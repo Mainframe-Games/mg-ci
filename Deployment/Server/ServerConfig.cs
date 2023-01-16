@@ -4,21 +4,23 @@ namespace Deployment.Server;
 
 internal class ServerConfig
 {
-    private const string CONFIG = "config-server.json";
     public static ServerConfig Instance { get; private set; }
+    private static string ConfigPath => Args.TryGetArg("-config", out var configPath)
+        ? configPath 
+        : "config-server.json";
     
     public bool RunServer { get; set; }
     public string IP { get; set; } = "127.0.0.1";
     public ushort Port { get; set; } = 8080;
     public List<string> AuthTokens { get; set; }
-    public string? SteamPath { get; set; }
+    public SteamServerConfig Steam { get; set; }
 
     public static ServerConfig Load()
     {
-        if (!File.Exists(CONFIG))
-            File.WriteAllText(CONFIG, Json.Serialise(new ServerConfig()));
+        if (!File.Exists(ConfigPath))
+            File.WriteAllText(ConfigPath, Json.Serialise(new ServerConfig()));
 
-        var configStr = File.ReadAllText(CONFIG);
+        var configStr = File.ReadAllText(ConfigPath);
         Instance = Json.Deserialise<ServerConfig>(configStr) ?? new ServerConfig();
         return Instance;
     }
@@ -26,9 +28,6 @@ internal class ServerConfig
     public void Refresh()
     {
         var newConfig = Load();
-        if (newConfig == null)
-            return;
-
         AuthTokens = newConfig.AuthTokens;
     }
 }

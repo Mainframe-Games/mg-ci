@@ -1,5 +1,6 @@
 ﻿using Deployment.Configs;
 using Deployment.Misc;
+using Deployment.Server;
 
 namespace Deployment.Deployments;
 
@@ -41,23 +42,9 @@ public class SteamDeploy
 			("ContentRoot", ContentDir),
 			("BuildOutput", OutputDir));
 
-		/*var username = string.IsNullOrEmpty(_config.Username)
-			? GetInput("Username: ")
-			: _config.Username;
-		var password = string.IsNullOrEmpty(_config.Password)
-			? GetInput("Password: ")
-			: _config.Password;
-		var steadGuard = string.IsNullOrEmpty(_config.SteamGuard)
-			? GetInput("Stead Guard: ")
-			: _config.SteamGuard;
-		
-		var args = $"+login {username} {password} {steadGuard} " +
-		           $"+run_app_build \"{vdfPath}\" " +
-		           "+quit";
-		*/
-		var args = $"+login {_config.Username} {_config.Password} " +
-		           $"+run_app_build \"{vdfPath}\" " +
-		           "+quit";
+		var username = ServerConfig.Instance.Steam.Username;
+		var password = ServerConfig.Instance.Steam.Password;
+		var args = $"+login {username} {password} +run_app_build \"{vdfPath}\" +quit";
 		Cmd.Run(SteamCmdExe, args);
 	}
 

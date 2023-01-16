@@ -130,7 +130,7 @@ public class BuildPipeline
 				continue;
 			
 			// Deploy - Steam
-			var steam = new SteamDeploy(build.Key.Steam, ServerConfig.Instance.SteamPath);
+			var steam = new SteamDeploy(build.Key.Steam, ServerConfig.Instance.Steam.Path);
 			steam.ClearContentFolder();
 			steam.Deploy(build.Value, BuildVersionTitle);
 		}
