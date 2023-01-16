@@ -4,8 +4,9 @@ namespace DiscordBot.Configs;
 
 public class DiscordConfig
 {
-    private const string CONFIG = "config-discord.json";
-
+    private static string ConfigPath => Args.TryGetArg("-config", out var configPath)
+	    ? configPath 
+	    : "config-discord.json";
 
     public string? BuildServerUrl { get; set; }
 	public string? Token { get; set; }
@@ -16,7 +17,7 @@ public class DiscordConfig
 
 	public static DiscordConfig? Load()
 	{
-		var configStr = File.ReadAllText(CONFIG);
+		var configStr = File.ReadAllText(ConfigPath);
 		var config = Json.Deserialise<DiscordConfig>(configStr);
 		return config;
 	}
