@@ -28,6 +28,7 @@ public static class Slack
 		}
 		catch (Exception e)
 		{
+			Console.Error.WriteLine($"Slack hack error with url: {channelHook}");
 			Console.Error.WriteLine(e);
 		}
 	}

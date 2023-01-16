@@ -7,7 +7,6 @@ public class TargetConfig
 	public string? UnityPath { get; set; }
 	public string? ExecuteMethod { get; set; }
 	public string? BuildPath { get; set; }
-	public bool IgnoreSteamUpload { get; set; }
 	public string? OS { get; set; }
 	public string? OffloadUrl { get; set; }
 	

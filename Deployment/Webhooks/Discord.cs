@@ -36,34 +36,42 @@ public class Discord
 	
 	public static void PostMessage(string channelUrl, string message, string username, string title, Colour colour = Colour.DEFAULT)
 	{
-		// send change long to discord
-		var req = (HttpWebRequest)WebRequest.Create(channelUrl);
-		req.ContentType = "application/json";
-		req.Method = "POST";
-			
-		var json = new JObject
+		try
 		{
-			["username"] = username,
-			["embeds"] = new JArray(new JObject
-			{
-				["title"] = title,
-				["color"] = ((int)colour).ToString(),
-				["description"] = message,
-			})
-		};
-			
-		var data = Encoding.ASCII.GetBytes(json.ToString());
-		req.ContentLength = data.Length;
+			// send change long to discord
+			var req = (HttpWebRequest)WebRequest.Create(channelUrl);
+			req.ContentType = "application/json";
+			req.Method = "POST";
 
-		using var stream = req.GetRequestStream();
-		stream.Write(data, 0, data.Length);
-			
-		var res = req.GetResponse();
-		var resStream = res.GetResponseStream();
-		if (resStream == null)
-			return;
-		using var reader = new StreamReader(resStream, Encoding.ASCII);
-		var responseText = reader.ReadToEnd();
-		Console.WriteLine($"Discord Response: {responseText}");
+			var json = new JObject
+			{
+				["username"] = username,
+				["embeds"] = new JArray(new JObject
+				{
+					["title"] = title,
+					["color"] = ((int)colour).ToString(),
+					["description"] = message,
+				})
+			};
+
+			var data = Encoding.ASCII.GetBytes(json.ToString());
+			req.ContentLength = data.Length;
+
+			using var stream = req.GetRequestStream();
+			stream.Write(data, 0, data.Length);
+
+			var res = req.GetResponse();
+			var resStream = res.GetResponseStream();
+			if (resStream == null)
+				return;
+			using var reader = new StreamReader(resStream, Encoding.ASCII);
+			var responseText = reader.ReadToEnd();
+			Console.WriteLine($"Discord Response: {responseText}");
+		}
+		catch (Exception e)
+		{
+			Console.Error.WriteLine($"Discord hook error with url: {channelUrl}");
+			Console.Error.WriteLine(e);
+		}
 	}
 }

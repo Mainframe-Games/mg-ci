@@ -58,7 +58,7 @@ public class BuildPipeline
 
 	private async Task Prebuild()
 	{
-		if (IsFlag("-noprebuild"))
+		if (Args.IsFlag("-noprebuild"))
 			return;
 
 		if (_preBuild == null)
@@ -76,8 +76,6 @@ public class BuildPipeline
 		
 		Console.WriteLine("Build process started...");
 
-		var buildMap = new Dictionary<BuildContainer, List<string>>();
-		
 		// configs
 		foreach (var build in _config.Builds)
 		{
@@ -85,7 +83,6 @@ public class BuildPipeline
 			await File.WriteAllTextAsync("steam_appid.txt", build.Steam.SteamId.ToString());
 
 			// Build
-			buildMap[build] = new List<string>();
 			var targets = build.Targets;
 
 			if (targets.Length == 0)
@@ -93,52 +90,41 @@ public class BuildPipeline
 
 			foreach (var target in targets)
 			{
-				if (!IsFlag("-nobuild"))
-				{
-					bool success;
-					
-					if (!string.IsNullOrEmpty(target.OffloadUrl))
-						success = await _unity.SendRemoteBuildRequest(_workspace, target);
-					else
-						success = await _unity.Build(target);
-	
-					if (!success)
-						continue;
-				}
-
-				if (!target.IgnoreSteamUpload)
-					buildMap[build].Add(target.BuildPath);
+				if (Args.IsFlag("-nobuild")) 
+					continue;
+				
+				if (!string.IsNullOrEmpty(target.OffloadUrl))
+					await _unity.SendRemoteBuildRequest(_workspace, target);
+				else
+					await _unity.Build(target);
 			}
 
 			await _unity.WaitBuildIds();
-
-			if (_preBuild?.IsRun ?? false)
-				_preBuild.CommitNewVersionNumber();
 		}
-
-		DeployAsync(buildMap);
+		
+		await DeployAsync();
+		
+		if (_preBuild?.IsRun ?? false)
+			_preBuild.CommitNewVersionNumber();
 	}
 
-	private void DeployAsync( Dictionary<BuildContainer, List<string>> buildMap)
+	private async Task DeployAsync()
 	{
-		if (IsFlag("-nosteamdeploy"))
+		if (Args.IsFlag("-nosteamdeploy"))
 			return;
 
-		foreach (var build in buildMap)
+		foreach (var build in _config.Builds)
 		{
-			if (build.Value.Count == 0)
-				continue;
-			
-			// Deploy - Steam
-			var steam = new SteamDeploy(build.Key.Steam, ServerConfig.Instance.Steam.Path);
-			steam.ClearContentFolder();
-			steam.Deploy(build.Value, BuildVersionTitle);
+			var steam = new SteamDeploy(build.Steam, ServerConfig.Instance.Steam.Path);
+			steam.Deploy(BuildVersionTitle);
 		}
+
+		await Task.CompletedTask;
 	}
 	
 	private async Task PostBuild()
 	{
-		if (IsFlag("-nopostbuild"))
+		if (Args.IsFlag("-nopostbuild"))
 			return;
 		
 		if (_config?.Hooks == null)
@@ -171,11 +157,6 @@ public class BuildPipeline
 	#endregion
 
 	#region Helper Methods
-
-	private bool IsFlag(string flag)
-	{
-		return _args?.Contains(flag) ?? false;
-	}
 
 	private static BuildConfig GetConfigJson(string workingDirectory)
 	{
