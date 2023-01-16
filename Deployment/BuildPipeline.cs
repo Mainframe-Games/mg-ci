@@ -147,23 +147,23 @@ public class BuildPipeline
 		Console.WriteLine("PostBuild process started...");
 
 		var hooks = _config.Hooks;
-		var slackHook = hooks.Slack.Url;
-		var slackTitle = hooks.Slack.Title;
-		var discordHook = hooks.Discord.Url;
-		var discordBotName = hooks.Discord.Title;
-	
 		var commits = _preBuild?.ChangeLog.Split(Environment.NewLine) ?? Array.Empty<string>();
 
-		var discord = new ChangeLogBuilderDiscord();
-		var isDiscordLog = discord.BuildLog(commits);
-		if (isDiscordLog && !string.IsNullOrEmpty(discordHook))
-			Discord.PostMessage(discordHook, discord.ToString(), discordBotName, BuildVersionTitle, Discord.Colour.GREEN);
-
-		var steam = new ChangeLogBuilderSteam();
-		var isSteamLog = steam.BuildLog(commits);
-
-		if (isSteamLog && !string.IsNullOrEmpty(slackHook))
-			Slack.PostMessage(slackHook, $"{slackTitle}.\n```{steam}```");
+		foreach (var hook in hooks)
+		{
+			if (hook.IsDiscord())
+			{
+				var discord = new ChangeLogBuilderDiscord();
+				if (discord.BuildLog(commits))
+					Discord.PostMessage(hook.Url, discord.ToString(), hook.Title, BuildVersionTitle, Discord.Colour.GREEN);
+			}
+			else if (hook.IsSlack())
+			{
+				var steam = new ChangeLogBuilderSteam();
+				if (steam.BuildLog(commits))
+					Slack.PostMessage(hook.Url, $"{hook.Title}.\n```{steam}```");
+			}
+		}
 
 		await Task.CompletedTask;
 	}
