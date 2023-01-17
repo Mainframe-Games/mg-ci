@@ -18,6 +18,7 @@ public enum UnityTarget
 
 public class LocalUnityBuild
 {
+	private const string DEFAULT_EXECUTE_METHOD = "BuildSystem.BuildScript.BuildPlayer";
 	private readonly string _unityVersion;
 
 	/// <summary>
@@ -28,6 +29,13 @@ public class LocalUnityBuild
 	public LocalUnityBuild(string unityVersion)
 	{
 		_unityVersion = unityVersion;
+	}
+	
+	private string GetDefaultUnityPath(string? versionExtension)
+	{
+		return OperatingSystem.IsMacOS()
+			? $"/Applications/Unity/Hub/Editor/{_unityVersion}{versionExtension}/Unity.app/Contents/MacOS/Unity"
+			: $@"C:\Program Files\Unity\Hub\Editor\{_unityVersion}{versionExtension}\Editor\Unity.exe";
 	}
 
 	/// <summary>
@@ -40,8 +48,8 @@ public class LocalUnityBuild
 		var logPath = $"{targetConfig.BuildPath}.log";
 		var buildStartTime = DateTime.Now;
 		
-		var exePath = targetConfig.GetUnityPath(_unityVersion);
-		var executeMethod = targetConfig.GetExecuteMethod();
+		var exePath = GetDefaultUnityPath(targetConfig.VersionExtension);
+		var executeMethod = targetConfig.ExecuteMethod ?? DEFAULT_EXECUTE_METHOD;
 		
 		Console.WriteLine(string.Empty);
 		Console.WriteLine($"Starting build '{targetConfig.Target}': {DateTime.Now:g}");

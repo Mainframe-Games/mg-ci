@@ -5,7 +5,7 @@ namespace Deployment.Server;
 internal class ServerConfig
 {
     public static ServerConfig Instance { get; private set; }
-    private static string ConfigPath => Args.TryGetArg("-config", out var configPath)
+    private static string ConfigPath => Args.Environment.TryGetArg("-config", out var configPath)
         ? configPath 
         : "config-server.json";
     

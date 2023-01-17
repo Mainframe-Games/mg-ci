@@ -10,12 +10,17 @@ public enum PreBuildType
 	None,
 	
 	/// <summary>
-	/// MAJOR.MINOR
+	/// MAJOR - Single number increments
+	/// </summary>
+	Major,
+	
+	/// <summary>
+	/// MAJOR.MINOR - Minor version increments. MAJOR must be done manually.
 	/// </summary>
 	Major_Minor,
 	
 	/// <summary>
-	/// MAJOR.CHANGE_SET_ID
+	/// MAJOR.CHANGE_SET_ID - Major version increments. ChangeSetId from HEAD on Plastic
 	/// </summary>
 	Major_ChangeSetId
 }
@@ -35,6 +40,24 @@ public abstract class PreBuildBase
 	public string BuildVersion { get; protected set; } = string.Empty;
 	
 	public bool IsRun { get; private set; }
+	
+	/// <summary>
+	/// Static method for created prebuild class from config type
+	/// </summary>
+	/// <param name="preBuildType"></param>
+	/// <returns></returns>
+	/// <exception cref="ArgumentOutOfRangeException"></exception>
+	public static PreBuildBase Create(PreBuildType preBuildType)
+	{
+		return preBuildType switch
+		{
+			PreBuildType.None => throw new InvalidOperationException(),
+			PreBuildType.Major => new PreBuild_Major_Minor(0),
+			PreBuildType.Major_Minor => new PreBuild_Major_Minor(1),
+			PreBuildType.Major_ChangeSetId => new PreBuild_Major_ChangeSetId(),
+			_ => throw new ArgumentOutOfRangeException(nameof(preBuildType), preBuildType, null)
+		};
+	}
 	
 	public virtual void Run()
 	{

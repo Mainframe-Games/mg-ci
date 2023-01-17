@@ -14,10 +14,10 @@ public class BuildPipeline
 	public static BuildPipeline? Current { get; private set; }
 	
 	private readonly Workspace _workspace;
-	private readonly string[]? _args;
-	private readonly BuildConfig? _config;
-	private readonly PreBuildBase? _preBuild;
-	private readonly LocalUnityBuild? _unity;
+	private readonly Args _args;
+	private readonly BuildConfig _config;
+	private readonly PreBuildBase _preBuild;
+	private readonly LocalUnityBuild _unity;
 
 	public Workspace Workspace => _workspace;
 
@@ -26,23 +26,12 @@ public class BuildPipeline
 	public BuildPipeline(Workspace workspace, string[]? args)
 	{
 		_workspace = workspace;
-		_args = args;
+		_args = new Args(args);
 		_config = GetConfigJson(workspace.Directory);
 		_unity = new LocalUnityBuild(workspace.UnityVersion);
-		_preBuild = GetPreBuildClass(_config.PreBuildType);
+		_preBuild = PreBuildBase.Create(_config.PreBuildType);
 		Environment.CurrentDirectory = workspace.Directory;
 		Current = this;
-	}
-
-	private static PreBuildBase? GetPreBuildClass(PreBuildType preBuildType)
-	{
-		return preBuildType switch
-		{
-			PreBuildType.None => null,
-			PreBuildType.Major_Minor => new PreBuild_Major_Minor(),
-			PreBuildType.Major_ChangeSetId => new PreBuild_Major_ChangeSetId(),
-			_ => throw new ArgumentOutOfRangeException(nameof(preBuildType), preBuildType, null)
-		};
 	}
 
 	#region Build Steps
@@ -59,7 +48,7 @@ public class BuildPipeline
 
 	private async Task Prebuild()
 	{
-		if (Args.IsFlag("-noprebuild"))
+		if (_args.IsFlag("-noprebuild"))
 			return;
 
 		if (_preBuild == null)
@@ -72,7 +61,7 @@ public class BuildPipeline
 	
 	private async Task Build()
 	{
-		if (Args.IsFlag("-nobuild")) 
+		if (_args.IsFlag("-nobuild")) 
 			return;
 		
 		if (_config == null || _unity == null || _config.Builds == null)
@@ -134,7 +123,7 @@ public class BuildPipeline
 
 	private async Task DeployAsync()
 	{
-		if (Args.IsFlag("-nosteamdeploy"))
+		if (_args.IsFlag("-nosteamdeploy"))
 			return;
 
 		foreach (var build in _config.Builds)
@@ -148,7 +137,7 @@ public class BuildPipeline
 	
 	private async Task PostBuild()
 	{
-		if (Args.IsFlag("-nopostbuild"))
+		if (_args.IsFlag("-nopostbuild"))
 			return;
 		
 		if (_config?.Hooks == null)

@@ -2,19 +2,21 @@
 
 public class Args
 {
-	private static readonly List<string> _args = new();
-	private static readonly Dictionary<string, List<string>> _cmds = new();
+	public static readonly Args Environment = new(System.Environment.GetCommandLineArgs());
+	
+	private readonly List<string> _args = new();
+	private readonly Dictionary<string, List<string>> _cmds = new();
 
-	static Args()
+	public Args(string[]? args)
 	{
-		_args.AddRange(Environment.GetCommandLineArgs());
+		_args.AddRange(args ?? Array.Empty<string>());
 		var cmd = string.Empty;
 
 		foreach (var arg in _args)
 			AddCmd(arg, ref cmd);
 	}
 
-	private static void AddCmd(string arg, ref string cmd)
+	private void AddCmd(string arg, ref string cmd)
 	{
 		if (arg.StartsWith('-'))
 		{
@@ -35,10 +37,10 @@ public class Args
 	/// <param name="cmd"></param>
 	/// <param name="args"></param>
 	/// <returns></returns>
-	public static bool TryGetArgs(string cmd, out List<string> args)
+	public bool TryGetArgs(string cmd, out List<string> args)
 		=> _cmds.TryGetValue(cmd, out args);
 
-	public static bool TryGetArg(string cmd, out string arg, string defaultValue = null)
+	public bool TryGetArg(string cmd, out string arg, string defaultValue = null)
 	{
 		arg = defaultValue;
 
@@ -49,19 +51,19 @@ public class Args
 		return true;
 	}
 
-	public static bool TryGetArg(string cmd, int index, out string arg, string defaultValue = null)
+	public bool TryGetArg(string cmd, int index, out string arg, string defaultValue = null)
 	{
 		arg = defaultValue;
 		return TryGetArgs(cmd, out var args) && TryGetArg(args, index, out arg, defaultValue);
 	}
 
-	public static bool TryGetArg(string cmd, int index, out int arg, int defaultValue = -1)
+	public bool TryGetArg(string cmd, int index, out int arg, int defaultValue = -1)
 	{
 		arg = defaultValue;
 		return TryGetArgs(cmd, out var args) && TryGetArg(args, index, out arg, defaultValue);
 	}
 
-	public static bool TryGetArg(IReadOnlyList<string> args, int index, out string arg, string defaultValue = null)
+	public bool TryGetArg(IReadOnlyList<string> args, int index, out string arg, string defaultValue = null)
 	{
 		arg = defaultValue;
 
@@ -72,7 +74,7 @@ public class Args
 		return true;
 	}
 
-	public static bool TryGetArg(IReadOnlyList<string> args, int index, out int arg, int defaultValue = -1)
+	public bool TryGetArg(IReadOnlyList<string> args, int index, out int arg, int defaultValue = -1)
 	{
 		arg = defaultValue;
 		if (!TryGetArg(args, index, out string str, defaultValue.ToString()))
@@ -87,7 +89,7 @@ public class Args
 	/// <param name="cmd"></param>
 	/// <param name="arg"></param>
 	/// <returns></returns>
-	public static bool ContainsArg(string cmd, string arg)
+	public bool ContainsArg(string cmd, string arg)
 		=> TryGetArgs(cmd, out var args) && args.Contains(arg);
 
 	/// <summary>
@@ -95,6 +97,6 @@ public class Args
 	/// </summary>
 	/// <param name="cmd"></param>
 	/// <returns></returns>
-	public static bool IsFlag(string cmd)
+	public bool IsFlag(string cmd)
 		=> TryGetArgs(cmd, out var args) && args.Count == 0;
 }
