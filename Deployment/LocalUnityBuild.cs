@@ -8,6 +8,14 @@ using SharedLib;
 
 namespace Deployment;
 
+public enum UnityTarget
+{
+	None,
+	Win64,
+	OSXUniversal,
+	Linux64
+}
+
 public class LocalUnityBuild
 {
 	private readonly string _unityVersion;
@@ -32,14 +40,14 @@ public class LocalUnityBuild
 		var logPath = $"{targetConfig.BuildPath}.log";
 		var buildStartTime = DateTime.Now;
 		
-		if (!targetConfig.TryGetUnityPath(_unityVersion, out string exe))
-			return false;
+		var exePath = targetConfig.GetUnityPath(_unityVersion);
+		var executeMethod = targetConfig.GetExecuteMethod();
 		
 		Console.WriteLine(string.Empty);
 		Console.WriteLine($"Starting build '{targetConfig.Target}': {DateTime.Now:g}");
-		var (exitCode, output) = Cmd.Run(exe, $"-quit -batchmode -buildTarget {targetConfig.Target} " +
-		                                      $"-projectPath . -executeMethod {targetConfig.ExecuteMethod} " +
-		                                      $"-logFile {logPath} -settings {targetConfig.Settings}");
+		var (exitCode, output) = Cmd.Run(exePath, $"-quit -batchmode -buildTarget {targetConfig.Target} " +
+		                                          $"-projectPath . -executeMethod {executeMethod} " +
+		                                          $"-logFile {logPath} -settings {targetConfig.Settings}");
 
 		if (exitCode != 0)
 			throw new Exception($"Build failed. Read log file: {Path.Combine(Environment.CurrentDirectory, logPath)}");
@@ -55,9 +63,10 @@ public class LocalUnityBuild
 	/// </summary>
 	/// <param name="workspace"></param>
 	/// <param name="targetConfig"></param>
+	/// <param name="offloadUrl"></param>
 	/// <returns>True is request is successful. Not if build is successful</returns>
 	/// <exception cref="WebException"></exception>
-	public async Task<bool> SendRemoteBuildRequest(Workspace workspace, TargetConfig targetConfig)
+	public async Task<bool> SendRemoteBuildRequest(Workspace workspace, TargetConfig targetConfig, string offloadUrl)
 	{
 		var remoteBuild = new RemoteBuildTargetRequest
 		{
@@ -66,7 +75,7 @@ public class LocalUnityBuild
 		};
 		
 		var body = new RemoteBuildPacket { BuildTargetRequest = remoteBuild };
-		var res = await Web.SendAsync(HttpMethod.Post, targetConfig.OffloadUrl, DeviceInfo.UniqueDeviceId, body);
+		var res = await Web.SendAsync(HttpMethod.Post, offloadUrl, DeviceInfo.UniqueDeviceId, body);
 
 		if (res.StatusCode != HttpStatusCode.OK)
 			throw new WebException(res.Reason);

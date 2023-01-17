@@ -52,6 +52,7 @@ public class BuildPipeline
 		var startTime = DateTime.Now;
 		await Prebuild();
 		await Build();
+		await DeployAsync();
 		await PostBuild();
 		Console.WriteLine($"Deployed. {DateTime.Now - startTime:hh\\:mm\\:ss}");
 	}
@@ -71,7 +72,10 @@ public class BuildPipeline
 	
 	private async Task Build()
 	{
-		if (_config == null || _unity == null)
+		if (Args.IsFlag("-nobuild")) 
+			return;
+		
+		if (_config == null || _unity == null || _config.Builds == null)
 			throw new NullReferenceException();
 		
 		Console.WriteLine("Build process started...");
@@ -90,11 +94,8 @@ public class BuildPipeline
 
 			foreach (var target in targets)
 			{
-				if (Args.IsFlag("-nobuild")) 
-					continue;
-				
-				if (!string.IsNullOrEmpty(target.OffloadUrl))
-					await _unity.SendRemoteBuildRequest(_workspace, target);
+				if (IsOffload(build, target))
+					await _unity.SendRemoteBuildRequest(_workspace, target, build.OffloadUrl);
 				else
 					await _unity.Build(target);
 			}
@@ -102,10 +103,33 @@ public class BuildPipeline
 			await _unity.WaitBuildIds();
 		}
 		
-		await DeployAsync();
-		
 		if (_preBuild?.IsRun ?? false)
 			_preBuild.CommitNewVersionNumber();
+	}
+
+	/// <summary>
+	/// Returns if offload is needed for IL2CPP
+	/// <para></para>
+	/// NOTE: Linux IL2CPP target can be built from Mac and Windows 
+	/// </summary>
+	/// <param name="build"></param>
+	/// <param name="target"></param>
+	/// <returns></returns>
+	private static bool IsOffload(BuildContainer build, TargetConfig target)
+	{
+		if (string.IsNullOrEmpty(build.OffloadUrl))
+			return false;
+		
+		// mac server
+		if (OperatingSystem.IsMacOS())
+			return target.Target is UnityTarget.OSXUniversal;
+		
+		// windows server
+		if (OperatingSystem.IsWindows())
+			return target.Target is UnityTarget.OSXUniversal;
+
+		// linux server
+		return target.Target is UnityTarget.Win64 or UnityTarget.OSXUniversal;
 	}
 
 	private async Task DeployAsync()
@@ -166,8 +190,7 @@ public class BuildPipeline
 
 		if (configClass == null)
 			throw new NullReferenceException("Failed to parse buildconfig.json");
-
-		configClass.Validate();
+		
 		return configClass;
 	}
 
