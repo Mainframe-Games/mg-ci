@@ -4,7 +4,7 @@ namespace DiscordBot.Configs;
 
 public class DiscordConfig
 {
-    private static string ConfigPath => Args.TryGetArg("-config", out var configPath)
+    private static string ConfigPath => Args.Environment.TryGetArg("-config", out var configPath)
 	    ? configPath 
 	    : "config-discord.json";
 

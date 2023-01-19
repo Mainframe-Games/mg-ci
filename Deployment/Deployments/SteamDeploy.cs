@@ -14,10 +14,10 @@ public class SteamDeploy
 		? $"{_steamPath}/builder_osx/steamcmd.sh"
 		: $"{_steamPath}/builder/steamcmd.exe";
 	
-	public SteamDeploy(SteamConfig config, string? steamPath)
+	public SteamDeploy(SteamConfig config)
 	{
 		_config = config;
-		_steamPath = steamPath;
+		_steamPath = ServerConfig.Instance.Steam.Path;
 	}
 
 	public void Deploy(string description)

@@ -61,7 +61,7 @@ public class BuildPipeline
 	
 	private async Task Build()
 	{
-		if (_args.IsFlag("-nobuild")) 
+		if (_args.IsFlag("-nobuild"))
 			return;
 		
 		if (_config == null || _unity == null || _config.Builds == null)
@@ -72,22 +72,11 @@ public class BuildPipeline
 		// configs
 		foreach (var build in _config.Builds)
 		{
-			// ensure correct appId is set
-			await File.WriteAllTextAsync("steam_appid.txt", build.Steam.SteamId.ToString());
-
 			// Build
-			var targets = build.Targets;
-
-			if (targets.Length == 0)
-				throw new Exception("targets must be assigned in config");
-
-			foreach (var target in targets)
-			{
-				if (IsOffload(build, target))
-					await _unity.SendRemoteBuildRequest(_workspace, target, build.OffloadUrl);
-				else
-					await _unity.Build(target);
-			}
+			if (IsOffload(build))
+				await _unity.SendRemoteBuildRequest(_workspace, build, ServerConfig.Instance.OffloadServerUrl);
+			else
+				await _unity.Build(build);
 
 			await _unity.WaitBuildIds();
 		}
@@ -101,12 +90,11 @@ public class BuildPipeline
 	/// <para></para>
 	/// NOTE: Linux IL2CPP target can be built from Mac and Windows 
 	/// </summary>
-	/// <param name="build"></param>
 	/// <param name="target"></param>
 	/// <returns></returns>
-	private static bool IsOffload(BuildContainer build, TargetConfig target)
+	private static bool IsOffload(TargetConfig target)
 	{
-		if (string.IsNullOrEmpty(build.OffloadUrl))
+		if (string.IsNullOrEmpty(ServerConfig.Instance.OffloadServerUrl))
 			return false;
 		
 		// mac server
@@ -125,11 +113,20 @@ public class BuildPipeline
 	{
 		if (_args.IsFlag("-nosteamdeploy"))
 			return;
+		
+		if(_config.Deploy == null)
+			return;
 
-		foreach (var build in _config.Builds)
+		if (_config.Deploy.Steam != null)
 		{
-			var steam = new SteamDeploy(build.Steam, ServerConfig.Instance.Steam.Path);
+			var steam = new SteamDeploy(_config.Deploy.Steam);
 			steam.Deploy(BuildVersionTitle);
+		}
+		
+		if (_config.Deploy.Multiplay != null)
+		{
+			var multiplay = new MultiplayDeploy();
+			multiplay.Deploy(_config.Deploy.Multiplay.Ccd.PathToBuild);
 		}
 
 		await Task.CompletedTask;

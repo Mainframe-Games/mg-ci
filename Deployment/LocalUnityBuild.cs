@@ -74,7 +74,7 @@ public class LocalUnityBuild
 	/// <param name="offloadUrl"></param>
 	/// <returns>True is request is successful. Not if build is successful</returns>
 	/// <exception cref="WebException"></exception>
-	public async Task<bool> SendRemoteBuildRequest(Workspace workspace, TargetConfig targetConfig, string offloadUrl)
+	public async Task<bool> SendRemoteBuildRequest(Workspace workspace, TargetConfig targetConfig, string? offloadUrl)
 	{
 		var remoteBuild = new RemoteBuildTargetRequest
 		{

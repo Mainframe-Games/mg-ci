@@ -14,11 +14,14 @@ public static class Web
 	
 	public static async Task<Response> SendAsync(
 		HttpMethod method,
-		string url,
+		string? url,
 		string? authToken = null,
 		object? body = null,
 		params (string key, string value)[] headers)
 	{
+		if (url == null)
+			throw new NullReferenceException("Url can not be null");
+
 		try
 		{
 			using var client = new HttpClient();

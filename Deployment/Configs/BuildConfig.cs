@@ -2,16 +2,20 @@ using Deployment.PreBuild;
 
 namespace Deployment.Configs;
 
+/// <summary>
+/// Build config local to each Unity project
+/// </summary>
 public class BuildConfig
 {
 	public PreBuildType PreBuildType { get; set; }
-	public BuildContainer[]? Builds { get; set; }
+	public TargetConfig[]? Builds { get; set; }
+	public DeployContiner? Deploy { get; set; }
 	public HooksConfig[]? Hooks { get; set; }
 }
 
-public class BuildContainer
+
+public class DeployContiner
 {
 	public SteamConfig? Steam { get; set; }
-	public string? OffloadUrl { get; set; }
-	public TargetConfig[]? Targets { get; set; }
+	public MultiplayConfigLocal? Multiplay { get; set; }
 }
