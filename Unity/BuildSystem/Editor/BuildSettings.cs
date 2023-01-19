@@ -18,6 +18,10 @@ namespace BuildSystem
 		public string AssetBundleManifestPath;
 		public BuildOptions BuildOptions = BuildOptions.None;
 
+		[Header("Optional")]
+		[Tooltip("Enter SteamId for when you need different steam deployments. i.e Demo and official builds")]
+		public ulong SteamId;
+		
 		public BuildPlayerOptions GetBuildOptions()
 		{
 			var options = new BuildPlayerOptions
@@ -32,6 +36,23 @@ namespace BuildSystem
 				options = BuildOptions,
 			};
 			return options;
+		}
+
+		private void OnValidate()
+		{
+			AutoSetExtension();
+		}
+
+		private void AutoSetExtension()
+		{
+			// TODO: support more targets just cant be bothered right now. Its all I need
+			Extension = Target switch
+			{
+				BuildTarget.StandaloneWindows or BuildTarget.StandaloneWindows64 => ".exe",
+				BuildTarget.StandaloneOSX => ".app",
+				BuildTarget.StandaloneLinux64 => ".x86_64",
+				_ => Extension
+			};
 		}
 
 		private void OnEnable()
@@ -61,7 +82,36 @@ namespace BuildSystem
 		[ContextMenu("Validate")]
 		public bool IsValid()
 		{
-			// validate scenes
+			return EnsureSteamId() && EnsureScenes();
+		}
+
+		[ContextMenu("Build")]
+		private void Build()
+		{
+			BuildScript.BuildPlayer(this);
+		}
+		
+		private bool EnsureSteamId()
+		{
+			if (SteamId == 0)
+				return true;
+
+			const string steamAppId = "steam_appid.txt";
+			
+			if (!File.Exists(steamAppId))
+				return true;
+
+			var curSteamId = ulong.Parse(File.ReadAllText(steamAppId));
+			if (SteamId != curSteamId)
+				File.WriteAllText(steamAppId, SteamId.ToString());
+			return true;
+		}
+
+		private bool EnsureScenes()
+		{
+			if (Scenes == null)
+				return false;
+			
 			var editorScenes = EditorBuildSettings.scenes.Select(x => x.path).ToList();
 
 			foreach (var scene in Scenes)
@@ -74,12 +124,6 @@ namespace BuildSystem
 			}
 
 			return true;
-		}
-
-		[ContextMenu("Build")]
-		private void Build()
-		{
-			BuildScript.BuildPlayer(this);
 		}
 	}
 }
