@@ -65,11 +65,6 @@ namespace BuildSystem
 			};
 		}
 
-		private void OnEnable()
-		{
-			IsValid();
-		}
-
 		[ContextMenu("Set Scenes")]
 		private void PopulateScenes()
 		{
