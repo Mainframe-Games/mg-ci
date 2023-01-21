@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace BuildSystem
 {
-	[CreateAssetMenu(fileName = "BuildSettings", menuName = "Builds/New Settings")]
+	[CreateAssetMenu(fileName = "BuildSettings", menuName = "Build Settings/New Settings")]
 	public class BuildSettings : ScriptableObject
 	{
 		public string Extension = ".exe";
@@ -13,7 +13,9 @@ namespace BuildSystem
 		public StandaloneBuildSubtarget SubTarget = StandaloneBuildSubtarget.Player;
 		public BuildTargetGroup TargetGroup = BuildTargetGroup.Standalone;
 		public string LocationPath = "Builds/";
+		[Tooltip("Custom scenes overrides. Empty array will use EditorSettings.Scenes")]
 		public string[] Scenes;
+		[Tooltip("Custom define overrides. Empty array will use ProjectSettings defines")]
 		public string[] ScriptingDefines;
 		public string AssetBundleManifestPath;
 		public BuildOptions BuildOptions = BuildOptions.None;
@@ -24,6 +26,10 @@ namespace BuildSystem
 		
 		public BuildPlayerOptions GetBuildOptions()
 		{
+			var scenes = Scenes.Length > 0 
+				? Scenes
+				: GetEditorSettingsScenes();
+			
 			var options = new BuildPlayerOptions
 			{
 				target = Target,
@@ -31,10 +37,14 @@ namespace BuildSystem
 				locationPathName = Path.Combine(LocationPath, $"{Application.productName}{Extension}"),
 				targetGroup = TargetGroup,
 				assetBundleManifestPath = AssetBundleManifestPath,
-				scenes = Scenes,
-				extraScriptingDefines = ScriptingDefines,
+				scenes = scenes,
+				// extraScriptingDefines = ScriptingDefines,
 				options = BuildOptions,
 			};
+
+			if (ScriptingDefines.Length > 0)
+				options.extraScriptingDefines = ScriptingDefines;
+			
 			return options;
 		}
 
@@ -63,7 +73,12 @@ namespace BuildSystem
 		[ContextMenu("Set Scenes")]
 		private void PopulateScenes()
 		{
-			Scenes = EditorBuildSettings.scenes
+			Scenes = GetEditorSettingsScenes();
+		}
+		
+		private string[] GetEditorSettingsScenes()
+		{
+			return EditorBuildSettings.scenes
 				.Where(x => x.enabled)
 				.Select(x => x.path)
 				.ToArray();
