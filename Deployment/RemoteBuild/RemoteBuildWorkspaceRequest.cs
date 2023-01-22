@@ -15,7 +15,7 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 		
 		FireAndForgetBuild(currentWorkspace, Args);
 		await Task.CompletedTask;
-		return currentWorkspace.ToString();
+		return $"{currentWorkspace.Name} | {currentWorkspace.UnityVersion}";
 	}
 
 	private static async void FireAndForgetBuild(Workspace currentWorkspace, string[]? args)

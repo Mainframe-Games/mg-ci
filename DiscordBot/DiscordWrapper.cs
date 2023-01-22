@@ -3,6 +3,7 @@ using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 using DiscordBot.Configs;
+using Newtonsoft.Json.Linq;
 using SharedLib;
 
 namespace DiscordBot;
@@ -124,7 +125,8 @@ public class DiscordWrapper
 		}
 
 		// success
-		await command.RespondSuccessDelayed(user, "Build Started", $"{workspaceName}. {res.Content}");
+		var resData = JObject.Parse(res.Content)["data"]?.ToString();
+		await command.RespondSuccessDelayed(user, "Build Started", resData ?? "Unknown Workspace");
 	}
 
 	private bool TryGetWorkspaceName(ulong channelId, out string? workspaceName)
