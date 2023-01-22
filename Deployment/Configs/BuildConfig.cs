@@ -16,6 +16,6 @@ public class BuildConfig
 
 public class DeployContiner
 {
-	public SteamConfig? Steam { get; set; }
+	public SteamConfig[]? Steam { get; set; }
 	public MultiplayConfigLocal? Multiplay { get; set; }
 }

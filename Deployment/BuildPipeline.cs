@@ -119,8 +119,11 @@ public class BuildPipeline
 
 		if (_config.Deploy.Steam != null)
 		{
-			var steam = new SteamDeploy(_config.Deploy.Steam);
-			steam.Deploy(BuildVersionTitle);
+			foreach (var steamConfig in _config.Deploy.Steam)
+			{
+				var steam = new SteamDeploy(steamConfig);
+				steam.Deploy(BuildVersionTitle);
+			}
 		}
 		
 		if (_config.Deploy.Multiplay != null)

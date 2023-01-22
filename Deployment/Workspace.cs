@@ -1,4 +1,5 @@
 ﻿using Deployment.Misc;
+using SharedLib;
 
 namespace Deployment;
 
@@ -43,9 +44,8 @@ public readonly struct Workspace
 
 	public static Workspace GetWorkspace()
 	{
-		var args = Environment.GetCommandLineArgs();
-		if (args.Contains("-config"))
-			return GetCustomWorkspace();
+		//if (Args.Environment.IsFlag("-config"))
+		//	return GetCustomWorkspace();
 
 		var (exitCode, output) = Cmd.Run("cm", "workspace", false);
 
