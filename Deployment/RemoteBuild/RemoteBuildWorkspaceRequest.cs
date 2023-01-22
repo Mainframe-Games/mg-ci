@@ -14,14 +14,14 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 			throw new Exception($"A build process already active. {BuildPipeline.Current.Workspace}");
 		
 		FireAndForgetBuild(currentWorkspace, Args);
+		Console.WriteLine("Fired off build");
 		await Task.CompletedTask;
 		return $"{currentWorkspace.Name} | {currentWorkspace.UnityVersion}";
 	}
 
-	private static async void FireAndForgetBuild(Workspace currentWorkspace, string[]? args)
+	private static void FireAndForgetBuild(Workspace currentWorkspace, string[]? args)
 	{
 		var pipe = new BuildPipeline(currentWorkspace, args);
-		await pipe.RunAsync();
-		Console.WriteLine("FireAndForgetBuild finished");
+		Task.Run(pipe.RunAsync);
 	}
 }

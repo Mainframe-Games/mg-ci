@@ -1,18 +1,27 @@
 ﻿using Deployment;
 using Deployment.Server;
 
-var config = ServerConfig.Load();
+try
+{
+	var config = ServerConfig.Load();
 
-if (config.RunServer)
-{
-	var server = new ListenServer(config.IP, config.Port);
-	await server.RunAsync();
-	Console.WriteLine("Server stopped");
+	if (config.RunServer)
+	{
+		var server = new ListenServer(config.IP, config.Port);
+		await server.RunAsync();
+		Console.WriteLine("Server stopped");
+	}
+	else
+	{
+		var currentWorkspace = Workspace.GetWorkspace();
+		Console.WriteLine($"Chosen workspace: {currentWorkspace}");
+		var pipe = new BuildPipeline(currentWorkspace, args);
+		await pipe.RunAsync();
+	}
 }
-else
+catch (Exception e)
 {
-	var currentWorkspace = Workspace.GetWorkspace();
-	Console.WriteLine($"Chosen workspace: {currentWorkspace}");
-	var pipe = new BuildPipeline(currentWorkspace, args);
-	await pipe.RunAsync();
+	Console.WriteLine(e);
 }
+
+Console.Read();

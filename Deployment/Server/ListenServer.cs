@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using SharedLib;
@@ -116,19 +117,26 @@ public class ListenServer
 
 	private void Respond(HttpListenerContext context, ServerResponse serverResponse)
 	{
-		var response = context.Response;
-		response.StatusCode = (int)serverResponse.StatusCode;
-		response.ContentType = "application/json";
-		var resJson = serverResponse.StatusCode == HttpStatusCode.OK 
-			? CreateSuccessResponse(serverResponse)
-			: CreateErrorResponse(serverResponse);
-		
-		var bytes = Encoding.UTF8.GetBytes(resJson.ToString());
-		response.OutputStream.Write(bytes);
-		response.OutputStream.Close();
-		
-		// start listening again
-		Receive();
+		try
+		{
+			var response = context.Response;
+			response.StatusCode = (int)serverResponse.StatusCode;
+			response.ContentType = "application/json";
+			var resJson = serverResponse.StatusCode == HttpStatusCode.OK
+				? CreateSuccessResponse(serverResponse)
+				: CreateErrorResponse(serverResponse);
+
+			var bytes = Encoding.UTF8.GetBytes(resJson.ToString());
+			response.OutputStream.Write(bytes);
+			response.OutputStream.Close();
+
+			// start listening again
+			Receive();
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine(e);
+		}
 	}
 
 	private static JObject CreateSuccessResponse(ServerResponse serverResponse)
