@@ -7,7 +7,15 @@ try
 
 	if (config.RunServer)
 	{
-		var server = new ListenServer(config.IP, config.Port);
+		var server = new ListenServer(config.IP, config.Port)
+		{
+			GetAuth = () =>
+			{
+				config.Refresh();
+				return config.AuthTokens ?? Enumerable.Empty<string>();
+			}
+		};
+		
 		await server.RunAsync();
 		Console.WriteLine("Server stopped");
 	}

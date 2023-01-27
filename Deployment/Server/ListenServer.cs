@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using SharedLib;
@@ -9,9 +8,8 @@ namespace Deployment.Server;
 public class ListenServer
 {
 	private readonly HttpListener _listener;
-	private readonly ServerConfig _config;
-
 	public bool IsAlive => _listener.IsListening;
+	public Func<IEnumerable<string>>? GetAuth { get; set; }
 
 	public ListenServer(string ip, ushort port = 8080)
 	{
@@ -19,8 +17,6 @@ public class ListenServer
 		_listener.Prefixes.Add($"http://{ip}:{port}/");
 		_listener.Start();
         Console.WriteLine($"... Server listening on '{ip}:{port}'");
-
-        _config = ServerConfig.Load();
 	}
 	
 	public async Task RunAsync()
@@ -49,9 +45,10 @@ public class ListenServer
 		if (string.IsNullOrEmpty(authToken))
 			return false;
 
-		_config.Refresh();
+		if (GetAuth == null)
+			return true;
 		
-		foreach (var token in _config.AuthTokens)
+		foreach (var token in GetAuth())
 		{
 			if (token == authToken)
 				return true;
@@ -69,7 +66,9 @@ public class ListenServer
 		var request = context.Request;
 
 		// do something with the request
-		Console.WriteLine($"{request.HttpMethod} {request.Url}\nContent-Type: {request.ContentType}");
+		Console.WriteLine($"{request.HttpMethod} {request.Url}");
+		if (!string.IsNullOrEmpty(request.ContentType))
+			Console.WriteLine($"Content-Type: {request.ContentType}");
 
 		var response = request.HttpMethod switch
 		{
@@ -84,7 +83,7 @@ public class ListenServer
 	private static async Task<ServerResponse> HandleGet(HttpListenerRequest request)
 	{
 		await Task.CompletedTask;
-		return new ServerResponse(HttpStatusCode.BadRequest, $"Request not supported: {request.HttpMethod} {request.Url}");
+		return new ServerResponse(HttpStatusCode.OK, "ok");
 	}
 
 	private async Task<ServerResponse> HandlePost(HttpListenerRequest request)
@@ -119,6 +118,7 @@ public class ListenServer
 	{
 		try
 		{
+			Console.WriteLine(serverResponse.StatusCode);
 			var response = context.Response;
 			response.StatusCode = (int)serverResponse.StatusCode;
 			response.ContentType = "application/json";
