@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Runtime.InteropServices;
 using Deployment.Configs;
 using Deployment.Misc;
 using Deployment.Server;
@@ -25,6 +26,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	public async Task<string> ProcessAsync()
 	{
 		var buildId = Guid.NewGuid().ToString();
+		Console.WriteLine($"Created buildId: {buildId}");
 		StartBuilder(buildId);
 		await Task.CompletedTask;
 		return buildId;

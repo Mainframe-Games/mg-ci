@@ -92,6 +92,7 @@ public class LocalUnityBuild
 
 		var json = JObject.Parse(res.Content);
 		var buildId = json.SelectToken("data", true)?.ToString();
+		Console.WriteLine($"Remote build id: {buildId}");
 		_buildIds.Add(buildId);
 		return true;
 	}
