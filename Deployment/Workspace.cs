@@ -57,7 +57,7 @@ public readonly struct Workspace
 		return workspaces[index];
 	}
 
-	public static Workspace GetWorkspaceFromName(string workspaceName)
+	public static Workspace GetWorkspaceFromName(string? workspaceName)
 	{
 		var workspaces = GetAvailableWorkspaces();
 		return workspaces.First(x => x.Name == workspaceName);

@@ -7,7 +7,10 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 	
 	public async Task<string> ProcessAsync()
 	{
-		var currentWorkspace = Workspace.GetWorkspaceFromName(WorkspaceName);
+		var mapping = new WorkspaceMapping();
+		var workspaceName = mapping.GetRemapping(WorkspaceName);
+		
+		var currentWorkspace = Workspace.GetWorkspaceFromName(workspaceName);
 		Console.WriteLine($"Chosen workspace: {currentWorkspace}");
 
 		if (BuildPipeline.Current != null)
