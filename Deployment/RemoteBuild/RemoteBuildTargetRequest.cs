@@ -27,7 +27,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	{
 		var buildId = Guid.NewGuid().ToString();
 		Console.WriteLine($"Created buildId: {buildId}");
-		StartBuilder(buildId);
+		Task.Run(() => StartBuilder(buildId));
 		await Task.CompletedTask;
 		return buildId;
 	}
@@ -37,7 +37,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	/// </summary>
 	/// <param name="buildId"></param>
 	/// <exception cref="WebException"></exception>
-	private async void StartBuilder(string buildId)
+	private async Task StartBuilder(string buildId)
 	{
 		var mapping = new WorkspaceMapping();
 		var workspaceName = mapping.GetRemapping(WorkspaceName);
