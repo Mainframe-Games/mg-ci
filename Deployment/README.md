@@ -20,9 +20,25 @@ Supported build targets:
 
 Supported deploy targets:
 - [x] Steam
-- [x] Itchio
+- [x] Itchio (Stopped support, but its still in there just needs the class to be hooked up)
 - [ ] Apple Store
 - [ ] Android Store
+
+# Server Config
+
+```json
+{
+  "runServer": true,
+  "ip": "127.0.0.1",
+  "port": 8080,
+  "offloadServerUrl": "192.168.x.xxx",
+  "steam":{
+    "path": "~/Documents/ContentBuilder/Steam",
+    "username": "",
+    "password": ""
+  }
+}
+```
 
 
 # Project Config
@@ -32,39 +48,31 @@ Build configs should be located in Unity project root folder `./BuilldScripts/bu
 
 ```json
 {
-  "preBuildScript": "Deployment.PreBuild.PreBuild_Mainframe",
+  "preBuildScript": "None",
   "builds":[
     {
-      "steam": {
-        "steamId": 69420,
-        "location": "~/Documents/ContentBuilder/Steam",
-        "vdfPath": "BuildScripts/Steam/build_official.vdf",
-        "setLive": "beta",
-        "username": "",
-        "password": ""
-      },
-      "executeMethod": "BuildSystem.BuildScript.BuildPlayer",
-      "unityPath": "/Applications/Unity/Hub/Editor/{unityVersion}/Unity.app/Contents/MacOS/Unity",
-      "targets": [
-        {
-          "target": "Win64",
-          "settings": "BuildSettings_Win64",
-          "os": "windows",
-          "buildPath": "Builds/win64"
-        },
-        {
-          "target": "OSXUniversal",
-          "settings": "BuildSettings_MacOS",
-          "buildPath": "Builds/macos"
-        },
-        {
-          "target": "Linux64",
-          "settings": "BuildSettings_Linux64",
-          "buildPath": "Builds/linux64"
-        }
-      ]
+      "target": "Win64",
+      "settings": "BuildSettings_Win64",
+      "buildPath": "Builds/win64"
+    },
+    {
+      "target": "OSXUniversal",
+      "settings": "BuildSettings_MacOS",
+      "buildPath": "Builds/macos"
+    },
+    {
+      "target": "Linux64",
+      "settings": "BuildSettings_Linux64Server",
+      "buildPath": "Builds/linux64_server",
+      "versionExtension": "-x86_64"
     }
   ],
+  "deploy": {
+    "steam": {
+      "vdfPath": "path/to/build.vdf",
+      "setLive": "beta"
+    }
+  },
   "hooks": {
     "slack": {
       "url": "https://hooks.slack.com/services/...",
@@ -82,7 +90,7 @@ Build configs should be located in Unity project root folder `./BuilldScripts/bu
 
 | Key                       | Required | Description                            |
 |---------------------------|----------|----------------------------------------|
-| `preBuildScript`          | true     | Uses reflection to load prebuild class |
+| `preBuildScript`          |          | Uses reflection to load prebuild class |
 |                           |          |                                        |
 | `steam`                   |          |                                        |
 | `steam.steamId`           | true     | The main Steam ID                      |
