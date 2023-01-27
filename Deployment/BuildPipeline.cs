@@ -99,7 +99,7 @@ public class BuildPipeline
 		
 		// mac server
 		if (OperatingSystem.IsMacOS())
-			return target.Target is UnityTarget.OSXUniversal;
+			return target.Target is UnityTarget.Win64;
 		
 		// windows server
 		if (OperatingSystem.IsWindows())
