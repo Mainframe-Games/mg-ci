@@ -15,6 +15,7 @@ internal class ServerConfig
 	public ushort Port { get; set; } = 8080;
 	public List<string>? AuthTokens { get; set; }
 	public string? OffloadServerUrl { get; set; }
+	public string? MasterServerUrl { get; set; }
 	public SteamServerConfig? Steam { get; set; }
 	public UnityServicesConfig? Unity { get; set; }
 

@@ -11,9 +11,12 @@ namespace Deployment.RemoteBuild;
 /// </summary>
 public class RemoteBuildTargetRequest : IRemoteControllable
 {
-	public Workspace Workspace { get; set; }
-	public string? SenderUrl { get; set; }
-	public TargetConfig? Config { get; set; }
+	/// <summary>
+	/// Workspace name from the master server. Remapping is done on offload server
+	/// </summary>
+	public string? WorkspaceName { get; init; }
+	public string? SendBackUrl { get; init; }
+	public TargetConfig? Config { get; init; }
 	
 	/// <summary>
 	/// 
@@ -34,7 +37,12 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	/// <exception cref="WebException"></exception>
 	private async void StartBuilder(string buildId)
 	{
-		var builder = new LocalUnityBuild(Workspace.UnityVersion);
+		var mapping = new WorkspaceMapping();
+		var workspaceName = mapping.GetRemapping(WorkspaceName);
+		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
+		Environment.CurrentDirectory = workspace.Directory;
+		
+		var builder = new LocalUnityBuild(workspace.UnityVersion);
 		var success = await builder.Build(Config);
 
 		RemoteBuildResponse response;
@@ -63,7 +71,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 
 		// build is done or failed, tell sender about it
 		var body = new RemoteBuildPacket { BuildResponse = response };
-		var res =  await Web.SendAsync(HttpMethod.Post, SenderUrl, DeviceInfo.UniqueDeviceId, body);
+		var res =  await Web.SendAsync(HttpMethod.Post, SendBackUrl, DeviceInfo.UniqueDeviceId, body);
 		if (res.StatusCode != HttpStatusCode.OK)
 			throw new WebException(res.Reason);
 	}

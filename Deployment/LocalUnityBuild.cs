@@ -69,17 +69,19 @@ public class LocalUnityBuild
 	/// <summary>
 	/// Called from main build server. Sends web request to offload server and gets a buildId in return
 	/// </summary>
-	/// <param name="workspace"></param>
+	/// <param name="workspaceName"></param>
 	/// <param name="targetConfig"></param>
-	/// <param name="offloadUrl"></param>
+	/// <param name="offloadUrl">The url to the offload server</param>
+	/// <param name="sendBackUrl">The url to send back the build response</param>
 	/// <returns>True is request is successful. Not if build is successful</returns>
 	/// <exception cref="WebException"></exception>
-	public async Task<bool> SendRemoteBuildRequest(Workspace workspace, TargetConfig targetConfig, string? offloadUrl)
+	public async Task<bool> SendRemoteBuildRequest(string? workspaceName, TargetConfig targetConfig, string? offloadUrl, string? sendBackUrl)
 	{
 		var remoteBuild = new RemoteBuildTargetRequest
 		{
-			Workspace = workspace,
-			Config = targetConfig
+			WorkspaceName = workspaceName,
+			Config = targetConfig,
+			SendBackUrl = sendBackUrl
 		};
 		
 		var body = new RemoteBuildPacket { BuildTargetRequest = remoteBuild };

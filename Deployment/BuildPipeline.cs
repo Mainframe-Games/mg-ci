@@ -74,7 +74,9 @@ public class BuildPipeline
 		{
 			// Build
 			if (IsOffload(build))
-				await _unity.SendRemoteBuildRequest(_workspace, build, ServerConfig.Instance.OffloadServerUrl);
+				await _unity.SendRemoteBuildRequest(_workspace.Name, build,
+					ServerConfig.Instance.OffloadServerUrl,
+					ServerConfig.Instance.MasterServerUrl);
 			else
 				await _unity.Build(build);
 
