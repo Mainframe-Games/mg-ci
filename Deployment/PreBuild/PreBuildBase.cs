@@ -51,7 +51,7 @@ public abstract class PreBuildBase
 	{
 		return preBuildType switch
 		{
-			PreBuildType.None => throw new InvalidOperationException(),
+			PreBuildType.None => new PreBuild_None(),
 			PreBuildType.Major => new PreBuild_Major_Minor(0),
 			PreBuildType.Major_Minor => new PreBuild_Major_Minor(1),
 			PreBuildType.Major_ChangeSetId => new PreBuild_Major_ChangeSetId(),
