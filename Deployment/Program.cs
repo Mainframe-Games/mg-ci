@@ -7,14 +7,16 @@ try
 
 	if (config.RunServer)
 	{
-		var server = new ListenServer(config.IP, config.Port)
+		var server = new ListenServer(config.IP, config.Port);
+
+		if (config.AuthTokens is { Count: > 0 })
 		{
-			GetAuth = () =>
+			server.GetAuth = () =>
 			{
 				config.Refresh();
 				return config.AuthTokens ?? Enumerable.Empty<string>();
-			}
-		};
+			};
+		}
 		
 		await server.RunAsync();
 		Console.WriteLine("Server stopped");
