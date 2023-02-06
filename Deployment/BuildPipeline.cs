@@ -113,7 +113,7 @@ public class BuildPipeline
 
 	private async Task DeployAsync()
 	{
-		if (_args.IsFlag("-nosteamdeploy"))
+		if (_args.IsFlag("-nodeploy"))
 			return;
 		
 		if(_config.Deploy == null)
