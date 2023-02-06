@@ -79,9 +79,9 @@ public class BuildPipeline
 					ServerConfig.Instance.MasterServerUrl);
 			else
 				await _unity.Build(build);
-
-			await _unity.WaitBuildIds();
 		}
+		
+		await _unity.WaitBuildIds();
 		
 		if (_preBuild?.IsRun ?? false)
 			_preBuild.CommitNewVersionNumber();
