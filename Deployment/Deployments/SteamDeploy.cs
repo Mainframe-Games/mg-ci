@@ -41,6 +41,9 @@ public class SteamDeploy
 
 	private static void SetVdfProperties(string vdfPath, params (string key, string value)[] values)
 	{
+		if (!File.Exists(vdfPath))
+			throw new FileNotFoundException($"File doesn't exist at {vdfPath}");
+		
 		var vdfLines = File.ReadAllLines(vdfPath);
 
 		foreach ((string key, string value) in values)
