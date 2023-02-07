@@ -1,11 +1,12 @@
 ﻿using Deployment;
 using Deployment.Server;
+using SharedLib;
 
 try
 {
 	var config = ServerConfig.Load();
 
-	if (config.RunServer)
+	if (config.RunServer || Args.Environment.IsFlag("-server"))
 	{
 		var server = new ListenServer(config.IP, config.Port);
 
