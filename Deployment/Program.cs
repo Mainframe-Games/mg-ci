@@ -17,7 +17,7 @@ try
 			server.GetAuth = () =>
 			{
 				config.Refresh();
-				return config.AuthTokens ?? Enumerable.Empty<string>();
+				return config.AuthTokens;
 			};
 		}
 		
