@@ -11,7 +11,7 @@ public class RemoteBuildResponse : IRemoteControllable
 	
 	public async Task<string> ProcessAsync()
 	{
-		if (string.IsNullOrEmpty(Error))
+		if (!string.IsNullOrEmpty(Error))
 			throw new Exception(Error);
 
 		if (BuildPipeline.Current == null)
