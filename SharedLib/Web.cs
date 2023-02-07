@@ -41,18 +41,20 @@ public static class Web
 			foreach (var header in headers)
 				msg.Headers.Add(header.key, header.value);
 
+			var jsonBody = string.Empty;
+			
 			if (body != null)
 			{
-				var jsonStr = Json.Serialise(body);
-				msg.Content = new StringContent(jsonStr, Encoding.UTF8, "application/json");
+				jsonBody = Json.Serialise(body);
+				msg.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 			}
 
-			Logger.Log($"[Sending...] {method.ToString().ToLower()} {url}\n{msg.Content}");
+			Logger.Log($"HTTP {method.ToString().ToUpper()} {url}\n{jsonBody}");
 			
 			var res = await client.SendAsync(msg);
 			var content = await res.Content.ReadAsStringAsync();
 			
-			Logger.Log($"[Responding...] {res.StatusCode} {content}");
+			Logger.Log($"{res.StatusCode} {content}");
 
 			return new Response
 			{

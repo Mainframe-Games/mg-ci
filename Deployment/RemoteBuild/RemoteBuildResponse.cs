@@ -13,12 +13,12 @@ public class RemoteBuildResponse : IRemoteControllable
 	{
 		if (!string.IsNullOrEmpty(Error))
 			throw new Exception(Error);
-
+		
 		if (BuildPipeline.Current == null)
 			throw new NullReferenceException($"{nameof(BuildPipeline)} is not active");
 		
 		Logger.Log($"Received build back from offload '{BuildId}'");
-		await BuildPipeline.Current.RemoteBuildReceived(this);
+		await Task.Run(() => BuildPipeline.Current.RemoteBuildReceived(this));
 		return "ok";
 	}
 }

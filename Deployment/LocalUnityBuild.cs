@@ -52,7 +52,7 @@ public class LocalUnityBuild
 		var executeMethod = targetConfig.ExecuteMethod ?? DEFAULT_EXECUTE_METHOD;
 		
 		Logger.Log(string.Empty);
-		Logger.Log($"Starting build '{targetConfig.Target}': {DateTime.Now:g}");
+		Logger.Log($"Starting build: {targetConfig.Target}");
 		var (exitCode, output) = Cmd.Run(exePath, $"-quit -batchmode -buildTarget {targetConfig.Target} " +
 		                                          $"-projectPath . -executeMethod {executeMethod} " +
 		                                          $"-logFile {logPath} -settings {targetConfig.Settings}");
