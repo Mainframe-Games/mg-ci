@@ -2,10 +2,13 @@
 
 public static class Logger
 {
-	private static string TimeStamp => DateTime.Now.ToString("t"); 
+	private static string TimeStamp => DateTime.Now.ToString("T"); 
 	
-	public static void Log(object message)
+	public static void Log(object? message)
 	{
-		Console.WriteLine($"[{TimeStamp}] {message}");
+		if (message == null || string.IsNullOrEmpty(message.ToString()))
+			Console.WriteLine();
+		else
+			Console.WriteLine($"[{TimeStamp}] {message}");
 	}
 }

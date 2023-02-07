@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.IO.Compression;
 using SharedLib;
 
@@ -9,6 +8,8 @@ namespace Deployment.Misc;
 /// </summary>
 public static class FilePacker
 {
+	private const uint MB = 1000000;
+	
 	/// <summary>
 	/// 
 	/// </summary>
@@ -21,8 +22,10 @@ public static class FilePacker
 		Logger.Log($"Packing file... {zipPath}");
 		ZipFile.CreateFromDirectory(pathToDir, zipPath);
 		var fileBytes = await File.ReadAllBytesAsync(zipPath);
-		var compressBytes = GZip.Compress(fileBytes);
-		var base64 = Convert.ToBase64String(compressBytes);
+		Logger.Log($"Zip size: {fileBytes.Length / MB} {nameof(MB)}");
+		// var compressBytes = GZip.Compress(fileBytes);
+		// Logger.Log($"Zip size (compressed): {compressBytes.Length / MB} {nameof(MB)}");
+		var base64 = Convert.ToBase64String(fileBytes);
 		return base64;
 	}
 	
@@ -32,23 +35,17 @@ public static class FilePacker
 		Delete(destPathDir);
 		Logger.Log($"Unpacking file... '{zipName}' to '{destPathDir}'");
 		var compressedBytes = Convert.FromBase64String(base64);
-		var fileBytes = GZip.Decompress(compressedBytes);
-		await File.WriteAllBytesAsync(zipName, fileBytes);
+		// var fileBytes = GZip.Decompress(compressedBytes);
+		await File.WriteAllBytesAsync(zipName, compressedBytes);
 		ZipFile.ExtractToDirectory(zipName, destPathDir);
 	}
 
 	private static void Delete(string? path)
 	{
 		if (File.Exists(path))
-		{
-			Logger.Log($"Deleting file... {path}");
 			File.Delete(path);
-		}
 
 		if (Directory.Exists(path))
-		{
-			Logger.Log($"Deleting dir... {path}");
 			Directory.Delete(path, true);
-		}		
 	}
 }
