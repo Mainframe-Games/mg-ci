@@ -1,4 +1,6 @@
-﻿namespace Deployment.RemoteBuild;
+﻿using SharedLib;
+
+namespace Deployment.RemoteBuild;
 
 public class RemoteBuildWorkspaceRequest : IRemoteControllable
 {
@@ -11,13 +13,13 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 		var workspaceName = mapping.GetRemapping(WorkspaceName);
 		
 		var currentWorkspace = Workspace.GetWorkspaceFromName(workspaceName);
-		Console.WriteLine($"Chosen workspace: {currentWorkspace}");
+		Logger.Log($"Chosen workspace: {currentWorkspace}");
 
 		if (BuildPipeline.Current != null)
 			throw new Exception($"A build process already active. {BuildPipeline.Current.Workspace}");
 		
 		FireAndForgetBuild(currentWorkspace, Args);
-		Console.WriteLine("Fired off build");
+		Logger.Log("Fired off build");
 		await Task.CompletedTask;
 		return $"{currentWorkspace.Name} | {currentWorkspace.UnityVersion}";
 	}

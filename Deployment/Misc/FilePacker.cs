@@ -1,4 +1,7 @@
+using System.Diagnostics;
 using System.IO.Compression;
+using SharedLib;
+
 namespace Deployment.Misc;
 
 /// <summary>
@@ -14,6 +17,11 @@ public static class FilePacker
 	public static async Task<string> PackAsync(string pathToDir)
 	{
 		var zipPath = $"{pathToDir}.zip";
+		
+		if (File.Exists(zipPath))
+			File.Delete(zipPath);
+		
+		Logger.Log($"Packing file... {zipPath}");
 		ZipFile.CreateFromDirectory(pathToDir, zipPath);
 		var fileBytes = await File.ReadAllBytesAsync(zipPath);
 		var compressBytes = GZip.Compress(fileBytes);
@@ -21,13 +29,6 @@ public static class FilePacker
 		return base64;
 	}
 	
-	/// <summary>
-	/// 
-	/// </summary>
-	/// <param name="zipName"></param>
-	/// <param name="base64"></param>
-	/// <param name="destPath"></param>
-	/// <returns></returns>
 	public static async Task UnpackAsync(string? zipName, string? base64, string? destPath)
 	{
 		var compressedBytes = Convert.FromBase64String(base64);

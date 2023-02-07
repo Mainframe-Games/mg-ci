@@ -2,6 +2,7 @@
 using System.Net;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using SharedLib;
 
 namespace Deployment.Webhooks;
 
@@ -24,7 +25,7 @@ public static class Slack
 			var url = new Uri(channelHook);
 			var response = client.UploadValues(url, "POST", data);
 			var responseText = Encoding.UTF8.GetString(response);
-			Console.WriteLine(responseText);
+			Logger.Log(responseText);
 		}
 		catch (Exception e)
 		{

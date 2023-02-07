@@ -16,7 +16,7 @@ public class ListenServer
 		_listener = new HttpListener();
 		_listener.Prefixes.Add($"http://{ip}:{port}/");
 		_listener.Start();
-        Console.WriteLine($"... Server listening on '{ip}:{port}'");
+        Logger.Log($"... Server listening on '{ip}:{port}'");
 	}
 	
 	public async Task RunAsync()
@@ -66,9 +66,9 @@ public class ListenServer
 		var request = context.Request;
 
 		// do something with the request
-		Console.WriteLine($"{request.HttpMethod} {request.Url}");
+		Logger.Log($"{request.HttpMethod} {request.Url}");
 		if (!string.IsNullOrEmpty(request.ContentType))
-			Console.WriteLine($"Content-Type: {request.ContentType}");
+			Logger.Log($"Content-Type: {request.ContentType}");
 
 		var response = request.HttpMethod switch
 		{
@@ -118,7 +118,7 @@ public class ListenServer
 	{
 		try
 		{
-			Console.WriteLine(serverResponse.StatusCode);
+			Logger.Log(serverResponse.StatusCode);
 			var response = context.Response;
 			response.StatusCode = (int)serverResponse.StatusCode;
 			response.ContentType = "application/json";
@@ -135,7 +135,7 @@ public class ListenServer
 		}
 		catch (Exception e)
 		{
-			Console.WriteLine(e);
+			Logger.Log(e);
 		}
 	}
 

@@ -26,7 +26,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	public async Task<string> ProcessAsync()
 	{
 		var buildId = Guid.NewGuid().ToString();
-		Console.WriteLine($"Created buildId: {buildId}");
+		Logger.Log($"Created buildId: {buildId}");
 		StartBuild(buildId);
 		await Task.CompletedTask;
 		return buildId;
@@ -78,7 +78,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 
 		// build is done or failed, tell sender about it
 		var body = new RemoteBuildPacket { BuildResponse = response };
-		Console.WriteLine($"Sending build '{buildId}' back to: {SendBackUrl}");
+		Logger.Log($"Sending build '{buildId}' back to: {SendBackUrl}");
 		var res =  await Web.SendAsync(HttpMethod.Post, SendBackUrl, body: body);
 		if (res.StatusCode != HttpStatusCode.OK)
 			throw new WebException(res.Reason);

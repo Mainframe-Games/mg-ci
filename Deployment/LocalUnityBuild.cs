@@ -51,8 +51,8 @@ public class LocalUnityBuild
 		var exePath = GetDefaultUnityPath(targetConfig.VersionExtension);
 		var executeMethod = targetConfig.ExecuteMethod ?? DEFAULT_EXECUTE_METHOD;
 		
-		Console.WriteLine(string.Empty);
-		Console.WriteLine($"Starting build '{targetConfig.Target}': {DateTime.Now:g}");
+		Logger.Log(string.Empty);
+		Logger.Log($"Starting build '{targetConfig.Target}': {DateTime.Now:g}");
 		var (exitCode, output) = Cmd.Run(exePath, $"-quit -batchmode -buildTarget {targetConfig.Target} " +
 		                                          $"-projectPath . -executeMethod {executeMethod} " +
 		                                          $"-logFile {logPath} -settings {targetConfig.Settings}");
@@ -61,7 +61,7 @@ public class LocalUnityBuild
 			throw new Exception($"Build failed. Read log file: {Path.Combine(Environment.CurrentDirectory, logPath)}");
 		
 		var buildTime = DateTime.Now - buildStartTime;
-		Console.WriteLine($"Build Success! Build Time: {buildTime:hh\\:mm\\:ss}");
+		Logger.Log($"Build Success! Build Time: {buildTime:hh\\:mm\\:ss}");
 		await Task.Delay(10);
 		return true;
 	}
@@ -92,7 +92,7 @@ public class LocalUnityBuild
 
 		var json = JObject.Parse(res.Content);
 		var buildId = json.SelectToken("data", true)?.ToString();
-		Console.WriteLine($"Remote build id: {buildId}");
+		Logger.Log($"Remote build id: {buildId}");
 		_buildIds.Add(buildId);
 		return true;
 	}

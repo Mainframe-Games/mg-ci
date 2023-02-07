@@ -47,7 +47,7 @@ public class MultiplayDeploy
 		if (res.StatusCode != HttpStatusCode.OK)
 			throw new Exception($"Multiplay failed: {res.Reason}");
 		
-		Console.WriteLine(res.Content);
+		Logger.Log(res.Content);
 	}
 
 	public class MultiplayPostBody

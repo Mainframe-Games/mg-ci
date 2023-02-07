@@ -1,4 +1,6 @@
-﻿namespace Deployment.RemoteBuild;
+﻿using SharedLib;
+
+namespace Deployment.RemoteBuild;
 
 public class RemoteBuildResponse : IRemoteControllable
 {
@@ -15,7 +17,7 @@ public class RemoteBuildResponse : IRemoteControllable
 		if (BuildPipeline.Current == null)
 			throw new NullReferenceException($"{nameof(BuildPipeline)} is not active");
 		
-		Console.WriteLine($"Received build back from offload '{BuildId}'");
+		Logger.Log($"Received build back from offload '{BuildId}'");
 		await BuildPipeline.Current.RemoteBuildReceived(this);
 		return "ok";
 	}

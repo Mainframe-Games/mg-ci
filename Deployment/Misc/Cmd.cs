@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text;
+using SharedLib;
 
 namespace Deployment.Misc;
 
@@ -8,7 +9,7 @@ public static class Cmd
 	public static (int exitCode, string output) Run(string fileName, string ags, bool logOutput = true)
 	{
 		if (logOutput)
-			Console.WriteLine($"{fileName} {ags}");
+			Logger.Log($"{fileName} {ags}");
 
 		try
 		{
@@ -49,14 +50,14 @@ public static class Cmd
 		sb.AppendLine(trimmed);
 		
 		if (logOutput)
-			Console.WriteLine(trimmed);
+			Logger.Log(trimmed);
 	}
 	
 	public static int Choose(string remark, IReadOnlyList<string> options)
 	{
 		// choose
 		for (int i = 0; i < options.Count; i++)
-			Console.WriteLine($"[{i}] {options[i]}");
+			Logger.Log($"[{i}] {options[i]}");
 
 		Console.Write($"{remark} [0..{options.Count - 1}] ");
 		var stdIn = Console.ReadLine();

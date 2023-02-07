@@ -1,5 +1,6 @@
 ﻿using Deployment.ChangeLogBuilders;
 using Deployment.Misc;
+using SharedLib;
 
 namespace Deployment;
 
@@ -23,7 +24,7 @@ public class ChangeLog
 		}
 		else
 		{
-			Console.WriteLine("Failed to write steam log");
+			Logger.Log("Failed to write steam log");
 		}
 	}
 	

@@ -89,7 +89,7 @@ public class UCB
 			var json = JObject.Parse(res.Content);
 
 			var status = json["buildStatus"].ToString();
-			Console.WriteLine($"{buildtargetid} {number}: {status}");
+			Logger.Log($"{buildtargetid} {number}: {status}");
 
 			switch (status)
 			{
@@ -109,7 +109,7 @@ public class UCB
 
 	private static async Task<string> DownloadFile(string url, string destination)
 	{
-		Console.WriteLine($"Downloading file: {url}");
+		Logger.Log($"Downloading file: {url}");
 	
 		var file = new FileInfo(destination);
 		if (!file.Directory?.Exists ?? false)

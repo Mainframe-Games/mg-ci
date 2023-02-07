@@ -1,4 +1,5 @@
 ﻿using Deployment.Misc;
+using SharedLib;
 
 namespace Deployment.PreBuild;
 
@@ -19,11 +20,11 @@ public class PreBuild_Major_ChangeSetId : PreBuildBase
 		// get current change set number from plastic
 		var changeSetStr = Cmd.Run("cm", "find changeset \"where branch='main'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid}\" --nototal");
 		var changeSetId = int.TryParse(changeSetStr.output, out id) ? id : 0;
-		Console.WriteLine($"changesetid: {changeSetId}");
+		Logger.Log($"changesetid: {changeSetId}");
 
 		if (prevChangeSetId != 0 && changeSetId == prevChangeSetId)
 		{
-			Console.WriteLine("No changes detected. Change set Ids are same");
+			Logger.Log("No changes detected. Change set Ids are same");
 			return;
 		}
 		

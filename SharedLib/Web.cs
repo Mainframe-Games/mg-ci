@@ -47,12 +47,12 @@ public static class Web
 				msg.Content = new StringContent(jsonStr, Encoding.UTF8, "application/json");
 			}
 
-			Console.WriteLine($"[Sending...] {method.ToString().ToLower()} {url}\n{msg.Content}");
+			Logger.Log($"[Sending...] {method.ToString().ToLower()} {url}\n{msg.Content}");
 			
 			var res = await client.SendAsync(msg);
 			var content = await res.Content.ReadAsStringAsync();
 			
-			Console.WriteLine($"[Responding...] {res.StatusCode} {content}");
+			Logger.Log($"[Responding...] {res.StatusCode} {content}");
 
 			return new Response
 			{

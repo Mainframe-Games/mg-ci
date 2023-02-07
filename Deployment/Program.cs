@@ -22,19 +22,19 @@ try
 		}
 		
 		await server.RunAsync();
-		Console.WriteLine("Server stopped");
+		Logger.Log("Server stopped");
 	}
 	else
 	{
 		var currentWorkspace = Workspace.GetWorkspace();
-		Console.WriteLine($"Chosen workspace: {currentWorkspace}");
+		Logger.Log($"Chosen workspace: {currentWorkspace}");
 		var pipe = new BuildPipeline(currentWorkspace, args);
 		await pipe.RunAsync();
 	}
 }
 catch (Exception e)
 {
-	Console.WriteLine(e);
+	Logger.Log(e);
 }
 
 Console.Read();

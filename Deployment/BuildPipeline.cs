@@ -43,7 +43,7 @@ public class BuildPipeline
 		await Build();
 		await DeployAsync();
 		await PostBuild();
-		Console.WriteLine($"Deployed. {DateTime.Now - startTime:hh\\:mm\\:ss}");
+		Logger.Log($"Deployed. {DateTime.Now - startTime:hh\\:mm\\:ss}");
 	}
 
 	private async Task Prebuild()
@@ -54,7 +54,7 @@ public class BuildPipeline
 		if (_preBuild == null)
 			throw new Exception("PreBuild class is null");
 		
-		Console.WriteLine("PreBuild process started...");
+		Logger.Log("PreBuild process started...");
 		_preBuild.Run();
 		await Task.CompletedTask;
 	}
@@ -67,7 +67,7 @@ public class BuildPipeline
 		if (_config == null || _unity == null || _config.Builds == null)
 			throw new NullReferenceException();
 		
-		Console.WriteLine("Build process started...");
+		Logger.Log("Build process started...");
 
 		// configs
 		foreach (var build in _config.Builds)
@@ -145,7 +145,7 @@ public class BuildPipeline
 		if (_config?.Hooks == null)
 			return;
 		
-		Console.WriteLine("PostBuild process started...");
+		Logger.Log("PostBuild process started...");
 
 		var hooks = _config.Hooks;
 		var commits = _preBuild?.ChangeLog.Split(Environment.NewLine) ?? Array.Empty<string>();

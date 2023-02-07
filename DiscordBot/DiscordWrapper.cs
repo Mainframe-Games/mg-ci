@@ -71,7 +71,7 @@ public class DiscordWrapper
 		catch (HttpException exception)
 		{
 			var json = Json.Serialise(exception.Message);
-			Console.WriteLine(json);
+			Logger.Log(json);
 		}
 	}
 
@@ -162,7 +162,7 @@ public class DiscordWrapper
 
 	private static async Task OnLog(LogMessage log)
 	{
-		Console.WriteLine(log.ToString());
+		Logger.Log(log.ToString());
 		await Task.CompletedTask;
 	}
 	

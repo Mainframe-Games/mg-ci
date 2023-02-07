@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using SharedLib;
 
 namespace Deployment.Webhooks;
 
@@ -66,7 +67,7 @@ public class Discord
 				return;
 			using var reader = new StreamReader(resStream, Encoding.ASCII);
 			var responseText = reader.ReadToEnd();
-			Console.WriteLine($"Discord Response: {responseText}");
+			Logger.Log($"Discord Response: {responseText}");
 		}
 		catch (Exception e)
 		{
