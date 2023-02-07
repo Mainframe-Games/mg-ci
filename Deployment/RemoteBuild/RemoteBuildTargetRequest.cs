@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Runtime.CompilerServices;
 using Deployment.Configs;
 using Deployment.Misc;
 using Deployment.Server;
@@ -77,6 +78,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 
 		// build is done or failed, tell sender about it
 		var body = new RemoteBuildPacket { BuildResponse = response };
+		Console.WriteLine($"Sending build '{buildId}' back to: {SendBackUrl}");
 		var res =  await Web.SendAsync(HttpMethod.Post, SendBackUrl, body: body);
 		if (res.StatusCode != HttpStatusCode.OK)
 			throw new WebException(res.Reason);
