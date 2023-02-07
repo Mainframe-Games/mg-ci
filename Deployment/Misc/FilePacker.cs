@@ -17,10 +17,7 @@ public static class FilePacker
 	public static async Task<string> PackAsync(string pathToDir)
 	{
 		var zipPath = $"{pathToDir}.zip";
-		
-		if (File.Exists(zipPath))
-			File.Delete(zipPath);
-		
+		Delete(zipPath);
 		Logger.Log($"Packing file... {zipPath}");
 		ZipFile.CreateFromDirectory(pathToDir, zipPath);
 		var fileBytes = await File.ReadAllBytesAsync(zipPath);
@@ -29,11 +26,29 @@ public static class FilePacker
 		return base64;
 	}
 	
-	public static async Task UnpackAsync(string? zipName, string? base64, string? destPath)
+	public static async Task UnpackAsync(string? zipName, string? base64, string? destPathDir)
 	{
+		Delete(zipName);
+		Delete(destPathDir);
+		Logger.Log($"Unpacking file... '{zipName}' to '{destPathDir}'");
 		var compressedBytes = Convert.FromBase64String(base64);
 		var fileBytes = GZip.Decompress(compressedBytes);
 		await File.WriteAllBytesAsync(zipName, fileBytes);
-		ZipFile.ExtractToDirectory(zipName, destPath);
+		ZipFile.ExtractToDirectory(zipName, destPathDir);
+	}
+
+	private static void Delete(string? path)
+	{
+		if (File.Exists(path))
+		{
+			Logger.Log($"Deleting file... {path}");
+			File.Delete(path);
+		}
+
+		if (Directory.Exists(path))
+		{
+			Logger.Log($"Deleting dir... {path}");
+			Directory.Delete(path, true);
+		}		
 	}
 }
