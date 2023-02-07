@@ -9,7 +9,7 @@ public class ListenServer
 {
 	private readonly HttpListener _listener;
 	public bool IsAlive => _listener.IsListening;
-	public Func<IEnumerable<string>>? GetAuth { get; set; }
+	public Func<string[]>? GetAuth { get; set; }
 
 	public ListenServer(string ip, ushort port = 8080)
 	{
@@ -42,13 +42,13 @@ public class ListenServer
 	/// <returns></returns>
 	private bool IsAuthorised(string authToken)
 	{
-		if (string.IsNullOrEmpty(authToken))
-			return false;
-
-		if (GetAuth == null)
-			return true;
+		// always return true if no auths have been given
+		var authTokens = GetAuth?.Invoke();
 		
-		foreach (var token in GetAuth())
+		if (authTokens == null || authTokens.Length == 0)
+			return true;
+
+		foreach (var token in authTokens)
 		{
 			if (token == authToken)
 				return true;

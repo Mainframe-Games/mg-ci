@@ -96,7 +96,16 @@ public class Args
 	/// Returns if the commands is a boolean flag, i.e no args
 	/// </summary>
 	/// <param name="cmd"></param>
+	/// <param name="zeroArgs"></param>
 	/// <returns></returns>
-	public bool IsFlag(string cmd)
-		=> TryGetArgs(cmd, out var args) && args.Count == 0;
+	public bool IsFlag(string cmd, bool zeroArgs = true)
+	{
+		if (!TryGetArgs(cmd, out var args))
+			return false;
+
+		if (zeroArgs)
+			return args.Count == 0;
+
+		return true;
+	}
 }

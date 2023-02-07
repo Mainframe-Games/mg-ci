@@ -6,9 +6,11 @@ try
 {
 	var config = ServerConfig.Load();
 
-	if (config.RunServer || Args.Environment.IsFlag("-server"))
+	if (config.RunServer || Args.Environment.IsFlag("-server", false))
 	{
-		var server = new ListenServer(config.IP, config.Port);
+		Args.Environment.TryGetArg("-server", 0, out string ip, config.IP);
+		Args.Environment.TryGetArg("-server", 1, out int port, config.Port);
+		var server = new ListenServer(ip, (ushort)port);
 
 		if (config.AuthTokens is { Count: > 0 })
 		{
