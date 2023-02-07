@@ -1,12 +1,11 @@
-﻿using Deployment.Configs;
-using Deployment.Misc;
+﻿using Deployment.Misc;
 using Deployment.Server;
 
 namespace Deployment.Deployments;
 
 public class SteamDeploy
 {
-	private readonly SteamConfig _config;
+	private readonly string? _vdfPath;
 	private readonly string? _steamPath;
 	
 	private string SteamCmdExe =>
@@ -14,22 +13,20 @@ public class SteamDeploy
 		? $"{_steamPath}/builder_osx/steamcmd.sh"
 		: $"{_steamPath}/builder/steamcmd.exe";
 	
-	public SteamDeploy(SteamConfig config)
+	public SteamDeploy(string? vdfPath)
 	{
-		_config = config;
+		_vdfPath = vdfPath;
 		_steamPath = ServerConfig.Instance.Steam.Path;
 	}
 
 	public void Deploy(string description)
 	{
-		var vdfPath = Path.Combine(Environment.CurrentDirectory, _config.VdfPath);
+		var vdfPath = Path.Combine(Environment.CurrentDirectory, _vdfPath);
 		var contentDir = Path.Combine(Environment.CurrentDirectory, "Builds");
 		var outputDir = Path.Combine(Environment.CurrentDirectory, "Builds", "SteamOutput");
-		var setLive = _config.SetLive;
 
 		SetVdfProperties(vdfPath, 
 			("Desc", description),
-			("SetLive", setLive),
 			("ContentRoot", contentDir),
 			("BuildOutput", outputDir));
 

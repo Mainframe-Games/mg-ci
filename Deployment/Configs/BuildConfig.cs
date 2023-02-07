@@ -13,9 +13,8 @@ public class BuildConfig
 	public HooksConfig[]? Hooks { get; set; }
 }
 
-
 public class DeployContiner
 {
-	public SteamConfig[]? Steam { get; set; }
+	public string[]? Steam { get; set; }
 	public MultiplayConfigLocal? Multiplay { get; set; }
 }
