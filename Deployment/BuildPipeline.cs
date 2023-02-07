@@ -131,7 +131,7 @@ public class BuildPipeline
 		if (_config.Deploy.Multiplay != null)
 		{
 			var multiplay = new MultiplayDeploy();
-			multiplay.Deploy(_config.Deploy.Multiplay.Ccd.PathToBuild);
+			await multiplay.Deploy(_config.Deploy.Multiplay.Ccd.PathToBuild);
 		}
 
 		await Task.CompletedTask;
@@ -185,9 +185,9 @@ public class BuildPipeline
 		return configClass;
 	}
 
-	public void RemoteBuildReceived(RemoteBuildResponse remoteBuildResponse)
+	public async Task RemoteBuildReceived(RemoteBuildResponse remoteBuildResponse)
 	{
-		_unity?.RemoteBuildReceived(remoteBuildResponse);
+		await _unity.RemoteBuildReceived(remoteBuildResponse);
 	}
 	
 	#endregion

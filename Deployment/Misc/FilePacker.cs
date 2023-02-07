@@ -28,7 +28,7 @@ public static class FilePacker
 	/// <param name="base64"></param>
 	/// <param name="destPath"></param>
 	/// <returns></returns>
-	public static async Task UnpackAsync(string zipName, string base64, string destPath)
+	public static async Task UnpackAsync(string? zipName, string? base64, string? destPath)
 	{
 		var compressedBytes = Convert.FromBase64String(base64);
 		var fileBytes = GZip.Decompress(compressedBytes);

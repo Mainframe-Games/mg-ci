@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Runtime.InteropServices;
 using Deployment.Configs;
 using Deployment.Misc;
 using Deployment.Server;
@@ -27,9 +26,14 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	{
 		var buildId = Guid.NewGuid().ToString();
 		Console.WriteLine($"Created buildId: {buildId}");
-		Task.Run(() => StartBuilder(buildId));
+		StartBuild(buildId);
 		await Task.CompletedTask;
 		return buildId;
+	}
+
+	private void StartBuild(string buildId)
+	{
+		Task.Run(() => StartBuilder(buildId)); // fire and forget
 	}
 	
 	/// <summary>
@@ -73,7 +77,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 
 		// build is done or failed, tell sender about it
 		var body = new RemoteBuildPacket { BuildResponse = response };
-		var res =  await Web.SendAsync(HttpMethod.Post, SendBackUrl, DeviceInfo.UniqueDeviceId, body);
+		var res =  await Web.SendAsync(HttpMethod.Post, SendBackUrl, body: body);
 		if (res.StatusCode != HttpStatusCode.OK)
 			throw new WebException(res.Reason);
 	}

@@ -117,6 +117,9 @@ public class LocalUnityBuild
 	public async Task WaitBuildIds()
 	{
 		while (_buildIds.Count > 0)
-			await Task.Delay(500);
+		{
+			Console.Write($"Remaining buildIds: ({_buildIds.Count}) {string.Join(",\n", _buildIds)}");
+			await Task.Delay(2000);
+		}
 	}
 }
