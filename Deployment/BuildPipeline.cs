@@ -160,9 +160,7 @@ public class BuildPipeline
 			}
 			else if (hook.IsSlack())
 			{
-				var steam = new ChangeLogBuilderSteam();
-				if (steam.BuildLog(commits))
-					Slack.PostMessage(hook.Url, $"{hook.Title}.\n```{steam}```");
+				Slack.PostMessage(hook.Url, $"{hook.Title} | {BuildVersionTitle}");
 			}
 		}
 
