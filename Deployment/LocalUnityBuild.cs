@@ -118,7 +118,7 @@ public class LocalUnityBuild
 	{
 		while (_buildIds.Count > 0)
 		{
-			Console.Write($"Remaining buildIds: ({_buildIds.Count}) {string.Join(",\n", _buildIds)}");
+			Logger.Log($"Remaining buildIds: ({_buildIds.Count}) {string.Join(", ", _buildIds)}");
 			await Task.Delay(2000);
 		}
 	}
