@@ -26,9 +26,10 @@ public class SteamDeploy
 		var outputDir = Path.Combine(Environment.CurrentDirectory, "Builds", "SteamOutput");
 
 		SetVdfProperties(vdfPath, 
-			("Desc", description),
-			("ContentRoot", contentDir),
-			("BuildOutput", outputDir));
+			("Desc", description)//,
+			//("ContentRoot", contentDir),
+			//("BuildOutput", outputDir)
+			);
 
 		var username = ServerConfig.Instance.Steam.Username;
 		var password = ServerConfig.Instance.Steam.Password;

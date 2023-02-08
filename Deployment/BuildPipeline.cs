@@ -148,7 +148,7 @@ public class BuildPipeline
 		Logger.Log("PostBuild process started...");
 
 		var hooks = _config.Hooks;
-		var commits = _preBuild?.ChangeLog.Split(Environment.NewLine) ?? Array.Empty<string>();
+		var commits = _preBuild.ChangeLog;
 
 		foreach (var hook in hooks)
 		{

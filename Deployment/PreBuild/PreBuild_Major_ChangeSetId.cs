@@ -27,14 +27,21 @@ public class PreBuild_Major_ChangeSetId : PreBuildBase
 			Logger.Log("No changes detected. Change set Ids are same");
 			return;
 		}
-		
-		ChangeLog = Cmd.Run("cm", $"log --from=cs:{prevChangeSetId} --csformat=\"{{comment}}\"").output;
-		BuildVersion  = GetNewBumpedVersion(changeSetId + 1);
+
+		ChangeLog = GetChangeLog(prevChangeSetId);
+		BuildVersion = GetNewBumpedVersion(changeSetId + 1);
 
 		if (string.IsNullOrEmpty(BuildVersion))
 			throw new Exception($"{nameof(BuildVersion)} can not be null. Something went wrong.");
 
 		ReplaceVersions(BuildVersion);
+	}
+
+	private static string[] GetChangeLog(int prevChangeSetId)
+	{
+		var raw = Cmd.Run("cm", $"log --from=cs:{prevChangeSetId} --csformat=\"{{comment}}\"").output;
+		var array = raw.Split(Environment.NewLine).Reverse().ToArray();
+		return array;
 	}
 
 	private static string GetNewBumpedVersion(int newChangeSetId)

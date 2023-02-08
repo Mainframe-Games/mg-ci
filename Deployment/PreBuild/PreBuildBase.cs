@@ -32,7 +32,7 @@ public abstract class PreBuildBase
 	/// <summary>
 	/// All raw commit messages
 	/// </summary>
-	public string ChangeLog { get; protected set; } = string.Empty;
+	public string[] ChangeLog { get; protected set; } = Array.Empty<string>();
 	
 	/// <summary>
 	/// Format 0.0000 (buildnumber.changesetid)
