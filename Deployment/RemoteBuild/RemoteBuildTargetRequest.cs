@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Runtime.CompilerServices;
 using Deployment.Configs;
 using Deployment.Misc;
 using Deployment.Server;
@@ -76,10 +75,16 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 			};
 		}
 
+		await UploadBuild(response);
+	}
+
+	private static async Task UploadBuild(RemoteBuildResponse response)
+	{
 		// build is done or failed, tell sender about it
+		var sendBackUrl = response.Request.SendBackUrl;
 		var body = new RemoteBuildPacket { BuildResponse = response };
-		Logger.Log($"Sending build '{buildId}' back to: {SendBackUrl}");
-		var res =  await Web.SendAsync(HttpMethod.Post, SendBackUrl, body: body);
+		Logger.Log($"Sending build '{response.BuildId}' back to: {sendBackUrl}");
+		var res =  await Web.SendAsync(HttpMethod.Post, sendBackUrl, body: body);
 		if (res.StatusCode != HttpStatusCode.OK)
 			throw new WebException(res.Reason);
 	}

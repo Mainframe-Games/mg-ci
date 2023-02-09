@@ -49,7 +49,8 @@ public static class Web
 				msg.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 			}
 
-			Logger.Log($"HTTP {method.ToString().ToUpper()} {url}\n{jsonBody}");
+			var jsonBodyLog = jsonBody.Length > 1000 ? $"{jsonBody[..1000]}...[truncated]" : jsonBody;
+			Logger.Log($"HTTP {method.ToString().ToUpper()} {url}\n{jsonBodyLog}");
 			
 			var res = await client.SendAsync(msg);
 			var content = await res.Content.ReadAsStringAsync();
