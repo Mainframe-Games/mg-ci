@@ -7,10 +7,16 @@ namespace Deployment.Configs;
 /// </summary>
 public class BuildConfig
 {
-	public PreBuildType PreBuildType { get; set; }
+	public PreBuild? PreBuild { get; set; }
 	public TargetConfig[]? Builds { get; set; }
 	public DeployContiner? Deploy { get; set; }
 	public HooksConfig[]? Hooks { get; set; }
+}
+
+public class PreBuild
+{
+	public PreBuildType PreBuildType { get; set; }
+	public bool ChangeLog { get; set; }
 }
 
 public class DeployContiner

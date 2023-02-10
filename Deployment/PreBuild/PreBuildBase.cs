@@ -32,7 +32,9 @@ public abstract class PreBuildBase
 	/// <summary>
 	/// All raw commit messages
 	/// </summary>
-	public string[] ChangeLog { get; protected set; } = Array.Empty<string>();
+	public string[] ChangeLog { get; private set; } = Array.Empty<string>();
+
+	protected int PreviousChangeSetId { get; private set; }
 	
 	/// <summary>
 	/// Format 0.0000 (buildnumber.changesetid)
@@ -63,7 +65,19 @@ public abstract class PreBuildBase
 	{
 		Cmd.Run("cm", "unco -a"); // clear workspace
 		Cmd.Run("cm", "upd"); // update workspace
+		
+		// get previously store change set value
+		var prevChangeSetIdStr = Cmd.Run("cm", "find changeset \"where branch='main' and comment like '%Build Version%'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid}\" --nototal");
+		PreviousChangeSetId = int.TryParse(prevChangeSetIdStr.output, out var id) ? id : 0;
+		
 		IsRun = true;
+	}
+
+	public void SetChangeLog()
+	{
+		var raw = Cmd.Run("cm", $"log --from=cs:{PreviousChangeSetId} --csformat=\"{{comment}}\"").output;
+		var array = raw.Split(Environment.NewLine).Reverse().ToArray();
+		ChangeLog = array;
 	}
 
 	public void CommitNewVersionNumber()

@@ -29,7 +29,7 @@ public class BuildPipeline
 		_args = new Args(args);
 		_config = GetConfigJson(workspace.Directory);
 		_unity = new LocalUnityBuild(workspace.UnityVersion);
-		_preBuild = PreBuildBase.Create(_config.PreBuildType);
+		_preBuild = PreBuildBase.Create(_config.PreBuild?.PreBuildType ?? default);
 		Environment.CurrentDirectory = workspace.Directory;
 		Current = this;
 	}
@@ -56,6 +56,8 @@ public class BuildPipeline
 		
 		Logger.Log("PreBuild process started...");
 		_preBuild.Run();
+		if (_config.PreBuild?.ChangeLog == true)
+			_preBuild.SetChangeLog();
 		await Task.CompletedTask;
 	}
 	
@@ -155,8 +157,8 @@ public class BuildPipeline
 			if (hook.IsDiscord())
 			{
 				var discord = new ChangeLogBuilderDiscord();
-				if (discord.BuildLog(commits))
-					Discord.PostMessage(hook.Url, discord.ToString(), hook.Title, BuildVersionTitle, Discord.Colour.GREEN);
+				discord.BuildLog(commits);
+				Discord.PostMessage(hook.Url, discord.ToString(), hook.Title, BuildVersionTitle, Discord.Colour.GREEN);
 			}
 			else if (hook.IsSlack())
 			{
