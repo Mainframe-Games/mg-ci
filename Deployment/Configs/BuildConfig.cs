@@ -15,7 +15,7 @@ public class BuildConfig
 
 public class PreBuild
 {
-	public PreBuildType PreBuildType { get; set; }
+	public PreBuildType Type { get; set; }
 	public bool ChangeLog { get; set; }
 }
 
