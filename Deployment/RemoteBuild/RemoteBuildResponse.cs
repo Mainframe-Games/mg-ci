@@ -8,23 +8,26 @@ public class RemoteBuildResponse : IRemoteControllable
 	public string? BuildId { get; set; }
 	public string? Base64 { get; set; }
 	public string? Error { get; set; }
+
+	private Thread? _thread;
 	
 	public async Task<string> ProcessAsync()
 	{
 		if (!string.IsNullOrEmpty(Error))
 			throw new Exception(Error);
 
-		UnpackBuild();
+		_thread = new Thread(UnpackBuild);
+		_thread.Start();
 		await Task.CompletedTask;
 		return "ok";
 	}
 
-	private void UnpackBuild()
+	private async void UnpackBuild()
 	{
 		if (BuildPipeline.Current == null)
 			throw new NullReferenceException($"{nameof(BuildPipeline)} is not active");
 		
 		Logger.Log($"Received build back from offload '{BuildId}'");
-		Task.Run(() => BuildPipeline.Current.RemoteBuildReceived(this));
+		await BuildPipeline.Current.RemoteBuildReceived(this);
 	}
 }
