@@ -29,7 +29,7 @@ public class BuildPipeline
 		_args = new Args(args);
 		_config = GetConfigJson(workspace.Directory);
 		_unity = new LocalUnityBuild(workspace.UnityVersion);
-		_preBuild = PreBuildBase.Create(_config.PreBuild?.PreBuildType ?? default);
+		_preBuild = PreBuildBase.Create(_config.PreBuild?.Type ?? default);
 		Environment.CurrentDirectory = workspace.Directory;
 		Current = this;
 	}
