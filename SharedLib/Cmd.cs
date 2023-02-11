@@ -2,7 +2,7 @@
 using System.Text;
 using SharedLib;
 
-namespace Deployment.Misc;
+namespace SharedLib;
 
 public static class Cmd
 {

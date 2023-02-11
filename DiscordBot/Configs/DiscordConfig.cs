@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using SharedLib;
 
 namespace DiscordBot.Configs;
@@ -12,25 +13,30 @@ public class DiscordConfig
 	public string? Token { get; set; }
 	public ulong GuildId { get; set; }
 	public List<string>? AuthorisedRoles { get; set; }
-	public List<ChannelWrap>? Workspaces { get; set; }
+	[JsonIgnore] public List<string>? WorkspaceNames { get; set; }
 	public string? CommandName { get; set; }
 
 	public static DiscordConfig? Load()
 	{
 		var configStr = File.ReadAllText(ConfigPath);
 		var config = Json.Deserialise<DiscordConfig>(configStr);
+		
+		if (config != null)
+			config.WorkspaceNames = Workspace.GetAvailableWorkspaces().Select(x => x.Name).ToList();
+		
 		return config;
 	}
 
 	public void Refresh()
 	{
 		var updated = Load();
+		
 		if (updated == null)
 			return;
 		
 		BuildServerUrl = updated.BuildServerUrl;
 		CommandName = updated.CommandName;
 		AuthorisedRoles = updated.AuthorisedRoles;
-		Workspaces = updated.Workspaces;
+		WorkspaceNames = updated.WorkspaceNames;
 	}
 }

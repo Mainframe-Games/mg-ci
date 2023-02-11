@@ -35,8 +35,8 @@ public class DiscordWrapper
 			.WithName("workspaces")
 			.WithDescription("List of available workspaces")
 			.WithType(ApplicationCommandOptionType.Integer);
-		for (int i = 0; i < _config.Workspaces.Count; i++)
-			opt.AddChoice(_config.Workspaces[i].WorkspaceName, i);
+		for (int i = 0; i < _config.WorkspaceNames.Count; i++)
+			opt.AddChoice(_config.WorkspaceNames[i], i);
 		return opt;
 	}
 	
@@ -63,10 +63,13 @@ public class DiscordWrapper
 			.WithDescription("Starts a build from discord")
 			.AddOption(WorkspaceOptions())
 			.AddOption(BuildArgumentsOptions());
-		
+
+		var built = cmd.Build();
+
 		try
 		{
-			await guild.CreateApplicationCommandAsync(cmd.Build());
+			await guild.CreateApplicationCommandAsync(built);
+			await _client.CreateGlobalApplicationCommandAsync(built);
 		}
 		catch (HttpException exception)
 		{
@@ -90,13 +93,6 @@ public class DiscordWrapper
 		string? workspaceName = null;
 		string[]? args = null;
 
-		// if no commands use channel id
-		if (command.Data.Options.Count == 0 && !TryGetWorkspaceName(command.Channel.Id, out workspaceName))
-		{
-			await command.RespondError(user, "Error", "This channel is not configured with a workspace");
-			return;
-		}
-		
 		// user options
 		foreach (var option in command.Data.Options)
 		{
@@ -104,7 +100,7 @@ public class DiscordWrapper
 			{
 				case "workspaces":
 					var index = (int)(long)option.Value;
-					workspaceName = _config.Workspaces[index].WorkspaceName;
+					workspaceName = _config.WorkspaceNames[index];
 					break;
 				
 				case "build-args":
@@ -129,21 +125,6 @@ public class DiscordWrapper
 		await command.RespondSuccessDelayed(user, "Build Started", resData ?? "Unknown Workspace");
 	}
 
-	private bool TryGetWorkspaceName(ulong channelId, out string? workspaceName)
-	{
-		foreach (var channel in _config.Workspaces)
-		{
-			if (channel.ChannelId != channelId) 
-				continue;
-			
-			workspaceName = channel.WorkspaceName;
-			return true;
-		}
-
-		workspaceName = null;
-		return false;
-	}
-	
 	private bool IsAuthorised(SocketGuildUser guildUser)
 	{
 		var roles = guildUser.Roles.Select(x => x.Name);

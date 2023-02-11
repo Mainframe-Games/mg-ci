@@ -1,7 +1,4 @@
-﻿using Deployment.Misc;
-using SharedLib;
-
-namespace Deployment;
+﻿namespace SharedLib;
 
 public readonly struct Workspace
 {
@@ -13,8 +10,8 @@ public readonly struct Workspace
 	{
 		return $"{Name} @ {Directory} | UnityVersion: {UnityVersion}";
 	}
-
-	private static List<Workspace> GetAvailableWorkspaces()
+	
+	public static List<Workspace> GetAvailableWorkspaces()
 	{
 		var (exitCode, output) = Cmd.Run("cm", "workspace", false);
 
