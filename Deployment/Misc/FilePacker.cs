@@ -38,6 +38,8 @@ public static class FilePacker
 		// var fileBytes = GZip.Decompress(compressedBytes);
 		await File.WriteAllBytesAsync(zipName, compressedBytes);
 		ZipFile.ExtractToDirectory(zipName, destPathDir);
+		Delete(zipName);
+		Logger.Log("Unpacking file... done");
 	}
 
 	private static void Delete(string? path)
