@@ -15,9 +15,10 @@ public class BuildPipeline
 	
 	private readonly Workspace _workspace;
 	private readonly Args _args;
-	private readonly BuildConfig _config;
-	private readonly PreBuildBase _preBuild;
-	private readonly LocalUnityBuild _unity;
+	
+	private LocalUnityBuild _unity;
+	private BuildConfig _config;
+	private PreBuildBase _preBuild;
 
 	public Workspace Workspace => _workspace;
 
@@ -27,9 +28,6 @@ public class BuildPipeline
 	{
 		_workspace = workspace;
 		_args = new Args(args);
-		_config = GetConfigJson(workspace.Directory);
-		_unity = new LocalUnityBuild(workspace.UnityVersion);
-		_preBuild = PreBuildBase.Create(_config.PreBuild?.Type ?? default);
 		Environment.CurrentDirectory = workspace.Directory;
 		Current = this;
 	}
@@ -51,10 +49,11 @@ public class BuildPipeline
 		if (_args.IsFlag("-noprebuild"))
 			return;
 
-		if (_preBuild == null)
-			throw new Exception("PreBuild class is null");
-		
 		Logger.Log("PreBuild process started...");
+		Cmd.Run("cm", "unco -a"); // clear workspace
+		Cmd.Run("cm", "upd"); // update workspace
+		_config = GetConfigJson(_workspace.Directory);
+		_preBuild = PreBuildBase.Create(_config.PreBuild?.Type ?? default);
 		_preBuild.Run();
 		if (_config.PreBuild?.ChangeLog == true)
 			_preBuild.SetChangeLog();
@@ -66,6 +65,8 @@ public class BuildPipeline
 		if (_args.IsFlag("-nobuild"))
 			return;
 		
+		_unity = new LocalUnityBuild(_workspace.UnityVersion);
+
 		if (_config == null || _unity == null || _config.Builds == null)
 			throw new NullReferenceException();
 		

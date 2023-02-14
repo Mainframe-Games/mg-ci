@@ -1,6 +1,6 @@
-namespace Deployment.PreBuild;
+﻿namespace Deployment.PreBuild;
 
-public class PreBuild_Major_Minor : PreBuildBase
+public class PreBuild_Major : PreBuildBase
 {
 	public override void Run()
 	{
@@ -8,8 +8,8 @@ public class PreBuild_Major_Minor : PreBuildBase
 		
 		// bump patch
 		var arr = GetVersionArray();
-		arr[1]++;
-		BuildVersion = string.Join(".", arr);
+		arr[0]++;
+		BuildVersion = arr[0].ToString();
 		
 		// apply changes
 		ReplaceVersions(BuildVersion);

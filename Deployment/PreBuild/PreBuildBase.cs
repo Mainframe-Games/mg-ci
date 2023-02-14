@@ -55,8 +55,8 @@ public abstract class PreBuildBase
 		return preBuildType switch
 		{
 			PreBuildType.None => new PreBuild_None(),
-			PreBuildType.Major => new PreBuild_Major_Minor(0),
-			PreBuildType.Major_Minor => new PreBuild_Major_Minor(1),
+			PreBuildType.Major => new PreBuild_Major(),
+			PreBuildType.Major_Minor => new PreBuild_Major_Minor(),
 			PreBuildType.Major_ChangeSetId => new PreBuild_Major_ChangeSetId(),
 			_ => throw new ArgumentOutOfRangeException(nameof(preBuildType), preBuildType, null)
 		};
@@ -64,9 +64,6 @@ public abstract class PreBuildBase
 	
 	public virtual void Run()
 	{
-		Cmd.Run("cm", "unco -a"); // clear workspace
-		Cmd.Run("cm", "upd"); // update workspace
-		
 		// get previously store change set value
 		var prevChangeSetIdStr = Cmd.Run("cm", "find changeset \"where branch='main' and comment like '%Build Version%'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid}\" --nototal");
 		PreviousChangeSetId = int.TryParse(prevChangeSetIdStr.output, out var id) ? id : 0;

@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Text;
-using SharedLib;
 
 namespace SharedLib;
 
@@ -57,6 +56,7 @@ public static class Cmd
 	{
 		// choose
 		var str = new StringBuilder();
+		str.AppendLine("");
 		for (int i = 0; i < options.Count; i++)
 			str.AppendLine($"[{i}] {options[i]}");
 			
