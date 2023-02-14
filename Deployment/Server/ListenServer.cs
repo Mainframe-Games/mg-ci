@@ -11,12 +11,17 @@ public class ListenServer
 	public bool IsAlive => _listener.IsListening;
 	public Func<List<string>>? GetAuth { get; set; }
 
+	private readonly string _ip;
+	private readonly ushort _port;
+
 	public ListenServer(string ip, ushort port = 8080)
 	{
+		_ip = ip;
+		_port = port;
+		
 		_listener = new HttpListener();
 		_listener.Prefixes.Add($"http://{ip}:{port}/");
 		_listener.Start();
-        Logger.Log($"... Server listening on '{ip}:{port}'");
 	}
 	
 	public async Task RunAsync()
@@ -32,6 +37,7 @@ public class ListenServer
 
 	private void Receive()
 	{
+		Logger.Log($"... Server listening on '{_ip}:{_port}'");
 		_listener.BeginGetContext(ListenerCallback, _listener);
 	}
 
