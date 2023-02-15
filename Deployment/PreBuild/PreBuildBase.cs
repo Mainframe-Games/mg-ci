@@ -106,8 +106,7 @@ public abstract class PreBuildBase
 	
 	protected static void ReplaceVersions(string newBundleVersion)
 	{
-		var text = File.ReadAllText(PROJECT_SETTINGS);
-		var lines = text.Split("\n");
+		var lines = File.ReadAllLines(PROJECT_SETTINGS);
 
 		var isBundleVersionFound = false;
 		var isBuildNumFound = false;
@@ -136,8 +135,7 @@ public abstract class PreBuildBase
 			}
 		}
 
-		var output = string.Join("\n", lines);
-		File.WriteAllText(PROJECT_SETTINGS, output);
+		File.WriteAllText(PROJECT_SETTINGS, string.Join("\n", lines));
 	}
 	
 	private static string ReplaceText(string line, string version)

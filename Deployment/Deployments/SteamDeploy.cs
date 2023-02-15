@@ -7,12 +7,7 @@ public class SteamDeploy
 {
 	private readonly string? _vdfPath;
 	private readonly string? _steamPath;
-	
-	private string SteamCmdExe =>
-		Environment.OSVersion.Platform == PlatformID.Unix
-		? $"{_steamPath}/builder_osx/steamcmd.sh"
-		: $"{_steamPath}/builder/steamcmd.exe";
-	
+
 	public SteamDeploy(string? vdfPath)
 	{
 		_vdfPath = vdfPath;
@@ -34,7 +29,7 @@ public class SteamDeploy
 		var username = ServerConfig.Instance.Steam.Username;
 		var password = ServerConfig.Instance.Steam.Password;
 		var args = $"+login {username} {password} +run_app_build \"{vdfPath}\" +quit";
-		Cmd.Run(SteamCmdExe, args);
+		Cmd.Run(_steamPath, args);
 	}
 
 	private static void SetVdfProperties(string vdfPath, params (string key, string value)[] values)
@@ -56,6 +51,6 @@ public class SteamDeploy
 			}
 		}
 
-		File.WriteAllLines(vdfPath, vdfLines);
+		File.WriteAllText(vdfPath, string.Join("\n", vdfLines));
 	}
 }
