@@ -85,9 +85,6 @@ public class BuildPipeline
 		}
 		
 		await _unity.WaitBuildIds();
-		
-		if (_preBuild?.IsRun ?? false)
-			_preBuild.CommitNewVersionNumber();
 	}
 
 	/// <summary>
@@ -150,6 +147,9 @@ public class BuildPipeline
 		
 		Logger.Log("PostBuild process started...");
 
+		if (_preBuild?.IsRun ?? false)
+			_preBuild.CommitNewVersionNumber();
+		
 		var hooks = _config.Hooks;
 		var commits = _preBuild.ChangeLog;
 
