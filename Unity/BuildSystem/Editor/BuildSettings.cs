@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace BuildSystem
 {
@@ -10,13 +11,14 @@ namespace BuildSystem
 	{
 		public string Extension = ".exe";
 		public BuildTarget Target = BuildTarget.StandaloneWindows64;
-		public StandaloneBuildSubtarget SubTarget = StandaloneBuildSubtarget.Player;
 		public BuildTargetGroup TargetGroup = BuildTargetGroup.Standalone;
+		public StandaloneBuildSubtarget SubTarget = StandaloneBuildSubtarget.Player;
 		public string LocationPath = "Builds/";
 		[Tooltip("Custom scenes overrides. Empty array will use EditorSettings.Scenes")]
 		public string[] Scenes;
+		[FormerlySerializedAs("ScriptingDefines")] 
 		[Tooltip("Custom define overrides. Empty array will use ProjectSettings defines")]
-		public string[] ScriptingDefines;
+		public string[] ExtraScriptingDefines;
 		public string AssetBundleManifestPath;
 		public BuildOptions BuildOptions = BuildOptions.None;
 
@@ -38,12 +40,12 @@ namespace BuildSystem
 				targetGroup = TargetGroup,
 				assetBundleManifestPath = AssetBundleManifestPath,
 				scenes = scenes,
-				// extraScriptingDefines = ScriptingDefines,
+				extraScriptingDefines = ExtraScriptingDefines,
 				options = BuildOptions,
 			};
 
-			if (ScriptingDefines.Length > 0)
-				options.extraScriptingDefines = ScriptingDefines;
+			if (ExtraScriptingDefines.Length > 0)
+				options.extraScriptingDefines = ExtraScriptingDefines;
 			
 			return options;
 		}
@@ -82,7 +84,7 @@ namespace BuildSystem
 		[ContextMenu("Set Defines")]
 		private void PopulateDefines()
 		{
-			ScriptingDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(TargetGroup)
+			ExtraScriptingDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(TargetGroup)
 				.Split(";")
 				.Where(x => !string.IsNullOrEmpty(x))
 				.Distinct()
