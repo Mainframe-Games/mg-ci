@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Text;
 using Deployment.Configs;
 using Deployment.Misc;
 using Deployment.RemoteBuild;
@@ -83,8 +82,7 @@ public class LocalUnityBuild
 		// for server builds
 		var isServerBuild = targetConfig.Settings?.ToLower().Contains("server") == true;
 		var subTarget = isServerBuild ? "Server" : "Player";
-		if (targetConfig.Settings?.ToLower().Contains("server") == true)
-			cliparams.Add($"-standaloneBuildSubtarget {subTarget}");
+		cliparams.Add($"-standaloneBuildSubtarget {subTarget}");
 
 		return string.Join(" ", cliparams);
 	}
