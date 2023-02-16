@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text;
 using Deployment.Configs;
 using Deployment.Misc;
 using Deployment.RemoteBuild;
@@ -53,9 +54,9 @@ public class LocalUnityBuild
 		
 		Logger.Log(string.Empty);
 		Logger.Log($"Starting build: {targetConfig.Target}");
-		var (exitCode, output) = Cmd.Run(exePath, $"-quit -batchmode -buildTarget {targetConfig.Target} " +
-		                                          $"-projectPath . -executeMethod {executeMethod} " +
-		                                          $"-logFile {logPath} -settings {targetConfig.Settings}");
+
+		var cliparams = BuildCliParams(targetConfig, executeMethod, logPath);
+		var (exitCode, output) = Cmd.Run(exePath, cliparams);
 
 		if (exitCode != 0)
 			throw new Exception($"Build failed. Read log file: {Path.Combine(Environment.CurrentDirectory, logPath)}");
@@ -66,6 +67,28 @@ public class LocalUnityBuild
 		return true;
 	}
 
+	private static string BuildCliParams(TargetConfig targetConfig, string executeMethod, string logPath)
+	{
+		var cliparams = new List<string>
+		{
+			"-quit",
+			"-batchmode",
+			$"-buildTarget {targetConfig.Target}",
+			"-projectPath .",
+			$"-executeMethod {executeMethod}",
+			$"-logFile {logPath}",
+			$"-settings {targetConfig.Settings}"
+		};
+
+		// for server builds
+		var isServerBuild = targetConfig.Settings?.ToLower().Contains("server") == true;
+		var subTarget = isServerBuild ? "Server" : "Player";
+		if (targetConfig.Settings?.ToLower().Contains("server") == true)
+			cliparams.Add($"-standaloneBuildSubtarget {subTarget}");
+
+		return string.Join(" ", cliparams);
+	}
+	
 	/// <summary>
 	/// Called from main build server. Sends web request to offload server and gets a buildId in return
 	/// </summary>
