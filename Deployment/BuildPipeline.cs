@@ -141,17 +141,17 @@ public class BuildPipeline
 	{
 		if (_args.IsFlag("-nopostbuild"))
 			return;
-		
-		if (_config?.Hooks == null)
-			return;
-		
+
 		Logger.Log("PostBuild process started...");
 
 		if (_preBuild?.IsRun ?? false)
 			_preBuild.CommitNewVersionNumber();
 		
+		if (_config?.Hooks == null)
+			return;
+		
+		var commits = _preBuild?.ChangeLog;
 		var hooks = _config.Hooks;
-		var commits = _preBuild.ChangeLog;
 
 		foreach (var hook in hooks)
 		{
