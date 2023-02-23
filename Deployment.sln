@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordBot", "DiscordBot\Di
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedLib", "SharedLib\SharedLib.csproj", "{A64D3CD8-A12E-4855-BAF2-9BA1C6043737}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{165659D8-995C-4F94-BA65-A301144253AE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{A64D3CD8-A12E-4855-BAF2-9BA1C6043737}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A64D3CD8-A12E-4855-BAF2-9BA1C6043737}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A64D3CD8-A12E-4855-BAF2-9BA1C6043737}.Release|Any CPU.Build.0 = Release|Any CPU
+		{165659D8-995C-4F94-BA65-A301144253AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{165659D8-995C-4F94-BA65-A301144253AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{165659D8-995C-4F94-BA65-A301144253AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{165659D8-995C-4F94-BA65-A301144253AE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

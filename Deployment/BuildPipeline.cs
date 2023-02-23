@@ -77,11 +77,16 @@ public class BuildPipeline
 		// configs
 		foreach (var build in _config.Builds)
 		{
+			bool success;
+			
 			// Build
 			if (IsOffload(build))
-				await _unity.SendRemoteBuildRequest(Workspace.Name, _preBuild.CurrentChangeSetId, build, ServerConfig.Instance.OffloadServerUrl);
+				success = await _unity.SendRemoteBuildRequest(Workspace.Name, _preBuild.CurrentChangeSetId, build, ServerConfig.Instance.OffloadServerUrl);
 			else
-				await _unity.Build(build);
+				success = await _unity.Build(build);
+			
+			if (!success)
+				throw new Exception("Build Failure");
 		}
 		
 		await _unity.WaitBuildIds();

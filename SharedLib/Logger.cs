@@ -21,11 +21,16 @@ public static class Logger
 		Console.WriteLine(message);
 	}
 
-	public static void WriteToFile(bool clearConsole)
+	/// <summary>
+	/// Writes all logs to file
+	/// </summary>
+	/// <param name="dirPath">Directory path to store log files</param>
+	/// <param name="clearConsole"></param>
+	public static void WriteToFile(string dirPath, bool clearConsole)
 	{
-		Directory.CreateDirectory("Logs");
+		Directory.CreateDirectory(dirPath);
 		var logTimeStamp = DateTime.Now.ToString("yyyy-MM-ddTHH-mm-ss");
-		var path = $"Logs/{logTimeStamp}.log";
+		var path = Path.Combine(dirPath, $"{logTimeStamp}.log");
 		File.WriteAllText(path, _builder.ToString());
 
 		if (clearConsole)

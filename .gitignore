@@ -4,3 +4,11 @@ obj/
 bin/
 *.DS_Store
 *.csproj.user
+
+#unity
+/Unity/BuildTest/Library
+/Unity/BuildTest/Temp
+/Unity/BuildTest/Logs
+/Unity/BuildTest/UserSettings
+/Unity/BuildTest/**.csproj
+/Unity/BuildTest/**.sln

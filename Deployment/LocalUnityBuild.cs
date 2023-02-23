@@ -25,6 +25,8 @@ public class LocalUnityBuild
 	/// build ids we are waiting for
 	/// </summary>
 	private readonly List<string> _buildIds = new();
+	
+	public string? Errors { get; private set; }
 
 	public LocalUnityBuild(string? unityVersion)
 	{
@@ -46,6 +48,11 @@ public class LocalUnityBuild
 	public async Task<bool> Build(TargetConfig targetConfig)
 	{
 		var logPath = $"{targetConfig.BuildPath}.log";
+		var errorPath = $"{targetConfig.BuildPath}_errors.log";
+		
+		if (File.Exists(errorPath))
+			File.Delete(errorPath);
+		
 		var buildStartTime = DateTime.Now;
 		
 		var exePath = GetDefaultUnityPath(targetConfig.VersionExtension);
@@ -58,10 +65,23 @@ public class LocalUnityBuild
 		var (exitCode, output) = Cmd.Run(exePath, cliparams);
 
 		if (exitCode != 0)
-			throw new Exception($"Build failed. Read log file: {Path.Combine(Environment.CurrentDirectory, logPath)}");
+		{
+			if (File.Exists(errorPath))
+			{
+				Errors = await File.ReadAllTextAsync(errorPath);
+				Logger.Log($"Build Failed with code '{exitCode}'\n{Errors}");
+			}
+			else
+			{
+				Logger.Log($"Build Failed with code '{exitCode}'");
+			}
+			
+			Logger.Log($"Verbose log file: {Path.Combine(Environment.CurrentDirectory, logPath)}");
+			return false;
+		}
 		
 		var buildTime = DateTime.Now - buildStartTime;
-		Logger.Log($"Build Success! Build Time: {buildTime:hh\\:mm\\:ss}");
+		Logger.Log($"Build Success! {targetConfig.Target}, Build Time: {buildTime:hh\\:mm\\:ss}");
 		await Task.Delay(10);
 		return true;
 	}
@@ -113,7 +133,10 @@ public class LocalUnityBuild
 		var res = await Web.SendAsync(HttpMethod.Post, offloadUrl, DeviceInfo.UniqueDeviceId, body);
 
 		if (res.StatusCode != HttpStatusCode.OK)
-			throw new WebException(res.Reason);
+		{
+			Logger.Log($"Web Request Failed '{res.StatusCode}' {res.Reason}");
+			return false;
+		}
 
 		var json = JObject.Parse(res.Content);
 		var buildId = json.SelectToken("data", true)?.ToString();

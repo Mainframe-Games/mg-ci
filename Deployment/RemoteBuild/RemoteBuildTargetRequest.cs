@@ -80,7 +80,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		else
 		{
 			// send web request to sender about the build failing
-			response = BuildErrorResponse(buildId);
+			response = BuildErrorResponse(buildId, builder.Errors);
 		}
 
 		await RespondBackToMasterServer(response);

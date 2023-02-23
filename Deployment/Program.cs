@@ -5,6 +5,7 @@ using SharedLib;
 try
 {
 	var config = ServerConfig.Load();
+	var originalDir = Environment.CurrentDirectory;
 
 	if (config.RunServer || Args.Environment.IsFlag("-server", false))
 	{
@@ -24,7 +25,7 @@ try
 		// when build pipeline completed dump logs and clear console
 		BuildPipeline.OnCompleted += () =>
 		{
-			Logger.WriteToFile(true);
+			Logger.WriteToFile(originalDir, true);
 			server.CheckIfServerStillListening();
 		};
 		
