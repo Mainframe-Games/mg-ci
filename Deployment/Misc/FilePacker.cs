@@ -15,7 +15,7 @@ public static class FilePacker
 	/// </summary>
 	/// <param name="pathToDir"></param>
 	/// <returns>Base64 string of zip file</returns>
-	public static async Task<string> PackAsync(string pathToDir)
+	public static async Task<string> PackAsync(string? pathToDir)
 	{
 		var zipPath = $"{pathToDir}.zip";
 		Delete(zipPath);

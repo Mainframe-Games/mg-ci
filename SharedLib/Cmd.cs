@@ -52,7 +52,7 @@ public static class Cmd
 			Logger.Log(trimmed);
 	}
 	
-	public static int Choose(string remark, IReadOnlyList<string> options)
+	public static int Choose(string remark, List<string?> options)
 	{
 		// choose
 		var str = new StringBuilder();

@@ -1,10 +1,10 @@
 ﻿namespace SharedLib;
 
-public readonly struct Workspace
+public class Workspace
 {
-	public string Name { get; private init; }
-	public string Directory { get; private init; }
-	public string UnityVersion { get; private init; }
+	public string? Name { get; private init; }
+	public string? Directory { get; private init; }
+	public string? UnityVersion { get; private set; }
 
 	public override string ToString()
 	{
@@ -21,9 +21,9 @@ public readonly struct Workspace
 		var workSpacesArray = output.Split(Environment.NewLine);
 		var workspaces = new List<Workspace>();
 
-		for (int i = 0; i < workSpacesArray.Length; i++)
+		foreach (var workspace in workSpacesArray)
 		{
-			var split = workSpacesArray[i].Split('@');
+			var split = workspace.Split('@');
 			var name = split[0];
 			var path = split[1].Replace(Environment.MachineName, string.Empty).Trim();
 			var unityVersion = GetUnityVersion(path);
@@ -50,7 +50,8 @@ public readonly struct Workspace
 			throw new Exception(output);
 
 		var workspaces = GetAvailableWorkspaces();
-		var index = Cmd.Choose("Choose workspace", workspaces.Select(x => x.Name).ToList());
+		var workspaceNames = workspaces.Select(x => x.Name).ToList();
+		var index = Cmd.Choose("Choose workspace", workspaceNames);
 		return workspaces[index];
 	}
 
@@ -75,12 +76,43 @@ public readonly struct Workspace
 		};
 	}
 
-	private static string GetUnityVersion(string workingDirectory)
+	private static string GetUnityVersion(string? workingDirectory)
 	{
+		if (workingDirectory == null)
+			return string.Empty;
+		
 		var path = Path.Combine(workingDirectory, "ProjectSettings", "ProjectVersion.txt");
 		var txt = File.ReadAllText(path);
-		var firstLine = txt.Split("\n")[0];
-		var version = firstLine.Replace("m_EditorVersion:", string.Empty).Trim();
-		return version;
+		var lines = txt.Split("\n");
+		
+		foreach (var line in lines)
+		{
+			if (line.Contains("m_EditorVersion:"))
+				return line.Replace("m_EditorVersion:", string.Empty).Trim();
+		}
+
+		return string.Empty;
+	}
+	
+	public void Clear()
+	{
+		Cmd.Run("cm", $"unco -a \"{Directory}\"");
+		UnityVersion = GetUnityVersion(Directory);
+	}
+
+	/// <summary>
+	/// Updates the workspace. 
+	/// </summary>
+	/// <param name="changeSetId">ChangeSetId to update to. -1 is latest</param>
+	public void Update(int changeSetId = -1)
+	{
+		// get all the latest updates
+		Cmd.Run("cm", $"update \"{Directory}\"");
+		
+		// set to a specific change set
+		if (changeSetId > 0)
+			Cmd.Run("cm", $"switch cs:{changeSetId} --workspace=\"{Directory}\"");
+		
+		UnityVersion = GetUnityVersion(Directory);
 	}
 }

@@ -15,6 +15,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	/// Workspace name from the master server. Remapping is done on offload server
 	/// </summary>
 	public string? WorkspaceName { get; init; }
+	public int ChangeSetId { get; init; }
 	public string? SendBackUrl { get; init; }
 	public TargetConfig? Config { get; init; }
 	
@@ -46,6 +47,18 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		var mapping = new WorkspaceMapping();
 		var workspaceName = mapping.GetRemapping(WorkspaceName);
 		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
+		workspace.Clear();
+		workspace.Update(ChangeSetId);
+
+		if (workspace.Directory == null || !Directory.Exists(workspace.Directory))
+			throw new DirectoryNotFoundException($"Directory doesn't exist: {workspace.Directory}");
+
+		if (Config == null)
+		{
+			await RespondBackToMasterServer(BuildErrorResponse(buildId, $"{nameof(TargetConfig)} is null"));
+			return;
+		}
+
 		Environment.CurrentDirectory = workspace.Directory;
 		
 		var builder = new LocalUnityBuild(workspace.UnityVersion);
@@ -67,18 +80,23 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		else
 		{
 			// send web request to sender about the build failing
-			response = new RemoteBuildResponse
-			{
-				Request = this,
-				BuildId = buildId,
-				Error = "build failed for reasons"
-			};
+			response = BuildErrorResponse(buildId);
 		}
 
-		await UploadBuild(response);
+		await RespondBackToMasterServer(response);
 	}
 
-	private static async Task UploadBuild(RemoteBuildResponse response)
+	private RemoteBuildResponse BuildErrorResponse(string buildId, string? message = null)
+	{
+		return new RemoteBuildResponse
+		{
+			Request = this,
+			BuildId = buildId,
+			Error = message ?? "build failed for reasons"
+		};
+	}
+
+	private static async Task RespondBackToMasterServer(RemoteBuildResponse response)
 	{
 		// build is done or failed, tell sender about it
 		var sendBackUrl = response.Request.SendBackUrl;

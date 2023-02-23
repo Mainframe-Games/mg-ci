@@ -35,6 +35,7 @@ public abstract class PreBuildBase
 	/// </summary>
 	public string[] ChangeLog { get; private set; } = Array.Empty<string>();
 
+	public int CurrentChangeSetId { get; protected set; }
 	protected int PreviousChangeSetId { get; private set; }
 	
 	/// <summary>
@@ -61,12 +62,36 @@ public abstract class PreBuildBase
 			_ => throw new ArgumentOutOfRangeException(nameof(preBuildType), preBuildType, null)
 		};
 	}
+
+	/// <summary>
+	/// Gets the current changeSetId
+	/// </summary>
+	/// <returns></returns>
+	private static int GetCurrentChangeSetId()
+	{
+		var changeSetStr = Cmd.Run("cm", "find changeset \"where branch='main'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid}\" --nototal");
+		return int.TryParse(changeSetStr.output, out var id) ? id : 0;
+	}
+
+	/// <summary>
+	/// Gets previous changeSetId based on commit message
+	/// </summary>
+	/// <param name="commitMessageHint">Will find the last message with this in it</param>
+	/// <returns></returns>
+	private static int GetPreviousChangeSetId(string commitMessageHint = "Build Version")
+	{
+		var prevChangeSetIdStr = Cmd.Run("cm", $"find changeset \"where branch='main' and comment like '%{commitMessageHint}%'\" \"order by date desc\" \"limit 1\" --format=\"{{changesetid}}\" --nototal");
+		return int.TryParse(prevChangeSetIdStr.output, out var id) ? id : 0;
+	}
 	
 	public virtual void Run()
 	{
 		// get previously store change set value
-		var prevChangeSetIdStr = Cmd.Run("cm", "find changeset \"where branch='main' and comment like '%Build Version%'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid}\" --nototal");
-		PreviousChangeSetId = int.TryParse(prevChangeSetIdStr.output, out var id) ? id : 0;
+		PreviousChangeSetId = GetPreviousChangeSetId();
+		CurrentChangeSetId = GetCurrentChangeSetId();
+		
+		// get current change set number from plastic
+		Logger.Log($"{nameof(CurrentChangeSetId)}: {CurrentChangeSetId}");
 		
 		IsRun = true;
 	}
@@ -104,6 +129,10 @@ public abstract class PreBuildBase
 		return arr;
 	}
 	
+	/// <summary>
+	/// Replaces the version in all the places within ProjectSettings.asset
+	/// </summary>
+	/// <param name="newBundleVersion"></param>
 	protected static void ReplaceVersions(string newBundleVersion)
 	{
 		var lines = File.ReadAllLines(PROJECT_SETTINGS);

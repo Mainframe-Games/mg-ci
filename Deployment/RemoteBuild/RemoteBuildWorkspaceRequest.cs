@@ -12,8 +12,11 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 		var mapping = new WorkspaceMapping();
 		var workspaceName = mapping.GetRemapping(WorkspaceName);
 		
+		Logger.Log($"Environment.CurrentDirectory: {Environment.CurrentDirectory}");
+		
 		var currentWorkspace = Workspace.GetWorkspaceFromName(workspaceName);
 		Logger.Log($"Chosen workspace: {currentWorkspace}");
+		currentWorkspace.Update();
 
 		if (BuildPipeline.Current != null)
 			throw new Exception($"A build process already active. {BuildPipeline.Current.Workspace}");

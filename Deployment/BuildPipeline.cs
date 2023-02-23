@@ -12,26 +12,25 @@ namespace Deployment;
 public class BuildPipeline
 {
 	public static BuildPipeline? Current { get; private set; }
-	
-	private readonly Workspace _workspace;
+
 	private readonly Args _args;
 	
 	private LocalUnityBuild _unity;
 	private BuildConfig _config;
 	private PreBuildBase _preBuild;
 
-	public Workspace Workspace => _workspace;
+	public Workspace Workspace { get; }
 
 	private string BuildVersionTitle => $"Build Version: {_preBuild?.BuildVersion}";
 
 	public BuildPipeline(Workspace workspace, string[]? args)
 	{
-		_workspace = workspace;
+		Workspace = workspace;
 		_args = new Args(args);
 		Environment.CurrentDirectory = workspace.Directory;
 		Current = this;
 	}
-
+	
 	#region Build Steps
 	
 	public async Task RunAsync()
@@ -50,13 +49,18 @@ public class BuildPipeline
 			return;
 
 		Logger.Log("PreBuild process started...");
-		Cmd.Run("cm", "unco -a"); // clear workspace
-		Cmd.Run("cm", "upd"); // update workspace
-		_config = GetConfigJson(_workspace.Directory);
+		
+		Workspace.Clear();
+		if(_args.TryGetArg("-changeSetId", 0, out int id))
+			Workspace.Update(id);
+		
+		_config = GetConfigJson(Workspace.Directory);
 		_preBuild = PreBuildBase.Create(_config.PreBuild?.Type ?? default);
 		_preBuild.Run();
+		
 		if (_config.PreBuild?.ChangeLog == true)
 			_preBuild.SetChangeLog();
+		
 		await Task.CompletedTask;
 	}
 	
@@ -65,7 +69,7 @@ public class BuildPipeline
 		if (_args.IsFlag("-nobuild"))
 			return;
 		
-		_unity = new LocalUnityBuild(_workspace.UnityVersion);
+		_unity = new LocalUnityBuild(Workspace.UnityVersion);
 
 		if (_config == null || _unity == null || _config.Builds == null)
 			throw new NullReferenceException();
@@ -77,9 +81,7 @@ public class BuildPipeline
 		{
 			// Build
 			if (IsOffload(build))
-				await _unity.SendRemoteBuildRequest(_workspace.Name, build,
-					ServerConfig.Instance.OffloadServerUrl,
-					ServerConfig.Instance.MasterServerUrl);
+				await _unity.SendRemoteBuildRequest(Workspace.Name, _preBuild.CurrentChangeSetId, build, ServerConfig.Instance.OffloadServerUrl);
 			else
 				await _unity.Build(build);
 		}
@@ -174,8 +176,11 @@ public class BuildPipeline
 
 	#region Helper Methods
 
-	private static BuildConfig GetConfigJson(string workingDirectory)
+	private static BuildConfig GetConfigJson(string? workingDirectory)
 	{
+		if (workingDirectory == null)
+			return new BuildConfig();
+		
 		var path = Path.Combine(workingDirectory, "BuildScripts", "buildconfig.json");
 		var configStr = File.ReadAllText(path);
 		var configClass = Json.Deserialise<BuildConfig>(configStr);

@@ -19,14 +19,14 @@ public enum UnityTarget
 public class LocalUnityBuild
 {
 	private const string DEFAULT_EXECUTE_METHOD = "BuildSystem.BuildScript.BuildPlayer";
-	private readonly string _unityVersion;
+	private readonly string? _unityVersion;
 
 	/// <summary>
 	/// build ids we are waiting for
 	/// </summary>
 	private readonly List<string> _buildIds = new();
 
-	public LocalUnityBuild(string unityVersion)
+	public LocalUnityBuild(string? unityVersion)
 	{
 		_unityVersion = unityVersion;
 	}
@@ -86,23 +86,27 @@ public class LocalUnityBuild
 
 		return string.Join(" ", cliparams);
 	}
-	
+
 	/// <summary>
 	/// Called from main build server. Sends web request to offload server and gets a buildId in return
 	/// </summary>
 	/// <param name="workspaceName"></param>
+	/// <param name="changeSetId"></param>
 	/// <param name="targetConfig"></param>
 	/// <param name="offloadUrl">The url to the offload server</param>
-	/// <param name="sendBackUrl">The url to send back the build response</param>
 	/// <returns>True is request is successful. Not if build is successful</returns>
 	/// <exception cref="WebException"></exception>
-	public async Task<bool> SendRemoteBuildRequest(string? workspaceName, TargetConfig targetConfig, string? offloadUrl, string? sendBackUrl)
+	public async Task<bool> SendRemoteBuildRequest(string? workspaceName, int changeSetId, TargetConfig targetConfig, string? offloadUrl)
 	{
+		if (offloadUrl == null)
+			throw new Exception("OffloadUrl is null");
+		
 		var remoteBuild = new RemoteBuildTargetRequest
 		{
 			WorkspaceName = workspaceName,
+			ChangeSetId = changeSetId,
 			Config = targetConfig,
-			SendBackUrl = sendBackUrl
+			SendBackUrl = $"http://{ServerConfig.Instance.IP}:{ServerConfig.Instance.Port}"
 		};
 		
 		var body = new RemoteBuildPacket { BuildTargetRequest = remoteBuild };
