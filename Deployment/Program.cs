@@ -21,6 +21,14 @@ try
 			};
 		}
 		
+		// when build pipeline completed dump logs and clear console
+		BuildPipeline.OnCompleted += () =>
+		{
+			Logger.WriteToFile(true);
+			server.CheckIfServerStillListening();
+		};
+		
+		// server should wait for ever
 		await server.RunAsync();
 		Logger.Log("Server stopped");
 	}

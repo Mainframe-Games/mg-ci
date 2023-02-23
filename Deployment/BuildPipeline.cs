@@ -12,6 +12,7 @@ namespace Deployment;
 public class BuildPipeline
 {
 	public static BuildPipeline? Current { get; private set; }
+	public static event Action? OnCompleted; 
 
 	private readonly Args _args;
 	
@@ -41,6 +42,7 @@ public class BuildPipeline
 		await DeployAsync();
 		await PostBuild();
 		Logger.Log($"Deployed. {DateTime.Now - startTime:hh\\:mm\\:ss}");
+		OnCompleted?.Invoke();
 	}
 
 	private async Task Prebuild()

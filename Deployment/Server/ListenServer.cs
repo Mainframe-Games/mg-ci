@@ -8,7 +8,6 @@ namespace Deployment.Server;
 public class ListenServer
 {
 	private readonly HttpListener _listener;
-	public bool IsAlive => _listener.IsListening;
 	public Func<List<string>>? GetAuth { get; set; }
 
 	private readonly string _ip;
@@ -22,8 +21,17 @@ public class ListenServer
 		_listener = new HttpListener();
 		_listener.Prefixes.Add($"http://{ip}:{port}/");
 		_listener.Start();
+		CheckIfServerStillListening();
 	}
-	
+
+	public void CheckIfServerStillListening()
+	{
+		if (_listener.IsListening)
+			Logger.Log($"... Server listening on '{_ip}:{_port}'");
+		else
+			throw new Exception("Server died");
+	}
+
 	public async Task RunAsync()
 	{
 		Receive();
@@ -37,7 +45,6 @@ public class ListenServer
 
 	private void Receive()
 	{
-		Logger.Log($"... Server listening on '{_ip}:{_port}'");
 		_listener.BeginGetContext(ListenerCallback, _listener);
 	}
 
