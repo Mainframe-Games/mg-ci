@@ -30,11 +30,6 @@ public abstract class PreBuildBase
 {
 	private const string PROJECT_SETTINGS = "ProjectSettings/ProjectSettings.asset";
 	
-	/// <summary>
-	/// All raw commit messages
-	/// </summary>
-	public string[] ChangeLog { get; private set; } = Array.Empty<string>();
-
 	public int CurrentChangeSetId { get; protected set; }
 	protected int PreviousChangeSetId { get; private set; }
 	
@@ -42,8 +37,6 @@ public abstract class PreBuildBase
 	/// Format 0.0000 (buildnumber.changesetid)
 	/// </summary>
 	public string BuildVersion { get; protected set; } = string.Empty;
-	
-	public bool IsRun { get; private set; }
 	
 	/// <summary>
 	/// Static method for created prebuild class from config type
@@ -76,12 +69,22 @@ public abstract class PreBuildBase
 	/// <summary>
 	/// Gets previous changeSetId based on commit message
 	/// </summary>
-	/// <param name="commitMessageHint">Will find the last message with this in it</param>
 	/// <returns></returns>
-	private static int GetPreviousChangeSetId(string commitMessageHint = "Build Version")
+	private static int GetPreviousChangeSetId()
 	{
-		var prevChangeSetIdStr = Cmd.Run("cm", $"find changeset \"where branch='main' and comment like '%{commitMessageHint}%'\" \"order by date desc\" \"limit 1\" --format=\"{{changesetid}}\" --nototal");
-		return int.TryParse(prevChangeSetIdStr.output, out var id) ? id : 0;
+		var changeSetIds = GetChangeChangSetIdsLastBuildVersions(1);
+		return changeSetIds[0];
+	}
+
+	private static int[] GetChangeChangSetIdsLastBuildVersions(int limit, string commentLike = "Build Version")
+	{
+		var cmdRes = Cmd.Run("cm", $"find changeset \"where branch='main' and comment like '%{commentLike}%'\" \"order by date desc\" \"limit {limit}\" --format=\"{{changesetid}}\" --nototal");
+		var stdOut = cmdRes.output;
+		var lines = stdOut.Split(Environment.NewLine);
+		var changesetIds = new int[lines.Length];
+		for (int i = 0; i < lines.Length; i++)
+			changesetIds[i] = int.TryParse(lines[i], out var id) ? id : 0;
+		return changesetIds;
 	}
 	
 	public virtual void Run()
@@ -89,23 +92,36 @@ public abstract class PreBuildBase
 		// get previously store change set value
 		PreviousChangeSetId = GetPreviousChangeSetId();
 		CurrentChangeSetId = GetCurrentChangeSetId();
-		
+
 		// get current change set number from plastic
+		Logger.Log($"{nameof(PreviousChangeSetId)}: {PreviousChangeSetId}");
 		Logger.Log($"{nameof(CurrentChangeSetId)}: {CurrentChangeSetId}");
+	}
+
+	/// <summary>
+	/// Gets all change logs between two changeSetIds
+	/// </summary>
+	public static string[] GetChangeLog(bool print = true)
+	{
+		var changeSetIds = GetChangeChangSetIdsLastBuildVersions(2);
+		var cs = changeSetIds[^1];
+		var raw = Cmd.Run("cm", $"log --from=cs:{cs} --csformat=\"{{comment}}\"").output;
+		var changeLog = raw.Split(Environment.NewLine).Reverse().ToArray();
 		
-		IsRun = true;
+		if (print)
+			Logger.Log($"___Change Logs___\n{string.Join("\n", changeLog)}");
+		
+		return changeLog;
 	}
 
-	public void SetChangeLog()
+	private void CommitNewVersionNumber(string messagePrefix = "Build Version")
 	{
-		var raw = Cmd.Run("cm", $"log --from=cs:{PreviousChangeSetId} --csformat=\"{{comment}}\"").output;
-		var array = raw.Split(Environment.NewLine).Reverse().ToArray();
-		ChangeLog = array;
-	}
-
-	public void CommitNewVersionNumber()
-	{
-		Cmd.Run("cm", $"ci {PROJECT_SETTINGS} -c=\"Build Version: {BuildVersion}\"");
+		var fullCommitMessage = $"{messagePrefix}: {BuildVersion}";
+		Logger.Log($"Commiting new build version \"{fullCommitMessage}\"");
+		Cmd.Run("cm", $"ci {PROJECT_SETTINGS} -c=\"{fullCommitMessage}\"");
+		
+		// update new changeSetId
+		CurrentChangeSetId = GetCurrentChangeSetId();
 	}
 
 	private static string GetAppVersion()
@@ -133,7 +149,7 @@ public abstract class PreBuildBase
 	/// Replaces the version in all the places within ProjectSettings.asset
 	/// </summary>
 	/// <param name="newBundleVersion"></param>
-	protected static void ReplaceVersions(string newBundleVersion)
+	protected void ReplaceVersions(string newBundleVersion)
 	{
 		var lines = File.ReadAllLines(PROJECT_SETTINGS);
 
@@ -165,6 +181,7 @@ public abstract class PreBuildBase
 		}
 
 		File.WriteAllText(PROJECT_SETTINGS, string.Join("\n", lines));
+		CommitNewVersionNumber();
 	}
 	
 	private static string ReplaceText(string line, string version)

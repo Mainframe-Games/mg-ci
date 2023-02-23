@@ -57,10 +57,6 @@ public class BuildPipeline
 		_config = GetConfigJson(Workspace.Directory);
 		_preBuild = PreBuildBase.Create(_config.PreBuild?.Type ?? default);
 		_preBuild.Run();
-		
-		if (_config.PreBuild?.ChangeLog == true)
-			_preBuild.SetChangeLog();
-		
 		await Task.CompletedTask;
 	}
 	
@@ -145,17 +141,15 @@ public class BuildPipeline
 			return;
 
 		Logger.Log("PostBuild process started...");
-
-		if (_preBuild?.IsRun ?? false)
-			_preBuild.CommitNewVersionNumber();
 		
-		if (_config?.Hooks == null)
+		var commits = _config.PreBuild?.ChangeLog == true
+			? PreBuildBase.GetChangeLog()
+			: Array.Empty<string>();
+		
+		if (_config.Hooks == null)
 			return;
 		
-		var commits = _preBuild?.ChangeLog;
-		var hooks = _config.Hooks;
-
-		foreach (var hook in hooks)
+		foreach (var hook in _config.Hooks)
 		{
 			if (hook.IsDiscord())
 			{
