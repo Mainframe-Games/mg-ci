@@ -53,8 +53,8 @@ public class BuildPipeline
 		Logger.Log("PreBuild process started...");
 		
 		Workspace.Clear();
-		if(_args.TryGetArg("-changeSetId", 0, out int id))
-			Workspace.Update(id);
+		_args.TryGetArg("-changeSetId", 0, out int id);
+		Workspace.Update(id);
 		
 		_config = GetConfigJson(Workspace.Directory);
 		_preBuild = PreBuildBase.Create(_config.PreBuild?.Type ?? default);
