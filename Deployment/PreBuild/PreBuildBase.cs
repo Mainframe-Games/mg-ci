@@ -114,7 +114,7 @@ public abstract class PreBuildBase
 		return changeLog;
 	}
 
-	private void CommitNewVersionNumber(string messagePrefix = "Build Version")
+	public void CommitNewVersionNumber(string messagePrefix = "Build Version")
 	{
 		var fullCommitMessage = $"{messagePrefix}: {BuildVersion}";
 		Logger.Log($"Commiting new build version \"{fullCommitMessage}\"");
@@ -149,7 +149,7 @@ public abstract class PreBuildBase
 	/// Replaces the version in all the places within ProjectSettings.asset
 	/// </summary>
 	/// <param name="newBundleVersion"></param>
-	protected void ReplaceVersions(string newBundleVersion)
+	public static void ReplaceVersions(string? newBundleVersion)
 	{
 		var lines = File.ReadAllLines(PROJECT_SETTINGS);
 
@@ -181,7 +181,6 @@ public abstract class PreBuildBase
 		}
 
 		File.WriteAllText(PROJECT_SETTINGS, string.Join("\n", lines));
-		CommitNewVersionNumber();
 	}
 	
 	private static string ReplaceText(string line, string version)

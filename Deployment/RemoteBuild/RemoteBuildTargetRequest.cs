@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Deployment.Configs;
 using Deployment.Misc;
+using Deployment.PreBuild;
 using Deployment.Server;
 using SharedLib;
 
@@ -16,6 +17,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	/// </summary>
 	public string? WorkspaceName { get; init; }
 	public int ChangeSetId { get; init; }
+	public string? BuildVersion { get; init; }
 	public string? SendBackUrl { get; init; }
 	public TargetConfig? Config { get; init; }
 	
@@ -61,6 +63,10 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 
 		Environment.CurrentDirectory = workspace.Directory;
 		
+		// pre build
+		PreBuildBase.ReplaceVersions(BuildVersion);
+		
+		// build 
 		var builder = new LocalUnityBuild(workspace.UnityVersion);
 		var success = await builder.Build(Config);
 

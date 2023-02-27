@@ -82,9 +82,17 @@ public class BuildPipeline
 			
 			// Build
 			if (IsOffload(build))
-				success = await _unity.SendRemoteBuildRequest(Workspace.Name, _preBuild.CurrentChangeSetId, build, ServerConfig.Instance.OffloadServerUrl);
+			{
+				success = await _unity.SendRemoteBuildRequest(Workspace.Name, 
+					_preBuild.CurrentChangeSetId,
+					_preBuild.BuildVersion,
+					build, 
+					ServerConfig.Instance.OffloadServerUrl);
+			}
 			else
+			{
 				success = await _unity.Build(build);
+			}
 			
 			if (!success)
 				throw new Exception("Build Failure");
@@ -151,6 +159,8 @@ public class BuildPipeline
 			return;
 
 		Logger.Log("PostBuild process started...");
+		
+		_preBuild.CommitNewVersionNumber();
 		
 		var commits = _config.PreBuild?.ChangeLog == true
 			? PreBuildBase.GetChangeLog()
