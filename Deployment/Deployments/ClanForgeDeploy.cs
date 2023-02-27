@@ -42,7 +42,6 @@ public class ClanForgeDeploy
 	/// Entry build for deploying build to clanforge.
 	/// Must be done after Steam Deploy
 	/// </summary>
-	/// <exception cref="WebException"></exception>
 	public async Task Deploy()
 	{
 		// create image
@@ -51,9 +50,7 @@ public class ClanForgeDeploy
 
 		// poll for when diff is ready
 		Console.WriteLine("...polling image status");
-		var success = await PollStatus("imageupdate", $"updateid={updateId}");
-		if (!success)
-			throw new WebException("Image failed. Please check ClanForge dashboard for more information");
+		await PollStatus("imageupdate", $"updateid={updateId}");
 
 		// generate diff
 		Console.WriteLine("...generating diff");
@@ -61,14 +58,10 @@ public class ClanForgeDeploy
 
 		// poll for diff status
 		Console.WriteLine("...polling diff status");
-		success = await PollStatus("imagediff", $"diffid={diffId}");
-		if (!success)
-			throw new WebException("Image Diff failed. Please check ClanForge dashboard for more information");
+		await PollStatus("imagediff", $"diffid={diffId}");
 		
 		// accept diff and create new image version
-		success = await CreateImageVersion(diffId);
-		if (!success)
-			throw new WebException("Creating Image Version failed. Please check ClanForge dashboard for more information");
+		await CreateImageVersion(diffId);
 	}
 
 	#region Requests
@@ -91,7 +84,7 @@ public class ClanForgeDeploy
 	/// </summary>
 	/// <returns>success</returns>
 	/// <exception cref="WebException"></exception>
-	private async Task<bool> PollStatus(string path, string paramStr, int pollTime = 1000)
+	private async Task PollStatus(string path, string paramStr, int pollTime = 1000)
 	{
 		var url = $"{BASE_URL}/{path}/status?accountserviceid={ASID}&{paramStr}";
 		var isCompleted = false;
@@ -101,17 +94,22 @@ public class ClanForgeDeploy
 			var res = await SendRequest(url);
 			var content = JObject.Parse(res.Content);
 			var stateName = content["jobstatename"]?.ToString();
-			Console.WriteLine($"...{path} status: {stateName}");
+			var progress = content["jobprogress"]?.Value<double>() ?? 0;
+			Console.WriteLine($"...{path} status ({progress}%): {stateName}");
 			isCompleted = stateName == "Completed";
-			
+
 			if (isCompleted)
-				return content["success"]?.Value<bool>() ?? false;
-
-			// poll every second
-			await Task.Delay(pollTime);
+				ThrowIfNotSuccess(content);
+			else
+				await Task.Delay(pollTime);
 		}
+	}
 
-		return false;
+	private static void ThrowIfNotSuccess(JObject content)
+	{
+		var success = content["success"]?.Value<bool>() ?? false;
+		if (!success)
+			throw new WebException($"Status failed. Please check ClanForge dashboard for more information. {content}");
 	}
 
 	/// <summary>
@@ -129,12 +127,12 @@ public class ClanForgeDeploy
 	/// <summary>
 	/// Docs: docs.unity.com/game-server-hosting/en/manual/api/endpoints/image-create-version
 	/// </summary>
-	private async Task<bool> CreateImageVersion(int diffId)
+	private async Task CreateImageVersion(int diffId)
 	{
 		var url = $"{BASE_URL}/imageversion/create?diffid={diffId}&accountserviceid={ASID}&restart=0&game_build=\"{Desc}\"";
 		var res = await SendRequest(url);
 		var content = JObject.Parse(res.Content);
-		return content["success"]?.Value<bool>() ?? false;
+		ThrowIfNotSuccess(content);
 	}
 	
 	/// <summary>
