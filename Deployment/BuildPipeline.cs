@@ -4,6 +4,7 @@ using Deployment.Deployments;
 using Deployment.PreBuild;
 using Deployment.RemoteBuild;
 using Deployment.Server;
+using Deployment.Server.Config;
 using Deployment.Webhooks;
 using SharedLib;
 
@@ -41,7 +42,7 @@ public class BuildPipeline
 		await Build();
 		await DeployAsync();
 		await PostBuild();
-		Logger.Log($"Deployed. {DateTime.Now - startTime:hh\\:mm\\:ss}");
+		Logger.Log($"Pipeline Completed. {DateTime.Now - startTime:hh\\:mm\\:ss}");
 		OnCompleted?.Invoke();
 	}
 
@@ -121,22 +122,24 @@ public class BuildPipeline
 		if (_args.IsFlag("-nodeploy"))
 			return;
 		
-		if(_config.Deploy == null)
+		if (_config.Deploy == null)
 			return;
 
+		// steam
 		if (_config.Deploy.Steam != null)
 		{
-			foreach (var steamConfig in _config.Deploy.Steam)
+			foreach (var vdfPath in _config.Deploy.Steam)
 			{
-				var steam = new SteamDeploy(steamConfig);
+				var steam = new SteamDeploy(vdfPath, ServerConfig.Instance.Steam);
 				steam.Deploy(BuildVersionTitle);
 			}
 		}
-		
-		if (_config.Deploy.Multiplay != null)
+
+		// clanforge
+		if (_config.Deploy.Clanforge == true)
 		{
-			var multiplay = new MultiplayDeploy();
-			await multiplay.Deploy(_config.Deploy.Multiplay.Ccd.PathToBuild);
+			var clanforge = new ClanForgeDeploy(ServerConfig.Instance.Clanforge, BuildVersionTitle);
+			await clanforge.Deploy();
 		}
 
 		await Task.CompletedTask;

@@ -1,7 +1,6 @@
-﻿using Deployment.Server.Config;
-using SharedLib;
+﻿using SharedLib;
 
-namespace Deployment.Server;
+namespace Deployment.Server.Config;
 
 internal class ServerConfig
 {
@@ -16,7 +15,7 @@ internal class ServerConfig
 	public List<string>? AuthTokens { get; set; }
 	public string? OffloadServerUrl { get; set; }
 	public SteamServerConfig? Steam { get; set; }
-	public UnityServicesConfig? Unity { get; set; }
+	public ClanforgeConfig? Clanforge { get; set; }
 
 	public static ServerConfig Load()
 	{

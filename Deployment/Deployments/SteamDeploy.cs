@@ -5,31 +5,25 @@ namespace Deployment.Deployments;
 
 public class SteamDeploy
 {
-	private readonly string? _vdfPath;
-	private readonly string? _steamPath;
+	private SteamServerConfig Config { get; }
+	private string VdfPath { get; }
 
-	public SteamDeploy(string? vdfPath)
+	public SteamDeploy(string? vdfPath, SteamServerConfig? steamConfig)
 	{
-		_vdfPath = vdfPath;
-		_steamPath = ServerConfig.Instance.Steam.Path;
+		VdfPath = vdfPath ?? string.Empty;
+		Config = steamConfig ?? new SteamServerConfig();
 	}
 
 	public void Deploy(string description)
 	{
-		var vdfPath = Path.Combine(Environment.CurrentDirectory, _vdfPath);
-		var contentDir = Path.Combine(Environment.CurrentDirectory, "Builds");
-		var outputDir = Path.Combine(Environment.CurrentDirectory, "Builds", "SteamOutput");
+		var vdfPath = Path.Combine(Environment.CurrentDirectory, VdfPath);
+		SetVdfProperties(vdfPath, ("Desc", description));
 
-		SetVdfProperties(vdfPath, 
-			("Desc", description)//,
-			//("ContentRoot", contentDir),
-			//("BuildOutput", outputDir)
-			);
-
-		var username = ServerConfig.Instance.Steam.Username;
-		var password = ServerConfig.Instance.Steam.Password;
+		var path = Config.Path ?? string.Empty;
+		var username = Config.Username;
+		var password = Config.Password;
 		var args = $"+login {username} {password} +run_app_build \"{vdfPath}\" +quit";
-		Cmd.Run(_steamPath, args);
+		Cmd.Run(path, args);
 	}
 
 	private static void SetVdfProperties(string vdfPath, params (string key, string value)[] values)

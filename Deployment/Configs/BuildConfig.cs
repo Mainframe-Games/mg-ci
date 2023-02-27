@@ -22,5 +22,5 @@ public class PreBuild
 public class DeployContiner
 {
 	public string[]? Steam { get; set; }
-	public MultiplayConfigLocal? Multiplay { get; set; }
+	public bool? Clanforge { get; set; }
 }
