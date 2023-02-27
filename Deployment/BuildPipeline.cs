@@ -3,7 +3,6 @@ using Deployment.Configs;
 using Deployment.Deployments;
 using Deployment.PreBuild;
 using Deployment.RemoteBuild;
-using Deployment.Server;
 using Deployment.Server.Config;
 using Deployment.Webhooks;
 using SharedLib;
@@ -48,6 +47,8 @@ public class BuildPipeline
 
 	private async Task Prebuild()
 	{
+		_config = GetConfigJson(Workspace.Directory); // need to get config even if -noprebuild flag
+		
 		if (_args.IsFlag("-noprebuild"))
 			return;
 
@@ -57,7 +58,7 @@ public class BuildPipeline
 		_args.TryGetArg("-changeSetId", 0, out int id);
 		Workspace.Update(id);
 		
-		_config = GetConfigJson(Workspace.Directory);
+		_config = GetConfigJson(Workspace.Directory); // refresh config
 		_preBuild = PreBuildBase.Create(_config.PreBuild?.Type ?? default);
 		_preBuild.Run();
 		await Task.CompletedTask;
@@ -160,7 +161,7 @@ public class BuildPipeline
 
 		Logger.Log("PostBuild process started...");
 		
-		_preBuild.CommitNewVersionNumber();
+		_preBuild?.CommitNewVersionNumber();
 		
 		var commits = _config.PreBuild?.ChangeLog == true
 			? PreBuildBase.GetChangeLog()

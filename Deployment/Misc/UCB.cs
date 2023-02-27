@@ -58,8 +58,7 @@ public class UCB
 			HttpMethod.Post,
 			$"https://build-api.cloud.unity3d.com/api/v1/orgs/{orgid}/projects/{projectid}/buildtargets/{buildtargetid}/builds",
 			authToken,
-			new JObject { ["clean"] = cleanBuild, ["commit"] = commitHash },
-			headers: (HttpRequestHeader.ContentType.ToString(), "application/json"));
+			new JObject { ["clean"] = cleanBuild, ["commit"] = commitHash });
 
 		var json = JObject.Parse(res.Content);
 

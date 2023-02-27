@@ -11,13 +11,13 @@ public static class Web
 		public string Reason;
 		public string Content;
 	}
-	
+
 	public static async Task<Response> SendAsync(
 		HttpMethod method,
 		string? url,
 		string? authToken = null,
 		object? body = null,
-		params (string key, string value)[] headers)
+		params (HttpRequestHeader key, string value)[] headers)
 	{
 		if (url == null)
 			throw new NullReferenceException("Url can not be null");
@@ -39,7 +39,7 @@ public static class Web
 				msg.Headers.Add(HttpRequestHeader.Authorization.ToString(), authToken);
 
 			foreach (var header in headers)
-				msg.Headers.Add(header.key, header.value);
+				msg.Headers.Add(header.key.ToString(), header.value);
 
 			var jsonBody = string.Empty;
 			

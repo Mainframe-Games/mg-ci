@@ -116,6 +116,9 @@ public abstract class PreBuildBase
 
 	public void CommitNewVersionNumber(string messagePrefix = "Build Version")
 	{
+		if (string.IsNullOrEmpty(BuildVersion))
+			return;
+		
 		var fullCommitMessage = $"{messagePrefix}: {BuildVersion}";
 		Logger.Log($"Commiting new build version \"{fullCommitMessage}\"");
 		Cmd.Run("cm", $"ci {PROJECT_SETTINGS} -c=\"{fullCommitMessage}\"");

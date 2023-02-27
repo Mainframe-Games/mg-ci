@@ -23,14 +23,13 @@ public class ClanForgeDeploy
 	private string Desc { get; }
 	private string Url { get; }
 
-	private (string key, string value) Header { get; } = ("Content-Type", "application/x-www-form-urlencoded");
-
 	public ClanForgeDeploy(ClanforgeConfig? clanforgeConfig, string desc)
 	{
 		if (clanforgeConfig == null)
 			throw new NullReferenceException($"Param {nameof(clanforgeConfig)} can not be null");
-		
-		AuthToken = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clanforgeConfig.AccessKey}:{clanforgeConfig.SecreteKey}"));
+
+		var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clanforgeConfig.AccessKey}:{clanforgeConfig.SecretKey}"));
+		AuthToken = $"Basic {base64}";
 		ASID = clanforgeConfig.Asid;
 		MachineId = clanforgeConfig.MachineId;
 		ImageId = clanforgeConfig.ImageId;
@@ -143,9 +142,9 @@ public class ClanForgeDeploy
 	/// <exception cref="WebException"></exception>
 	private async Task<Web.Response> SendRequest(string url)
 	{
-		var res = await Web.SendAsync(HttpMethod.Get, url, AuthToken, headers: Header);
+		var res = await Web.SendAsync(HttpMethod.Get, url, AuthToken, headers: (HttpRequestHeader.ContentType, "application/x-www-form-urlencoded"));
 		
-		if (res.StatusCode != 0)
+		if (res.StatusCode != HttpStatusCode.OK)
 			throw new WebException(res.Reason);
 
 		return res;
