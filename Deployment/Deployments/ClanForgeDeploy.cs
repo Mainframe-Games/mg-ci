@@ -12,6 +12,7 @@ namespace Deployment.Deployments;
 public class ClanForgeDeploy
 {
 	private const string BASE_URL = "https://api.multiplay.co.uk/cfp/v1";
+	private const int POLL_TIME = 3000;
 	
 	/// <summary>
 	/// A base64 encoded string of '{AccessKey}:{SecretKey}'
@@ -83,7 +84,7 @@ public class ClanForgeDeploy
 	/// </summary>
 	/// <returns>success</returns>
 	/// <exception cref="WebException"></exception>
-	private async Task PollStatus(string path, string paramStr, int pollTime = 1000)
+	private async Task PollStatus(string path, string paramStr)
 	{
 		var url = $"{BASE_URL}/{path}/status?accountserviceid={ASID}&{paramStr}";
 		var isCompleted = false;
@@ -93,14 +94,13 @@ public class ClanForgeDeploy
 			var res = await SendRequest(url);
 			var content = JObject.Parse(res.Content);
 			var stateName = content["jobstatename"]?.ToString();
-			var progress = content["jobprogress"]?.Value<double>() ?? 0;
-			Console.WriteLine($"...{path} status ({progress}%): {stateName}");
+			Console.WriteLine($"...{path} status: {stateName}");
 			isCompleted = stateName == "Completed";
 
 			if (isCompleted)
 				ThrowIfNotSuccess(content);
 			else
-				await Task.Delay(pollTime);
+				await Task.Delay(POLL_TIME);
 		}
 	}
 
