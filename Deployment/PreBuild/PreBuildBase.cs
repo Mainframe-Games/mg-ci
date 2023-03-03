@@ -124,9 +124,6 @@ public abstract class PreBuildBase
 		var fullCommitMessage = $"{messagePrefix}: {BuildVersion}";
 		Logger.Log($"Commiting new build version \"{fullCommitMessage}\"");
 		Cmd.Run("cm", $"ci {PROJECT_SETTINGS} -c=\"{fullCommitMessage}\"");
-		
-		// update new changeSetId
-		CurrentChangeSetId = GetCurrentChangeSetId();
 	}
 
 	private static string GetAppVersion()
