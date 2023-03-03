@@ -164,7 +164,7 @@ public class BuildPipeline
 		_preBuild?.CommitNewVersionNumber();
 		
 		var commits = _config.PreBuild?.ChangeLog == true
-			? PreBuildBase.GetChangeLog()
+			? _preBuild?.GetChangeLog()
 			: Array.Empty<string>();
 		
 		if (_config.Hooks == null)

@@ -1,4 +1,3 @@
-using Deployment.Misc;
 using SharedLib;
 
 namespace Deployment.PreBuild;
@@ -31,7 +30,7 @@ public abstract class PreBuildBase
 	private const string PROJECT_SETTINGS = "ProjectSettings/ProjectSettings.asset";
 	
 	public int CurrentChangeSetId { get; protected set; }
-	protected int PreviousChangeSetId { get; private set; }
+	public int PreviousChangeSetId { get; private set; }
 	
 	/// <summary>
 	/// Format 0.0000 (buildnumber.changesetid)
@@ -101,11 +100,11 @@ public abstract class PreBuildBase
 	/// <summary>
 	/// Gets all change logs between two changeSetIds
 	/// </summary>
-	public static string[] GetChangeLog(bool print = true)
+	public string[] GetChangeLog(bool print = true)
 	{
 		var changeSetIds = GetChangeChangSetIdsLastBuildVersions(2);
-		var cs = changeSetIds[^1];
-		var raw = Cmd.Run("cm", $"log --from=cs:{cs} --csformat=\"{{comment}}\"").output;
+		var csFrom = changeSetIds[^1];
+		var raw = Cmd.Run("cm", $"log --from={csFrom} cs:{CurrentChangeSetId} --csformat=\"{{comment}}\"").output;
 		var changeLog = raw.Split(Environment.NewLine).Reverse().ToArray();
 		
 		if (print)
@@ -118,6 +117,9 @@ public abstract class PreBuildBase
 	{
 		if (string.IsNullOrEmpty(BuildVersion))
 			return;
+
+		// update in case there are new changes in coming  
+		Cmd.Run("cm", "update");
 		
 		var fullCommitMessage = $"{messagePrefix}: {BuildVersion}";
 		Logger.Log($"Commiting new build version \"{fullCommitMessage}\"");
