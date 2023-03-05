@@ -74,8 +74,7 @@ public class ClanForgeDeploy
 	private async Task<int> CreateNewImage()
 	{
 		var url = $"{BASE_URL}/imageupdate/create?imageid={ImageId}&desc=\"{Desc}\"&machineid={MachineId}&accountserviceid={ASID}&url={Url}";
-		var res = await SendRequest(url);
-		var content = JObject.Parse(res.Content);
+		var content = await SendRequest(url);
 		return content["updateid"]?.Value<int>() ?? -1;
 	}
 
@@ -91,8 +90,7 @@ public class ClanForgeDeploy
 
 		while (!isCompleted)
 		{
-			var res = await SendRequest(url);
-			var content = JObject.Parse(res.Content);
+			var content = await SendRequest(url);
 			var stateName = content["jobstatename"]?.ToString();
 			Console.WriteLine($"...{path} status: {stateName}");
 			isCompleted = stateName == "Completed";
@@ -104,13 +102,6 @@ public class ClanForgeDeploy
 		}
 	}
 
-	private static void ThrowIfNotSuccess(JObject content)
-	{
-		var success = content["success"]?.Value<bool>() ?? false;
-		if (!success)
-			throw new WebException($"Status failed. Please check ClanForge dashboard for more information. {content}");
-	}
-
 	/// <summary>
 	/// Docs: https://docs.unity.com/game-server-hosting/en/manual/api/endpoints/image-diff-create
 	/// </summary>
@@ -118,8 +109,7 @@ public class ClanForgeDeploy
 	private async Task<int> GenerateDiff()
 	{
 		var url = $"{BASE_URL}/imagediff/create?imageid={ImageId}&machineid={MachineId}&accountserviceid={ASID}";
-		var res = await SendRequest(url);
-		var content = JObject.Parse(res.Content);
+		var content = await SendRequest(url);
 		return content["diffid"]?.Value<int>() ?? -1;
 	}
 
@@ -129,8 +119,7 @@ public class ClanForgeDeploy
 	private async Task CreateImageVersion(int diffId)
 	{
 		var url = $"{BASE_URL}/imageversion/create?diffid={diffId}&accountserviceid={ASID}&restart=0&game_build=\"{Desc}\"";
-		var res = await SendRequest(url);
-		var content = JObject.Parse(res.Content);
+		var content = await SendRequest(url);
 		ThrowIfNotSuccess(content);
 	}
 	
@@ -140,14 +129,28 @@ public class ClanForgeDeploy
 	/// <param name="url"></param>
 	/// <returns></returns>
 	/// <exception cref="WebException"></exception>
-	private async Task<Web.Response> SendRequest(string url)
+	private async Task<JObject> SendRequest(string url)
 	{
 		var res = await Web.SendAsync(HttpMethod.Get, url, AuthToken, headers: (HttpRequestHeader.ContentType, "application/x-www-form-urlencoded"));
 		
 		if (res.StatusCode != HttpStatusCode.OK)
 			throw new WebException(res.Reason);
 
-		return res;
+		var content = JObject.Parse(res.Content);
+		ThrowIfError(content);
+		return content;
+	}
+	
+	private static void ThrowIfNotSuccess(JObject content)
+	{
+		if (content["success"]?.Value<bool>() == false)
+			throw new WebException($"Status failed. Please check ClanForge dashboard for more information. {content}");
+	}
+	
+	private static void ThrowIfError(JObject content)
+	{
+		if (content["error"]?.Value<bool>() == true)
+			throw new WebException(content["error_message"]?.ToString());
 	}
 	
 	#endregion
