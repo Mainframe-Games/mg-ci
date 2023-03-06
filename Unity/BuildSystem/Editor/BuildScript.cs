@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
@@ -18,8 +19,26 @@ namespace BuildSystem
 		public static void BuildPlayer()
 		{
 			var settingsArg = GetArgValue("-settings");
-			var ettings = GetBuildConfig(settingsArg);
-			BuildPlayer(ettings);
+			var settings = GetBuildConfig(settingsArg);
+			RunPrebuild(settings);
+			BuildPlayer(settings);
+		}
+
+		/// <summary>
+		/// Finds all classes that implement <see cref="IPrebuildProcess"/> and runs the callback method
+		/// </summary>
+		/// <param name="settings"></param>
+		private static void RunPrebuild(BuildSettings settings)
+		{
+			var types = AppDomain.CurrentDomain.GetAssemblies()
+				.SelectMany(s => s.GetTypes())
+				.Where(p => typeof(IPrebuildProcess).IsAssignableFrom(p));
+			
+			foreach (var type in types)
+			{
+				var inst = (IPrebuildProcess)Activator.CreateInstance(type);
+				inst.OnPrebuildProcess(settings);
+			}
 		}
 		
 		public static void BuildPlayer(BuildSettings settings)
@@ -41,14 +60,24 @@ namespace BuildSystem
 			}
 			else
 			{
-				Debug.LogError($"Build Failed is {report.summary.totalErrors} errors...\n{_builder}");
-				var logFile = GetArgValue("-logFile");
-				var errorFileName = logFile.Replace(".log", "_errors.log");
-				File.WriteAllText(errorFileName, _builder.ToString());
-				
+				DumpErrorLog(report);
+
 				if (Application.isBatchMode)
 					EditorApplication.Exit(666);
 			}
+		}
+
+		private static void DumpErrorLog(BuildReport report)
+		{
+			Debug.LogError($"Build Failed is {report.summary.totalErrors} errors...\n{_builder}");
+			
+			var logFile = GetArgValue("-logFile");
+			
+			if (string.IsNullOrEmpty(logFile))
+				return;
+			
+			var errorFileName = logFile.Replace(".log", "_errors.log");
+			File.WriteAllText(errorFileName, _builder.ToString());
 		}
 
 		private static void OnLogReceived(string condition, string stacktrace, LogType type)
