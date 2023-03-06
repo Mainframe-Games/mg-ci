@@ -54,6 +54,10 @@ namespace BuildSystem
 				throw new Exception($"BuildSettings '{settings.name}' not valid");
 			
 			RunPrebuild(settings);
+			
+			// ensure build target folder exits
+			if (!Directory.Exists(settings.LocationPath))
+				Directory.CreateDirectory(settings.LocationPath);
 
 			Application.logMessageReceived += OnLogReceived;
 			
@@ -91,6 +95,9 @@ namespace BuildSystem
 
 		private static void OnLogReceived(string condition, string stacktrace, LogType type)
 		{
+			if (type is LogType.Log or LogType.Warning)
+				return;
+			
 			_builder.AppendLine($"[{type.ToString().ToUpper()}] {condition}");
 			
 			if (!string.IsNullOrEmpty(stacktrace))
