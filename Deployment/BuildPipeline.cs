@@ -55,7 +55,7 @@ public class BuildPipeline
 		Logger.Log("PreBuild process started...");
 
 		if (_args.IsFlag("-cleanbuild"))
-			CleanBuild();
+			Workspace.CleanBuild();
 		
 		Workspace.Clear();
 		_args.TryGetArg("-changeSetId", 0, out int id);
@@ -91,7 +91,8 @@ public class BuildPipeline
 					_preBuild.CurrentChangeSetId,
 					_preBuild.BuildVersion,
 					build, 
-					ServerConfig.Instance.OffloadServerUrl);
+					ServerConfig.Instance.OffloadServerUrl,
+					_args.IsFlag("-cleanbuild"));
 			}
 			else
 			{
@@ -216,35 +217,6 @@ public class BuildPipeline
 		await _unity.RemoteBuildReceived(remoteBuildResponse);
 	}
 
-	private void CleanBuild()
-	{
-		var rootDir = new DirectoryInfo(Workspace.Directory);
-		
-		// delete folders
-		var dirs = new[] { "Library", "Builds", "obj" };
-		foreach (var directory in rootDir.GetDirectories())
-			if (dirs.Contains(directory.Name))
-				DeleteIfExist(directory);
-		
-		// delete files
-		var files = new List<FileInfo>();
-		files.AddRange(rootDir.GetFiles("*.csproj"));
-		files.AddRange(rootDir.GetFiles("*.sln"));
-		foreach (var file in files)
-			DeleteIfExist(file);
-	}
-
-	private static void DeleteIfExist(FileSystemInfo fileSystemInfo)
-	{
-		if (!fileSystemInfo.Exists)
-			return;
-		
-		if (fileSystemInfo is DirectoryInfo directoryInfo)
-			directoryInfo.Delete(true);
-		else
-			fileSystemInfo.Delete();
-	}
-	
 	#endregion
 
 }

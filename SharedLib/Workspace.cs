@@ -115,4 +115,33 @@ public class Workspace
 		
 		UnityVersion = GetUnityVersion(Directory);
 	}
+
+	public void CleanBuild()
+	{
+		var rootDir = new DirectoryInfo(Directory);
+		
+		// delete folders
+		var dirs = new[] { "Library", "Builds", "obj" };
+		foreach (var directory in rootDir.GetDirectories())
+			if (dirs.Contains(directory.Name))
+				DeleteIfExist(directory);
+		
+		// delete files
+		var files = new List<FileInfo>();
+		files.AddRange(rootDir.GetFiles("*.csproj"));
+		files.AddRange(rootDir.GetFiles("*.sln"));
+		foreach (var file in files)
+			DeleteIfExist(file);
+	}
+
+	private static void DeleteIfExist(FileSystemInfo fileSystemInfo)
+	{
+		if (!fileSystemInfo.Exists)
+			return;
+		
+		if (fileSystemInfo is DirectoryInfo directoryInfo)
+			directoryInfo.Delete(true);
+		else
+			fileSystemInfo.Delete();
+	}
 }

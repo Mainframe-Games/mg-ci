@@ -18,6 +18,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	public string? WorkspaceName { get; init; }
 	public int ChangeSetId { get; init; }
 	public string? BuildVersion { get; init; }
+	public bool CleanBuild { get; init; }
 	public string? SendBackUrl { get; init; }
 	public TargetConfig? Config { get; init; }
 	
@@ -62,6 +63,9 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		}
 
 		Environment.CurrentDirectory = workspace.Directory;
+		
+		if (CleanBuild)
+			workspace.CleanBuild();
 		
 		// pre build
 		PreBuildBase.ReplaceVersions(BuildVersion);

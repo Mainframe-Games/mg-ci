@@ -118,7 +118,7 @@ public class LocalUnityBuild
 	/// <param name="offloadUrl">The url to the offload server</param>
 	/// <returns>True is request is successful. Not if build is successful</returns>
 	/// <exception cref="WebException"></exception>
-	public async Task<bool> SendRemoteBuildRequest(string? workspaceName, int changeSetId, string? buildVersion, TargetConfig targetConfig, string? offloadUrl)
+	public async Task<bool> SendRemoteBuildRequest(string? workspaceName, int changeSetId, string? buildVersion, TargetConfig targetConfig, string? offloadUrl, bool cleanBuild)
 	{
 		if (offloadUrl == null)
 			throw new Exception("OffloadUrl is null");
@@ -129,6 +129,7 @@ public class LocalUnityBuild
 			ChangeSetId = changeSetId,
 			BuildVersion = buildVersion,
 			Config = targetConfig,
+			CleanBuild = cleanBuild,
 			SendBackUrl = $"http://{ServerConfig.Instance.IP}:{ServerConfig.Instance.Port}"
 		};
 		
