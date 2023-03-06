@@ -88,6 +88,9 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 			// send web request to sender about the build failing
 			response = BuildErrorResponse(buildId, builder.Errors);
 		}
+		
+		// clean up after build
+		workspace.Clear();
 
 		await RespondBackToMasterServer(response);
 	}
