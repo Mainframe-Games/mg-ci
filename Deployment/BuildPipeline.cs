@@ -183,6 +183,8 @@ public class BuildPipeline
 				Slack.PostMessage(hook.Url, $"{hook.Title} | {BuildVersionTitle}");
 			}
 		}
+		
+		Workspace.Clear();
 
 		await Task.CompletedTask;
 	}
