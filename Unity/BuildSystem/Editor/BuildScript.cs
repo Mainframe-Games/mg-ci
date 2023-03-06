@@ -20,7 +20,6 @@ namespace BuildSystem
 		{
 			var settingsArg = GetArgValue("-settings");
 			var settings = GetBuildConfig(settingsArg);
-			RunPrebuild(settings);
 			BuildPlayer(settings);
 		}
 
@@ -32,12 +31,20 @@ namespace BuildSystem
 		{
 			var types = AppDomain.CurrentDomain.GetAssemblies()
 				.SelectMany(s => s.GetTypes())
-				.Where(p => typeof(IPrebuildProcess).IsAssignableFrom(p));
+				.Where(p => !p.IsInterface && !p.IsAbstract && typeof(IPrebuildProcess).IsAssignableFrom(p))
+				.ToArray();
 			
 			foreach (var type in types)
 			{
-				var inst = (IPrebuildProcess)Activator.CreateInstance(type);
-				inst.OnPrebuildProcess(settings);
+				try
+				{
+					var inst = (IPrebuildProcess)Activator.CreateInstance(type);
+					inst.OnPrebuildProcess(settings);
+				}
+				catch (Exception e)
+				{
+					Debug.LogException(e);
+				}
 			}
 		}
 		
@@ -45,6 +52,8 @@ namespace BuildSystem
 		{
 			if (!settings.IsValid())
 				throw new Exception($"BuildSettings '{settings.name}' not valid");
+			
+			RunPrebuild(settings);
 
 			Application.logMessageReceived += OnLogReceived;
 			
