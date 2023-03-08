@@ -24,7 +24,7 @@ public class ClanForgeDeploy
 	private string Desc { get; }
 	private string Url { get; }
 
-	public ClanForgeDeploy(ClanforgeConfig? clanforgeConfig, string desc)
+	public ClanForgeDeploy(ClanforgeConfig? clanforgeConfig, string? desc)
 	{
 		if (clanforgeConfig == null)
 			throw new NullReferenceException($"Param {nameof(clanforgeConfig)} can not be null");
@@ -35,7 +35,7 @@ public class ClanForgeDeploy
 		MachineId = clanforgeConfig.MachineId;
 		ImageId = clanforgeConfig.ImageId;
 		Url = Uri.EscapeDataString(clanforgeConfig.Url ?? string.Empty);
-		Desc = desc;
+		Desc = desc ?? string.Empty;
 	}
 
 	/// <summary>

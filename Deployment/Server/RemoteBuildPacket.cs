@@ -21,6 +21,11 @@ public class RemoteBuildPacket : IRemoteControllable
 	/// Response from offload server, used on master server
 	/// </summary>
 	public RemoteBuildResponse? BuildResponse { get; set; }
+	
+	/// <summary>
+	/// For updating a clanforge image via API request
+	/// </summary>
+	public RemoteClanforgeImageUpdate? ClanforgeImageUpdate { get; set; }
 
 	/// <summary>
 	/// 
@@ -31,6 +36,7 @@ public class RemoteBuildPacket : IRemoteControllable
 		if (WorkspaceBuildRequest != null) return await WorkspaceBuildRequest.ProcessAsync();
 		if (BuildTargetRequest != null) return await BuildTargetRequest.ProcessAsync();
 		if (BuildResponse != null) return await BuildResponse.ProcessAsync();
+		if (ClanforgeImageUpdate != null) return await ClanforgeImageUpdate.ProcessAsync();
 		throw new Exception($"Issue with {nameof(RemoteBuildPacket)}. Neither {nameof(BuildTargetRequest)} or {nameof(BuildResponse)} is valid");
 	}
 }
