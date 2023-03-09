@@ -21,6 +21,7 @@ Supported build targets:
 Supported deploy targets:
 - [x] Steam
 - [x] Itchio (Stopped support, but its still in there just needs the class to be hooked up)
+- [x] Clanforge (Will eventually be for UGS Multiplay)
 - [ ] Apple Store
 - [ ] Android Store
 
@@ -29,13 +30,20 @@ Supported deploy targets:
 ```json
 {
   "runServer": true,
-  "ip": "127.0.0.1",
-  "port": 8080,
-  "offloadServerUrl": "192.168.x.xxx",
-  "steam":{
-    "path": "~/Documents/ContentBuilder/Steam",
+  "ip": "192.168.xx.xxx",
+  "offloadServerUrl": "http://192.168.xx.xxx:8080",
+  "steam": {
+    "path": "/full-path-to/steamcmd.sh",
     "username": "",
     "password": ""
+  },
+  "clanforge": {
+    "accessKey": "",
+    "secretKey": "",
+    "asid": 0,
+    "machineId": 0,
+    "url": "",
+    "imageId": 0
   }
 }
 ```
@@ -48,8 +56,11 @@ Build configs should be located in Unity project root folder `./BuilldScripts/bu
 
 ```json
 {
-  "preBuildScript": "None",
-  "builds":[
+  "prebuild": {
+    "type": "Major_Minor",
+    "changeLog": true
+  },
+  "builds": [
     {
       "target": "Win64",
       "settings": "BuildSettings_Win64",
@@ -68,49 +79,43 @@ Build configs should be located in Unity project root folder `./BuilldScripts/bu
     }
   ],
   "deploy": {
-    "steam": {
-      "vdfPath": "path/to/build.vdf",
-      "setLive": "beta"
-    }
+    "steam": [
+      "path/to/build.vdf"
+    ],
+    "clanforge": true
   },
-  "hooks": {
-    "slack": {
+  "hooks": [
+    {
       "url": "https://hooks.slack.com/services/...",
       "title": "{Game} Deployed"
     },
-    "discord":{
+    {
       "url": "https://discord.com/api/webhooks/...",
       "title": "Change Log Bot"
     }
-  }
+  ]
 }
 
 ```
 
 
-| Key                       | Required | Description                            |
-|---------------------------|----------|----------------------------------------|
-| `preBuildScript`          |          | Uses reflection to load prebuild class |
-|                           |          |                                        |
-| `steam`                   |          |                                        |
-| `steam.steamId`           | true     | The main Steam ID                      |
-| `steam.location`          | true     |                                        |
-| `steam.vdfPath`           | true     |                                        |
-| `steam.username`          |          |                                        |
-| `steam.password`          |          |                                        |
-|                           |          |                                        |
-| `executeMethod`           |          |                                        |
-| `unityPath `              | true     |                                        |
-|                           |          |                                        |
-| `targets`                 |          |                                        |
-| `targets.target`          | true     |                                        |
-| `targets.settings`        | true     |                                        |
-| `targets.buildPath`       | true     |                                        |
-| `targets.os`              |          | windows, osx                           |
-| `targets.executeMethod`   |          |                                        |
-| `targets.unityPath`       |          |                                        |
-| `targets.offloadUrl`      |          |                                        |
-|                           |          |                                        |
-| `hooks`                   |          |                                        |
-| `hooks.slack`             |          |                                        |
-| `hooks.discord`           |          |                                        |
+| Key                      | Required | Description                                                                        |
+|--------------------------|----------|------------------------------------------------------------------------------------|
+| `preBuildScript`         |          | Uses reflection to load prebuild class                                             |
+|                          |          |                                                                                    |
+| `steam`                  |          |                                                                                    |
+| `steam.steamId`          | true     | The main Steam ID                                                                  |
+| `steam.location`         | true     |                                                                                    |
+| `steam.vdfPath`          | true     |                                                                                    |
+| `steam.username`         |          |                                                                                    |
+| `steam.password`         |          |                                                                                    |
+|                          |          |                                                                                    |
+| `executeMethod`          |          | If you want to set up your own build script in unity                               |
+|                          |          |                                                                                    |
+| `builds`                 |          |                                                                                    |
+| `builds.target`          | true     |                                                                                    |
+| `builds.settings`        | true     | Name of the settings file in Unity                                                 |
+| `builds.buildPath`       | true     | Build target location. TODO: figure out a way to get this from the build settings  |
+| `builds.executeMethod`   |          | If you want to set up your own build script in unity. TODO: handle this in unity   |
+|                          |          |                                                                                    |
+| `hooks`                  |          | Array of hook urls and titles to alert when process is completed                   |
