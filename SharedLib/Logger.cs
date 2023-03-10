@@ -28,9 +28,10 @@ public static class Logger
 	/// <param name="clearConsole"></param>
 	public static void WriteToFile(string dirPath, bool clearConsole)
 	{
-		Directory.CreateDirectory(dirPath);
+		var logsDir = Path.Combine(dirPath, "Logs");
+		Directory.CreateDirectory(logsDir);
 		var logTimeStamp = DateTime.Now.ToString("yyyy-MM-ddTHH-mm-ss");
-		var path = Path.Combine(dirPath, $"{logTimeStamp}.log");
+		var path = Path.Combine(logsDir, $"{logTimeStamp}.log");
 		File.WriteAllText(path, _builder.ToString());
 
 		if (clearConsole)
