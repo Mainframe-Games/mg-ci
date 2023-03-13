@@ -25,6 +25,7 @@ public abstract class ChangelogBuilder
 			"improved" => true,
 			"updated" => true,
 			"changed" => true,
+			"modified" => true,
 			_ => false
 		};
 	}
