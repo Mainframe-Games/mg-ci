@@ -173,6 +173,11 @@ public class BuildPipeline
 		
 		if (_config.Hooks == null)
 			return;
+
+		// optional message from clanforge
+		var clanforgeMessage = _config.Deploy?.Clanforge == true 
+			? ClanforgeConfig.BuildHookMessage(ServerConfig.Instance.Clanforge, "Updated")
+			: string.Empty;
 		
 		foreach (var hook in _config.Hooks)
 		{
@@ -180,7 +185,8 @@ public class BuildPipeline
 			{
 				var discord = new ChangeLogBuilderDiscord();
 				discord.BuildLog(commits);
-				Discord.PostMessage(hook.Url, discord.ToString(), hook.Title, BuildVersionTitle, Discord.Colour.GREEN);
+				var message = $"{clanforgeMessage}\n{discord}";
+				Discord.PostMessage(hook.Url, message, hook.Title, BuildVersionTitle, Discord.Colour.GREEN);
 			}
 			else if (hook.IsSlack())
 			{
