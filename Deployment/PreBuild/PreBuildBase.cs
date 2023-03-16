@@ -79,16 +79,16 @@ public abstract class PreBuildBase
 		return int.TryParse(str, out var id) ? id : 0;
 	}
 
-	private static int[] GetChangeChangSetIdsLastBuildVersions(int limit, string commentLike = "Build Version")
-	{
-		var cmdRes = Cmd.Run("cm", $"find changeset \"where branch='main' and comment like '%{commentLike}%'\" \"order by date desc\" \"limit {limit}\" --format=\"{{changesetid}}\" --nototal");
-		var stdOut = cmdRes.output;
-		var lines = stdOut.Split(Environment.NewLine);
-		var changesetIds = new int[lines.Length];
-		for (int i = 0; i < lines.Length; i++)
-			changesetIds[i] = int.TryParse(lines[i], out var id) ? id : 0;
-		return changesetIds;
-	}
+	// private static int[] GetChangeChangSetIdsLastBuildVersions(int limit, string commentLike = "Build Version")
+	// {
+	// 	var cmdRes = Cmd.Run("cm", $"find changeset \"where branch='main' and comment like '%{commentLike}%'\" \"order by date desc\" \"limit {limit}\" --format=\"{{changesetid}}\" --nototal");
+	// 	var stdOut = cmdRes.output;
+	// 	var lines = stdOut.Split(Environment.NewLine);
+	// 	var changesetIds = new int[lines.Length];
+	// 	for (int i = 0; i < lines.Length; i++)
+	// 		changesetIds[i] = int.TryParse(lines[i], out var id) ? id : 0;
+	// 	return changesetIds;
+	// }
 	
 	public virtual void Run()
 	{
@@ -105,9 +105,7 @@ public abstract class PreBuildBase
 	/// </summary>
 	public string[] GetChangeLog(bool print = true)
 	{
-		var changeSetIds = GetChangeChangSetIdsLastBuildVersions(2);
-		var csFrom = changeSetIds[^1];
-		var raw = Cmd.Run("cm", $"log --from={csFrom} cs:{CurrentChangeSetId} --csformat=\"{{comment}}\"").output;
+		var raw = Cmd.Run("cm", $"log --from={PreviousChangeSetId} cs:{CurrentChangeSetId} --csformat=\"{{comment}}\"").output;
 		var changeLog = raw.Split(Environment.NewLine).Reverse().ToArray();
 		
 		if (print)
