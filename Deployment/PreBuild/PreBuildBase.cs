@@ -139,7 +139,7 @@ public abstract class PreBuildBase
 		
 		// add vdfs
 		var vdfs = new DirectoryInfo(STEAM_DIR_PATH).GetFiles("*.vdf");
-		var relativeNames = vdfs.Select(x => x.FullName.Replace(Environment.CurrentDirectory, string.Empty));
+		var relativeNames = vdfs.Select(x => x.FullName.Replace($"{Environment.CurrentDirectory}/", string.Empty));
 		filesToCommit.AddRange(relativeNames);
 		
 		// commit changes
