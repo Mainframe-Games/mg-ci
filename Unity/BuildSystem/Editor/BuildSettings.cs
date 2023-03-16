@@ -9,7 +9,9 @@ namespace BuildSystem
 	[CreateAssetMenu(fileName = "BuildSettings", menuName = "Build Settings/New Settings")]
 	public class BuildSettings : ScriptableObject
 	{
-		public string Extension = ".exe";
+		[Tooltip("File extension. Include '.'")]
+		public string Extension;
+		public string ProductName;
 		public BuildTarget Target = BuildTarget.StandaloneWindows64;
 		public BuildTargetGroup TargetGroup = BuildTargetGroup.Standalone;
 		public StandaloneBuildSubtarget SubTarget = StandaloneBuildSubtarget.Player;
@@ -36,7 +38,7 @@ namespace BuildSystem
 			{
 				target = Target,
 				subtarget = (int)SubTarget,
-				locationPathName = Path.Combine(LocationPath, $"{Application.productName}{Extension}"),
+				locationPathName = Path.Combine(LocationPath, $"{ProductName}{Extension}"),
 				targetGroup = TargetGroup,
 				assetBundleManifestPath = AssetBundleManifestPath,
 				scenes = scenes,
@@ -65,6 +67,9 @@ namespace BuildSystem
 				BuildTarget.StandaloneLinux64 => ".x86_64",
 				_ => Extension
 			};
+
+			if (string.IsNullOrEmpty(ProductName))
+				ProductName = Application.productName;
 		}
 
 		[ContextMenu("Set Scenes")]
@@ -73,7 +78,7 @@ namespace BuildSystem
 			Scenes = GetEditorSettingsScenes();
 		}
 		
-		private string[] GetEditorSettingsScenes()
+		private static string[] GetEditorSettingsScenes()
 		{
 			return EditorBuildSettings.scenes
 				.Where(x => x.enabled)
