@@ -28,9 +28,11 @@ public enum PreBuildType
 public abstract class PreBuildBase
 {
 	private const string PROJECT_SETTINGS = "ProjectSettings/ProjectSettings.asset";
+	private const string PREV_CHANGESET_ID_PATH = "BuildSettings/previous-changesetId.txt";
+	private const string STEAM_DIR_PATH = "BuildSettings/Steam";
 	
 	public int CurrentChangeSetId { get; protected set; }
-	public int PreviousChangeSetId { get; private set; }
+	public static int PreviousChangeSetId => GetPreviousChangeSetId();
 	
 	/// <summary>
 	/// Format 0.0000 (buildnumber.changesetid)
@@ -61,8 +63,8 @@ public abstract class PreBuildBase
 	/// <returns></returns>
 	private static int GetCurrentChangeSetId()
 	{
-		var changeSetStr = Cmd.Run("cm", "find changeset \"where branch='main'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid}\" --nototal");
-		return int.TryParse(changeSetStr.output, out var id) ? id : 0;
+		var cmdRes = Cmd.Run("cm", "find changeset \"where branch='main'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid}\" --nototal");
+		return int.TryParse(cmdRes.output, out var id) ? id : 0;
 	}
 
 	/// <summary>
@@ -71,8 +73,10 @@ public abstract class PreBuildBase
 	/// <returns></returns>
 	private static int GetPreviousChangeSetId()
 	{
-		var changeSetIds = GetChangeChangSetIdsLastBuildVersions(1);
-		return changeSetIds[0];
+		var str = File.Exists(PREV_CHANGESET_ID_PATH)
+			? File.ReadAllText(PREV_CHANGESET_ID_PATH)
+			: "0";
+		return int.TryParse(str, out var id) ? id : 0;
 	}
 
 	private static int[] GetChangeChangSetIdsLastBuildVersions(int limit, string commentLike = "Build Version")
@@ -89,7 +93,6 @@ public abstract class PreBuildBase
 	public virtual void Run()
 	{
 		// get previously store change set value
-		PreviousChangeSetId = GetPreviousChangeSetId();
 		CurrentChangeSetId = GetCurrentChangeSetId();
 
 		// get current change set number from plastic
@@ -117,13 +120,35 @@ public abstract class PreBuildBase
 	{
 		if (string.IsNullOrEmpty(BuildVersion))
 			return;
+		
+		// write new prev changeset id
+		File.WriteAllText(PREV_CHANGESET_ID_PATH, CurrentChangeSetId.ToString());
 
-		// update in case there are new changes in coming  
+		// update in case there are new changes in coming otherwise it will fail
 		Cmd.Run("cm", "update");
 		
+		/*
+		 * checkin files:
+		 *		- project settings
+		 *		- steam vdfs
+		 *		- previous changeset id, 
+		 */
+		var filesToCommit = new List<string>
+		{
+			PROJECT_SETTINGS,
+			PREV_CHANGESET_ID_PATH,
+		};
+		
+		// add vdfs
+		var vdfs = new DirectoryInfo(STEAM_DIR_PATH).GetFiles("*.vdf");
+		var relativeNames = vdfs.Select(x => x.FullName.Replace(Environment.CurrentDirectory, string.Empty));
+		filesToCommit.AddRange(relativeNames);
+		
+		// commit changes
+		var filesStr = string.Join(" ", filesToCommit);
 		var fullCommitMessage = $"{messagePrefix}: {BuildVersion}";
 		Logger.Log($"Commiting new build version \"{fullCommitMessage}\"");
-		Cmd.Run("cm", $"ci {PROJECT_SETTINGS} -c=\"{fullCommitMessage}\"");
+		Cmd.Run("cm", $"ci {filesStr} -c=\"{fullCommitMessage}\"");
 	}
 
 	private static string GetAppVersion()
