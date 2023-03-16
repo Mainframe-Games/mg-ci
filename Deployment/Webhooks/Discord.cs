@@ -5,7 +5,7 @@ using SharedLib;
 
 namespace Deployment.Webhooks;
 
-public class Discord
+public static class Discord
 {
 	public enum Colour
 	{
@@ -57,22 +57,14 @@ public class Discord
 
 			var data = Encoding.ASCII.GetBytes(json.ToString());
 			req.ContentLength = data.Length;
-
 			using var stream = req.GetRequestStream();
 			stream.Write(data, 0, data.Length);
-
-			var res = req.GetResponse();
-			var resStream = res.GetResponseStream();
-			if (resStream == null)
-				return;
-			using var reader = new StreamReader(resStream, Encoding.ASCII);
-			var responseText = reader.ReadToEnd();
-			Logger.Log($"Discord Response: {responseText}");
+			using var res = req.GetResponse();
+			// discord doesn't respond with any text so just fire and forget
 		}
 		catch (Exception e)
 		{
-			Console.Error.WriteLine($"Discord hook error with url: {channelUrl}");
-			Console.Error.WriteLine(e);
+			Logger.Log(e);
 		}
 	}
 }

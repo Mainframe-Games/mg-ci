@@ -48,9 +48,11 @@ public class BuildPipeline
 			await PostBuild();
 			Logger.Log($"Pipeline Completed. {TimeSinceStart}");
 			OnCompleted?.Invoke();
+			Current = null;
 		}
 		catch (Exception e)
 		{
+			Logger.Log(e);
 			SendErrorHook(e);
 		}
 	}
@@ -175,7 +177,7 @@ public class BuildPipeline
 
 		Logger.Log("PostBuild process started...");
 		
-		_preBuild?.CommitNewVersionNumber();
+		_preBuild.CommitNewVersionNumber();
 		
 		var commits = _config.PreBuild?.ChangeLog == true
 			? _preBuild?.GetChangeLog()

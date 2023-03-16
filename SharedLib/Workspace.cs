@@ -134,6 +134,15 @@ public class Workspace
 			DeleteIfExist(file);
 	}
 
+	public int GetCurrentChangeSetId()
+	{
+		var currentDir = Environment.CurrentDirectory;
+		Environment.CurrentDirectory = Directory;
+		var cmdRes = Cmd.Run("cm", "find changeset \"where branch='main'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid}\" --nototal");
+		Environment.CurrentDirectory = currentDir;
+		return int.TryParse(cmdRes.output, out var id) ? id : 0;
+	}
+
 	private static void DeleteIfExist(FileSystemInfo fileSystemInfo)
 	{
 		if (!fileSystemInfo.Exists)

@@ -11,20 +11,18 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 	{
 		var mapping = new WorkspaceMapping();
 		var workspaceName = mapping.GetRemapping(WorkspaceName);
-		
-		Logger.Log($"Environment.CurrentDirectory: {Environment.CurrentDirectory}");
-		
-		var currentWorkspace = Workspace.GetWorkspaceFromName(workspaceName);
-		Logger.Log($"Chosen workspace: {currentWorkspace}");
-		currentWorkspace.Update();
+		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
+		Logger.Log($"Chosen workspace: {workspace}");
+		workspace.Update();
 
 		if (BuildPipeline.Current != null)
 			throw new Exception($"A build process already active. {BuildPipeline.Current.Workspace}");
 		
-		FireAndForgetBuild(currentWorkspace, Args);
-		Logger.Log("Fired off build");
+		var changeSetId = workspace.GetCurrentChangeSetId();
+		FireAndForgetBuild(workspace, Args);
+		
 		await Task.CompletedTask;
-		return $"{currentWorkspace.Name} | {currentWorkspace.UnityVersion}";
+		return $"{workspace.Name} | {workspace.UnityVersion} | changeSetId: {changeSetId}";
 	}
 
 	private static void FireAndForgetBuild(Workspace currentWorkspace, string[]? args)

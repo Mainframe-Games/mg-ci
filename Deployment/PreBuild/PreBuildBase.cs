@@ -28,8 +28,8 @@ public enum PreBuildType
 public abstract class PreBuildBase
 {
 	private const string PROJECT_SETTINGS = "ProjectSettings/ProjectSettings.asset";
-	private const string PREV_CHANGESET_ID_PATH = "BuildSettings/previous-changesetId.txt";
-	private const string STEAM_DIR_PATH = "BuildSettings/Steam";
+	private const string PREV_CHANGESET_ID_PATH = "BuildScripts/previous-changesetId.txt";
+	private const string STEAM_DIR_PATH = "BuildScripts/Steam";
 	
 	public int CurrentChangeSetId { get; protected set; }
 	public static int PreviousChangeSetId => GetPreviousChangeSetId();
