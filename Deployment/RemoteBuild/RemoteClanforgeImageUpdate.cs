@@ -13,7 +13,6 @@ public class RemoteClanforgeImageUpdate : IRemoteControllable
 
 	public async Task<string> ProcessAsync()
 	{
-		
 		_ = Task.Run(ProcessInternal);
 		await Task.CompletedTask;
 		return "ok";
@@ -21,16 +20,15 @@ public class RemoteClanforgeImageUpdate : IRemoteControllable
 
 	private async Task ProcessInternal()
 	{
-		var clanforge = new ClanForgeDeploy(Config, Desc);
-
 		try
 		{
+			var clanforge = new ClanForgeDeploy(Config, Desc);
 			await clanforge.Deploy();
-			SendHook(Desc, ClanforgeConfig.BuildHookMessage(Config, "Updated"));
+			SendHook(Desc, Config?.BuildHookMessage("Updated"));
 		}
 		catch (Exception e)
 		{
-			SendHook(ClanforgeConfig.BuildHookMessage(Config, $"Failed ({e.GetType().Name})"), e.Message, true);
+			SendHook(Config?.BuildHookMessage($"Failed ({e.GetType().Name})"), e.Message, true);
 		}
 	}
 

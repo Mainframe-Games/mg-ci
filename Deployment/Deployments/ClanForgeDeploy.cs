@@ -12,7 +12,7 @@ namespace Deployment.Deployments;
 public class ClanForgeDeploy
 {
 	private const string BASE_URL = "https://api.multiplay.co.uk/cfp/v1";
-	private const int POLL_TIME = 3000;
+	private const int POLL_TIME = 5000;
 	
 	/// <summary>
 	/// A base64 encoded string of '{AccessKey}:{SecretKey}'
@@ -20,7 +20,7 @@ public class ClanForgeDeploy
 	private string AuthToken { get; }
 	private uint ASID { get; }
 	private uint MachineId { get; }
-	private uint ImageId { get; }
+	private uint[] ImageIds { get; }
 	private string Desc { get; }
 	private string Url { get; }
 
@@ -33,20 +33,26 @@ public class ClanForgeDeploy
 		AuthToken = $"Basic {base64}";
 		ASID = clanforgeConfig.Asid;
 		MachineId = clanforgeConfig.MachineId;
-		ImageId = clanforgeConfig.ImageId;
+		ImageIds = clanforgeConfig.ImageIds ?? Array.Empty<uint>();
 		Url = Uri.EscapeDataString(clanforgeConfig.Url ?? string.Empty);
 		Desc = desc ?? string.Empty;
+	}
+
+	public async Task Deploy()
+	{
+		var tasks = ImageIds.Select(DeployInternal);
+		await Task.WhenAll(tasks);
 	}
 
 	/// <summary>
 	/// Entry build for deploying build to clanforge.
 	/// Must be done after Steam Deploy
 	/// </summary>
-	public async Task Deploy()
+	private async Task DeployInternal(uint imageId)
 	{
 		// create image
 		Console.WriteLine("...creating new image");
-		var updateId = await CreateNewImage();
+		var updateId = await CreateNewImage(imageId);
 
 		// poll for when diff is ready
 		Console.WriteLine("...polling image status");
@@ -54,7 +60,7 @@ public class ClanForgeDeploy
 
 		// generate diff
 		Console.WriteLine("...generating diff");
-		var diffId = await GenerateDiff();
+		var diffId = await GenerateDiff(imageId);
 
 		// poll for diff status
 		Console.WriteLine("...polling diff status");
@@ -71,9 +77,9 @@ public class ClanForgeDeploy
 	/// </summary>
 	/// <returns>updateid</returns>
 	/// <exception cref="WebException"></exception>
-	private async Task<int> CreateNewImage()
+	private async Task<int> CreateNewImage(uint imageId)
 	{
-		var url = $"{BASE_URL}/imageupdate/create?imageid={ImageId}&desc=\"{Desc}\"&machineid={MachineId}&accountserviceid={ASID}&url={Url}";
+		var url = $"{BASE_URL}/imageupdate/create?imageid={imageId}&desc=\"{Desc}\"&machineid={MachineId}&accountserviceid={ASID}&url={Url}";
 		var content = await SendRequest(url);
 		return content["updateid"]?.Value<int>() ?? -1;
 	}
@@ -106,9 +112,9 @@ public class ClanForgeDeploy
 	/// Docs: https://docs.unity.com/game-server-hosting/en/manual/api/endpoints/image-diff-create
 	/// </summary>
 	/// <returns>diffid</returns>
-	private async Task<int> GenerateDiff()
+	private async Task<int> GenerateDiff(uint imageId)
 	{
-		var url = $"{BASE_URL}/imagediff/create?imageid={ImageId}&machineid={MachineId}&accountserviceid={ASID}";
+		var url = $"{BASE_URL}/imagediff/create?imageid={imageId}&machineid={MachineId}&accountserviceid={ASID}";
 		var content = await SendRequest(url);
 		return content["diffid"]?.Value<int>() ?? -1;
 	}

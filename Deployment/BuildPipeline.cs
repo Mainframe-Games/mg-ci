@@ -1,4 +1,5 @@
-﻿using Deployment.ChangeLogBuilders;
+﻿using System.Text;
+using Deployment.ChangeLogBuilders;
 using Deployment.Configs;
 using Deployment.Deployments;
 using Deployment.PreBuild;
@@ -21,6 +22,8 @@ public class BuildPipeline
 	private PreBuildBase _preBuild;
 
 	public Workspace Workspace { get; }
+	private DateTime StartTime { get; set; }
+	private string TimeSinceStart => $"{DateTime.Now - StartTime:hh\\:mm\\:ss}";
 
 	private string BuildVersionTitle => $"Build Version: {_preBuild?.BuildVersion}";
 
@@ -36,13 +39,20 @@ public class BuildPipeline
 	
 	public async Task RunAsync()
 	{
-		var startTime = DateTime.Now;
-		await Prebuild();
-		await Build();
-		await DeployAsync();
-		await PostBuild();
-		Logger.Log($"Pipeline Completed. {DateTime.Now - startTime:hh\\:mm\\:ss}");
-		OnCompleted?.Invoke();
+		try
+		{
+			StartTime = DateTime.Now;
+			await Prebuild();
+			await Build();
+			await DeployAsync();
+			await PostBuild();
+			Logger.Log($"Pipeline Completed. {TimeSinceStart}");
+			OnCompleted?.Invoke();
+		}
+		catch (Exception e)
+		{
+			SendErrorHook(e);
+		}
 	}
 
 	private async Task Prebuild()
@@ -176,21 +186,32 @@ public class BuildPipeline
 
 		// optional message from clanforge
 		var clanforgeMessage = _config.Deploy?.Clanforge == true 
-			? ClanforgeConfig.BuildHookMessage(ServerConfig.Instance.Clanforge, "Updated")
+			? ServerConfig.Instance.Clanforge?.BuildHookMessage("Updated")
 			: string.Empty;
 		
 		foreach (var hook in _config.Hooks)
 		{
+			if (hook.IsErrorChannel)
+				continue;
+			
 			if (hook.IsDiscord())
 			{
 				var discord = new ChangeLogBuilderDiscord();
 				discord.BuildLog(commits);
-				var message = $"{clanforgeMessage}\n{discord}";
-				Discord.PostMessage(hook.Url, message, hook.Title, BuildVersionTitle, Discord.Colour.GREEN);
+				var hookMessage = new StringBuilder();
+				hookMessage.AppendLine($"Total Time: {TimeSinceStart}");
+				hookMessage.AppendLine(clanforgeMessage);
+				hookMessage.AppendLine(discord.ToString());
+				
+				Discord.PostMessage(hook.Url, hookMessage.ToString(), hook.Title, BuildVersionTitle, Discord.Colour.GREEN);
 			}
 			else if (hook.IsSlack())
 			{
-				Slack.PostMessage(hook.Url, $"{hook.Title} | {BuildVersionTitle}");
+				var hookMessage = new StringBuilder();
+				hookMessage.AppendLine($"{hook.Title} | {BuildVersionTitle}");
+				hookMessage.AppendLine($"Total Time: {TimeSinceStart}");
+				hookMessage.AppendLine(clanforgeMessage);
+				Slack.PostMessage(hook.Url, hookMessage.ToString());
 			}
 		}
 		
@@ -221,6 +242,35 @@ public class BuildPipeline
 	public async Task RemoteBuildReceived(RemoteBuildResponse remoteBuildResponse)
 	{
 		await _unity.RemoteBuildReceived(remoteBuildResponse);
+	}
+
+	private void SendErrorHook(Exception e)
+	{
+		if(_config.Hooks == null)
+			return;
+		
+		var hookMessage = new StringBuilder();
+		
+		foreach (var hook in _config.Hooks)
+		{
+			if (!hook.IsErrorChannel)
+				continue;
+			
+			hookMessage.Clear();
+				
+			if (hook.IsDiscord())
+			{
+				hookMessage.AppendLine(hook.Title);
+				hookMessage.AppendLine(e.ToString());
+				Discord.PostMessage(hook.Url, hookMessage.ToString(), hook.Title, BuildVersionTitle, Discord.Colour.RED);
+			}
+			else if (hook.IsSlack())
+			{
+				hookMessage.AppendLine(hook.Title);
+				hookMessage.AppendLine(e.ToString());
+				Slack.PostMessage(hook.Url, hookMessage.ToString());
+			}
+		}
 	}
 
 	#endregion

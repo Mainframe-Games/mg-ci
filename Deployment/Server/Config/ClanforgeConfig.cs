@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Deployment.Server.Config;
 
 public class ClanforgeConfig
@@ -6,11 +8,11 @@ public class ClanforgeConfig
 	public string? SecretKey { get; set; }
 	public uint Asid { get; set; }
 	public uint MachineId { get; set; }
-	public uint ImageId { get; set; }
+	public uint[]? ImageIds { get; set; }
 	public string? Url { get; set; }
 	public Dictionary<string, string>? ImageIdProfileNames { get; set; }
 
-	public string GetProfileName(uint imageId)
+	private string GetProfileName(uint imageId)
 	{
 		if (ImageIdProfileNames == null)
 			return string.Empty;
@@ -26,12 +28,19 @@ public class ClanforgeConfig
 		return string.Empty;
 	}
 
-	public static string BuildHookMessage(ClanforgeConfig? config, string status)
+	public string BuildHookMessage(string status)
 	{
-		if (config == null)
+		if (ImageIds == null)
 			return string.Empty;
 		
-		var profileName = config.GetProfileName(config.ImageId);
-		return $"Game Image {status}: {profileName} ({config.ImageId})";
+		var str = new StringBuilder();
+		
+		foreach (var imageId in ImageIds)
+		{
+			var profileName = GetProfileName(imageId);
+			str.AppendLine($"Game Image {status}: {profileName} ({imageId})");
+		}
+		
+		return str.ToString();
 	}
 }
