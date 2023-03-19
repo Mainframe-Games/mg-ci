@@ -168,10 +168,18 @@ public class LocalUnityBuild
 	/// </summary>
 	public async Task WaitBuildIds()
 	{
+		var cachedCount = -1;
+		
 		while (_buildIds.Count > 0)
 		{
-			Logger.Log($"Remaining buildIds: ({_buildIds.Count}) {string.Join(", ", _buildIds)}");
-			await Task.Delay(2000);
+			// to limit the amount of log spamming just log when count changes
+			if (_buildIds.Count != cachedCount)
+			{
+				Logger.Log($"Remaining buildIds: ({_buildIds.Count}) {string.Join(", ", _buildIds)}");
+				cachedCount = _buildIds.Count;
+			}
+			
+			await Task.Delay(3000);
 		}
 	}
 }
