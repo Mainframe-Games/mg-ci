@@ -177,11 +177,13 @@ public class BuildPipeline
 
 		Logger.Log("PostBuild process started...");
 		
-		_preBuild.CommitNewVersionNumber();
-		
+		// collect change logs
 		var commits = _config.PreBuild?.ChangeLog == true
 			? _preBuild?.GetChangeLog()
 			: Array.Empty<string>();
+		
+		// committing new version must be done after collecting changeLogs as the prev changesetid will be updated
+		_preBuild?.CommitNewVersionNumber();
 		
 		if (_config.Hooks == null)
 			return;
