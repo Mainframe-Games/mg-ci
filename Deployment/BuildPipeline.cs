@@ -48,13 +48,14 @@ public class BuildPipeline
 			await PostBuild();
 			Logger.Log($"Pipeline Completed. {TimeSinceStart}");
 			OnCompleted?.Invoke();
-			Current = null;
 		}
 		catch (Exception e)
 		{
 			Logger.Log(e);
 			SendErrorHook(e);
 		}
+		
+		Current = null;
 	}
 
 	private async Task Prebuild()
