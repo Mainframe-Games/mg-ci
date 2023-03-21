@@ -3,7 +3,6 @@ using Deployment.ChangeLogBuilders;
 using Deployment.Configs;
 using Deployment.Deployments;
 using Deployment.PreBuild;
-using Deployment.RemoteBuild;
 using Deployment.Server.Config;
 using Deployment.Webhooks;
 using SharedLib;
@@ -16,8 +15,7 @@ public class BuildPipeline
 	public static event Action? OnCompleted; 
 
 	private readonly Args _args;
-	
-	private LocalUnityBuild _unity;
+
 	private BuildConfig _config;
 	private PreBuildBase _preBuild;
 
@@ -25,7 +23,7 @@ public class BuildPipeline
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{DateTime.Now - StartTime:hh\\:mm\\:ss}";
 	private string BuildVersionTitle => $"Build Version: {_preBuild?.BuildVersion}";
-	public LocalUnityBuild Unity => _unity;
+	public LocalUnityBuild Unity { get; private set; }
 
 	public BuildPipeline(Workspace workspace, string[]? args)
 	{
@@ -85,9 +83,9 @@ public class BuildPipeline
 		if (_args.IsFlag("-nobuild"))
 			return;
 		
-		_unity = new LocalUnityBuild(Workspace.UnityVersion);
+		Unity = new LocalUnityBuild(Workspace.UnityVersion);
 
-		if (_config == null || _unity == null || _config.Builds == null)
+		if (_config == null || Unity == null || _config.Builds == null)
 			throw new NullReferenceException();
 		
 		Logger.Log("Build process started...");
@@ -100,7 +98,7 @@ public class BuildPipeline
 			// Build
 			if (IsOffload(build))
 			{
-				success = await _unity.SendRemoteBuildRequest(Workspace.Name, 
+				success = await Unity.SendRemoteBuildRequest(Workspace.Name, 
 					_preBuild.CurrentChangeSetId,
 					_preBuild.BuildVersion,
 					build, 
@@ -109,14 +107,14 @@ public class BuildPipeline
 			}
 			else
 			{
-				success = await _unity.Build(build);
+				success = await Unity.Build(build);
 			}
 			
 			if (!success)
 				throw new Exception("Build Failure");
 		}
 		
-		await _unity.WaitBuildIds();
+		await Unity.WaitBuildIds();
 	}
 
 	/// <summary>

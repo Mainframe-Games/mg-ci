@@ -109,6 +109,7 @@ public class ListenServer
 		using var reader = new BinaryReader(request.InputStream, request.ContentEncoding);
 		var packet = new RemoteBuildResponse();
 		packet.Read(reader);
+		await Task.CompletedTask;
 		return ProcessPacket(packet);
 	}
 
