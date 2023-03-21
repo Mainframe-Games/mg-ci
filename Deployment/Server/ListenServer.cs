@@ -142,7 +142,7 @@ public class ListenServer
 		}
 		catch (Exception e)
 		{
-			Console.Error.WriteLine(e);
+			Logger.Log(e);
 			return new ServerResponse(HttpStatusCode.InternalServerError, e.Message);
 		}
 	}

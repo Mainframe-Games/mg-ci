@@ -38,6 +38,9 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	/// <exception cref="WebException"></exception>
 	private async Task StartBuilder(string buildId)
 	{
+		// this needs to be here to kick start the thread, otherwise it will stall app
+		await Task.Delay(1);
+		
 		var mapping = new WorkspaceMapping();
 		var workspaceName = mapping.GetRemapping(WorkspaceName);
 		var workspace = Workspace.GetWorkspaceFromName(workspaceName);

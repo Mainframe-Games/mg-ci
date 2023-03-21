@@ -1,6 +1,4 @@
-﻿using SharedLib;
-
-namespace Deployment.Misc;
+﻿namespace Deployment.Misc;
 
 public static class TaskEx
 {
@@ -10,23 +8,24 @@ public static class TaskEx
 	/// </summary>
 	/// <param name="taskToRun"></param>
 	/// <param name="onExceptionThrown"></param>
-	public static void FireAndForget(this Task taskToRun, Action<Exception>? onExceptionThrown = null)
+	public static Thread FireAndForget(this Task taskToRun, Action<Exception>? onExceptionThrown = null)
 	{
-		new Thread(() =>
+		var thread = new Thread(() =>
 		{
 			try
 			{
-				var task = Task.Run(() => taskToRun);
-				task.Wait();
+				taskToRun.Wait();
 			}
 			catch (AggregateException ae)
 			{
 				foreach (var e in ae.InnerExceptions)
 				{
-					Logger.Log(e);
+					Console.WriteLine(e);
 					onExceptionThrown?.Invoke(e);
 				}
 			}
-		}).Start();
+		});
+		thread.Start();
+		return thread;
 	}
 }
