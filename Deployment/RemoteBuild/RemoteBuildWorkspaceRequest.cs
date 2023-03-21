@@ -1,4 +1,5 @@
-﻿using SharedLib;
+﻿using Deployment.Misc;
+using SharedLib;
 
 namespace Deployment.RemoteBuild;
 
@@ -28,6 +29,6 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 	private static void FireAndForgetBuild(Workspace currentWorkspace, string[]? args)
 	{
 		var pipe = new BuildPipeline(currentWorkspace, args);
-		Task.Run(pipe.RunAsync);
+		pipe.RunAsync().FireAndForget();
 	}
 }

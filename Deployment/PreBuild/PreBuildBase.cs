@@ -79,17 +79,6 @@ public abstract class PreBuildBase
 		return int.TryParse(str, out var id) ? id : 0;
 	}
 
-	// private static int[] GetChangeChangSetIdsLastBuildVersions(int limit, string commentLike = "Build Version")
-	// {
-	// 	var cmdRes = Cmd.Run("cm", $"find changeset \"where branch='main' and comment like '%{commentLike}%'\" \"order by date desc\" \"limit {limit}\" --format=\"{{changesetid}}\" --nototal");
-	// 	var stdOut = cmdRes.output;
-	// 	var lines = stdOut.Split(Environment.NewLine);
-	// 	var changesetIds = new int[lines.Length];
-	// 	for (int i = 0; i < lines.Length; i++)
-	// 		changesetIds[i] = int.TryParse(lines[i], out var id) ? id : 0;
-	// 	return changesetIds;
-	// }
-	
 	public virtual void Run()
 	{
 		// get previously store change set value

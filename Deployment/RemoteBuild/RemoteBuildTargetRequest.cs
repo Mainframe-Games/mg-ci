@@ -37,7 +37,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 
 	private void StartBuild(string buildId)
 	{
-		Task.Run(() => StartBuilder(buildId)); // fire and forget
+		StartBuilder(buildId).FireAndForget();
 	}
 	
 	/// <summary>
