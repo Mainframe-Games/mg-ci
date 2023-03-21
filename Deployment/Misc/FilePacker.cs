@@ -8,40 +8,28 @@ namespace Deployment.Misc;
 /// </summary>
 public static class FilePacker
 {
-	private const uint MB = 1000000;
-	
-	/// <summary>
-	/// 
-	/// </summary>
-	/// <param name="pathToDir"></param>
-	/// <returns>Base64 string of zip file</returns>
-	public static async Task<string> PackAsync(string? pathToDir)
+	public static async Task<byte[]> PackRawAsync(string? pathToDir)
 	{
 		var zipPath = $"{pathToDir}.zip";
 		Delete(zipPath);
 		Logger.Log($"Packing file... {zipPath}");
 		ZipFile.CreateFromDirectory(pathToDir, zipPath);
 		var fileBytes = await File.ReadAllBytesAsync(zipPath);
-		Logger.Log($"Zip size: {fileBytes.Length / MB} {nameof(MB)}");
-		// var compressBytes = GZip.Compress(fileBytes);
-		// Logger.Log($"Zip size (compressed): {compressBytes.Length / MB} {nameof(MB)}");
-		var base64 = Convert.ToBase64String(fileBytes);
-		return base64;
+		Logger.Log($"Zip size: {fileBytes.ToMegaByteString()}");
+		return fileBytes;
 	}
 	
-	public static async Task UnpackAsync(string? zipName, string? base64, string? destPathDir)
+	public static async Task UnpackRawAsync(string? zipName, byte[] data, string? destPathDir)
 	{
 		Delete(zipName);
 		Delete(destPathDir);
 		Logger.Log($"Unpacking file... '{zipName}' to '{destPathDir}'");
-		var compressedBytes = Convert.FromBase64String(base64);
-		// var fileBytes = GZip.Decompress(compressedBytes);
-		await File.WriteAllBytesAsync(zipName, compressedBytes);
+		await File.WriteAllBytesAsync(zipName, data);
 		ZipFile.ExtractToDirectory(zipName, destPathDir);
 		Delete(zipName);
 		Logger.Log("Unpacking file... done");
 	}
-
+	
 	private static void Delete(string? path)
 	{
 		if (File.Exists(path))

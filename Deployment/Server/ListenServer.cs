@@ -1,5 +1,8 @@
 ﻿using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text;
+using Deployment.RemoteBuild;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SharedLib;
 
@@ -87,6 +90,7 @@ public class ListenServer
 		{
 			"GET" => await HandleGet(request),
 			"POST" => await HandlePost(request),
+			"PUT" => await HandlePut(request),
 			_ => throw new WebException($"HttpMethod not supported: {request.HttpMethod}")
 		};
 
@@ -97,6 +101,17 @@ public class ListenServer
 	{
 		await Task.CompletedTask;
 		return new ServerResponse(HttpStatusCode.OK, "ok");
+	}
+	
+	private static async Task<ServerResponse> HandlePut(HttpListenerRequest request)
+	{
+		if (!request.HasEntityBody)
+			return new ServerResponse(HttpStatusCode.NoContent, "No body was given in request");
+
+		using var reader = new BinaryReader(request.InputStream, request.ContentEncoding);
+		var packet = new RemoteBuildResponse();
+		packet.Read(reader);
+		return await ProcessPacket(packet);
 	}
 
 	private async Task<ServerResponse> HandlePost(HttpListenerRequest request)
@@ -111,10 +126,16 @@ public class ListenServer
 		
 		using var reader = new StreamReader(request.InputStream, request.ContentEncoding);
 		var jsonStr = await reader.ReadToEndAsync();
+		
 		var packet = Json.Deserialise<RemoteBuildPacket>(jsonStr);
 		if (packet == null)
 			throw new NullReferenceException($"{nameof(RemoteBuildPacket)} is null from json: {jsonStr}");
 
+		return await ProcessPacket(packet);
+	}
+
+	private static async Task<ServerResponse> ProcessPacket(IRemoteControllable packet)
+	{
 		try
 		{
 			var responseMessage = await packet.ProcessAsync();
@@ -135,11 +156,8 @@ public class ListenServer
 			var response = context.Response;
 			response.StatusCode = (int)serverResponse.StatusCode;
 			response.ContentType = "application/json";
-			var resJson = serverResponse.StatusCode == HttpStatusCode.OK
-				? CreateSuccessResponse(serverResponse)
-				: CreateErrorResponse(serverResponse);
-
-			var bytes = Encoding.UTF8.GetBytes(resJson.ToString());
+			var resJson = JsonConvert.SerializeObject(serverResponse);
+			var bytes = Encoding.UTF8.GetBytes(resJson);
 			response.OutputStream.Write(bytes);
 			response.OutputStream.Close();
 

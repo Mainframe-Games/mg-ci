@@ -143,23 +143,18 @@ public class LocalUnityBuild
 		}
 
 		var json = JObject.Parse(res.Content);
-		var buildId = json.SelectToken("data", true)?.ToString();
+		var buildId = json.SelectToken("Message", true)?.ToString();
 		Logger.Log($"Remote build id: {buildId}");
 		_buildIds.Add(buildId);
 		return true;
 	}
 
-	public async Task RemoteBuildReceived(RemoteBuildResponse remoteBuildResponse)
+	public async Task RemoteBuildReceived(string buildId, string buildPath, byte[] data)
 	{
-		var buildId = remoteBuildResponse.BuildId;
-		
 		if (!_buildIds.Contains(buildId))
 			throw new Exception($"Build ID not expected: {buildId}");
 
-		var zip = $"{remoteBuildResponse.Request.Config.BuildPath}.zip";
-		var base64 = remoteBuildResponse.Base64;
-		var buildPath = remoteBuildResponse.Request.Config.BuildPath;
-		await FilePacker.UnpackAsync(zip, base64, buildPath);
+		await FilePacker.UnpackRawAsync($"{buildPath}.zip", data, buildPath);
 		_buildIds.Remove(buildId);
 	}
 

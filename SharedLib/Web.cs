@@ -52,25 +52,51 @@ public static class Web
 			var jsonBodyLog = jsonBody.Length > 1000 ? $"{jsonBody[..1000]}...[truncated]" : jsonBody;
 			Logger.Log($"HTTP {method.ToString().ToUpper()} {url}\n{jsonBodyLog}");
 			
-			var res = await client.SendAsync(msg);
-			var content = await res.Content.ReadAsStringAsync();
-			
-			Logger.Log($"{res.StatusCode} {content}");
-
-			return new Response
-			{
-				StatusCode = res.StatusCode,
-				Reason = res.ReasonPhrase ?? string.Empty,
-				Content = content
-			};
+			using var res = await client.SendAsync(msg);
+			return await GetSuccess(res);
 		}
 		catch (Exception e)
 		{
-			return new Response
-			{
-				StatusCode = HttpStatusCode.InternalServerError,
-				Reason = e.Message
-			};
+			return GetError(e);
 		}
+	}
+
+	public static async Task<Response> SendBytesAsync(string? url, byte[] data)
+	{
+		try
+		{
+			using var client = new HttpClient();
+			using var byteContent = new ByteArrayContent(data);
+			Logger.Log($"Sending Data: {data.ToMegaByteString()}");
+			using var res = await client.PutAsync(url, byteContent);
+			return await GetSuccess(res);
+		}
+		catch (Exception e)
+		{
+			return GetError(e);
+		}
+	}
+
+	private static async Task<Response> GetSuccess(HttpResponseMessage res)
+	{
+		var content = await res.Content.ReadAsStringAsync();
+
+		Logger.Log($"{res.StatusCode} {content}");
+
+		return new Response
+		{
+			StatusCode = res.StatusCode,
+			Reason = res.ReasonPhrase ?? string.Empty,
+			Content = content
+		};
+	}
+
+	private static Response GetError(Exception e)
+	{
+		return new Response
+		{
+			StatusCode = HttpStatusCode.InternalServerError,
+			Reason = e.Message
+		};
 	}
 }

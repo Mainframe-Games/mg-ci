@@ -79,12 +79,13 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		if (success)
 		{
 			// send web request back to sender with zip folder of build
-			var base64 = await FilePacker.PackAsync(Config.BuildPath);
+			var zipBytes = await FilePacker.PackRawAsync(Config.BuildPath);
+			
 			response = new RemoteBuildResponse
 			{
-				Request = this,
 				BuildId = buildId,
-				Base64 = base64
+				BuildPath = Config?.BuildPath,
+				Data = zipBytes
 			};
 		}
 		else
@@ -92,30 +93,44 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 			// send web request to sender about the build failing
 			response = BuildErrorResponse(buildId, builder.Errors);
 		}
+			
+		await RespondBackToMasterServer(response);
 		
 		// clean up after build
 		workspace.Clear();
-
-		await RespondBackToMasterServer(response);
 	}
 
 	private RemoteBuildResponse BuildErrorResponse(string buildId, string? message = null)
 	{
 		return new RemoteBuildResponse
 		{
-			Request = this,
 			BuildId = buildId,
+			BuildPath = Config?.BuildPath,
 			Error = message ?? "build failed for reasons"
 		};
 	}
 
-	private static async Task RespondBackToMasterServer(RemoteBuildResponse response)
+	private async Task RespondBackToMasterServer(RemoteBuildResponse response)
 	{
-		// build is done or failed, tell sender about it
-		var sendBackUrl = response.Request.SendBackUrl;
-		var body = new RemoteBuildPacket { BuildResponse = response };
-		Logger.Log($"Sending build '{response.BuildId}' back to: {sendBackUrl}");
-		var res =  await Web.SendAsync(HttpMethod.Post, sendBackUrl, body: body);
+		Logger.Log($"Sending build '{response.BuildId}' back to: {SendBackUrl}");
+		
+		Web.Response res;
+			
+		if (string.IsNullOrEmpty(response.Error))
+		{
+			// success
+			using var ms = new MemoryStream();
+			await using var steam = new BinaryWriter(ms);
+			response.Write(steam);
+			res = await Web.SendBytesAsync(SendBackUrl, ms.ToArray());
+		}
+		else
+		{
+			// failed
+			var body = new RemoteBuildPacket { BuildResponse = response };
+			res =  await Web.SendAsync(HttpMethod.Post, SendBackUrl, body: body);
+		}
+		
 		if (res.StatusCode != HttpStatusCode.OK)
 			throw new WebException(res.Reason);
 	}

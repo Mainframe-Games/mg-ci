@@ -24,8 +24,8 @@ public class BuildPipeline
 	public Workspace Workspace { get; }
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{DateTime.Now - StartTime:hh\\:mm\\:ss}";
-
 	private string BuildVersionTitle => $"Build Version: {_preBuild?.BuildVersion}";
+	public LocalUnityBuild Unity => _unity;
 
 	public BuildPipeline(Workspace workspace, string[]? args)
 	{
@@ -242,11 +242,6 @@ public class BuildPipeline
 			throw new NullReferenceException("Failed to parse buildconfig.json");
 		
 		return configClass;
-	}
-
-	public async Task RemoteBuildReceived(RemoteBuildResponse remoteBuildResponse)
-	{
-		await _unity.RemoteBuildReceived(remoteBuildResponse);
 	}
 
 	private void SendErrorHook(Exception e)

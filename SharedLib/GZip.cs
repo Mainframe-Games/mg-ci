@@ -1,27 +1,12 @@
 using System.IO.Compression;
-using System.Text;
 
-namespace Deployment.Misc;
+namespace SharedLib;
 
 /// <summary>
 /// Wrapper class for GZipStream
 /// </summary>
 public static class GZip
 {
-	public static string Decompress(string input)
-	{
-		byte[] compressed = Convert.FromBase64String(input);
-		byte[] decompressed = Decompress(compressed);
-		return Encoding.UTF8.GetString(decompressed);
-	}
-
-	public static string Compress(string input)
-	{
-		byte[] encoded = Encoding.UTF8.GetBytes(input);
-		byte[] compressed = Compress(encoded);
-		return Convert.ToBase64String(compressed);
-	}
-
 	public static byte[] Decompress(byte[] input)
 	{
 		using var source = new MemoryStream(input);
