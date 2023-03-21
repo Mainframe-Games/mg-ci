@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Deployment.Misc;
+using Newtonsoft.Json;
 using SharedLib;
 
 namespace Deployment.RemoteBuild;
@@ -10,27 +11,18 @@ public class RemoteBuildResponse : IRemoteControllable
 	[JsonIgnore] public byte[]? Data { get; set; }
 	public string? Error { get; set; }
 
-	private Thread? _thread;
-	
-	public async Task<string> ProcessAsync()
+	public string Process()
 	{
 		if (!string.IsNullOrEmpty(Error))
 			throw new Exception(Error);
 
-		_thread = new Thread(UnpackBuild);
-		_thread.Start();
-		await Task.CompletedTask;
-		return "ok";
-	}
-
-	private async void UnpackBuild()
-	{
 		if (BuildPipeline.Current == null)
 			throw new NullReferenceException($"{nameof(BuildPipeline)} is not active");
-		Logger.Log($"Received build back from offload '{BuildId}'");
 		
 		Logger.Log($"BuildId: {BuildId}, {Data?.ToMegaByteString()}");
-		await BuildPipeline.Current.Unity.RemoteBuildReceived(BuildId, BuildPath, Data);
+		BuildPipeline.Current.Unity.RemoteBuildReceived(BuildId, BuildPath, Data).FireAndForget();
+		
+		return "ok";
 	}
 
 	public void Write(BinaryWriter writer)

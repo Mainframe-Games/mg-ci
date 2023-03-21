@@ -2,5 +2,9 @@
 
 public interface IRemoteControllable
 {
-	Task<string> ProcessAsync();
+	/// <summary>
+	/// Returns response message
+	/// </summary>
+	/// <returns></returns>
+	string Process();
 }

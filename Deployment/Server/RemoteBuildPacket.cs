@@ -31,12 +31,12 @@ public class RemoteBuildPacket : IRemoteControllable
 	/// 
 	/// </summary>
 	/// <returns>Response back to web sender so they know what happened</returns>
-	public async Task<string> ProcessAsync()
+	public string Process()
 	{
-		if (WorkspaceBuildRequest != null) return await WorkspaceBuildRequest.ProcessAsync();
-		if (BuildTargetRequest != null) return await BuildTargetRequest.ProcessAsync();
-		if (BuildResponse != null) return await BuildResponse.ProcessAsync();
-		if (ClanforgeImageUpdate != null) return await ClanforgeImageUpdate.ProcessAsync();
+		if (WorkspaceBuildRequest != null) return WorkspaceBuildRequest.Process();
+		if (BuildTargetRequest != null) return BuildTargetRequest.Process();
+		if (BuildResponse != null) return BuildResponse.Process();
+		if (ClanforgeImageUpdate != null) return ClanforgeImageUpdate.Process();
 		throw new Exception($"Issue with {nameof(RemoteBuildPacket)}. Neither {nameof(BuildTargetRequest)} or {nameof(BuildResponse)} is valid");
 	}
 }

@@ -1,9 +1,7 @@
 ﻿using System.Net;
-using System.Runtime.CompilerServices;
 using System.Text;
 using Deployment.RemoteBuild;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using SharedLib;
 
 namespace Deployment.Server;
@@ -111,7 +109,7 @@ public class ListenServer
 		using var reader = new BinaryReader(request.InputStream, request.ContentEncoding);
 		var packet = new RemoteBuildResponse();
 		packet.Read(reader);
-		return await ProcessPacket(packet);
+		return ProcessPacket(packet);
 	}
 
 	private async Task<ServerResponse> HandlePost(HttpListenerRequest request)
@@ -131,14 +129,14 @@ public class ListenServer
 		if (packet == null)
 			throw new NullReferenceException($"{nameof(RemoteBuildPacket)} is null from json: {jsonStr}");
 
-		return await ProcessPacket(packet);
+		return ProcessPacket(packet);
 	}
 
-	private static async Task<ServerResponse> ProcessPacket(IRemoteControllable packet)
+	private static ServerResponse ProcessPacket(IRemoteControllable packet)
 	{
 		try
 		{
-			var responseMessage = await packet.ProcessAsync();
+			var responseMessage = packet.Process();
 			return new ServerResponse(HttpStatusCode.OK, responseMessage);
 		}
 		catch (Exception e)
@@ -168,25 +166,5 @@ public class ListenServer
 		{
 			Logger.Log(e);
 		}
-	}
-
-	private static JObject CreateSuccessResponse(ServerResponse serverResponse)
-	{
-		return new JObject
-		{
-			["data"] = serverResponse.Message
-		};
-	}
-
-	private static JObject CreateErrorResponse(ServerResponse serverResponse)
-	{
-		return new JObject
-		{
-			["error"] = new JObject
-			{
-				["statusCode"] = serverResponse.StatusCode.ToString(),
-				["message"] = serverResponse.Message
-			}
-		};
 	}
 }

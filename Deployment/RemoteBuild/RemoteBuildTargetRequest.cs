@@ -21,25 +21,16 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	public bool CleanBuild { get; init; }
 	public string? SendBackUrl { get; init; }
 	public TargetConfig? Config { get; init; }
-	
-	/// <summary>
-	/// 
-	/// </summary>
+
 	/// <returns>BuildId</returns>
-	public async Task<string> ProcessAsync()
+	public string Process()
 	{
 		var buildId = Guid.NewGuid().ToString();
 		Logger.Log($"Created buildId: {buildId}");
-		StartBuild(buildId);
-		await Task.CompletedTask;
+		StartBuilder(buildId).FireAndForget();
 		return buildId;
 	}
 
-	private void StartBuild(string buildId)
-	{
-		StartBuilder(buildId).FireAndForget();
-	}
-	
 	/// <summary>
 	/// Fire and forget method for starting a build
 	/// </summary>

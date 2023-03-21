@@ -3,7 +3,6 @@ using Deployment.Deployments;
 using Deployment.Misc;
 using Deployment.Server.Config;
 using Deployment.Webhooks;
-using SharedLib;
 
 namespace Deployment.RemoteBuild;
 
@@ -13,10 +12,9 @@ public class RemoteClanforgeImageUpdate : IRemoteControllable
 	public string? Desc { get; set; }
 	public HooksConfig? Hook { get; set; }
 
-	public async Task<string> ProcessAsync()
+	public string Process()
 	{
 		ProcessInternalAsync().FireAndForget();
-		await Task.CompletedTask;
 		return "ok";
 	}
 
