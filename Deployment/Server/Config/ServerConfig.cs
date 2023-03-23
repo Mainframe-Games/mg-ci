@@ -1,4 +1,5 @@
-﻿using SharedLib;
+﻿using Deployment.Configs;
+using SharedLib;
 
 namespace Deployment.Server.Config;
 
@@ -14,6 +15,8 @@ internal class ServerConfig
 	public ushort Port { get; set; } = 8080;
 	public List<string>? AuthTokens { get; set; }
 	public string? OffloadServerUrl { get; set; }
+	public HooksConfig[]? Hooks { get; set; }
+	public UnityServicesConfig? UnityServices { get; set; }
 	public SteamServerConfig? Steam { get; set; }
 	public ClanforgeConfig? Clanforge { get; set; }
 

@@ -94,7 +94,7 @@ public abstract class PreBuildBase
 	/// </summary>
 	public string[] GetChangeLog(bool print = true)
 	{
-		var raw = Cmd.Run("cm", $"log --from={PreviousChangeSetId} cs:{CurrentChangeSetId} --csformat=\"{{comment}}\"").output;
+		var raw = Cmd.Run("cm", $"log --from=cs:{PreviousChangeSetId} cs:{CurrentChangeSetId} --csformat=\"{{comment}}\"").output;
 		var changeLog = raw.Split(Environment.NewLine).Reverse().ToArray();
 		
 		if (print)
@@ -138,7 +138,7 @@ public abstract class PreBuildBase
 		Cmd.Run("cm", $"ci {filesStr} -c=\"{fullCommitMessage}\"");
 	}
 
-	private static string GetAppVersion()
+	public static string GetAppVersion()
 	{
 		var appVer = File.ReadAllLines(PROJECT_SETTINGS)
 			.Single(x => x.Contains("bundleVersion:"))

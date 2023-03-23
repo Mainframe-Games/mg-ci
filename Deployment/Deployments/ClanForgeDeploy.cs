@@ -29,8 +29,7 @@ public class ClanForgeDeploy
 		if (clanforgeConfig == null)
 			throw new NullReferenceException($"Param {nameof(clanforgeConfig)} can not be null");
 
-		var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clanforgeConfig.AccessKey}:{clanforgeConfig.SecretKey}"));
-		AuthToken = $"Basic {base64}";
+		AuthToken = $"Basic {Base64Key.Generate(clanforgeConfig.AccessKey, clanforgeConfig.SecretKey)}";
 		ASID = clanforgeConfig.Asid;
 		MachineId = clanforgeConfig.MachineId;
 		ImageIds = clanforgeConfig.ImageIds ?? Array.Empty<uint>();

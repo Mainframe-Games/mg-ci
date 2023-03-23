@@ -53,6 +53,10 @@ public static class Web
 			Logger.Log($"HTTP {method.ToString().ToUpper()} {url}\n{jsonBodyLog}");
 			
 			using var res = await client.SendAsync(msg);
+			
+			if (res.StatusCode != HttpStatusCode.OK)
+				throw new WebException(res.ReasonPhrase);
+			
 			return await GetSuccess(res);
 		}
 		catch (Exception e)

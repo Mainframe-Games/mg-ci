@@ -26,6 +26,11 @@ public class RemoteBuildPacket : IRemoteControllable
 	/// For updating a clanforge image via API request
 	/// </summary>
 	public RemoteClanforgeImageUpdate? ClanforgeImageUpdate { get; set; }
+	
+	/// <summary>
+	/// Used to do any automation after switch `default` on Steam
+	/// </summary>
+	public ProductionRequest? ProductionProcess { get; set; }
 
 	/// <summary>
 	/// 
@@ -37,6 +42,7 @@ public class RemoteBuildPacket : IRemoteControllable
 		if (BuildTargetRequest != null) return BuildTargetRequest.Process();
 		if (BuildResponse != null) return BuildResponse.Process();
 		if (ClanforgeImageUpdate != null) return ClanforgeImageUpdate.Process();
+		if (ProductionProcess != null) return ProductionProcess.Process();
 		throw new Exception($"Issue with {nameof(RemoteBuildPacket)}. Neither {nameof(BuildTargetRequest)} or {nameof(BuildResponse)} is valid");
 	}
 }
