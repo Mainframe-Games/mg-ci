@@ -19,21 +19,11 @@ public enum PreBuildType
 	/// </summary>
 	Major_Minor,
 	
-	/// <summary>
-	/// MAJOR.CHANGE_SET_ID - Major version increments. ChangeSetId from HEAD on Plastic
-	/// </summary>
-	Major_ChangeSetId
+	// TODO: add MAJOR_MINOR_PATCH
 }
 
 public abstract class PreBuildBase
-{
-	private const string PROJECT_SETTINGS = "ProjectSettings/ProjectSettings.asset";
-	private const string PREV_CHANGESET_ID_PATH = "BuildScripts/previous-changesetId.txt";
-	private const string STEAM_DIR_PATH = "BuildScripts/Steam";
-	
-	public int CurrentChangeSetId { get; protected set; }
-	public static int PreviousChangeSetId => GetPreviousChangeSetId();
-	
+{ 
 	/// <summary>
 	/// Format 0.0000 (buildnumber.changesetid)
 	/// </summary>
@@ -52,95 +42,15 @@ public abstract class PreBuildBase
 			PreBuildType.None => new PreBuild_None(),
 			PreBuildType.Major => new PreBuild_Major(),
 			PreBuildType.Major_Minor => new PreBuild_Major_Minor(),
-			PreBuildType.Major_ChangeSetId => new PreBuild_Major_ChangeSetId(),
 			_ => throw new ArgumentOutOfRangeException(nameof(preBuildType), preBuildType, null)
 		};
 	}
 
-	/// <summary>
-	/// Gets the current changeSetId
-	/// </summary>
-	/// <returns></returns>
-	private static int GetCurrentChangeSetId()
-	{
-		var cmdRes = Cmd.Run("cm", "find changeset \"where branch='main'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid}\" --nototal");
-		return int.TryParse(cmdRes.output, out var id) ? id : 0;
-	}
-
-	/// <summary>
-	/// Gets previous changeSetId based on commit message
-	/// </summary>
-	/// <returns></returns>
-	private static int GetPreviousChangeSetId()
-	{
-		var str = File.Exists(PREV_CHANGESET_ID_PATH)
-			? File.ReadAllText(PREV_CHANGESET_ID_PATH)
-			: "0";
-		return int.TryParse(str, out var id) ? id : 0;
-	}
-
-	public virtual void Run()
-	{
-		// get previously store change set value
-		CurrentChangeSetId = GetCurrentChangeSetId();
-
-		// get current change set number from plastic
-		Logger.Log($"{nameof(PreviousChangeSetId)}: {PreviousChangeSetId}");
-		Logger.Log($"{nameof(CurrentChangeSetId)}: {CurrentChangeSetId}");
-	}
-
-	/// <summary>
-	/// Gets all change logs between two changeSetIds
-	/// </summary>
-	public string[] GetChangeLog(bool print = true)
-	{
-		var raw = Cmd.Run("cm", $"log --from=cs:{PreviousChangeSetId} cs:{CurrentChangeSetId} --csformat=\"{{comment}}\"").output;
-		var changeLog = raw.Split(Environment.NewLine).Reverse().ToArray();
-		
-		if (print)
-			Logger.Log($"___Change Logs___\n{string.Join("\n", changeLog)}");
-		
-		return changeLog;
-	}
-
-	public void CommitNewVersionNumber(string messagePrefix = "Build Version")
-	{
-		if (string.IsNullOrEmpty(BuildVersion))
-			return;
-		
-		// write new prev changeset id
-		File.WriteAllText(PREV_CHANGESET_ID_PATH, CurrentChangeSetId.ToString());
-
-		// update in case there are new changes in coming otherwise it will fail
-		Cmd.Run("cm", "update");
-		
-		/*
-		 * checkin files:
-		 *		- project settings
-		 *		- steam vdfs
-		 *		- previous changeset id, 
-		 */
-		var filesToCommit = new List<string>
-		{
-			PROJECT_SETTINGS,
-			PREV_CHANGESET_ID_PATH,
-		};
-		
-		// add vdfs
-		var vdfs = new DirectoryInfo(STEAM_DIR_PATH).GetFiles("*.vdf");
-		var relativeNames = vdfs.Select(x => x.FullName.Replace($"{Environment.CurrentDirectory}/", string.Empty));
-		filesToCommit.AddRange(relativeNames);
-		
-		// commit changes
-		var filesStr = string.Join(" ", filesToCommit);
-		var fullCommitMessage = $"{messagePrefix}: {BuildVersion}";
-		Logger.Log($"Commiting new build version \"{fullCommitMessage}\"");
-		Cmd.Run("cm", $"ci {filesStr} -c=\"{fullCommitMessage}\"");
-	}
+	public abstract void Run();
 
 	public static string GetAppVersion()
 	{
-		var appVer = File.ReadAllLines(PROJECT_SETTINGS)
+		var appVer = File.ReadAllLines(Workspace.PROJECT_SETTINGS)
 			.Single(x => x.Contains("bundleVersion:"))
 			.Replace("bundleVersion: ", string.Empty)
 			.Trim();
@@ -165,7 +75,7 @@ public abstract class PreBuildBase
 	/// <param name="newBundleVersion"></param>
 	public static void ReplaceVersions(string? newBundleVersion)
 	{
-		var lines = File.ReadAllLines(PROJECT_SETTINGS);
+		var lines = File.ReadAllLines(Workspace.PROJECT_SETTINGS);
 
 		var isBundleVersionFound = false;
 		var isBuildNumFound = false;
@@ -194,7 +104,7 @@ public abstract class PreBuildBase
 			}
 		}
 
-		File.WriteAllText(PROJECT_SETTINGS, string.Join("\n", lines));
+		File.WriteAllText(Workspace.PROJECT_SETTINGS, string.Join("\n", lines));
 	}
 	
 	private static string ReplaceText(string line, string version)

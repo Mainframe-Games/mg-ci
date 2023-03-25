@@ -2,6 +2,10 @@
 
 public class Workspace
 {
+	public const string PREV_CHANGESET_ID_PATH = "BuildScripts/previous-changesetId.txt";
+	public const string PROJECT_SETTINGS = "ProjectSettings/ProjectSettings.asset";
+	private const string STEAM_DIR_PATH = "BuildScripts/Steam";
+
 	public string? Name { get; private init; }
 	public string? Directory { get; private init; }
 	public string? UnityVersion { get; private set; }
@@ -138,9 +142,76 @@ public class Workspace
 	{
 		var currentDir = Environment.CurrentDirectory;
 		Environment.CurrentDirectory = Directory;
-		var cmdRes = Cmd.Run("cm", "find changeset \"where branch='main'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid}\" --nototal");
+		var cmdRes = Cmd.Run("cm", "find changeset \"where branch='main'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid}\" --nototal", false);
 		Environment.CurrentDirectory = currentDir;
 		return int.TryParse(cmdRes.output, out var id) ? id : 0;
+	}
+	
+	/// <summary>
+	/// Gets previous changeSetId based on commit message
+	/// </summary>
+	/// <returns></returns>
+	public int GetPreviousChangeSetId()
+	{
+		var currentDir = Environment.CurrentDirectory;
+		Environment.CurrentDirectory = Directory;
+
+		var str = File.Exists(PREV_CHANGESET_ID_PATH)
+			? File.ReadAllText(PREV_CHANGESET_ID_PATH)
+			: "0";
+		
+		Environment.CurrentDirectory = currentDir;
+		
+		return int.TryParse(str, out var id) ? id : 0;
+	}
+	
+	/// <summary>
+	/// Gets all change logs between two changeSetIds
+	/// </summary>
+	public static string[] GetChangeLog(int curId, int prevId, bool print = true)
+	{
+		var raw = Cmd.Run("cm", $"log --from=cs:{prevId} cs:{curId} --csformat=\"{{comment}}\"").output;
+		var changeLog = raw.Split(Environment.NewLine).Reverse().ToArray();
+		
+		if (print)
+			Logger.Log($"___Change Logs___\n{string.Join("\n", changeLog)}");
+		
+		return changeLog;
+	}
+	
+	public static void CommitNewVersionNumber(int currentChangeSetId, string buildVersion, string messagePrefix = "Build Version")
+	{
+		if (string.IsNullOrEmpty(buildVersion))
+			return;
+		
+		// write new prev changeset id
+		File.WriteAllText(PREV_CHANGESET_ID_PATH, currentChangeSetId.ToString());
+
+		// update in case there are new changes in coming otherwise it will fail
+		Cmd.Run("cm", "update");
+		
+		/*
+		 * checkin files:
+		 *		- project settings
+		 *		- steam vdfs
+		 *		- previous changeset id, 
+		 */
+		var filesToCommit = new List<string>
+		{
+			PROJECT_SETTINGS,
+			PREV_CHANGESET_ID_PATH,
+		};
+		
+		// add vdfs
+		var vdfs = new DirectoryInfo(STEAM_DIR_PATH).GetFiles("*.vdf");
+		var relativeNames = vdfs.Select(x => x.FullName.Replace($"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}", string.Empty));
+		filesToCommit.AddRange(relativeNames);
+		
+		// commit changes
+		var filesStr = $"\"{string.Join("\" \"", filesToCommit)}\"";
+		var fullCommitMessage = $"{messagePrefix}: {buildVersion}";
+		Logger.Log($"Commiting new build version \"{fullCommitMessage}\"");
+		Cmd.Run("cm", $"ci {filesStr} -c=\"{fullCommitMessage}\"");
 	}
 
 	private static void DeleteIfExist(FileSystemInfo fileSystemInfo)

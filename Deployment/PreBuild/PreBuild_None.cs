@@ -5,5 +5,5 @@ namespace Deployment.PreBuild;
 /// </summary>
 public class PreBuild_None : PreBuildBase
 {
-	
+	public override void Run() { }
 }

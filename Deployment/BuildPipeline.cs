@@ -15,15 +15,21 @@ public class BuildPipeline
 	public static event Action? OnCompleted; 
 
 	private readonly Args _args;
-
 	private BuildConfig _config;
-	private PreBuildBase _preBuild;
 
 	public Workspace Workspace { get; }
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{DateTime.Now - StartTime:hh\\:mm\\:ss}";
-	private string BuildVersionTitle => $"Build Version: {_preBuild?.BuildVersion}";
+	private string BuildVersionTitle => $"Build Version: {_buildVersion}";
 	public LocalUnityBuild Unity { get; private set; }
+
+
+	/// <summary>
+	/// The change set id that was current when build started
+	/// </summary>
+	private int _currentChangeSetId;
+	private int _previousChangeSetId;
+	private string _buildVersion;
 
 	public BuildPipeline(Workspace workspace, string[]? args)
 	{
@@ -71,10 +77,16 @@ public class BuildPipeline
 		Workspace.Clear();
 		_args.TryGetArg("-changeSetId", 0, out int id);
 		Workspace.Update(id);
+
+		_currentChangeSetId = Workspace.GetCurrentChangeSetId();
+		_previousChangeSetId = Workspace.GetPreviousChangeSetId();
+		Logger.Log($"[CHANGESET] cs:{_previousChangeSetId} \u2192 cs:{_currentChangeSetId}");
 		
 		_config = GetConfigJson(Workspace.Directory); // refresh config
-		_preBuild = PreBuildBase.Create(_config.PreBuild?.Type ?? default);
-		_preBuild.Run();
+		
+		var preBuild = PreBuildBase.Create(_config.PreBuild?.Type ?? default);
+		preBuild.Run();
+		_buildVersion = preBuild.BuildVersion;
 		await Task.CompletedTask;
 	}
 	
@@ -98,9 +110,9 @@ public class BuildPipeline
 			// Build
 			if (IsOffload(build))
 			{
-				success = await Unity.SendRemoteBuildRequest(Workspace.Name, 
-					_preBuild.CurrentChangeSetId,
-					_preBuild.BuildVersion,
+				success = await Unity.SendRemoteBuildRequest(Workspace.Name,
+					_currentChangeSetId,
+					_buildVersion,
 					build, 
 					ServerConfig.Instance.OffloadServerUrl,
 					_args.IsFlag("-cleanbuild"));
@@ -177,12 +189,12 @@ public class BuildPipeline
 		Logger.Log("PostBuild process started...");
 		
 		// collect change logs
-		var commits = _config.PreBuild?.ChangeLog == true
-			? _preBuild?.GetChangeLog()
+		var commits = _config.PostBuild?.ChangeLog == true
+			? Workspace.GetChangeLog(_currentChangeSetId, _previousChangeSetId)
 			: Array.Empty<string>();
 		
 		// committing new version must be done after collecting changeLogs as the prev changesetid will be updated
-		_preBuild?.CommitNewVersionNumber();
+		Workspace.CommitNewVersionNumber(_currentChangeSetId, _buildVersion);
 		
 		if (_config.Hooks == null)
 			return;

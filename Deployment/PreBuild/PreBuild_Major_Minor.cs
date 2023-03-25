@@ -4,8 +4,6 @@ public class PreBuild_Major_Minor : PreBuildBase
 {
 	public override void Run()
 	{
-		base.Run();
-		
 		// bump patch
 		var arr = GetVersionArray();
 		arr[1]++;
