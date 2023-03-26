@@ -27,6 +27,9 @@ namespace BuildSystem
 		[Header("Optional")]
 		[Tooltip("Enter SteamId for when you need different steam deployments. i.e Demo and official builds")]
 		public ulong SteamId;
+
+		[Tooltip("Deletes all the files at LocationPath before building")]
+		public bool DeleteFiles; 
 		
 		public BuildPlayerOptions GetBuildOptions()
 		{

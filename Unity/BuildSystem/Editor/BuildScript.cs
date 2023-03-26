@@ -29,6 +29,11 @@ namespace BuildSystem
 		/// <param name="settings"></param>
 		private static void RunPrebuild(BuildSettings settings)
 		{
+			// delete files
+			if (settings.DeleteFiles && Directory.Exists(settings.LocationPath))
+				Directory.Delete(settings.LocationPath, true);
+			
+			// pre-build interface search
 			var types = AppDomain.CurrentDomain.GetAssemblies()
 				.SelectMany(s => s.GetTypes())
 				.Where(p => !p.IsInterface && !p.IsAbstract && typeof(IPrebuildProcess).IsAssignableFrom(p))
@@ -43,7 +48,13 @@ namespace BuildSystem
 				}
 				catch (Exception e)
 				{
+					// log exception
 					Debug.LogException(e);
+					
+					if (Application.isBatchMode)
+						EditorApplication.Exit(555);
+					
+					break;
 				}
 			}
 		}
