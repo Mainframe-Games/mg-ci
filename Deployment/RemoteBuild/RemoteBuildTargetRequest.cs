@@ -108,24 +108,19 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	{
 		Logger.Log($"Sending build '{response.BuildId}' back to: {SendBackUrl}");
 		
-		Web.Response res;
-			
 		if (string.IsNullOrEmpty(response.Error))
 		{
 			// success
 			using var ms = new MemoryStream();
 			await using var steam = new BinaryWriter(ms);
 			response.Write(steam);
-			res = await Web.SendBytesAsync(SendBackUrl, ms.ToArray());
+			await Web.SendBytesAsync(SendBackUrl, ms.ToArray());
 		}
 		else
 		{
 			// failed
 			var body = new RemoteBuildPacket { BuildResponse = response };
-			res =  await Web.SendAsync(HttpMethod.Post, SendBackUrl, body: body);
+			await Web.SendAsync(HttpMethod.Post, SendBackUrl, body: body);
 		}
-		
-		if (res.StatusCode != HttpStatusCode.OK)
-			throw new WebException(res.Reason);
 	}
 }

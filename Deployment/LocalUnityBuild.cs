@@ -135,13 +135,6 @@ public class LocalUnityBuild
 		
 		var body = new RemoteBuildPacket { BuildTargetRequest = remoteBuild };
 		var res = await Web.SendAsync(HttpMethod.Post, offloadUrl, DeviceInfo.UniqueDeviceId, body);
-
-		if (res.StatusCode != HttpStatusCode.OK)
-		{
-			Logger.Log($"Web Request Failed '{res.StatusCode}' {res.Reason}");
-			return false;
-		}
-
 		var json = JObject.Parse(res.Content);
 		var buildId = json.SelectToken("Message", true)?.ToString();
 		Logger.Log($"Remote build id: {buildId}");

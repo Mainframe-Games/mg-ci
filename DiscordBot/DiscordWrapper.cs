@@ -111,18 +111,19 @@ public class DiscordWrapper
 
 		await command.DeferAsync(true);
 
-		// request to build server
-		var req = new BuildRequest { WorkspaceBuildRequest = new WorkspaceReq { WorkspaceName = workspaceName, Args = args } };
-		var res = await Web.SendAsync(HttpMethod.Post, _config.BuildServerUrl, command.User.Id.ToString(), req);
-		if (res.StatusCode != HttpStatusCode.OK)
+		try
 		{
-			await command.RespondErrorDelayed(user, "Build Server request failed", $"{res.StatusCode}: {res.Reason}\n{res.Content}");
-			return;
+			// request to build server
+			var req = new BuildRequest { WorkspaceBuildRequest = new WorkspaceReq { WorkspaceName = workspaceName, Args = args } };
+			var res = await Web.SendAsync(HttpMethod.Post, _config.BuildServerUrl, command.User.Id.ToString(), req);
+			var resData = JObject.Parse(res.Content)["data"]?.ToString();
+			await command.RespondSuccessDelayed(user, "Build Started", resData ?? "Unknown Workspace");
 		}
-
-		// success
-		var resData = JObject.Parse(res.Content)["data"]?.ToString();
-		await command.RespondSuccessDelayed(user, "Build Started", resData ?? "Unknown Workspace");
+		catch (Exception e)
+		{
+			Logger.Log(e);
+			await command.RespondErrorDelayed(user, "Build Server request failed", e.Message);
+		}
 	}
 
 	private bool IsAuthorised(SocketGuildUser guildUser)

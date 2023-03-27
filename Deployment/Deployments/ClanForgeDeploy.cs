@@ -50,19 +50,19 @@ public class ClanForgeDeploy
 	private async Task DeployInternal(uint imageId)
 	{
 		// create image
-		Console.WriteLine("...creating new image");
+		Logger.Log("...creating new image");
 		var updateId = await CreateNewImage(imageId);
 
 		// poll for when diff is ready
-		Console.WriteLine("...polling image status");
+		Logger.Log("...polling image status");
 		await PollStatus("imageupdate", $"updateid={updateId}");
 
 		// generate diff
-		Console.WriteLine("...generating diff");
+		Logger.Log("...generating diff");
 		var diffId = await GenerateDiff(imageId);
 
 		// poll for diff status
-		Console.WriteLine("...polling diff status");
+		Logger.Log("...polling diff status");
 		await PollStatus("imagediff", $"diffid={diffId}");
 		
 		// accept diff and create new image version
@@ -123,7 +123,7 @@ public class ClanForgeDeploy
 	/// </summary>
 	private async Task CreateImageVersion(int diffId)
 	{
-		var url = $"{BASE_URL}/imageversion/create?diffid={diffId}&accountserviceid={ASID}&restart=0&game_build=\"{Desc}\"";
+		var url = $"{BASE_URL}/imageversion/create?diffid={diffId}&accountserviceid={ASID}&restart=0&force=0&full=1&game_build=\"{Desc}\"";
 		var content = await SendRequest(url);
 		ThrowIfNotSuccess(content);
 	}
@@ -137,10 +137,6 @@ public class ClanForgeDeploy
 	private async Task<JObject> SendRequest(string url)
 	{
 		var res = await Web.SendAsync(HttpMethod.Get, url, AuthToken, headers: (HttpRequestHeader.ContentType, "application/x-www-form-urlencoded"));
-		
-		if (res.StatusCode != HttpStatusCode.OK)
-			throw new WebException(res.Reason);
-
 		var content = JObject.Parse(res.Content);
 		ThrowIfError(content);
 		return content;
