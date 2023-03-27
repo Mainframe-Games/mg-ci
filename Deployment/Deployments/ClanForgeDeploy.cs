@@ -119,11 +119,11 @@ public class ClanForgeDeploy
 	}
 
 	/// <summary>
-	/// Docs: docs.unity.com/game-server-hosting/en/manual/api/endpoints/image-create-version
+	/// Docs: https://docs.unity.com/game-server-hosting/en/manual/api/endpoints/image-create-version
 	/// </summary>
 	private async Task CreateImageVersion(int diffId)
 	{
-		var url = $"{BASE_URL}/imageversion/create?diffid={diffId}&accountserviceid={ASID}&restart=0&force=0&full=1&game_build=\"{Desc}\"";
+		var url = $"{BASE_URL}/imageversion/create?diffid={diffId}&accountserviceid={ASID}&restart=0&force=1&full=1&game_build=\"{Desc}\"";
 		var content = await SendRequest(url);
 		ThrowIfNotSuccess(content);
 	}
