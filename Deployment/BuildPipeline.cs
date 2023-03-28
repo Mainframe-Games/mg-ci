@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Net;
+using System.Text;
 using Deployment.ChangeLogBuilders;
 using Deployment.Configs;
 using Deployment.Deployments;
@@ -46,6 +47,7 @@ public class BuildPipeline
 		try
 		{
 			StartTime = DateTime.Now;
+			await PingOffloadServer();
 			await Prebuild();
 			await Build();
 			await DeployAsync();
@@ -238,6 +240,26 @@ public class BuildPipeline
 	#endregion
 
 	#region Helper Methods
+
+	/// <summary>
+	/// Pings Offload server to check if its awake
+	/// </summary>
+	/// <exception cref="WebException"></exception>
+	private static async Task PingOffloadServer()
+	{
+		// ignore if no offload server is needed
+		if (string.IsNullOrEmpty(ServerConfig.Instance.OffloadServerUrl))
+			return;
+
+		try
+		{
+			await Web.SendAsync(HttpMethod.Get, ServerConfig.Instance.OffloadServerUrl);
+		}
+		catch (Exception e)
+		{
+			throw new WebException($"Error with offload server. {e.Message}");
+		}
+	}
 
 	private static BuildConfig GetConfigJson(string? workingDirectory)
 	{
