@@ -38,60 +38,71 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	/// <exception cref="WebException"></exception>
 	private async Task StartBuilder(string buildId)
 	{
-		// this needs to be here to kick start the thread, otherwise it will stall app
-		await Task.Delay(1);
-		
-		var mapping = new WorkspaceMapping();
-		var workspaceName = mapping.GetRemapping(WorkspaceName);
-		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
-		workspace.Clear();
-		workspace.Update(ChangeSetId);
-
-		if (workspace.Directory == null || !Directory.Exists(workspace.Directory))
-			throw new DirectoryNotFoundException($"Directory doesn't exist: {workspace.Directory}");
-
-		if (Config == null)
+		try
 		{
-			await RespondBackToMasterServer(BuildErrorResponse(buildId, $"{nameof(TargetConfig)} is null"));
-			return;
-		}
+			// this needs to be here to kick start the thread, otherwise it will stall app
+            await Task.Delay(1);
+            
+            var mapping = new WorkspaceMapping();
+            var workspaceName = mapping.GetRemapping(WorkspaceName);
+            var workspace = Workspace.GetWorkspaceFromName(workspaceName);
+            workspace.Clear();
+            workspace.Update(ChangeSetId);
+    
+            if (workspace.Directory == null || !Directory.Exists(workspace.Directory))
+            	throw new DirectoryNotFoundException($"Directory doesn't exist: {workspace.Directory}");
+    
+            if (Config == null)
+            {
+            	await RespondBackToMasterServer(BuildErrorResponse(buildId, $"{nameof(TargetConfig)} is null"));
+            	return;
+            }
+    
+            Environment.CurrentDirectory = workspace.Directory;
+            
+            if (CleanBuild)
+            	workspace.CleanBuild();
+            
+            // pre build
+            PreBuildBase.ReplaceVersions(BuildVersion);
+            
+            // build 
+            var builder = new LocalUnityBuild(workspace.UnityVersion);
+            var success = await builder.Build(Config);
 
-		Environment.CurrentDirectory = workspace.Directory;
-		
-		if (CleanBuild)
-			workspace.CleanBuild();
-		
-		// pre build
-		PreBuildBase.ReplaceVersions(BuildVersion);
-		
-		// build 
-		var builder = new LocalUnityBuild(workspace.UnityVersion);
-		var success = await builder.Build(Config);
-
-		RemoteBuildResponse response;
-		
-		if (success)
-		{
-			// send web request back to sender with zip folder of build
-			var zipBytes = await FilePacker.PackRawAsync(Config.BuildPath);
-			
-			response = new RemoteBuildResponse
-			{
-				BuildId = buildId,
-				BuildPath = Config?.BuildPath,
-				Data = zipBytes
-			};
+            RemoteBuildResponse response;
+            
+            if (success)
+            {
+            	// send web request back to sender with zip folder of build
+            	var zipBytes = await FilePacker.PackRawAsync(Config.BuildPath);
+            	
+            	response = new RemoteBuildResponse
+            	{
+            		BuildId = buildId,
+            		BuildPath = Config?.BuildPath,
+            		Data = zipBytes
+            	};
+            }
+            else
+            {
+            	// send web request to sender about the build failing
+            	response = BuildErrorResponse(buildId, builder.Errors);
+            }
+            	
+            await RespondBackToMasterServer(response);
+            
+            // clean up after build
+            workspace.Clear();
+            
+            App.DumpLogs();
 		}
-		else
+		catch (Exception e)
 		{
-			// send web request to sender about the build failing
-			response = BuildErrorResponse(buildId, builder.Errors);
+			Logger.Log(e);
+			var res = BuildErrorResponse(buildId, e.Message);
+			await RespondBackToMasterServer(res);
 		}
-			
-		await RespondBackToMasterServer(response);
-		
-		// clean up after build
-		workspace.Clear();
 	}
 
 	private RemoteBuildResponse BuildErrorResponse(string buildId, string? message = null)

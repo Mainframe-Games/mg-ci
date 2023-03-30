@@ -13,7 +13,6 @@ namespace Deployment;
 public class BuildPipeline
 {
 	public static BuildPipeline? Current { get; private set; }
-	public static event Action? OnCompleted; 
 
 	private readonly Args _args;
 	private BuildConfig _config;
@@ -53,7 +52,7 @@ public class BuildPipeline
 			await DeployAsync();
 			await PostBuild();
 			Logger.Log($"Pipeline Completed. {TimeSinceStart}");
-			OnCompleted?.Invoke();
+			App.DumpLogs();
 		}
 		catch (Exception e)
 		{

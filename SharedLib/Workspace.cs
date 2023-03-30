@@ -115,7 +115,12 @@ public class Workspace
 		
 		// set to a specific change set
 		if (changeSetId > 0)
-			Cmd.Run("cm", $"switch cs:{changeSetId} --workspace=\"{Directory}\"");
+		{
+			var (exitCode, output) = Cmd.Run("cm", $"switch cs:{changeSetId} --workspace=\"{Directory}\"");
+			
+			if (exitCode != 0 || output.ToLower().Contains("does not exist"))
+				throw new Exception($"Plastic update error: {output}");
+		}
 		
 		UnityVersion = GetUnityVersion(Directory);
 	}
