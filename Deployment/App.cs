@@ -7,7 +7,7 @@ namespace Deployment;
 public static class App
 {
 	public static string RootDirectory { get; set; }
-	public static ListenServer Server { get; set; }
+	public static ListenServer? Server { get; set; }
 	
 	public static async Task RunAsync(string[] args)
 	{
@@ -45,6 +45,6 @@ public static class App
 	public static void DumpLogs()
 	{
 		Logger.WriteToFile(RootDirectory, true);
-		Server.CheckIfServerStillListening();
+		Server?.CheckIfServerStillListening();
 	}
 }

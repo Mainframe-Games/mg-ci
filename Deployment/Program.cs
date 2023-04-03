@@ -1,6 +1,4 @@
 ﻿using Deployment;
-using Deployment.Server;
-using Deployment.Server.Config;
 using SharedLib;
 
 try
