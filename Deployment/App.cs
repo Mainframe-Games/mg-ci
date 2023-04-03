@@ -46,5 +46,6 @@ public static class App
 	{
 		Logger.WriteToFile(RootDirectory, true);
 		Server?.CheckIfServerStillListening();
+		Environment.CurrentDirectory = RootDirectory; // reset cur dir back to root of exe
 	}
 }
