@@ -74,7 +74,8 @@ public static class ClonesManager
 				{
 					var source = new DirectoryInfo(Path.Combine(srcDir, copy));
 					var destination = new DirectoryInfo(Path.Combine(destDir, copy));
-					CopyDirectoryWithProgressBarRecursive(source, destination, ref totalBytes, ref copiedBytes, progressBar);
+					if (!destination.Exists) // skip if already exits. Library this is fine, some might not be.
+						CopyDirectoryWithProgressBarRecursive(source, destination, ref totalBytes, ref copiedBytes, progressBar);
 				});
 				tasks.Add(task);
 			}
