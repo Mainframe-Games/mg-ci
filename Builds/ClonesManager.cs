@@ -55,7 +55,7 @@ public static class ClonesManager
 		var printSize = PrintEx.ToGigaByteString(copyByte, "0.00");
 		Console.Write($"Copying directories ({printSize}) to {destDirs.Count} locations ... ");
 		
-		using var progressBar = new ProgressBar();
+		var progressBar = new ProgressBar();
 		var tasks = new List<Task>();
 
 		foreach (var destDir in destDirs)
@@ -73,6 +73,7 @@ public static class ClonesManager
 		}
 
 		await Task.WhenAll(tasks);
+		progressBar.Dispose();
 		Console.WriteLine();
 		Logger.LogTimeStamp("Copying complete", sw);
 		sw.Stop();
