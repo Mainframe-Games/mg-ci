@@ -9,14 +9,6 @@ using SharedLib;
 
 namespace Deployment;
 
-public enum UnityTarget
-{
-	None,
-	Win64,
-	OSXUniversal,
-	Linux64
-}
-
 public class LocalUnityBuild
 {
 	private const string DEFAULT_EXECUTE_METHOD = "BuildSystem.BuildScript.BuildPlayer";
@@ -46,7 +38,7 @@ public class LocalUnityBuild
 	/// </summary>
 	/// <param name="targetConfig"></param>
 	/// <returns>Directory of build</returns>
-	public async Task<bool> Build(TargetConfig targetConfig)
+	public async Task Build(TargetConfig targetConfig)
 	{
 		var logPath = $"{targetConfig.BuildPath}.log";
 		var errorPath = $"{targetConfig.BuildPath}_errors.log";
@@ -67,24 +59,20 @@ public class LocalUnityBuild
 
 		if (exitCode != 0)
 		{
+			var verboseLog = $"Verbose log file: {Path.Combine(Environment.CurrentDirectory, logPath)}";
+			
 			if (File.Exists(errorPath))
 			{
 				Errors = await File.ReadAllTextAsync(errorPath);
-				Logger.Log($"Build Failed with code '{exitCode}'\n{Errors}");
+				throw new Exception($"Build Failed with code '{exitCode}'\n{Errors}\n{verboseLog}");
 			}
-			else
-			{
-				Logger.Log($"Build Failed with code '{exitCode}'");
-			}
-			
-			Logger.Log($"Verbose log file: {Path.Combine(Environment.CurrentDirectory, logPath)}");
-			return false;
+
+			throw new Exception($"Build Failed with code '{exitCode}'\n{verboseLog}");
 		}
 		
 		var buildTime = DateTime.Now - buildStartTime;
 		Logger.Log($"Build Success! {targetConfig.Target}, Build Time: {buildTime:hh\\:mm\\:ss}");
 		await Task.Delay(10);
-		return true;
 	}
 
 	private static string BuildCliParams(TargetConfig targetConfig, string executeMethod, string logPath)
@@ -118,7 +106,7 @@ public class LocalUnityBuild
 	/// <param name="offloadUrl">The url to the offload server</param>
 	/// <returns>True is request is successful. Not if build is successful</returns>
 	/// <exception cref="WebException"></exception>
-	public async Task<bool> SendRemoteBuildRequest(string? workspaceName, int changeSetId, string? buildVersion, TargetConfig targetConfig, string? offloadUrl, bool cleanBuild)
+	public async Task SendRemoteBuildRequest(string? workspaceName, int changeSetId, string? buildVersion, TargetConfig targetConfig, string? offloadUrl, bool cleanBuild)
 	{
 		if (offloadUrl == null)
 			throw new Exception("OffloadUrl is null");
@@ -139,7 +127,6 @@ public class LocalUnityBuild
 		var buildId = json.SelectToken("Message", true)?.ToString();
 		Logger.Log($"Remote build id: {buildId}");
 		_buildIds.Add(buildId);
-		return true;
 	}
 
 	public async Task RemoteBuildReceived(string buildId, string buildPath, byte[] data)

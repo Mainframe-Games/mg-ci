@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 
 namespace SharedLib;
 
@@ -19,6 +20,17 @@ public static class Logger
 	{
 		_builder.AppendLine(message);
 		Console.WriteLine(message);
+	}
+
+	public static void LogTimeStamp(string message, DateTime startTime)
+	{
+		Log($"{message} {DateTime.Now - startTime:hh\\:mm\\:ss}");
+	}
+	
+	public static void LogTimeStamp(string message, Stopwatch stopwatch)
+	{
+		var timeSpan = TimeSpan.FromMilliseconds(stopwatch.ElapsedMilliseconds);
+		Log($"{message} {timeSpan:hh\\:mm\\:ss}");
 	}
 
 	/// <summary>

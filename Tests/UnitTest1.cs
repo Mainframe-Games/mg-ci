@@ -6,7 +6,7 @@ namespace Tests;
 public class Tests
 {
 	private const string UNITY_VERSION = "2021.3.19f1";
-	
+
 	[SetUp]
 	public void Setup()
 	{
@@ -24,12 +24,12 @@ public class Tests
 			BuildPath = "Builds/win64",
 			Settings = "BuildSettings_Success"
 		};
-		
+
 		var unity = new LocalUnityBuild(UNITY_VERSION);
-		var success = await unity.Build(targetConfig);
-		Assert.That(success, Is.True);
+		await unity.Build(targetConfig);
+		Assert.That(unity.Errors, Is.Null);
 	}
-	
+
 	[Test]
 	public async Task UnityBuildFailures()
 	{
@@ -39,9 +39,9 @@ public class Tests
 			BuildPath = "Builds/win64",
 			Settings = "BuildSettings_Failure"
 		};
-		
+
 		var unity = new LocalUnityBuild(UNITY_VERSION);
-		var success = await unity.Build(targetConfig);
-		Assert.That(success, Is.False);
+		await unity.Build(targetConfig);
+		Assert.That(unity.Errors, Is.Not.Null);
 	}
 }

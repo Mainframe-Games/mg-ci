@@ -1,26 +1,7 @@
+using Deployment.Configs;
 using SharedLib;
 
 namespace Deployment.PreBuild;
-
-public enum PreBuildType
-{
-	/// <summary>
-	/// No prebuild
-	/// </summary>
-	None,
-	
-	/// <summary>
-	/// MAJOR - Single number increments
-	/// </summary>
-	Major,
-	
-	/// <summary>
-	/// MAJOR.MINOR - Minor version increments. MAJOR must be done manually.
-	/// </summary>
-	Major_Minor,
-	
-	// TODO: add MAJOR_MINOR_PATCH
-}
 
 public abstract class PreBuildBase
 { 

@@ -16,6 +16,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	/// Workspace name from the master server. Remapping is done on offload server
 	/// </summary>
 	public string? WorkspaceName { get; init; }
+
 	public int ChangeSetId { get; init; }
 	public string? BuildVersion { get; init; }
 	public bool CleanBuild { get; init; }
@@ -41,61 +42,62 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		try
 		{
 			// this needs to be here to kick start the thread, otherwise it will stall app
-            await Task.Delay(1);
-            
-            var mapping = new WorkspaceMapping();
-            var workspaceName = mapping.GetRemapping(WorkspaceName);
-            var workspace = Workspace.GetWorkspaceFromName(workspaceName);
-            workspace.Clear();
-            workspace.Update(ChangeSetId);
-    
-            if (workspace.Directory == null || !Directory.Exists(workspace.Directory))
-            	throw new DirectoryNotFoundException($"Directory doesn't exist: {workspace.Directory}");
-    
-            if (Config == null)
-            {
-            	await RespondBackToMasterServer(BuildErrorResponse(buildId, $"{nameof(TargetConfig)} is null"));
-            	return;
-            }
-    
-            Environment.CurrentDirectory = workspace.Directory;
-            
-            if (CleanBuild)
-            	workspace.CleanBuild();
-            
-            // pre build
-            PreBuildBase.ReplaceVersions(BuildVersion);
-            
-            // build 
-            var builder = new LocalUnityBuild(workspace.UnityVersion);
-            var success = await builder.Build(Config);
+			await Task.Delay(1);
 
-            RemoteBuildResponse response;
-            
-            if (success)
-            {
-            	// send web request back to sender with zip folder of build
-            	var zipBytes = await FilePacker.PackRawAsync(Config.BuildPath);
-            	
-            	response = new RemoteBuildResponse
-            	{
-            		BuildId = buildId,
-            		BuildPath = Config?.BuildPath,
-            		Data = zipBytes
-            	};
-            }
-            else
-            {
-            	// send web request to sender about the build failing
-            	response = BuildErrorResponse(buildId, builder.Errors);
-            }
-            	
-            await RespondBackToMasterServer(response);
-            
-            // clean up after build
-            workspace.Clear();
-            
-            App.DumpLogs();
+			var mapping = new WorkspaceMapping();
+			var workspaceName = mapping.GetRemapping(WorkspaceName);
+			var workspace = Workspace.GetWorkspaceFromName(workspaceName);
+			workspace.Clear();
+			workspace.Update(ChangeSetId);
+
+			if (workspace.Directory == null || !Directory.Exists(workspace.Directory))
+				throw new DirectoryNotFoundException($"Directory doesn't exist: {workspace.Directory}");
+
+			if (Config == null)
+			{
+				await RespondBackToMasterServer(BuildErrorResponse(buildId, $"{nameof(TargetConfig)} is null"));
+				return;
+			}
+
+			Environment.CurrentDirectory = workspace.Directory;
+
+			if (CleanBuild)
+				workspace.CleanBuild();
+
+			// pre build
+			PreBuildBase.ReplaceVersions(BuildVersion);
+
+			// build 
+			var builder = new LocalUnityBuild(workspace.UnityVersion);
+			await builder.Build(Config);
+			var success = builder.Errors is null;
+
+			RemoteBuildResponse response;
+
+			if (success)
+			{
+				// send web request back to sender with zip folder of build
+				var zipBytes = await FilePacker.PackRawAsync(Config.BuildPath);
+
+				response = new RemoteBuildResponse
+				{
+					BuildId = buildId,
+					BuildPath = Config?.BuildPath,
+					Data = zipBytes
+				};
+			}
+			else
+			{
+				// send web request to sender about the build failing
+				response = BuildErrorResponse(buildId, builder.Errors);
+			}
+
+			await RespondBackToMasterServer(response);
+
+			// clean up after build
+			workspace.Clear();
+
+			App.DumpLogs();
 		}
 		catch (Exception e)
 		{
@@ -118,7 +120,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	private async Task RespondBackToMasterServer(RemoteBuildResponse response)
 	{
 		Logger.Log($"Sending build '{response.BuildId}' back to: {SendBackUrl}");
-		
+
 		if (string.IsNullOrEmpty(response.Error))
 		{
 			// success

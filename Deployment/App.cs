@@ -37,8 +37,8 @@ public static class App
 		{
 			var currentWorkspace = Workspace.GetWorkspace();
 			Logger.Log($"Chosen workspace: {currentWorkspace}");
-			var pipe = new BuildPipeline(currentWorkspace, args);
-			await pipe.RunAsync();
+			// var pipe = new BuildPipeline(currentWorkspace, args);
+			// await pipe.RunAsync();
 		}
 	}
 

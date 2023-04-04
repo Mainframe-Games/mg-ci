@@ -51,7 +51,7 @@ public class BuildPipeline
 			await Build();
 			await DeployAsync();
 			await PostBuild();
-			Logger.Log($"Pipeline Completed. {TimeSinceStart}");
+			Logger.LogTimeStamp($"Pipeline Completed", StartTime);
 			App.DumpLogs();
 		}
 		catch (Exception e)
@@ -65,7 +65,7 @@ public class BuildPipeline
 
 	private async Task Prebuild()
 	{
-		_config = GetConfigJson(Workspace.Directory); // need to get config even if -noprebuild flag
+		_config = BuildConfig.GetConfig(Workspace.Directory); // need to get config even if -noprebuild flag
 		
 		if (_args.IsFlag("-noprebuild"))
 			return;
@@ -83,7 +83,7 @@ public class BuildPipeline
 		_previousChangeSetId = Workspace.GetPreviousChangeSetId();
 		Logger.Log($"[CHANGESET] cs:{_previousChangeSetId} \u2192 cs:{_currentChangeSetId}");
 		
-		_config = GetConfigJson(Workspace.Directory); // refresh config
+		_config = BuildConfig.GetConfig(Workspace.Directory); // refresh config
 		
 		var preBuild = PreBuildBase.Create(_config.PreBuild?.Type ?? default);
 		preBuild.Run();
@@ -103,15 +103,17 @@ public class BuildPipeline
 		
 		Logger.Log("Build process started...");
 
+		var builds = new List<Task>();
+		
 		// configs
 		foreach (var build in _config.Builds)
 		{
-			bool success;
+			Task task;
 			
 			// Build
 			if (IsOffload(build))
 			{
-				success = await Unity.SendRemoteBuildRequest(Workspace.Name,
+				task = Unity.SendRemoteBuildRequest(Workspace.Name,
 					_currentChangeSetId,
 					_buildVersion,
 					build, 
@@ -120,12 +122,13 @@ public class BuildPipeline
 			}
 			else
 			{
-				success = await Unity.Build(build);
+				task = Unity.Build(build);
 			}
 			
-			if (!success)
-				throw new Exception("Build Failure");
+			builds.Add(task);
 		}
+		
+		await Task.WhenAll(builds);
 		
 		await Unity.WaitBuildIds();
 	}
@@ -258,21 +261,6 @@ public class BuildPipeline
 		{
 			throw new WebException($"Error with offload server. {e.Message}");
 		}
-	}
-
-	private static BuildConfig GetConfigJson(string? workingDirectory)
-	{
-		if (workingDirectory == null)
-			return new BuildConfig();
-		
-		var path = Path.Combine(workingDirectory, "BuildScripts", "buildconfig.json");
-		var configStr = File.ReadAllText(path);
-		var configClass = Json.Deserialise<BuildConfig>(configStr);
-
-		if (configClass == null)
-			throw new NullReferenceException("Failed to parse buildconfig.json");
-		
-		return configClass;
 	}
 
 	private void SendErrorHook(Exception e)
