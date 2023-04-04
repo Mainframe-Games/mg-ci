@@ -33,15 +33,14 @@ public class LocalUnityBuild
 		var logPath = $"{targetConfig.BuildPath}.log";
 		var errorPath = $"{targetConfig.BuildPath}_errors.log";
 		
+		// delete error logs file
 		if (File.Exists(errorPath))
 			File.Delete(errorPath);
 		
 		var buildStartTime = DateTime.Now;
-		
 		var exePath = GetDefaultUnityPath(targetConfig.VersionExtension);
 		var executeMethod = targetConfig.ExecuteMethod ?? DEFAULT_EXECUTE_METHOD;
 		
-		Logger.Log(string.Empty);
 		Logger.Log($"Starting build: {targetConfig.Target}");
 
 		var cliparams = BuildCliParams(targetConfig, projectPath, executeMethod, logPath);
@@ -49,7 +48,7 @@ public class LocalUnityBuild
 
 		if (exitCode != 0)
 		{
-			var verboseLog = $"Verbose log file: {Path.Combine(Environment.CurrentDirectory, logPath)}";
+			var verboseLog = $"Verbose log file: {Path.Combine(Environment.CurrentDirectory, logPath)}\nRAW OUTPUT: {output}";
 			
 			if (File.Exists(errorPath))
 			{
@@ -73,8 +72,9 @@ public class LocalUnityBuild
 			$"-buildTarget {targetConfig.Target}",
 			$"-projectPath \"{projectPath}\"",
 			$"-executeMethod {executeMethod}",
-			$"-logFile {logPath}",
-			$"-settings {targetConfig.Settings}"
+			$"-logFile \"{logPath}\"",
+			$"-settings {targetConfig.Settings}",
+			$"-buildPath \"{targetConfig.BuildPath}\""
 		};
 
 		// for server builds

@@ -52,7 +52,7 @@ public class BuildPipeline
 	}
 	
 	#region Build Steps
-	
+
 	public async Task RunAsync()
 	{
 		try
@@ -127,7 +127,7 @@ public class BuildPipeline
 			// offload build
 			if (IsOffload(build))
 			{
-				continue;
+				// TODO: need to make this an array
 				var buildId = await OffloadBuildNeeded.Invoke(
 					Workspace.Name,
 					_currentChangeSetId,
@@ -229,7 +229,6 @@ public class BuildPipeline
 				hookMessage.AppendLine($"Total Time: {TimeSinceStart}");
 				hookMessage.AppendLine(clanforgeMessage);
 				hookMessage.AppendLine(discord.ToString());
-				
 				Discord.PostMessage(hook.Url, hookMessage.ToString(), hook.Title, BuildVersionTitle, Discord.Colour.GREEN);
 			}
 			else if (hook.IsSlack())
@@ -312,7 +311,7 @@ public class BuildPipeline
 	/// <summary>
 	/// Returns once buildIds count is 0
 	/// </summary>
-	public async Task WaitBuildIds()
+	private async Task WaitBuildIds()
 	{
 		var cachedCount = -1;
 		
