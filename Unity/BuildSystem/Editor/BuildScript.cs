@@ -19,10 +19,53 @@ namespace BuildSystem
 		public static void BuildPlayer()
 		{
 			var settingsArg = GetArgValue("-settings");
+			var buildPathRoot = GetArgValue("-buildPath");
 			var settings = GetBuildConfig(settingsArg);
+			settings.RootDirectoryPath = buildPathRoot;
 			BuildPlayer(settings);
 		}
+		
+		public static void BuildPlayer(BuildSettings settings)
+		{
+			if (!settings.IsValid())
+				throw new Exception($"BuildSettings '{settings.name}' not valid");
+			
+			RunPrebuild(settings);
+			
+			var options = settings.GetBuildOptions();
+			EnsureBuildDirectoryExists(options);
+			
+			Debug.Log($"Started build: {options.locationPathName}");
+			
+			Application.logMessageReceived += OnLogReceived;
+			var report = BuildPipeline.BuildPlayer(options);
+			Application.logMessageReceived -= OnLogReceived;
+			
+			if (report.summary.result == BuildResult.Succeeded)
+			{
+				Debug.Log($"Build Succeeded: {report.summary.outputPath}");
+			}
+			else
+			{
+				DumpErrorLog(report);
 
+				if (Application.isBatchMode)
+					EditorApplication.Exit(666);
+			}
+		}
+
+		private static void EnsureBuildDirectoryExists(BuildPlayerOptions options)
+		{
+			var fullDir = new FileInfo(options.locationPathName).Directory;
+			
+			// ensure build target folder exits
+			if (fullDir == null)
+				throw new NullReferenceException($"Directory is null: {options.locationPathName}");
+			
+			if (!fullDir.Exists)
+				fullDir.Create();
+		}
+		
 		/// <summary>
 		/// Finds all classes that implement <see cref="IPrebuildProcess"/> and runs the callback method
 		/// </summary>
@@ -30,8 +73,8 @@ namespace BuildSystem
 		private static void RunPrebuild(BuildSettings settings)
 		{
 			// delete files
-			if (settings.DeleteFiles && Directory.Exists(settings.LocationPath))
-				Directory.Delete(settings.LocationPath, true);
+			if (settings.DeleteFiles && Directory.Exists(settings.RootDirectoryPath))
+				Directory.Delete(settings.RootDirectoryPath, true);
 			
 			// pre-build interface search
 			var types = AppDomain.CurrentDomain.GetAssemblies()
@@ -56,38 +99,6 @@ namespace BuildSystem
 					
 					break;
 				}
-			}
-		}
-		
-		public static void BuildPlayer(BuildSettings settings)
-		{
-			if (!settings.IsValid())
-				throw new Exception($"BuildSettings '{settings.name}' not valid");
-			
-			RunPrebuild(settings);
-			
-			// ensure build target folder exits
-			if (!Directory.Exists(settings.LocationPath))
-				Directory.CreateDirectory(settings.LocationPath);
-
-			Application.logMessageReceived += OnLogReceived;
-			
-			var options = settings.GetBuildOptions();
-			var report = BuildPipeline.BuildPlayer(options);
-
-			Application.logMessageReceived -= OnLogReceived;
-			
-			if (report.summary.result == BuildResult.Succeeded)
-			{
-				Debug.Log($"Build {report.summary.result}: {report.summary.outputPath}");
-				CleanUp(settings.LocationPath);
-			}
-			else
-			{
-				DumpErrorLog(report);
-
-				if (Application.isBatchMode)
-					EditorApplication.Exit(666);
 			}
 		}
 
@@ -130,16 +141,6 @@ namespace BuildSystem
 			throw new Exception($"Build settings not found '{buildSettingsName}'");
 		}
 		
-		private static void CleanUp(string buildDir)
-		{
-			var dirs = new DirectoryInfo(buildDir).GetDirectories();
-			foreach (var dir in dirs)
-			{
-				if (dir.Name.Contains("_DoNotShip") || dir.Name.Contains("_ButDontShipItWithYourGame"))
-					dir.Delete(true);
-			}
-		}
-
 		private static string GetArgValue(string arg)
 		{
 			var args = Environment.GetCommandLineArgs();
@@ -150,22 +151,6 @@ namespace BuildSystem
 			}
 
 			return null;
-		}
-
-		public class Response
-		{
-			public string Data { get; set; }
-		}
-
-		private static void SendReport()
-		{
-			var body = new Response { Data = _builder.ToString() };
-			var json = JsonUtility.ToJson(body);
-			var urlArg = GetArgValue("-serverUrl");
-			var url = new Uri(urlArg);
-			var req = UnityWebRequest.Post(url, json);
-			req.SetRequestHeader("Content-Type", "application/json");
-			req.SendWebRequest();
 		}
 	}
 }

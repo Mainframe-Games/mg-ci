@@ -15,7 +15,6 @@ namespace BuildSystem
 		public BuildTarget Target = BuildTarget.StandaloneWindows64;
 		public BuildTargetGroup TargetGroup = BuildTargetGroup.Standalone;
 		public StandaloneBuildSubtarget SubTarget = StandaloneBuildSubtarget.Player;
-		public string LocationPath = "Builds/";
 		[Tooltip("Custom scenes overrides. Empty array will use EditorSettings.Scenes")]
 		public string[] Scenes;
 		[FormerlySerializedAs("ScriptingDefines")] 
@@ -31,6 +30,8 @@ namespace BuildSystem
 		[Tooltip("Deletes all the files at LocationPath before building")]
 		public bool DeleteFiles; 
 		
+		public string RootDirectoryPath { get; set; }
+		
 		public BuildPlayerOptions GetBuildOptions()
 		{
 			var scenes = Scenes.Length > 0 
@@ -41,12 +42,12 @@ namespace BuildSystem
 			{
 				target = Target,
 				subtarget = (int)SubTarget,
-				locationPathName = Path.Combine(LocationPath, $"{ProductName}{Extension}"),
+				locationPathName = Path.Combine(RootDirectoryPath, $"{ProductName}{Extension}"),
 				targetGroup = TargetGroup,
 				assetBundleManifestPath = AssetBundleManifestPath,
 				scenes = scenes,
 				extraScriptingDefines = ExtraScriptingDefines,
-				options = BuildOptions,
+				options = BuildOptions
 			};
 
 			if (ExtraScriptingDefines.Length > 0)
