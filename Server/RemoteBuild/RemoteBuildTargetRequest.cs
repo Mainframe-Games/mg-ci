@@ -71,7 +71,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 
 			// build 
 			var builder = new LocalUnityBuild(workspace.UnityVersion);
-			await builder.Build(Config);
+			await builder.Build(workspace.Directory, Config);
 			var success = builder.Errors is null;
 
 			RemoteBuildResponse response;

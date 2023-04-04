@@ -38,7 +38,7 @@ public static class ClonesManager
 		// append links
 		if (config.Links != null)
 			AppendLinks(Links, config.Links);
-		if (config.Links != null)
+		if (config.Copies != null)
 			AppendLinks(Copy, config.Copies);
 		
 		var destDirs = new List<string>();

@@ -10,7 +10,6 @@ internal class ServerConfig
 		? configPath 
 		: "config-server.json";
 	
-	public bool RunServer { get; set; }
 	public string IP { get; set; } = "127.0.0.1";
 	public ushort Port { get; set; } = 8080;
 	public List<string>? AuthTokens { get; set; }

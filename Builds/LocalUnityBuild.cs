@@ -25,9 +25,10 @@ public class LocalUnityBuild
 	/// <summary>
 	/// Builds the player
 	/// </summary>
+	/// <param name="projectPath">Full path to project folder as not to rely on relative paths</param>
 	/// <param name="targetConfig"></param>
 	/// <returns>Directory of build</returns>
-	public async Task Build(TargetConfig targetConfig)
+	public async Task Build(string projectPath, TargetConfig targetConfig)
 	{
 		var logPath = $"{targetConfig.BuildPath}.log";
 		var errorPath = $"{targetConfig.BuildPath}_errors.log";
@@ -43,7 +44,7 @@ public class LocalUnityBuild
 		Logger.Log(string.Empty);
 		Logger.Log($"Starting build: {targetConfig.Target}");
 
-		var cliparams = BuildCliParams(targetConfig, executeMethod, logPath);
+		var cliparams = BuildCliParams(targetConfig, projectPath, executeMethod, logPath);
 		var (exitCode, output) = Cmd.Run(exePath, cliparams);
 
 		if (exitCode != 0)
@@ -64,14 +65,14 @@ public class LocalUnityBuild
 		await Task.Delay(10);
 	}
 
-	private static string BuildCliParams(TargetConfig targetConfig, string executeMethod, string logPath)
+	private static string BuildCliParams(TargetConfig targetConfig, string projectPath, string executeMethod, string logPath)
 	{
 		var cliparams = new List<string>
 		{
 			"-quit",
 			"-batchmode",
 			$"-buildTarget {targetConfig.Target}",
-			"-projectPath .",
+			$"-projectPath \"{projectPath}\"",
 			$"-executeMethod {executeMethod}",
 			$"-logFile {logPath}",
 			$"-settings {targetConfig.Settings}"

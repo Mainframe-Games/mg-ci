@@ -29,7 +29,6 @@ public class BuildPipeline
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{DateTime.Now - StartTime:hh\\:mm\\:ss}";
 	private string BuildVersionTitle => $"Build Version: {_buildVersion}";
-	public LocalUnityBuild Unity { get; private set; }
 
 	/// <summary>
 	/// The change set id that was current when build started
@@ -143,7 +142,7 @@ public class BuildPipeline
 			else
 			{
 				build.BuildPath = Path.Combine(Workspace.Directory, build.BuildPath);
-				var task = Unity.Build(build);
+				var task = unity.Build(targetPath, build);
 				builds.Add(task);
 			}
 		}
