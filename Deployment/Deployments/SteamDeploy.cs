@@ -9,8 +9,6 @@ public class SteamDeploy
 	private readonly string? _password;
 	private readonly string? _vdfPath;
 
-	public bool IsCompleted { get; private set; }
-
 	public SteamDeploy(string? vdfPath, string? password, string? username, string? path)
 	{
 		_vdfPath = vdfPath;
@@ -25,7 +23,6 @@ public class SteamDeploy
 		SetVdfProperties(vdfPath, ("Desc", description));
 		var args = $"+login {_username} {_password} +run_app_build \"{vdfPath}\" +quit";
 		Cmd.Run(_path, args);
-		IsCompleted = true;
 	}
 
 	private static void SetVdfProperties(string vdfPath, params (string key, string value)[] values)

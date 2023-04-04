@@ -68,7 +68,7 @@ public class BuildPipeline
 		catch (Exception e)
 		{
 			Logger.Log(e);
-			// SendErrorHook(e);
+			SendErrorHook(e);
 		}
 		
 		Current = null;
