@@ -28,7 +28,7 @@ public class LocalUnityBuild
 	/// <param name="projectPath">Full path to project folder as not to rely on relative paths</param>
 	/// <param name="targetConfig"></param>
 	/// <returns>Directory of build</returns>
-	public async Task Build(string projectPath, TargetConfig targetConfig)
+	public void Build(string projectPath, TargetConfig targetConfig)
 	{
 		var logPath = $"{targetConfig.BuildPath}.log";
 		var errorPath = $"{targetConfig.BuildPath}_errors.log";
@@ -53,7 +53,7 @@ public class LocalUnityBuild
 			
 			if (File.Exists(errorPath))
 			{
-				Errors = await File.ReadAllTextAsync(errorPath);
+				Errors = File.ReadAllText(errorPath);
 				throw new Exception($"Build Failed with code '{exitCode}'\n{Errors}\n{verboseLog}");
 			}
 
@@ -62,7 +62,6 @@ public class LocalUnityBuild
 		
 		var buildTime = DateTime.Now - buildStartTime;
 		Logger.Log($"Build Success! {targetConfig.Target}, Build Time: {buildTime:hh\\:mm\\:ss}");
-		await Task.Delay(10);
 	}
 
 	private static string BuildCliParams(TargetConfig targetConfig, string projectPath, string executeMethod, string logPath)

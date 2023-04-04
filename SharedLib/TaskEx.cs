@@ -10,22 +10,27 @@ public static class TaskEx
 	/// <param name="onExceptionThrown"></param>
 	public static Thread FireAndForget(this Task taskToRun, Action<Exception>? onExceptionThrown = null)
 	{
-		var thread = new Thread(() =>
+		var thread = new Thread(() => 
 		{
-			try
-			{
-				taskToRun.Wait();
-			}
-			catch (AggregateException ae)
-			{
-				foreach (var e in ae.InnerExceptions)
-				{
-					Console.WriteLine(e);
-					onExceptionThrown?.Invoke(e);
-				}
-			}
+			taskToRun.WaitAndThrow(onExceptionThrown);
 		});
 		thread.Start();
 		return thread;
+	}
+
+	public static void WaitAndThrow(this Task taskToRun, Action<Exception>? onExceptionThrown = null)
+	{
+		try
+		{
+			taskToRun.Wait();
+		}
+		catch (AggregateException ae)
+		{
+			foreach (var e in ae.InnerExceptions)
+			{
+				Console.WriteLine(e);
+				onExceptionThrown?.Invoke(e);
+			}
+		}
 	}
 }

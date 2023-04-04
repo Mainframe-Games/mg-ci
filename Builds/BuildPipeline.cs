@@ -68,7 +68,7 @@ public class BuildPipeline
 		catch (Exception e)
 		{
 			Logger.Log(e);
-			SendErrorHook(e);
+			// SendErrorHook(e);
 		}
 		
 		Current = null;
@@ -114,12 +114,12 @@ public class BuildPipeline
 		await ClonesManager.CloneProject(Workspace.Directory, _config);
 		Logger.Log("Build process started...");
 		
-		var builds = new List<Task>();
+		var tasks = new List<Task>();
 
 		foreach (var build in _config.Builds)
 		{
 			var targetPath = ClonesManager.GetTargetPath(Workspace.Directory, build);
-			var unity = new LocalUnityBuild(targetPath);
+			var unity = new LocalUnityBuild(Workspace.UnityVersion);
 			
 			if (unity == null || _config?.Builds == null)
 				throw new NullReferenceException();
@@ -127,6 +127,7 @@ public class BuildPipeline
 			// offload build
 			if (IsOffload(build))
 			{
+				continue;
 				var buildId = await OffloadBuildNeeded.Invoke(
 					Workspace.Name,
 					_currentChangeSetId,
@@ -135,19 +136,25 @@ public class BuildPipeline
 					_offloadUrl,
 					_args.IsFlag("-cleanbuild")
 				);
-				
 				_buildIds.Add(buildId);
 			}
 			// local build
 			else
 			{
 				build.BuildPath = Path.Combine(Workspace.Directory, build.BuildPath);
-				var task = unity.Build(targetPath, build);
-				builds.Add(task);
+				var task = Task.Run(() => unity.Build(targetPath, build));
+				tasks.Add(task);
 			}
 		}
+
+		var isSuccess = true;
 		
-		await Task.WhenAll(builds);
+		foreach (var task in tasks)
+			task.WaitAndThrow(_ => isSuccess = false);
+
+		if (!isSuccess)
+			throw new Exception("Build Failed");
+		
 		await WaitBuildIds();
 	}
 
