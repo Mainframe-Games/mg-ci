@@ -16,26 +16,30 @@ public static class App
 	{
 		var config = ServerConfig.Load();
 		RootDirectory = Environment.CurrentDirectory;
-		
-		
-		// Args.Environment.TryGetArg("-server", 0, out string ip, config.IP);
-		// Args.Environment.TryGetArg("-server", 1, out int port, config.Port);
-		// Server = new ListenServer(ip, (ushort)port);
-		//
-		// if (config.AuthTokens is { Count: > 0 })
-		// {
-		// 	Server.GetAuth = () =>
-		// 	{
-		// 		config.Refresh();
-		// 		return config.AuthTokens;
-		// 	};
-		// }
-		// // server should wait for ever
-		// await Server.RunAsync();
-		// Logger.Log("Server stopped");
+
+		// for locally running the build process without a listen server
+		if (Args.Environment.IsFlag("-local"))
 		{
 			var workspace = Workspace.GetWorkspace();
 			await RunBuildPipe(workspace, args);
+		}
+		else
+		{
+			Args.Environment.TryGetArg("-server", 0, out string ip, config.IP);
+			Args.Environment.TryGetArg("-server", 1, out int port, config.Port);
+			Server = new ListenServer(ip, (ushort)port);
+			
+			if (config.AuthTokens is { Count: > 0 })
+			{
+				Server.GetAuth = () =>
+				{
+					config.Refresh();
+					return config.AuthTokens;
+				};
+			}
+			// server should wait for ever
+			await Server.RunAsync();
+			Logger.Log("Server stopped");
 		}
 	}
 
@@ -50,11 +54,11 @@ public static class App
 	
 	public static async Task RunBuildPipe(Workspace workspace, string[]? args)
 	{
-		var buildPipeline = new BuildPipeline(workspace, args, ServerConfig.Instance.OffloadServerUrl);
-		buildPipeline.OffloadBuildNeeded += RemoteBuildTargetRequest.SendRemoteBuildRequest;
-		buildPipeline.GetExtraHookLogs += BuildPipelineOnGetExtraHookLog;
-		buildPipeline.DeployEvent += BuildPipelineOnDeployEvent;
-		await buildPipeline.RunAsync();
+		var pipe = new BuildPipeline(workspace, args, ServerConfig.Instance.OffloadServerUrl);
+		pipe.OffloadBuildNeeded += RemoteBuildTargetRequest.SendRemoteBuildRequest;
+		pipe.GetExtraHookLogs += BuildPipelineOnGetExtraHookLog;
+		pipe.DeployEvent += BuildPipelineOnDeployEvent;
+		await pipe.RunAsync();
 		DumpLogs();
 	}
 
