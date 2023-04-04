@@ -56,7 +56,9 @@ public class Workspace
 		var workspaces = GetAvailableWorkspaces();
 		var workspaceNames = workspaces.Select(x => x.Name).ToList();
 		var index = Cmd.Choose("Choose workspace", workspaceNames);
-		return workspaces[index];
+		var workspace = workspaces[index];
+		Logger.Log($"Chosen workspace: {workspace}");
+		return workspace;
 	}
 
 	public static Workspace GetWorkspaceFromName(string? workspaceName)
@@ -96,6 +98,28 @@ public class Workspace
 		}
 
 		return string.Empty;
+	}
+	
+	public string GetAppVersion()
+	{
+		var path = Path.Combine(Directory, PROJECT_SETTINGS);
+		var appVer = File.ReadAllLines(path)
+			.Single(x => x.Contains("bundleVersion:"))
+			.Replace("bundleVersion: ", string.Empty)
+			.Trim();
+		return appVer;
+	}
+	
+	public int[] GetVersionArray()
+	{
+		var verStr = GetAppVersion();
+		var ver = verStr.Split(".");
+		var arr = new int[ver.Length];
+
+		for (int i = 0; i < ver.Length; i++)
+			arr[i] = int.Parse(ver[i].Trim());
+
+		return arr;
 	}
 	
 	public void Clear()

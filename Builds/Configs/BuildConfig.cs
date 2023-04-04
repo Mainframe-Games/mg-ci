@@ -9,11 +9,20 @@ public class BuildConfig
 {
 	public PreBuild? PreBuild { get; set; }
 	public PostBuild? PostBuild { get; set; }
-	public string[]? Links { get; set; }
-	public TargetConfig[]? Builds { get; set; }
-	public DeployContiner? Deploy { get; set; }
-	public HooksConfig[]? Hooks { get; set; }
 	
+	/// <summary>
+	/// Additional directories to symlink
+	/// </summary>
+	public string[]? Links { get; set; }
+
+	/// <summary>
+	/// Additional directories to copy
+	/// </summary>
+	public string[]? Copies { get; set; }
+	public TargetConfig[]? Builds { get; set; }
+	public DeployContainer? Deploy { get; set; }
+	public HooksConfig[]? Hooks { get; set; }
+
 	public static BuildConfig GetConfig(string? workingDirectory)
 	{
 		if (workingDirectory == null)
@@ -40,7 +49,7 @@ public class PostBuild
 	public bool ChangeLog { get; set; }
 }
 
-public class DeployContiner
+public class DeployContainer
 {
 	public string[]? Steam { get; set; }
 	public bool? Clanforge { get; set; }

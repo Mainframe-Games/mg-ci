@@ -6,15 +6,19 @@ namespace Deployment.Server.Unity;
 public class UnityRemoteConfigRequest : UnityWebRequest
 {
 	private string? ConfigId { get; }
+
+	public delegate string UrlBuilder(string pathRoot, string endPoint);
+
+	public UrlBuilder OnUrlReq;
 	
-	public UnityRemoteConfigRequest(string? configId)
+	public UnityRemoteConfigRequest(string accessKey, string secretKey, string configId) : base(accessKey, secretKey)
 	{
 		ConfigId = configId;
 	}
 
 	public async Task UpdateConfig(string? key, object? value)
 	{
-		var url = Config?.BuildUrl("remote-config", $"configs/{ConfigId}");
+		var url = OnUrlReq?.Invoke("remote-config", $"configs/{ConfigId}");
 		var currentConfig = await Web.SendAsync(HttpMethod.Get, url, AuthToken);
 		var json = JObject.Parse(currentConfig.Content);
 

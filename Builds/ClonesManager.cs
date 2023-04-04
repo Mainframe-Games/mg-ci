@@ -21,7 +21,14 @@ public static class ClonesManager
 		"Library"
 	};
 
-	public static async Task<DirectoryInfo[]> CloneProject(DirectoryInfo srcDir, BuildConfig config)
+	public static string GetTargetPath(string srcDir, TargetConfig targetConfig)
+	{
+		var suffix = targetConfig.BuildPath?.Split("/")[^1];
+		var targetDir = $"{srcDir}_{suffix}";
+		return targetDir;
+	}
+
+	public static async Task CloneProject(string srcDir, BuildConfig config)
 	{
 		if (config.Builds == null)
 			throw new NullReferenceException("Builds array is null");
@@ -30,25 +37,26 @@ public static class ClonesManager
 		
 		// append links
 		if (config.Links != null)
-			AppendLinks(config.Links);
-
+			AppendLinks(Links, config.Links);
+		if (config.Links != null)
+			AppendLinks(Copy, config.Copies);
+		
 		var destDirs = new List<string>();
 
 		foreach (var buildTarget in config.Builds)
 		{
 			// create dir
-			var suffix = buildTarget.BuildPath?.Split("/")[^1];
-			var targetDir = $"{srcDir.FullName}_{suffix}";
+			var targetDir = GetTargetPath(srcDir, buildTarget);
 			Directory.CreateDirectory(targetDir);
 			destDirs.Add(targetDir);
 			
 			// links
 			foreach (var link in Links)
-				LinkFolders(Path.Combine(srcDir.FullName, link), Path.Combine(targetDir, link));
+				LinkFolders(Path.Combine(srcDir, link), Path.Combine(targetDir, link));
 		}
 
 		// copies
-		var sources = Copy.Select(x => new DirectoryInfo(Path.Combine(srcDir.FullName, x)));
+		var sources = Copy.Select(x => new DirectoryInfo(Path.Combine(srcDir, x)));
 		var copyByte = GetTotalBytesToCopy(sources);
 		var totalBytes = copyByte * destDirs.Count;
 		var copiedBytes = 0L;
@@ -64,7 +72,7 @@ public static class ClonesManager
 			{
 				var task = Task.Run(() =>
 				{
-					var source = new DirectoryInfo(Path.Combine(srcDir.FullName, copy));
+					var source = new DirectoryInfo(Path.Combine(srcDir, copy));
 					var destination = new DirectoryInfo(Path.Combine(destDir, copy));
 					CopyDirectoryWithProgressBarRecursive(source, destination, ref totalBytes, ref copiedBytes, progressBar);
 				});
@@ -77,7 +85,6 @@ public static class ClonesManager
 		Console.WriteLine();
 		Logger.LogTimeStamp("Copying complete", sw);
 		sw.Stop();
-		return destDirs.Select(x => new DirectoryInfo(x)).ToArray();
 	}
 
 	private static long GetTotalBytesToCopy(IEnumerable<DirectoryInfo> sources)
@@ -294,10 +301,10 @@ public static class ClonesManager
 			Logger.Log(proc.StandardError.ReadToEnd());
 	}
 
-	private static void AppendLinks(IEnumerable<string> links)
+	private static void AppendLinks(ISet<string> source, IEnumerable<string> adds)
 	{
-		foreach (var link in links)
-			Links.Add(link);
+		foreach (var add in adds)
+			source.Add(add);
 	}
 
 	#endregion

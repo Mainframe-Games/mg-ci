@@ -1,6 +1,5 @@
 using System.Net;
-using System.Text;
-using Deployment.Server.Config;
+using Deployment.Configs;
 using Newtonsoft.Json.Linq;
 using SharedLib;
 

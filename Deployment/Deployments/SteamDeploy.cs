@@ -1,29 +1,28 @@
-﻿using Deployment.Server;
-using SharedLib;
+﻿using SharedLib;
 
 namespace Deployment.Deployments;
 
 public class SteamDeploy
 {
-	private SteamServerConfig Config { get; }
-	private string VdfPath { get; }
+	private readonly string? _path; // steamcmd path
+	private readonly string? _username;
+	private readonly string? _password;
+	private readonly string? _vdfPath;
 
-	public SteamDeploy(string? vdfPath, SteamServerConfig? steamConfig)
+	public SteamDeploy(string? vdfPath, string? password, string? username, string? path)
 	{
-		VdfPath = vdfPath ?? string.Empty;
-		Config = steamConfig ?? new SteamServerConfig();
+		_vdfPath = vdfPath;
+		_password = password;
+		_username = username;
+		_path = path;
 	}
 
 	public void Deploy(string description)
 	{
-		var vdfPath = Path.Combine(Environment.CurrentDirectory, VdfPath);
+		var vdfPath = Path.Combine(Environment.CurrentDirectory, _vdfPath);
 		SetVdfProperties(vdfPath, ("Desc", description));
-
-		var path = Config.Path ?? string.Empty;
-		var username = Config.Username;
-		var password = Config.Password;
-		var args = $"+login {username} {password} +run_app_build \"{vdfPath}\" +quit";
-		Cmd.Run(path, args);
+		var args = $"+login {_username} {_password} +run_app_build \"{vdfPath}\" +quit";
+		Cmd.Run(_path, args);
 	}
 
 	private static void SetVdfProperties(string vdfPath, params (string key, string value)[] values)

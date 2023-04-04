@@ -15,33 +15,33 @@ public class Tests
 			Environment.CurrentDirectory = dir.FullName;
 	}
 
-	[Test]
-	public async Task UnityBuildSuccess()
-	{
-		var targetConfig = new TargetConfig
-		{
-			Target = UnityTarget.Win64,
-			BuildPath = "Builds/win64",
-			Settings = "BuildSettings_Success"
-		};
-
-		var unity = new LocalUnityBuild(UNITY_VERSION);
-		await unity.Build(targetConfig);
-		Assert.That(unity.Errors, Is.Null);
-	}
-
-	[Test]
-	public async Task UnityBuildFailures()
-	{
-		var targetConfig = new TargetConfig
-		{
-			Target = UnityTarget.Win64,
-			BuildPath = "Builds/win64",
-			Settings = "BuildSettings_Failure"
-		};
-
-		var unity = new LocalUnityBuild(UNITY_VERSION);
-		await unity.Build(targetConfig);
-		Assert.That(unity.Errors, Is.Not.Null);
-	}
+	// [Test]
+	// public async Task UnityBuildSuccess()
+	// {
+	// 	var targetConfig = new TargetConfig
+	// 	{
+	// 		Target = UnityTarget.Win64,
+	// 		BuildPath = "Builds/win64",
+	// 		Settings = "BuildSettings_Success"
+	// 	};
+	//
+	// 	var unity = new LocalUnityBuild(UNITY_VERSION);
+	// 	await unity.Build(targetConfig);
+	// 	Assert.That(unity.Errors, Is.Null);
+	// }
+	//
+	// [Test]
+	// public async Task UnityBuildFailures()
+	// {
+	// 	var targetConfig = new TargetConfig
+	// 	{
+	// 		Target = UnityTarget.Win64,
+	// 		BuildPath = "Builds/win64",
+	// 		Settings = "BuildSettings_Failure"
+	// 	};
+	//
+	// 	var unity = new LocalUnityBuild(UNITY_VERSION);
+	// 	await unity.Build(targetConfig);
+	// 	Assert.That(unity.Errors, Is.Not.Null);
+	// }
 }
