@@ -96,8 +96,8 @@ public class ClanForgeDeploy
 		{
 			var content = await SendRequest(url);
 			var stateName = content["jobstatename"]?.ToString();
-			Console.WriteLine($"...{path} status: {stateName}");
-			isCompleted = stateName == "Completed";
+			Logger.Log($"...{path} status: {stateName}");
+			isCompleted = stateName != "Queued";
 
 			if (isCompleted)
 				ThrowIfNotSuccess(content);
