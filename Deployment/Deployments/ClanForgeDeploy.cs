@@ -11,7 +11,7 @@ namespace Deployment.Deployments;
 public class ClanForgeDeploy
 {
 	private const string BASE_URL = "https://api.multiplay.co.uk/cfp/v1";
-	private const int POLL_TIME = 5000;
+	private const int POLL_TIME_MS = 10000;
 	
 	/// <summary>
 	/// A base64 encoded string of '{AccessKey}:{SecretKey}'
@@ -102,7 +102,7 @@ public class ClanForgeDeploy
 			if (isCompleted)
 				ThrowIfNotSuccess(content);
 			else
-				await Task.Delay(POLL_TIME);
+				await Task.Delay(POLL_TIME_MS);
 		}
 	}
 
