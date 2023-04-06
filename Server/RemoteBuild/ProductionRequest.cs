@@ -11,6 +11,7 @@ public class ProductionRequest : IRemoteControllable
 	public string Process()
 	{
 		var workspace = Workspace.GetWorkspaceFromName(WorkspaceName);
+		workspace.Update();
 		var buildVersion = workspace.GetAppVersion();
 
 		Environment.CurrentDirectory = workspace.Directory;
