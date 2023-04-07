@@ -113,6 +113,7 @@ public class BuildPipeline
 		
 		await ClonesManager.CloneProject(Workspace.Directory, _config);
 		Logger.Log("Build process started...");
+		var buildStartTime = DateTime.Now;
 		
 		var tasks = new List<Task>();
 
@@ -156,6 +157,8 @@ public class BuildPipeline
 			throw new Exception("Build Failed");
 		
 		await WaitBuildIds();
+		Logger.LogTimeStamp("Build time", buildStartTime);
+		ClonesManager.Cleanup();
 	}
 
 	/// <summary>

@@ -21,11 +21,19 @@ public static class ClonesManager
 		"Library"
 	};
 
+	private static readonly Stack<string> TempDirs = new();
+
 	public static string GetTargetPath(string srcDir, TargetConfig targetConfig)
 	{
 		var suffix = targetConfig.BuildPath?.Split("/")[^1];
 		var targetDir = $"{srcDir}_{suffix}";
 		return targetDir;
+	}
+
+	public static void Cleanup()
+	{
+		while (TempDirs.Count > 0)
+			Task.Run(() => Directory.Delete(TempDirs.Pop(), true));
 	}
 
 	public static async Task CloneProject(string srcDir, BuildConfig config)
@@ -41,14 +49,12 @@ public static class ClonesManager
 		if (config.Copies != null)
 			AppendLinks(Copy, config.Copies);
 		
-		var destDirs = new List<string>();
-
 		foreach (var buildTarget in config.Builds)
 		{
 			// create dir
 			var targetDir = GetTargetPath(srcDir, buildTarget);
 			Directory.CreateDirectory(targetDir);
-			destDirs.Add(targetDir);
+			TempDirs.Push(targetDir);
 			
 			// links
 			foreach (var link in Links)
@@ -58,15 +64,15 @@ public static class ClonesManager
 		// copies
 		var sources = Copy.Select(x => new DirectoryInfo(Path.Combine(srcDir, x)));
 		var copyByte = GetTotalBytesToCopy(sources);
-		var totalBytes = copyByte * destDirs.Count;
+		var totalBytes = copyByte * TempDirs.Count;
 		var copiedBytes = 0L;
 		var printSize = PrintEx.ToGigaByteString(copyByte, "0.00");
-		Console.Write($"Copying directories ({printSize}) to {destDirs.Count} locations ... ");
+		Console.Write($"Copying directories ({printSize}) to {TempDirs.Count} locations ... ");
 		
 		var progressBar = new ProgressBar();
 		var tasks = new List<Task>();
 
-		foreach (var destDir in destDirs)
+		foreach (var destDir in TempDirs.ToArray())
 		{
 			foreach (var copy in Copy)
 			{
