@@ -21,7 +21,7 @@ public static class ClonesManager
 		"Library"
 	};
 
-	private static readonly Stack<string> TempDirs = new();
+	private static readonly Stack<DirectoryInfo> TempDirs = new();
 
 	public static string GetTargetPath(string srcDir, TargetConfig targetConfig)
 	{
@@ -32,8 +32,20 @@ public static class ClonesManager
 
 	public static void Cleanup()
 	{
+		Logger.Log($"Deleting '{TempDirs.Count}' directories");
 		while (TempDirs.Count > 0)
-			Task.Run(() => Directory.Delete(TempDirs.Pop(), true));
+		{
+			var dir = TempDirs.Pop();
+			
+			if (!dir.Exists)
+			{
+				Logger.Log($"Directory doesn't exist {dir}");
+				continue;
+			}
+
+			Logger.Log($"Deleting {dir}");
+			Task.Run(() => dir.Delete(true)).FireAndForget();
+		}
 	}
 
 	public static async Task CloneProject(string srcDir, BuildConfig config)
@@ -52,13 +64,15 @@ public static class ClonesManager
 		foreach (var buildTarget in config.Builds)
 		{
 			// create dir
-			var targetDir = GetTargetPath(srcDir, buildTarget);
-			Directory.CreateDirectory(targetDir);
+			var targetDirPath = GetTargetPath(srcDir, buildTarget);
+			var targetDir = new DirectoryInfo(targetDirPath);
+			if (targetDir.Exists)
+				targetDir.Create();
 			TempDirs.Push(targetDir);
 			
 			// links
 			foreach (var link in Links)
-				LinkFolders(Path.Combine(srcDir, link), Path.Combine(targetDir, link));
+				LinkFolders(Path.Combine(srcDir, link), Path.Combine(targetDir.FullName, link));
 		}
 
 		// copies
@@ -79,7 +93,7 @@ public static class ClonesManager
 				var task = Task.Run(() =>
 				{
 					var source = new DirectoryInfo(Path.Combine(srcDir, copy));
-					var destination = new DirectoryInfo(Path.Combine(destDir, copy));
+					var destination = new DirectoryInfo(Path.Combine(destDir.FullName, copy));
 					if (!destination.Exists) // skip if already exits. Library this is fine, some might not be.
 						CopyDirectoryWithProgressBarRecursive(source, destination, ref totalBytes, ref copiedBytes, progressBar);
 				});
