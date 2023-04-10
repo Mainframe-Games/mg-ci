@@ -16,7 +16,7 @@ namespace BuildSystem
 		public BuildTargetGroup TargetGroup = BuildTargetGroup.Standalone;
 		public StandaloneBuildSubtarget SubTarget = StandaloneBuildSubtarget.Player;
 		[Tooltip("Custom scenes overrides. Empty array will use EditorSettings.Scenes")]
-		public string[] Scenes;
+		public SceneAsset[] Scenes;
 		[FormerlySerializedAs("ScriptingDefines")] 
 		[Tooltip("Custom define overrides. Empty array will use ProjectSettings defines")]
 		public string[] ExtraScriptingDefines;
@@ -35,7 +35,7 @@ namespace BuildSystem
 		public BuildPlayerOptions GetBuildOptions()
 		{
 			var scenes = Scenes.Length > 0 
-				? Scenes
+				? Scenes.Select(AssetDatabase.GetAssetPath).ToArray()
 				: GetEditorSettingsScenes();
 			
 			var options = new BuildPlayerOptions
@@ -76,12 +76,6 @@ namespace BuildSystem
 				ProductName = Application.productName;
 		}
 
-		[ContextMenu("Set Scenes")]
-		private void PopulateScenes()
-		{
-			Scenes = GetEditorSettingsScenes();
-		}
-		
 		private static string[] GetEditorSettingsScenes()
 		{
 			return EditorBuildSettings.scenes
@@ -103,7 +97,7 @@ namespace BuildSystem
 		[ContextMenu("Validate")]
 		public bool IsValid()
 		{
-			return EnsureSteamId() && EnsureScenes();
+			return EnsureSteamId();
 		}
 
 		[ContextMenu("Build")]
@@ -125,25 +119,6 @@ namespace BuildSystem
 			var curSteamId = ulong.Parse(File.ReadAllText(steamAppId));
 			if (SteamId != curSteamId)
 				File.WriteAllText(steamAppId, SteamId.ToString());
-			return true;
-		}
-
-		private bool EnsureScenes()
-		{
-			if (Scenes == null)
-				return false;
-			
-			var editorScenes = EditorBuildSettings.scenes.Select(x => x.path).ToList();
-
-			foreach (var scene in Scenes)
-			{
-				if (editorScenes.Contains(scene))
-					continue;
-				
-				Debug.LogError($"Scene isn't in build settings '{scene}'");
-				return false;
-			}
-
 			return true;
 		}
 	}

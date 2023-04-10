@@ -40,8 +40,6 @@ public class LocalUnityBuild
 		var buildStartTime = DateTime.Now;
 		var exePath = GetDefaultUnityPath(targetConfig.VersionExtension);
 		var executeMethod = targetConfig.ExecuteMethod ?? DEFAULT_EXECUTE_METHOD;
-		
-		Logger.Log($"Starting build: {targetConfig.Target}");
 
 		var cliparams = BuildCliParams(targetConfig, projectPath, executeMethod, logPath);
 		var (exitCode, output) = Cmd.Run(exePath, cliparams);

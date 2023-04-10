@@ -5,7 +5,6 @@ using System.Text;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace BuildSystem
 {
@@ -13,6 +12,12 @@ namespace BuildSystem
 	{
 		private static readonly StringBuilder _builder = new();
 
+		private static void Exit(int code)
+		{
+			if (Application.isBatchMode)
+				EditorApplication.Exit(code);
+		}
+		
 		/// <summary>
 		/// Called from build server
 		/// </summary>
@@ -31,12 +36,16 @@ namespace BuildSystem
 				throw new Exception($"BuildSettings '{settings.name}' not valid");
 			
 			RunPrebuild(settings);
-			
+
 			var options = settings.GetBuildOptions();
-			EnsureBuildDirectoryExists(options);
+			
+			if (!EnsureBuildDirectoryExists(options))
+			{
+				Exit(555);
+				return;
+			}
 			
 			Debug.Log($"Started build: {options.locationPathName}");
-			
 			Application.logMessageReceived += OnLogReceived;
 			var report = BuildPipeline.BuildPlayer(options);
 			Application.logMessageReceived -= OnLogReceived;
@@ -48,13 +57,11 @@ namespace BuildSystem
 			else
 			{
 				DumpErrorLog(report);
-
-				if (Application.isBatchMode)
-					EditorApplication.Exit(666);
+				Exit(666);
 			}
 		}
 
-		private static void EnsureBuildDirectoryExists(BuildPlayerOptions options)
+		private static bool EnsureBuildDirectoryExists(BuildPlayerOptions options)
 		{
 			var fullDir = new FileInfo(options.locationPathName).Directory;
 			
@@ -64,6 +71,8 @@ namespace BuildSystem
 			
 			if (!fullDir.Exists)
 				fullDir.Create();
+			
+			return true;
 		}
 		
 		/// <summary>
@@ -93,10 +102,7 @@ namespace BuildSystem
 				{
 					// log exception
 					Debug.LogException(e);
-					
-					if (Application.isBatchMode)
-						EditorApplication.Exit(555);
-					
+					Exit(555);
 					break;
 				}
 			}
