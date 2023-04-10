@@ -9,12 +9,13 @@ namespace Server;
 
 public static class App
 {
-	private static string RootDirectory { get; set; }
+	private static string? RootDirectory { get; set; }
 	private static ListenServer? Server { get; set; }
+	private static ServerConfig? Config { get; set; }
 	
 	public static async Task RunAsync(string[]? args)
 	{
-		var config = ServerConfig.Load();
+		Config = ServerConfig.Load();
 		RootDirectory = Environment.CurrentDirectory;
 
 		// for locally running the build process without a listen server
@@ -25,16 +26,16 @@ public static class App
 		}
 		else
 		{
-			Args.Environment.TryGetArg("-server", 0, out string ip, config.IP);
-			Args.Environment.TryGetArg("-server", 1, out int port, config.Port);
+			Args.Environment.TryGetArg("-server", 0, out string ip, Config.IP);
+			Args.Environment.TryGetArg("-server", 1, out int port, Config.Port);
 			Server = new ListenServer(ip, (ushort)port);
 			
-			if (config.AuthTokens is { Count: > 0 })
+			if (Config.AuthTokens is { Count: > 0 })
 			{
 				Server.GetAuth = () =>
 				{
-					config.Refresh();
-					return config.AuthTokens;
+					Config.Refresh();
+					return Config.AuthTokens;
 				};
 			}
 			// server should wait for ever
@@ -54,12 +55,27 @@ public static class App
 	
 	public static async Task RunBuildPipe(Workspace workspace, string[]? args)
 	{
-		var pipe = new BuildPipeline(workspace, args, ServerConfig.Instance.OffloadServerUrl);
-		pipe.OffloadBuildNeeded += RemoteBuildTargetRequest.SendRemoteBuildRequest;
+		var pipe = new BuildPipeline(workspace, args, Config.OffloadServerUrl);
+		pipe.OffloadBuildNeeded += SendRemoteBuildRequest;
 		pipe.GetExtraHookLogs += BuildPipelineOnGetExtraHookLog;
 		pipe.DeployEvent += BuildPipelineOnDeployEvent;
 		await pipe.RunAsync();
 		DumpLogs();
+	}
+	
+	/// <summary>
+	/// Called from main build server. Sends web request to offload server and gets a buildId in return
+	/// </summary>
+	private static void SendRemoteBuildRequest(OffloadServerPacket offloadPacket)
+	{
+		var remoteBuild = new RemoteBuildTargetRequest
+		{
+			SendBackUrl = $"http://{Config.IP}:{Config.Port}",
+			Packet = offloadPacket,
+		};
+		
+		var body = new RemoteBuildPacket { BuildTargetRequest = remoteBuild };
+		Web.SendAsync(HttpMethod.Post, Config.OffloadServerUrl, body: body).FireAndForget();
 	}
 
 	private static async Task BuildPipelineOnDeployEvent(DeployContainer deploy, string buildVersionTitle)
@@ -69,9 +85,9 @@ public static class App
 		{
 			foreach (var vdfPath in deploy.Steam)
 			{
-				var path = ServerConfig.Instance.Steam.Path;
-				var password = ServerConfig.Instance.Steam.Password;
-				var username = ServerConfig.Instance.Steam.Username;
+				var path = Config.Steam.Path;
+				var password = Config.Steam.Password;
+				var username = Config.Steam.Username;
 				var steam = new SteamDeploy(vdfPath, password, username, path);
 				steam.Deploy(buildVersionTitle);
 			}
@@ -80,14 +96,14 @@ public static class App
 		// clanforge
 		if (deploy.Clanforge == true)
 		{
-			var clanforge = new ClanForgeDeploy(ServerConfig.Instance.Clanforge, buildVersionTitle);
+			var clanforge = new ClanForgeDeploy(Config.Clanforge, buildVersionTitle);
 			await clanforge.Deploy();
 		}
 	}
 
 	private static string? BuildPipelineOnGetExtraHookLog()
 	{
-		return ServerConfig.Instance.Clanforge?.BuildHookMessage("Updated");
+		return Config.Clanforge?.BuildHookMessage("Updated");
 	}
 	
 	#endregion

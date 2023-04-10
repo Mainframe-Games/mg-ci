@@ -48,20 +48,17 @@ public static class ClonesManager
 		}
 	}
 
-	public static async Task CloneProject(string srcDir, BuildConfig config)
+	public static async Task CloneProject(string srcDir, string[]? links, string[]? copies, IEnumerable<TargetConfig> buildConfigs)
 	{
-		if (config.Builds == null)
-			throw new NullReferenceException("Builds array is null");
-
 		var sw = Stopwatch.StartNew();
 		
 		// append links
-		if (config.Links != null)
-			AppendLinks(Links, config.Links);
-		if (config.Copies != null)
-			AppendLinks(Copy, config.Copies);
+		if (links != null)
+			AppendLinks(Links, links);
+		if (copies != null)
+			AppendLinks(Copy, copies);
 		
-		foreach (var buildTarget in config.Builds)
+		foreach (var buildTarget in buildConfigs)
 		{
 			// create dir
 			var targetDirPath = GetTargetPath(srcDir, buildTarget);

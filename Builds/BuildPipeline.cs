@@ -9,11 +9,29 @@ using SharedLib.Webhooks;
 
 namespace Deployment;
 
+public class OffloadServerPacket
+{
+	public string WorkspaceName { get; set; }
+	public string UnityVersion { get; set; }
+	public string BuildVersion { get; set; }
+	public int ChangesetId { get; set; }
+	public bool CleanBuild { get; set; }
+	
+	public string[]? Links { get; set; }
+	public string[]? Copies { get; set; }
+	
+	/// <summary>
+	/// BuildId, Config
+	/// </summary>
+	public Dictionary<string, TargetConfig> Builds { get; set; }
+
+}
+
 public class BuildPipeline
 {
 	public static BuildPipeline? Current { get; private set; }
 
-	public delegate Task<string> OffloadBuildReqPacket(string workspaceName, int changesetId, string buildVersion, TargetConfig targetConfig, string offloadUrl, bool cleanBuild);
+	public delegate void OffloadBuildReqPacket(OffloadServerPacket packet);
 	public delegate string? ExtraHookLogs();
 	public delegate Task DeployDelegate(DeployContainer deploy, string buildVersionTitle);
 	
@@ -111,11 +129,13 @@ public class BuildPipeline
 		if (_config?.Builds == null)
 			throw new NullReferenceException();
 		
-		await ClonesManager.CloneProject(Workspace.Directory, _config);
+		await ClonesManager.CloneProject(Workspace.Directory, _config.Links, _config.Copies, _config.Builds);
 		Logger.Log("Build process started...");
 		var buildStartTime = DateTime.Now;
 		
 		var tasks = new List<Task>();
+
+		OffloadServerPacket? offloadBuilds = null;
 
 		foreach (var build in _config.Builds)
 		{
@@ -128,15 +148,20 @@ public class BuildPipeline
 			// offload build
 			if (IsOffload(build))
 			{
-				// TODO: need to make this an array
-				var buildId = await OffloadBuildNeeded.Invoke(
-					Workspace.Name,
-					_currentChangeSetId,
-					_buildVersion,
-					build,
-					_offloadUrl,
-					_args.IsFlag("-cleanbuild")
-				);
+				offloadBuilds ??= new OffloadServerPacket
+				{
+					WorkspaceName = Workspace.Name,
+					ChangesetId = _currentChangeSetId,
+					UnityVersion = Workspace.UnityVersion,
+					BuildVersion = _buildVersion,
+					CleanBuild = _args.IsFlag("-cleanbuild"),
+					Links = _config.Links,
+					Copies = _config.Copies,
+					Builds = new Dictionary<string, TargetConfig>()
+				};
+				
+				var buildId = Guid.NewGuid().ToString();
+				offloadBuilds.Builds[buildId] = build;
 				_buildIds.Add(buildId);
 			}
 			// local build
@@ -147,6 +172,10 @@ public class BuildPipeline
 				tasks.Add(task);
 			}
 		}
+
+		// send offload builds
+		if (offloadBuilds != null)
+			OffloadBuildNeeded?.Invoke(offloadBuilds);
 
 		var isSuccess = true;
 		

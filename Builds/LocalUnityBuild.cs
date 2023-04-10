@@ -41,6 +41,8 @@ public class LocalUnityBuild
 		var exePath = GetDefaultUnityPath(targetConfig.VersionExtension);
 		var executeMethod = targetConfig.ExecuteMethod ?? DEFAULT_EXECUTE_METHOD;
 
+		Logger.Log($"Started Build: {targetConfig.Settings}");
+		
 		var cliparams = BuildCliParams(targetConfig, projectPath, executeMethod, logPath);
 		var (exitCode, output) = Cmd.Run(exePath, cliparams);
 
@@ -57,8 +59,7 @@ public class LocalUnityBuild
 			throw new Exception($"Build Failed with code '{exitCode}'\n{verboseLog}");
 		}
 		
-		var buildTime = DateTime.Now - buildStartTime;
-		Logger.Log($"Build Success! {targetConfig.Target}, Build Time: {buildTime:hh\\:mm\\:ss}");
+		Logger.LogTimeStamp($"Build Success! {targetConfig.Settings}, Build Time: ", buildStartTime);
 	}
 
 	private static string BuildCliParams(TargetConfig targetConfig, string projectPath, string executeMethod, string logPath)
