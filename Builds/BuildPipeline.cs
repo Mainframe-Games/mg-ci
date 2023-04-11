@@ -197,7 +197,7 @@ public class BuildPipeline
 	/// <returns></returns>
 	private bool IsOffload(TargetConfig target)
 	{
-		return string.IsNullOrEmpty(_offloadUrl) && _offloadTargets.Contains(target.Target ?? UnityTarget.None);
+		return !string.IsNullOrEmpty(_offloadUrl) && _offloadTargets.Contains(target.Target ?? UnityTarget.None);
 	}
 
 	private async Task DeployAsync()
