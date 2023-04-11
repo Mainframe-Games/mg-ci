@@ -37,7 +37,8 @@ public class BuildPipeline
 	public event DeployDelegate DeployEvent;
 
 	private readonly Args _args;
-	private readonly string _offloadUrl;
+	private readonly string? _offloadUrl;
+	private readonly List<UnityTarget> _offloadTargets;
 	private BuildConfig _config;
 
 	public Workspace Workspace { get; }
@@ -57,11 +58,12 @@ public class BuildPipeline
 	/// </summary>
 	private readonly List<string> _buildIds = new();
 
-	public BuildPipeline(Workspace workspace, string[]? args, string? offloadUrl)
+	public BuildPipeline(Workspace workspace, string[]? args, string? offloadUrl, List<UnityTarget>? offloadTargets)
 	{
 		Workspace = workspace;
 		_args = new Args(args);
 		_offloadUrl = offloadUrl;
+		_offloadTargets = offloadTargets ?? new List<UnityTarget>();
 		Environment.CurrentDirectory = workspace.Directory;
 		Current = this;
 	}
@@ -195,19 +197,7 @@ public class BuildPipeline
 	/// <returns></returns>
 	private bool IsOffload(TargetConfig target)
 	{
-		if (string.IsNullOrEmpty(_offloadUrl))
-			return false;
-		
-		// mac server
-		if (OperatingSystem.IsMacOS())
-			return target.Target is UnityTarget.Win64;
-		
-		// windows server
-		if (OperatingSystem.IsWindows())
-			return target.Target is UnityTarget.OSXUniversal;
-
-		// linux server
-		return target.Target is UnityTarget.Win64 or UnityTarget.OSXUniversal;
+		return string.IsNullOrEmpty(_offloadUrl) && _offloadTargets.Contains(target.Target ?? UnityTarget.None);
 	}
 
 	private async Task DeployAsync()

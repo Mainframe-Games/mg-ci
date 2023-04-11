@@ -19,7 +19,7 @@ public class LocalUnityBuild
 	{
 		return OperatingSystem.IsMacOS()
 			? $"/Applications/Unity/Hub/Editor/{_unityVersion}{versionExtension}/Unity.app/Contents/MacOS/Unity"
-			: $@"C:\Program Files\Unity\Hub\Editor\{_unityVersion}{versionExtension}\Editor\Unity.exe";
+			: $@"C:\Program Files\Unity\Hub\Editor\{_unityVersion}\Editor\Unity.exe";
 	}
 
 	/// <summary>

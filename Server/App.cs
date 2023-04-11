@@ -55,7 +55,7 @@ public static class App
 	
 	public static async Task RunBuildPipe(Workspace workspace, string[]? args)
 	{
-		var pipe = new BuildPipeline(workspace, args, Config.OffloadServerUrl);
+		var pipe = new BuildPipeline(workspace, args, Config.OffloadServerUrl, Config.OffloadTargets);
 		pipe.OffloadBuildNeeded += SendRemoteBuildRequest;
 		pipe.GetExtraHookLogs += BuildPipelineOnGetExtraHookLog;
 		pipe.DeployEvent += BuildPipelineOnDeployEvent;
