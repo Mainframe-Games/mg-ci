@@ -5,7 +5,6 @@ using Deployment;
 using Deployment.Configs;
 using Deployment.RemoteBuild;
 using Newtonsoft.Json;
-using Server.Configs;
 using SharedLib;
 
 namespace Server.RemoteBuild;
@@ -20,7 +19,6 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 
 	[JsonIgnore] private string? WorkspaceName => Packet.WorkspaceName;
 	[JsonIgnore] private int ChangesetId => Packet.ChangesetId;
-	[JsonIgnore] private string? UnityVersion => Packet.UnityVersion;
 	[JsonIgnore] private string? BuildVersion => Packet.BuildVersion;
 	[JsonIgnore] private bool CleanBuild => Packet.CleanBuild;
 	[JsonIgnore] private string[]? Links => Packet.Links;

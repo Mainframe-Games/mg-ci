@@ -12,7 +12,6 @@ namespace Deployment;
 public class OffloadServerPacket
 {
 	public string WorkspaceName { get; set; }
-	public string UnityVersion { get; set; }
 	public string BuildVersion { get; set; }
 	public int ChangesetId { get; set; }
 	public bool CleanBuild { get; set; }
@@ -152,7 +151,6 @@ public class BuildPipeline
 				{
 					WorkspaceName = Workspace.Name,
 					ChangesetId = _currentChangeSetId,
-					UnityVersion = Workspace.UnityVersion,
 					BuildVersion = _buildVersion,
 					CleanBuild = _args.IsFlag("-cleanbuild"),
 					Links = _config.Links,
