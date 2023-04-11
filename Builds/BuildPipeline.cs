@@ -304,6 +304,7 @@ public class BuildPipeline
 			return;
 		
 		var hookMessage = new StringBuilder();
+		var errorMessage = $"{e.GetType()}: {e.Message}";
 		
 		foreach (var hook in _config.Hooks)
 		{
@@ -311,17 +312,17 @@ public class BuildPipeline
 				continue;
 			
 			hookMessage.Clear();
-				
+			
 			if (hook.IsDiscord())
 			{
 				hookMessage.AppendLine(hook.Title);
-				hookMessage.AppendLine(e.ToString());
+				hookMessage.AppendLine(errorMessage);
 				Discord.PostMessage(hook.Url, hookMessage.ToString(), hook.Title, BuildVersionTitle, Discord.Colour.RED);
 			}
 			else if (hook.IsSlack())
 			{
 				hookMessage.AppendLine(hook.Title);
-				hookMessage.AppendLine(e.ToString());
+				hookMessage.AppendLine(errorMessage);
 				Slack.PostMessage(hook.Url, hookMessage.ToString());
 			}
 		}

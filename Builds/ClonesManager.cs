@@ -11,13 +11,13 @@ public static class ClonesManager
 {
 	private static readonly HashSet<string> Links = new()
 	{
-		"Assets",
 		"Packages",
 		"ProjectSettings"
 	};
 
 	private static readonly HashSet<string> Copy = new()
 	{
+		"Assets",
 		"Library"
 	};
 
@@ -63,7 +63,7 @@ public static class ClonesManager
 			// create dir
 			var targetDirPath = GetTargetPath(srcDir, buildTarget);
 			var targetDir = new DirectoryInfo(targetDirPath);
-			if (targetDir.Exists)
+			if (!targetDir.Exists)
 				targetDir.Create();
 			TempDirs.Push(targetDir);
 			
