@@ -41,10 +41,15 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		if (workspace.Directory == null || !Directory.Exists(workspace.Directory))
 			throw new DirectoryNotFoundException($"Directory doesn't exist: {workspace.Directory}");
 		
-		await ClonesManager.CloneProject(workspaceName, Packet.Links, Packet.Copies, Packet.Builds.Values);
+		await ClonesManager.CloneProject(workspace.Directory, Packet.Links, Packet.Copies, Packet.Builds.Values);
 
-		foreach (var buildConfig in Packet.Builds)
-			StartBuilder(buildConfig.Key, buildConfig.Value, workspace).FireAndForget();
+		var tasks = Packet.Builds.Select(x => StartBuilder(x.Key, x.Value, workspace));
+		await Task.WhenAll(tasks);
+		
+		// clean up after build
+		workspace.Clear();
+		ClonesManager.Cleanup();
+		App.DumpLogs();
 	}
 
 	/// <summary>
@@ -86,11 +91,6 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 			}
 
 			await RespondBackToMasterServer(response);
-
-			// clean up after build
-			workspace.Clear();
-
-			App.DumpLogs();
 		}
 		catch (Exception e)
 		{
