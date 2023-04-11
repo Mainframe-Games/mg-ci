@@ -41,10 +41,14 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		if (workspace.Directory == null || !Directory.Exists(workspace.Directory))
 			throw new DirectoryNotFoundException($"Directory doesn't exist: {workspace.Directory}");
 		
+		// set build version in project settings
+		PreBuildBase.ReplaceVersions(Packet.BuildVersion);
+		
 		await ClonesManager.CloneProject(workspace.Directory, Packet.Links, Packet.Copies, Packet.Builds.Values);
 
 		Packet.Builds
 			.Select(x => Task.Run(() => StartBuilder(x.Key, x.Value, workspace)))
+			.ToList()
 			.WaitForAll();
 		
 		// clean up after build
@@ -62,10 +66,6 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		try
 		{
 			var targetPath = ClonesManager.GetTargetPath(workspace.Directory, config);
-			
-			// pre build
-			var projSettingsPath = Path.Combine(targetPath, Workspace.PROJECT_SETTINGS);
-			PreBuildBase.ReplaceVersions(Packet.BuildVersion, projSettingsPath);
 
 			// build 
 			var builder = new LocalUnityBuild(workspace.UnityVersion);

@@ -38,7 +38,7 @@ public static class TaskEx
 	/// </summary>
 	/// <param name="tasks"></param>
 	/// <exception cref="AggregateException"></exception>
-	public static void WaitForAll(this IEnumerable<Task> tasks)
+	public static void WaitForAll(this List<Task> tasks)
 	{
 		Exception? exception = null;
 		
