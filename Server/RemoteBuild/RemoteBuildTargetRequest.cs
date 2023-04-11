@@ -48,7 +48,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		
 		// clean up after build
 		workspace.Clear();
-		ClonesManager.Cleanup();
+		// ClonesManager.Cleanup();
 		App.DumpLogs();
 	}
 
