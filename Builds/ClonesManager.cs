@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net;
 using Deployment.Configs;
 using SharedLib;
 
@@ -91,8 +92,12 @@ public static class ClonesManager
 				{
 					var source = new DirectoryInfo(Path.Combine(srcDir, copy));
 					var destination = new DirectoryInfo(Path.Combine(destDir.FullName, copy));
-					if (!destination.Exists) // skip if already exits. Library this is fine, some might not be.
-						CopyDirectoryWithProgressBarRecursive(source, destination, ref totalBytes, ref copiedBytes, progressBar);
+					
+					// Skip Library if already exists to speed up process.
+					if (destination is { Name: "Library", Exists: true })
+						return;
+						
+					CopyDirectoryWithProgressBarRecursive(source, destination, ref totalBytes, ref copiedBytes, progressBar);
 				});
 				tasks.Add(task);
 			}
