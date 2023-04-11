@@ -4,7 +4,6 @@ using Builds.PreBuild;
 using Deployment;
 using Deployment.Configs;
 using Deployment.RemoteBuild;
-using Newtonsoft.Json;
 using SharedLib;
 
 namespace Server.RemoteBuild;
@@ -14,19 +13,9 @@ namespace Server.RemoteBuild;
 /// </summary>
 public class RemoteBuildTargetRequest : IRemoteControllable
 {
-	public string? SendBackUrl { get; init; }
-	public OffloadServerPacket Packet { get; set; }
+	public string? SendBackUrl { get; set; }
+	public OffloadServerPacket? Packet { get; set; }
 
-	[JsonIgnore] private string? WorkspaceName => Packet.WorkspaceName;
-	[JsonIgnore] private int ChangesetId => Packet.ChangesetId;
-	[JsonIgnore] private string? BuildVersion => Packet.BuildVersion;
-	[JsonIgnore] private bool CleanBuild => Packet.CleanBuild;
-	[JsonIgnore] private string[]? Links => Packet.Links;
-	[JsonIgnore] private string[]? Copies => Packet.Copies;
-	[JsonIgnore] private Dictionary<string, TargetConfig> BuildConfigs => Packet.Builds;
-	
-
-	/// <returns>BuildId</returns>
 	public string Process()
 	{
 		ProcessAsync().FireAndForget();
@@ -39,39 +28,41 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		await Task.Delay(1);
 		
 		var mapping = new WorkspaceMapping();
-		var workspaceName = mapping.GetRemapping(WorkspaceName);
+		var workspaceName = mapping.GetRemapping(Packet.WorkspaceName);
 		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
+		Environment.CurrentDirectory = workspace.Directory;
+		
+		if (Packet.CleanBuild)
+			workspace.CleanBuild();
+		
 		workspace.Clear();
-		workspace.Update(ChangesetId);
+		workspace.Update(Packet.ChangesetId);
 
 		if (workspace.Directory == null || !Directory.Exists(workspace.Directory))
 			throw new DirectoryNotFoundException($"Directory doesn't exist: {workspace.Directory}");
 		
-		await ClonesManager.CloneProject(workspaceName, Links, Copies, BuildConfigs.Values);
+		await ClonesManager.CloneProject(workspaceName, Packet.Links, Packet.Copies, Packet.Builds.Values);
 
-		foreach (var packet in BuildConfigs)
-			StartBuilder(packet.Key, packet.Value, workspace, CleanBuild).FireAndForget();
+		foreach (var buildConfig in Packet.Builds)
+			StartBuilder(buildConfig.Key, buildConfig.Value, workspace).FireAndForget();
 	}
 
 	/// <summary>
 	/// Fire and forget method for starting a build
 	/// </summary>
 	/// <exception cref="WebException"></exception>
-	private async Task StartBuilder(string buildId, TargetConfig config, Workspace workspace, bool clean)
+	private async Task StartBuilder(string buildId, TargetConfig config, Workspace workspace)
 	{
 		try
 		{
-			Environment.CurrentDirectory = workspace.Directory;
-
-			if (clean)
-				workspace.CleanBuild();
-
+			var targetPath = ClonesManager.GetTargetPath(workspace.Directory, config);
+			
 			// pre build
-			PreBuildBase.ReplaceVersions(BuildVersion);
+			var projSettingsPath = Path.Combine(targetPath, Workspace.PROJECT_SETTINGS);
+			PreBuildBase.ReplaceVersions(Packet.BuildVersion, projSettingsPath);
 
 			// build 
 			var builder = new LocalUnityBuild(workspace.UnityVersion);
-			var targetPath = ClonesManager.GetTargetPath(workspace.Directory, config);
 			builder.Build(targetPath, config);
 
 			RemoteBuildResponse response;

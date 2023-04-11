@@ -11,11 +11,10 @@ namespace Deployment;
 
 public class OffloadServerPacket
 {
-	public string WorkspaceName { get; set; }
-	public string BuildVersion { get; set; }
+	public string? WorkspaceName { get; set; }
+	public string? BuildVersion { get; set; }
 	public int ChangesetId { get; set; }
 	public bool CleanBuild { get; set; }
-	
 	public string[]? Links { get; set; }
 	public string[]? Copies { get; set; }
 	
@@ -23,7 +22,6 @@ public class OffloadServerPacket
 	/// BuildId, Config
 	/// </summary>
 	public Dictionary<string, TargetConfig> Builds { get; set; }
-
 }
 
 public class BuildPipeline

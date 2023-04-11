@@ -41,10 +41,9 @@ public abstract class PreBuildBase
 	/// <summary>
 	/// Replaces the version in all the places within ProjectSettings.asset
 	/// </summary>
-	/// <param name="newBundleVersion"></param>
-	public static void ReplaceVersions(string? newBundleVersion)
+	public static void ReplaceVersions(string? newBundleVersion, string projectSettingsPath = Workspace.PROJECT_SETTINGS)
 	{
-		var lines = File.ReadAllLines(Workspace.PROJECT_SETTINGS);
+		var lines = File.ReadAllLines(projectSettingsPath);
 
 		var isBundleVersionFound = false;
 		var isBuildNumFound = false;
