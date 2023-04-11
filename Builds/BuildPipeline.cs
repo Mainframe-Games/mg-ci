@@ -128,7 +128,7 @@ public class BuildPipeline
 		if (_config?.Builds == null)
 			throw new NullReferenceException();
 		
-		await ClonesManager.CloneProject(Workspace.Directory, _config.Links, _config.Copies, _config.Builds);
+		await ClonesManager.CloneProject(Workspace.Directory, _config.Links, _config.Copies, _config.Builds.Where(x => !IsOffload(x)));
 		Logger.Log("Build process started...");
 		var buildStartTime = DateTime.Now;
 		
