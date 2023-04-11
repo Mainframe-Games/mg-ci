@@ -175,13 +175,7 @@ public class BuildPipeline
 		if (offloadBuilds != null)
 			OffloadBuildNeeded?.Invoke(offloadBuilds);
 
-		var isSuccess = true;
-		
-		foreach (var task in tasks)
-			task.WaitAndThrow(_ => isSuccess = false);
-
-		if (!isSuccess)
-			throw new Exception("Build Failed");
+		tasks.WaitForAll();
 		
 		await WaitBuildIds();
 		Logger.LogTimeStamp("Build time", buildStartTime);

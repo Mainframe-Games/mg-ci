@@ -43,8 +43,9 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		
 		await ClonesManager.CloneProject(workspace.Directory, Packet.Links, Packet.Copies, Packet.Builds.Values);
 
-		var tasks = Packet.Builds.Select(x => StartBuilder(x.Key, x.Value, workspace));
-		await Task.WhenAll(tasks);
+		Packet.Builds
+			.Select(x => Task.Run(() => StartBuilder(x.Key, x.Value, workspace)))
+			.WaitForAll();
 		
 		// clean up after build
 		workspace.Clear();
