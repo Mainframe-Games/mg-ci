@@ -1,14 +1,16 @@
-﻿namespace SharedLib;
+﻿using Newtonsoft.Json;
+
+namespace SharedLib;
 
 public class Workspace
 {
-	public const string PREV_CHANGESET_ID_PATH = "BuildScripts/previous-changesetId.txt";
-	public const string PROJECT_SETTINGS = "ProjectSettings/ProjectSettings.asset";
-	private const string STEAM_DIR_PATH = "BuildScripts/Steam";
-
 	public string? Name { get; private init; }
 	public string? Directory { get; private init; }
 	public string? UnityVersion { get; private set; }
+
+	[JsonIgnore] private string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", "ProjectSettings.asset");
+	[JsonIgnore] private string PrevChangesetIdPath => Path.Combine(Directory, "BuildScripts", "previous-changesetId.txt");
+	[JsonIgnore] private string SteamDirPath => Path.Combine(Directory, "BuildScripts", "Steam");
 
 	public override string ToString()
 	{
@@ -102,8 +104,7 @@ public class Workspace
 	
 	public string GetAppVersion()
 	{
-		var path = Path.Combine(Directory, PROJECT_SETTINGS);
-		var appVer = File.ReadAllLines(path)
+		var appVer = File.ReadAllLines(ProjectSettingsPath)
 			.Single(x => x.Contains("bundleVersion:"))
 			.Replace("bundleVersion: ", string.Empty)
 			.Trim();
@@ -182,14 +183,9 @@ public class Workspace
 	/// <returns></returns>
 	public int GetPreviousChangeSetId()
 	{
-		var currentDir = Environment.CurrentDirectory;
-		Environment.CurrentDirectory = Directory;
-
-		var str = File.Exists(PREV_CHANGESET_ID_PATH)
-			? File.ReadAllText(PREV_CHANGESET_ID_PATH)
+		var str = File.Exists(PrevChangesetIdPath)
+			? File.ReadAllText(PrevChangesetIdPath)
 			: "0";
-		
-		Environment.CurrentDirectory = currentDir;
 		
 		return int.TryParse(str, out var id) ? id : 0;
 	}
@@ -208,13 +204,13 @@ public class Workspace
 		return changeLog;
 	}
 	
-	public static void CommitNewVersionNumber(int currentChangeSetId, string buildVersion, string messagePrefix = "Build Version")
+	public void CommitNewVersionNumber(int currentChangeSetId, string buildVersion, string messagePrefix = "Build Version")
 	{
 		if (string.IsNullOrEmpty(buildVersion))
 			return;
 		
 		// write new prev changeset id
-		File.WriteAllText(PREV_CHANGESET_ID_PATH, currentChangeSetId.ToString());
+		File.WriteAllText(PrevChangesetIdPath, currentChangeSetId.ToString());
 
 		// update in case there are new changes in coming otherwise it will fail
 		Cmd.Run("cm", "update");
@@ -227,13 +223,13 @@ public class Workspace
 		 */
 		var filesToCommit = new List<string>
 		{
-			PROJECT_SETTINGS,
-			PREV_CHANGESET_ID_PATH,
+			ProjectSettingsPath,
+			PrevChangesetIdPath,
 		};
 		
 		// add vdfs
-		var vdfs = new DirectoryInfo(STEAM_DIR_PATH).GetFiles("*.vdf");
-		var relativeNames = vdfs.Select(x => x.FullName.Replace($"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}", string.Empty));
+		var vdfs = new DirectoryInfo(SteamDirPath).GetFiles("*.vdf");
+		var relativeNames = vdfs.Select(x => x.FullName);
 		filesToCommit.AddRange(relativeNames);
 		
 		// commit changes
