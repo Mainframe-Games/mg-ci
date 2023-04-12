@@ -32,9 +32,6 @@ namespace BuildSystem
 		[Tooltip("Deletes all the files at LocationPath before building")]
 		public bool DeleteFiles;
 
-		[Tooltip("Runs 'AddressableAssetSettings.BuildPlayerContent' before player build")]
-		public bool BuildAddressables;
-
 		public BuildPlayerOptions GetBuildOptions(string rootDirectoryPath = null)
 		{
 			// if no override given use default

@@ -3,9 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEditor;
-using UnityEditor.AddressableAssets;
-using UnityEditor.AddressableAssets.Build;
-using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
@@ -49,12 +46,7 @@ namespace BuildSystem
 			
 			Debug.Log($"Started build: {options.locationPathName}");
 			Application.logMessageReceived += OnLogReceived;
-
-			if (settings.BuildAddressables)
-				BuildAddressables();
-
 			var report = BuildPipeline.BuildPlayer(options);
-			
 			Application.logMessageReceived -= OnLogReceived;
 			
 			if (report.summary.result == BuildResult.Succeeded)
@@ -66,12 +58,6 @@ namespace BuildSystem
 				DumpErrorLog(report);
 				Exit(666);
 			}
-		}
-
-		private static void BuildAddressables()
-		{
-			AddressableAssetSettings.CleanPlayerContent(AddressableAssetSettingsDefaultObject.Settings.ActivePlayerDataBuilder);
-			AddressableAssetSettings.BuildPlayerContent();
 		}
 
 		private static bool EnsureBuildDirectoryExists(BuildPlayerOptions options)
