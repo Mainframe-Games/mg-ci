@@ -8,7 +8,7 @@ public class Workspace
 	public string? Directory { get; private init; }
 	public string? UnityVersion { get; private set; }
 
-	[JsonIgnore] private string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", "ProjectSettings.asset");
+	[JsonIgnore] public string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", "ProjectSettings.asset");
 	[JsonIgnore] private string PrevChangesetIdPath => Path.Combine(Directory, "BuildScripts", "previous-changesetId.txt");
 	[JsonIgnore] private string SteamDirPath => Path.Combine(Directory, "BuildScripts", "Steam");
 
