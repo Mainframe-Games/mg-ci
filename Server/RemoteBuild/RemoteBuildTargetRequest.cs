@@ -69,6 +69,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 
 			// build 
 			var builder = new LocalUnityBuild(workspace.UnityVersion);
+			config.BuildPath = Path.Combine(workspace.Directory, config.BuildPath); // Todo, 
 			builder.Build(targetPath, config);
 
 			RemoteBuildResponse response;
