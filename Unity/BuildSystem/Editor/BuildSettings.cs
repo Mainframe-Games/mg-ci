@@ -28,10 +28,13 @@ namespace BuildSystem
 		public ulong SteamId;
 
 		[Tooltip("Deletes all the files at LocationPath before building")]
-		public bool DeleteFiles; 
+		public bool DeleteFiles;
+
+		[Tooltip("Runs 'AddressableAssetSettings.BuildPlayerContent' before player build")]
+		public bool BuildAddressables;
 		
 		public string RootDirectoryPath { get; set; }
-		
+
 		public BuildPlayerOptions GetBuildOptions()
 		{
 			var scenes = Scenes.Length > 0 
