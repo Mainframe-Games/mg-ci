@@ -63,13 +63,15 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	/// <exception cref="WebException"></exception>
 	private async Task StartBuilder(string buildId, TargetConfig config, Workspace workspace)
 	{
+		var originalBuildPath = config.BuildPath;
+			
 		try
 		{
 			var targetPath = ClonesManager.GetTargetPath(workspace.Directory, config);
-
+			
 			// build 
 			var builder = new LocalUnityBuild(workspace.UnityVersion);
-			config.BuildPath = Path.Combine(workspace.Directory, config.BuildPath); // Todo, 
+			config.BuildPath = Path.Combine(workspace.Directory, originalBuildPath); // Todo, consolidate this. Its in BuildPipeline.cs as well
 			builder.Build(targetPath, config);
 
 			RemoteBuildResponse response;
@@ -82,14 +84,14 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 				response = new RemoteBuildResponse
 				{
 					BuildId = buildId,
-					BuildPath = config.BuildPath,
+					BuildPath = originalBuildPath,
 					Data = zipBytes
 				};
 			}
 			else
 			{
 				// send web request to sender about the build failing
-				response = BuildErrorResponse(buildId, config, builder.Errors);
+				response = BuildErrorResponse(buildId, originalBuildPath, builder.Errors);
 			}
 
 			await RespondBackToMasterServer(response);
@@ -97,17 +99,17 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		catch (Exception e)
 		{
 			Logger.Log(e);
-			var res = BuildErrorResponse(buildId, config, e.Message);
+			var res = BuildErrorResponse(buildId, originalBuildPath, e.Message);
 			await RespondBackToMasterServer(res);
 		}
 	}
 
-	private static RemoteBuildResponse BuildErrorResponse(string buildId, TargetConfig config, string? message = null)
+	private static RemoteBuildResponse BuildErrorResponse(string? buildId, string? originalBuildPath, string? message = null)
 	{
 		return new RemoteBuildResponse
 		{
 			BuildId = buildId,
-			BuildPath = config.BuildPath,
+			BuildPath = originalBuildPath,
 			Error = message ?? "build failed for reasons unknown"
 		};
 	}
