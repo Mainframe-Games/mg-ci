@@ -41,9 +41,9 @@ public abstract class PreBuildBase
 	/// <summary>
 	/// Replaces the version in all the places within ProjectSettings.asset
 	/// </summary>
-	public static void ReplaceVersions(string? newBundleVersion, string projectSettingsPath = Workspace.PROJECT_SETTINGS)
+	public void ReplaceVersions(string? newBundleVersion)
 	{
-		var lines = File.ReadAllLines(projectSettingsPath);
+		var lines = File.ReadAllLines(_workspace.ProjectSettingsPath);
 
 		var isBundleVersionFound = false;
 		var isBuildNumFound = false;
@@ -72,7 +72,7 @@ public abstract class PreBuildBase
 			}
 		}
 
-		File.WriteAllText(Workspace.PROJECT_SETTINGS, string.Join("\n", lines));
+		File.WriteAllText(_workspace.ProjectSettingsPath, string.Join("\n", lines));
 	}
 
 	private static string ReplaceText(string line, string version)

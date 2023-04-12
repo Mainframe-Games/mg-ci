@@ -42,7 +42,8 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 			throw new DirectoryNotFoundException($"Directory doesn't exist: {workspace.Directory}");
 		
 		// set build version in project settings
-		PreBuildBase.ReplaceVersions(Packet.BuildVersion);
+		var preBuild = new PreBuild_None(workspace);
+		preBuild.ReplaceVersions(Packet.BuildVersion);
 		
 		await ClonesManager.CloneProject(workspace.Directory, Packet.Links, Packet.Copies, Packet.Builds.Values);
 
