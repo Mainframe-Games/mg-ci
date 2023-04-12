@@ -15,6 +15,8 @@ namespace BuildSystem
 		public BuildTarget Target = BuildTarget.StandaloneWindows64;
 		public BuildTargetGroup TargetGroup = BuildTargetGroup.Standalone;
 		public StandaloneBuildSubtarget SubTarget = StandaloneBuildSubtarget.Player;
+		[Tooltip("Location to build player. Can use -buildPath CLI param to override")]
+		public string BuildPath = "Builds/";
 		[Tooltip("Custom scenes overrides. Empty array will use EditorSettings.Scenes")]
 		public SceneAsset[] Scenes;
 		[FormerlySerializedAs("ScriptingDefines")] 
@@ -32,11 +34,13 @@ namespace BuildSystem
 
 		[Tooltip("Runs 'AddressableAssetSettings.BuildPlayerContent' before player build")]
 		public bool BuildAddressables;
-		
-		public string RootDirectoryPath { get; set; }
 
-		public BuildPlayerOptions GetBuildOptions()
+		public BuildPlayerOptions GetBuildOptions(string rootDirectoryPath = null)
 		{
+			// if no override given use default
+			if (string.IsNullOrEmpty(rootDirectoryPath))
+				rootDirectoryPath = BuildPath;
+			
 			var scenes = Scenes.Length > 0 
 				? Scenes.Select(AssetDatabase.GetAssetPath).ToArray()
 				: GetEditorSettingsScenes();
@@ -45,7 +49,7 @@ namespace BuildSystem
 			{
 				target = Target,
 				subtarget = (int)SubTarget,
-				locationPathName = Path.Combine(RootDirectoryPath, $"{ProductName}{Extension}"),
+				locationPathName = Path.Combine(rootDirectoryPath, $"{ProductName}{Extension}"),
 				targetGroup = TargetGroup,
 				assetBundleManifestPath = AssetBundleManifestPath,
 				scenes = scenes,

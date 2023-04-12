@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Build;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
@@ -25,9 +27,7 @@ namespace BuildSystem
 		public static void BuildPlayer()
 		{
 			var settingsArg = GetArgValue("-settings");
-			var buildPathRoot = GetArgValue("-buildPath");
 			var settings = GetBuildConfig(settingsArg);
-			settings.RootDirectoryPath = buildPathRoot;
 			BuildPlayer(settings);
 		}
 		
@@ -36,9 +36,10 @@ namespace BuildSystem
 			if (!settings.IsValid())
 				throw new Exception($"BuildSettings '{settings.name}' not valid");
 			
-			RunPrebuild(settings);
-
-			var options = settings.GetBuildOptions();
+			var buildPathRoot = GetArgValue("-buildPath");
+			var options = settings.GetBuildOptions(buildPathRoot);
+			
+			RunPrebuild(settings, options);
 			
 			if (!EnsureBuildDirectoryExists(options))
 			{
@@ -50,8 +51,8 @@ namespace BuildSystem
 			Application.logMessageReceived += OnLogReceived;
 
 			if (settings.BuildAddressables)
-				AddressableAssetSettings.BuildPlayerContent();
-			
+				BuildAddressables();
+
 			var report = BuildPipeline.BuildPlayer(options);
 			
 			Application.logMessageReceived -= OnLogReceived;
@@ -67,6 +68,12 @@ namespace BuildSystem
 			}
 		}
 
+		private static void BuildAddressables()
+		{
+			AddressableAssetSettings.CleanPlayerContent(AddressableAssetSettingsDefaultObject.Settings.ActivePlayerDataBuilder);
+			AddressableAssetSettings.BuildPlayerContent();
+		}
+
 		private static bool EnsureBuildDirectoryExists(BuildPlayerOptions options)
 		{
 			var fullDir = new FileInfo(options.locationPathName).Directory;
@@ -80,16 +87,18 @@ namespace BuildSystem
 			
 			return true;
 		}
-		
+
 		/// <summary>
 		/// Finds all classes that implement <see cref="IPrebuildProcess"/> and runs the callback method
 		/// </summary>
 		/// <param name="settings"></param>
-		private static void RunPrebuild(BuildSettings settings)
+		/// <param name="options"></param>
+		private static void RunPrebuild(BuildSettings settings, BuildPlayerOptions options)
 		{
 			// delete files
-			if (settings.DeleteFiles && Directory.Exists(settings.RootDirectoryPath))
-				Directory.Delete(settings.RootDirectoryPath, true);
+			var fileInfo = new FileInfo(options.locationPathName);
+			if (settings.DeleteFiles && (fileInfo.Directory?.Exists ?? false))
+				fileInfo.Directory.Delete(true);
 			
 			// pre-build interface search
 			var types = AppDomain.CurrentDomain.GetAssemblies()

@@ -1,6 +1,6 @@
 {
     "name": "com.mainframe-games.build-system",
-    "version": "0.0.11",
+    "version": "0.0.12",
     "displayName": "Build System",
     "description": "Build system for Unity. Src: https://github.com/Mainframe-Games/UnityDeployment",
     "dependencies": {
