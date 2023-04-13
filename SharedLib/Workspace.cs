@@ -133,10 +133,17 @@ public class Workspace
 	/// Updates the workspace. 
 	/// </summary>
 	/// <param name="changeSetId">ChangeSetId to update to. -1 is latest</param>
-	public void Update(int changeSetId = -1)
+	/// <param name="override">
+	/// Overrides changed files outside Unity VCS control.
+	/// Their content will be overwritten with the server content.
+	/// </param>
+	public void Update(int changeSetId = -1, bool @override = false)
 	{
 		// get all the latest updates
-		Cmd.Run("cm", $"update \"{Directory}\"");
+		if (@override)
+			Cmd.Run("cm", $"update \"{Directory}\" --override");
+		else
+			Cmd.Run("cm", $"update \"{Directory}\"");
 		
 		// set to a specific change set
 		if (changeSetId > 0)
@@ -213,24 +220,15 @@ public class Workspace
 		File.WriteAllText(PrevChangesetIdPath, currentChangeSetId.ToString());
 
 		// update in case there are new changes in coming otherwise it will fail
-		Cmd.Run("cm", "update");
+		Update(@override: true);
 		
-		/*
-		 * checkin files:
-		 *		- project settings
-		 *		- steam vdfs
-		 *		- previous changeset id, 
-		 */
-		var filesToCommit = new List<string>
-		{
-			ProjectSettingsPath,
-			PrevChangesetIdPath,
-		};
-		
-		// add vdfs
-		var vdfs = new DirectoryInfo(SteamDirPath).GetFiles("*.vdf");
-		var relativeNames = vdfs.Select(x => x.FullName);
-		filesToCommit.AddRange(relativeNames);
+		var status = Cmd.Run("cm", "status --short").output;
+		var files = status.Split(Environment.NewLine);
+		var filesToCommit = files
+			.Where(x => x.Contains(".vdf") 
+			            || x.Contains("ProjectSettings.asset")
+			            || x.Contains("previous-changesetId.txt"))
+			.ToList();
 		
 		// commit changes
 		var filesStr = $"\"{string.Join("\" \"", filesToCommit)}\"";
