@@ -133,17 +133,10 @@ public class Workspace
 	/// Updates the workspace. 
 	/// </summary>
 	/// <param name="changeSetId">ChangeSetId to update to. -1 is latest</param>
-	/// <param name="override">
-	/// Overrides changed files outside Unity VCS control.
-	/// Their content will be overwritten with the server content.
-	/// </param>
-	public void Update(int changeSetId = -1, bool @override = false)
+	public void Update(int changeSetId = -1)
 	{
 		// get all the latest updates
-		if (@override)
-			Cmd.Run("cm", $"update \"{Directory}\" --override");
-		else
-			Cmd.Run("cm", $"update \"{Directory}\"");
+		Cmd.Run("cm", $"update \"{Directory}\"");
 		
 		// set to a specific change set
 		if (changeSetId > 0)
@@ -220,7 +213,8 @@ public class Workspace
 		File.WriteAllText(PrevChangesetIdPath, currentChangeSetId.ToString());
 
 		// update in case there are new changes in coming otherwise it will fail
-		Update(@override: true);
+		// TODO: need to find a way to automatically resolve conflicts with cloud
+		Update();
 		
 		var status = Cmd.Run("cm", "status --short").output;
 		var files = status.Split(Environment.NewLine);
