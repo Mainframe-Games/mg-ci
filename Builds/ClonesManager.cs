@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Net;
 using Deployment.Configs;
 using SharedLib;
 
@@ -22,31 +21,11 @@ public static class ClonesManager
 		"Library"
 	};
 
-	private static readonly Stack<DirectoryInfo> TempDirs = new();
-
 	public static string GetTargetPath(string srcDir, TargetConfig targetConfig)
 	{
 		var suffix = targetConfig.BuildPath?.Split("/")[^1];
 		var targetDir = $"{srcDir}_{suffix}";
 		return targetDir;
-	}
-
-	public static void Cleanup()
-	{
-		Logger.Log($"Deleting '{TempDirs.Count}' directories");
-		while (TempDirs.Count > 0)
-		{
-			var dir = TempDirs.Pop();
-			
-			if (!dir.Exists)
-			{
-				Logger.Log($"Directory doesn't exist {dir}");
-				continue;
-			}
-
-			Logger.Log($"Deleting {dir}");
-			Task.Run(() => dir.Delete(true)).FireAndForget();
-		}
 	}
 
 	public static async Task CloneProject(string srcDir, string[]? links, string[]? copies, IEnumerable<TargetConfig> buildConfigs)
@@ -59,6 +38,8 @@ public static class ClonesManager
 		if (copies != null)
 			AppendLinks(Copy, copies);
 		
+		var tempDirs = new List<DirectoryInfo>();
+		
 		foreach (var buildTarget in buildConfigs)
 		{
 			// create dir
@@ -66,7 +47,7 @@ public static class ClonesManager
 			var targetDir = new DirectoryInfo(targetDirPath);
 			if (!targetDir.Exists)
 				targetDir.Create();
-			TempDirs.Push(targetDir);
+			tempDirs.Add(targetDir);
 			
 			// links
 			foreach (var link in Links)
@@ -76,15 +57,15 @@ public static class ClonesManager
 		// copies
 		var sources = Copy.Select(x => new DirectoryInfo(Path.Combine(srcDir, x)));
 		var copyByte = GetTotalBytesToCopy(sources);
-		var totalBytes = copyByte * TempDirs.Count;
+		var totalBytes = copyByte * tempDirs.Count;
 		var copiedBytes = 0L;
 		var printSize = PrintEx.ToGigaByteString(copyByte, "0.00");
-		Console.Write($"Copying directories ({printSize}) to {TempDirs.Count} locations ... ");
+		Console.Write($"Copying directories ({printSize}) to {tempDirs.Count} locations ... ");
 		
 		var progressBar = new ProgressBar();
 		var tasks = new List<Task>();
 
-		foreach (var destDir in TempDirs.ToArray())
+		foreach (var destDir in tempDirs)
 		{
 			foreach (var copy in Copy)
 			{
@@ -92,11 +73,22 @@ public static class ClonesManager
 				{
 					var source = new DirectoryInfo(Path.Combine(srcDir, copy));
 					var destination = new DirectoryInfo(Path.Combine(destDir.FullName, copy));
-					
-					// Skip Library if already exists to speed up process.
-					if (destination is { Name: "Library", Exists: true })
-						return;
-						
+
+					if (destination.Exists)
+					{
+						switch (destination.Name)
+						{
+							// Skip Library if already exists to speed up process.
+							case "Library":
+								return;
+							
+							// Need to clear out Assets folder first as there could be deleted files that will cause compile issues
+							case "Assets":
+								destination.Delete(true);
+								break;
+						}
+					}
+
 					CopyDirectoryWithProgressBarRecursive(source, destination, ref totalBytes, ref copiedBytes, progressBar);
 				});
 				tasks.Add(task);
@@ -166,7 +158,7 @@ public static class ClonesManager
 
 			// Display the progress bar.
 			progressBar.Report(copiedBytes / (double)totalBytes);
-			progressBar.SetContext($"Copying {file.FullName}");
+			progressBar.SetContext($"Copying {file.FullName.Replace(Environment.CurrentDirectory, $".{Path.PathSeparator}")}");
 		}
 
 		// Copy all nested directories from the source.

@@ -179,7 +179,6 @@ public class BuildPipeline
 		
 		await WaitBuildIds();
 		Logger.LogTimeStamp("Build time", buildStartTime);
-		// ClonesManager.Cleanup();
 	}
 
 	/// <summary>
