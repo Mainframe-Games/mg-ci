@@ -158,7 +158,7 @@ public static class ClonesManager
 
 			// Display the progress bar.
 			progressBar.Report(copiedBytes / (double)totalBytes);
-			progressBar.SetContext($"Copying {file.FullName.Replace(Environment.CurrentDirectory, $".{Path.PathSeparator}")}");
+			progressBar.SetContext($"Copying {file.FullName.Replace(Environment.CurrentDirectory, ".")}");
 		}
 
 		// Copy all nested directories from the source.
