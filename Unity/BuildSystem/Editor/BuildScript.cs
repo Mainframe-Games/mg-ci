@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
@@ -10,14 +12,9 @@ namespace BuildSystem
 {
 	public static class BuildScript
 	{
+		private static readonly string Eol = Environment.NewLine;
 		private static readonly StringBuilder _builder = new();
 
-		private static void Exit(int code)
-		{
-			if (Application.isBatchMode)
-				EditorApplication.Exit(code);
-		}
-		
 		/// <summary>
 		/// Called from build server
 		/// </summary>
@@ -40,24 +37,83 @@ namespace BuildSystem
 			
 			if (!EnsureBuildDirectoryExists(options))
 			{
-				Exit(555);
+				ExitWithResult(BuildResult.Failed);
 				return;
 			}
 			
-			Debug.Log($"Started build: {options.locationPathName}");
 			Application.logMessageReceived += OnLogReceived;
+			PrintBuildOptions(options);
 			var report = BuildPipeline.BuildPlayer(options);
 			Application.logMessageReceived -= OnLogReceived;
+
+			PrintReportSummary(report.summary);
+			DumpErrorLog(report);
+			ExitWithResult(report.summary.result);
+		}
+
+		private static void ExitWithResult(BuildResult result)
+		{
+			switch (result)
+			{
+				case BuildResult.Succeeded:
+					Console.WriteLine("Build succeeded!");
+					Exit(0);
+					break;
+				case BuildResult.Failed:
+					Console.WriteLine("Build failed!");
+					Exit(101);
+					break;
+				case BuildResult.Cancelled:
+					Console.WriteLine("Build cancelled!");
+					Exit(102);
+					break;
+				case BuildResult.Unknown:
+				default:
+					Console.WriteLine("Build result is unknown!");
+					Exit(103);
+					break;
+			}
 			
-			if (report.summary.result == BuildResult.Succeeded)
+			void Exit(int code)
 			{
-				Debug.Log($"Build Succeeded: {report.summary.outputPath}");
+				if (Application.isBatchMode)
+					EditorApplication.Exit(code);
 			}
-			else
+		}
+
+		private static void PrintReportSummary(BuildSummary summary)
+		{
+			Console.WriteLine(
+				$"{Eol}" +
+				$"###########################{Eol}" +
+				$"#      Build results      #{Eol}" +
+				$"###########################{Eol}" +
+				$"{Eol}" +
+				$"Duration: {summary.totalTime.ToString()}{Eol}" +
+				$"Warnings: {summary.totalWarnings.ToString()}{Eol}" +
+				$"Errors: {summary.totalErrors.ToString()}{Eol}" +
+				$"Size: {summary.totalSize.ToString()} bytes{Eol}" +
+				$"{Eol}"
+			);
+		}
+		
+		private static void PrintBuildOptions(BuildPlayerOptions buildOptions)
+		{
+			var jsonSettings = new JsonSerializerSettings
 			{
-				DumpErrorLog(report);
-				Exit(666);
-			}
+				Formatting = Formatting.Indented,
+				Converters = { new StringEnumConverter() }
+			};
+		
+			Console.WriteLine(
+				$"{Eol}" +
+				$"###########################{Eol}" +
+				$"#   Build Player Options  #{Eol}" +
+				$"###########################{Eol}" +
+				$"{Eol}" +
+				$"{JsonConvert.SerializeObject(buildOptions, jsonSettings)}" +
+				$"{Eol}"
+			);
 		}
 
 		private static bool EnsureBuildDirectoryExists(BuildPlayerOptions options)
@@ -103,7 +159,7 @@ namespace BuildSystem
 				{
 					// log exception
 					Debug.LogException(e);
-					Exit(555);
+					ExitWithResult(BuildResult.Failed);
 					break;
 				}
 			}
