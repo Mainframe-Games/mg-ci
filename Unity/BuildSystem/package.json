@@ -1,6 +1,6 @@
 {
     "name": "com.mainframe-games.build-system",
-    "version": "0.0.13",
+    "version": "0.0.14",
     "displayName": "Build System",
     "description": "Build system for Unity. Src: https://github.com/Mainframe-Games/UnityDeployment"
 }
