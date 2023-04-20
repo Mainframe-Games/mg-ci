@@ -56,20 +56,20 @@ namespace BuildSystem
 			switch (result)
 			{
 				case BuildResult.Succeeded:
-					Console.WriteLine("Build succeeded!");
+					Log("Build succeeded!");
 					Exit(0);
 					break;
 				case BuildResult.Failed:
-					Console.WriteLine("Build failed!");
+					Log("Build failed!", LogType.Error);
 					Exit(101);
 					break;
 				case BuildResult.Cancelled:
-					Console.WriteLine("Build cancelled!");
+					Log("Build cancelled!", LogType.Warning);
 					Exit(102);
 					break;
 				case BuildResult.Unknown:
 				default:
-					Console.WriteLine("Build result is unknown!");
+					Log("Build result is unknown!", LogType.Error);
 					Exit(103);
 					break;
 			}
@@ -83,7 +83,7 @@ namespace BuildSystem
 
 		private static void PrintReportSummary(BuildSummary summary)
 		{
-			Console.WriteLine(
+			Log(
 				$"{Eol}" +
 				$"###########################{Eol}" +
 				$"#      Build results      #{Eol}" +
@@ -105,7 +105,7 @@ namespace BuildSystem
 				Converters = { new StringEnumConverter() }
 			};
 		
-			Console.WriteLine(
+			Log(
 				$"{Eol}" +
 				$"###########################{Eol}" +
 				$"#   Build Player Options  #{Eol}" +
@@ -158,7 +158,7 @@ namespace BuildSystem
 				catch (Exception e)
 				{
 					// log exception
-					Debug.LogException(e);
+					Log(e, LogType.Exception);
 					ExitWithResult(BuildResult.Failed);
 					break;
 				}
@@ -167,7 +167,10 @@ namespace BuildSystem
 
 		private static void DumpErrorLog(BuildReport report)
 		{
-			Debug.LogError($"Build Failed is {report.summary.totalErrors} errors...\n{_builder}");
+			if (report.summary.totalErrors == 0)
+				return;
+			
+			Log($"Build Failed is {report.summary.totalErrors} errors...\n{_builder}");
 			
 			var logFile = GetArgValue("-logFile");
 			
@@ -214,6 +217,36 @@ namespace BuildSystem
 			}
 
 			return null;
+		}
+
+		private static void Log(object log, LogType logType = LogType.Log)
+		{
+			if (Application.isBatchMode)
+			{
+				Console.WriteLine(log);
+				return;
+			}
+
+			switch (logType)
+			{
+				case LogType.Error:
+					Debug.LogError(log);
+					break;
+				case LogType.Assert:
+					Debug.LogAssertion(log);
+					break;
+				case LogType.Warning:
+					Debug.LogWarning(log);
+					break;
+				case LogType.Log:
+					Debug.Log(log);
+					break;
+				case LogType.Exception:
+					Debug.LogException(log as Exception);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(logType), logType, null);
+			}
 		}
 	}
 }
