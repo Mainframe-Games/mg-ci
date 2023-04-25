@@ -17,6 +17,8 @@ public static class App
 	{
 		Config = ServerConfig.Load();
 		RootDirectory = Environment.CurrentDirectory;
+		
+		Logger.Log($"Config: {Config}");
 
 		// for locally running the build process without a listen server
 		if (Args.Environment.IsFlag("-local"))

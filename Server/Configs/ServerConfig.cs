@@ -35,4 +35,9 @@ internal class ServerConfig
 		var newConfig = Load();
 		AuthTokens = newConfig.AuthTokens;
 	}
+
+	public override string ToString()
+	{
+		return Json.Serialise(this);
+	}
 }
