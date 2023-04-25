@@ -168,13 +168,16 @@ public class Workspace
 			DeleteIfExist(file);
 	}
 
-	public int GetCurrentChangeSetId()
+	public void GetCurrent(out int changesetId, out string guid)
 	{
 		var currentDir = Environment.CurrentDirectory;
 		Environment.CurrentDirectory = Directory;
-		var cmdRes = Cmd.Run("cm", "find changeset \"where branch='main'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid}\" --nototal", false);
+		var cmdRes = Cmd.Run("cm", "find changeset \"where branch='main'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid} {guid}\" --nototal", false);
 		Environment.CurrentDirectory = currentDir;
-		return int.TryParse(cmdRes.output, out var id) ? id : 0;
+
+		var split = cmdRes.output.Split(' ');
+		changesetId = int.TryParse(split[0], out var id) ? id : 0;
+		guid = split[1];
 	}
 	
 	/// <summary>

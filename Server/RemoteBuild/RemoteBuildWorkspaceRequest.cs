@@ -21,7 +21,7 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 			throw new Exception($"A build process already active. {BuildPipeline.Current.Workspace}");
 		
 		App.RunBuildPipe(workspace, Args).FireAndForget();
-		var changeSetId = workspace.GetCurrentChangeSetId();
-		return $"{workspace.Name} | {workspace.UnityVersion} | changeSetId: {changeSetId}";
+		workspace.GetCurrent(out var changeSetId, out var guid);
+		return $"{workspace.Name} | {workspace.UnityVersion} | changeSetId: {changeSetId}, guid: {guid}";
 	}
 }

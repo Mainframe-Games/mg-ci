@@ -43,12 +43,13 @@ public class BuildPipeline
 	public Workspace Workspace { get; }
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{DateTime.Now - StartTime:hh\\:mm\\:ss}";
-	private string BuildVersionTitle => $"Build Version: {_buildVersion}";
+	private string BuildVersionTitle => $"Build Version: {_buildVersion}\ncs: {_currentChangeSetId}\nguid: {_currentGuid}";
 
 	/// <summary>
 	/// The change set id that was current when build started
 	/// </summary>
 	private int _currentChangeSetId;
+	private string _currentGuid;
 	private int _previousChangeSetId;
 	private string _buildVersion;
 
@@ -106,9 +107,9 @@ public class BuildPipeline
 		_args.TryGetArg("-changeSetId", 0, out int id);
 		Workspace.Update(id);
 
-		_currentChangeSetId = Workspace.GetCurrentChangeSetId();
+		Workspace.GetCurrent(out _currentChangeSetId, out _currentGuid);
 		_previousChangeSetId = Workspace.GetPreviousChangeSetId();
-		Logger.Log($"[CHANGESET] cs:{_previousChangeSetId} \u2192 cs:{_currentChangeSetId}");
+		Logger.Log($"[CHANGESET] cs:{_previousChangeSetId} \u2192 cs:{_currentChangeSetId}, guid:{_currentGuid}");
 		
 		_config = BuildConfig.GetConfig(Workspace.Directory); // refresh config
 
