@@ -9,16 +9,7 @@ public class BuildConfig
 {
 	public PreBuild? PreBuild { get; set; }
 	public PostBuild? PostBuild { get; set; }
-	
-	/// <summary>
-	/// Additional directories to symlink
-	/// </summary>
-	public string[]? Links { get; set; }
-
-	/// <summary>
-	/// Additional directories to copy
-	/// </summary>
-	public string[]? Copies { get; set; }
+	public ParallelBuild? ParallelBuild { get; set; }
 	public TargetConfig[]? Builds { get; set; }
 	public DeployContainer? Deploy { get; set; }
 	public HooksConfig[]? Hooks { get; set; }
@@ -47,6 +38,19 @@ public class PreBuild
 public class PostBuild
 {
 	public bool ChangeLog { get; set; }
+}
+
+public class ParallelBuild
+{
+	/// <summary>
+	/// Additional directories to symlink
+	/// </summary>
+	public string[]? Links { get; set; }
+
+	/// <summary>
+	/// Additional directories to copy
+	/// </summary>
+	public string[]? Copies { get; set; }
 }
 
 public class DeployContainer

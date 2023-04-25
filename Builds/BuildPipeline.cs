@@ -15,8 +15,7 @@ public class OffloadServerPacket
 	public string? BuildVersion { get; set; }
 	public int ChangesetId { get; set; }
 	public bool CleanBuild { get; set; }
-	public string[]? Links { get; set; }
-	public string[]? Copies { get; set; }
+	public ParallelBuild? ParallelBuild { get; set; }
 	
 	/// <summary>
 	/// BuildId, Config
@@ -128,7 +127,12 @@ public class BuildPipeline
 		if (_config?.Builds == null)
 			throw new NullReferenceException();
 		
-		await ClonesManager.CloneProject(Workspace.Directory, _config.Links, _config.Copies, _config.Builds.Where(x => !IsOffload(x)));
+		if (_config.ParallelBuild != null)
+			await ClonesManager.CloneProject(Workspace.Directory,
+				_config.ParallelBuild.Links,
+				_config.ParallelBuild.Copies,
+				_config.Builds.Where(x => !IsOffload(x)));
+		
 		Logger.Log("Build process started...");
 		var buildStartTime = DateTime.Now;
 		
@@ -138,7 +142,6 @@ public class BuildPipeline
 
 		foreach (var build in _config.Builds)
 		{
-			var targetPath = ClonesManager.GetTargetPath(Workspace.Directory, build);
 			var unity = new LocalUnityBuild(Workspace.UnityVersion);
 			
 			if (unity == null || _config?.Builds == null)
@@ -153,8 +156,7 @@ public class BuildPipeline
 					ChangesetId = _currentChangeSetId,
 					BuildVersion = _buildVersion,
 					CleanBuild = _args.IsFlag("-cleanbuild"),
-					Links = _config.Links,
-					Copies = _config.Copies,
+					ParallelBuild = _config.ParallelBuild,
 					Builds = new Dictionary<string, TargetConfig>()
 				};
 				
@@ -165,9 +167,17 @@ public class BuildPipeline
 			// local build
 			else
 			{
-				build.BuildPath = Path.Combine(Workspace.Directory, build.BuildPath);
-				var task = Task.Run(() => unity.Build(targetPath, build));
-				tasks.Add(task);
+				if (_config.ParallelBuild != null)
+				{
+					build.BuildPath = Path.Combine(Workspace.Directory, build.BuildPath);
+					var targetPath = ClonesManager.GetTargetPath(Workspace.Directory, build);
+					var task = Task.Run(() => unity.Build(targetPath, build));
+					tasks.Add(task);
+				}
+				else
+				{
+					unity.Build(Workspace.Directory, build);
+				}
 			}
 		}
 
@@ -175,7 +185,8 @@ public class BuildPipeline
 		if (offloadBuilds != null)
 			OffloadBuildNeeded?.Invoke(offloadBuilds);
 
-		tasks.WaitForAll();
+		if (tasks.Count > 0)
+			tasks.WaitForAll();
 		
 		await WaitBuildIds();
 		Logger.LogTimeStamp("Build time", buildStartTime);

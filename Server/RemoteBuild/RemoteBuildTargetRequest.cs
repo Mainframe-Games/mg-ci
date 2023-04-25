@@ -45,7 +45,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		var preBuild = new PreBuild_None(workspace);
 		preBuild.ReplaceVersions(Packet.BuildVersion);
 		
-		await ClonesManager.CloneProject(workspace.Directory, Packet.Links, Packet.Copies, Packet.Builds.Values);
+		await ClonesManager.CloneProject(workspace.Directory, Packet.ParallelBuild.Links, Packet.ParallelBuild.Copies, Packet.Builds.Values);
 
 		Packet.Builds
 			.Select(x => Task.Run(() => StartBuilder(x.Key, x.Value, workspace)))
