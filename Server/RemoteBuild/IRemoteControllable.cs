@@ -1,4 +1,6 @@
-﻿namespace Server.RemoteBuild;
+﻿using Deployment.Server;
+
+namespace Server.RemoteBuild;
 
 public interface IRemoteControllable
 {
@@ -6,5 +8,5 @@ public interface IRemoteControllable
 	/// Returns response message
 	/// </summary>
 	/// <returns></returns>
-	string Process();
+	ServerResponse Process();
 }

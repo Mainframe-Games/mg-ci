@@ -1,4 +1,6 @@
-﻿namespace Server.RemoteBuild;
+﻿using Deployment.Server;
+
+namespace Server.RemoteBuild;
 
 /// <summary>
 /// Packet to be used for sending across web requests
@@ -34,7 +36,7 @@ public class RemoteBuildPacket : IRemoteControllable
 	/// 
 	/// </summary>
 	/// <returns>Response back to web sender so they know what happened</returns>
-	public string Process()
+	public ServerResponse Process()
 	{
 		if (WorkspaceBuildRequest != null) return WorkspaceBuildRequest.Process();
 		if (BuildTargetRequest != null) return BuildTargetRequest.Process();

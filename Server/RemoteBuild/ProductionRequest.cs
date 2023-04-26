@@ -1,3 +1,4 @@
+using Deployment.Server;
 using Deployment.Server.Unity;
 using Server.Configs;
 using SharedLib;
@@ -8,7 +9,7 @@ public class ProductionRequest : IRemoteControllable
 {
 	public string? WorkspaceName { get; set; }
 
-	public string Process()
+	public ServerResponse Process()
 	{
 		var workspace = Workspace.GetWorkspaceFromName(WorkspaceName);
 		workspace.Update();
@@ -17,7 +18,7 @@ public class ProductionRequest : IRemoteControllable
 		Environment.CurrentDirectory = workspace.Directory;
 		ClanforgeProcess(buildVersion);
 		RemoteConfigProcess(buildVersion);
-		return "ok";
+		return ServerResponse.Default;
 	}
 
 	private void ClanforgeProcess(string buildVersion)

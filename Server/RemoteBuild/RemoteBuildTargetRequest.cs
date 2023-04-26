@@ -4,6 +4,7 @@ using Builds.PreBuild;
 using Deployment;
 using Deployment.Configs;
 using Deployment.RemoteBuild;
+using Deployment.Server;
 using SharedLib;
 
 namespace Server.RemoteBuild;
@@ -16,10 +17,10 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	public string? SendBackUrl { get; set; }
 	public OffloadServerPacket? Packet { get; set; }
 
-	public string Process()
+	public ServerResponse Process()
 	{
 		ProcessAsync().FireAndForget();
-		return "ok";
+		return ServerResponse.Default;
 	}
 
 	private async Task ProcessAsync()

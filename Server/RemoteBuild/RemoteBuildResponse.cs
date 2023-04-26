@@ -1,4 +1,5 @@
 ﻿using Deployment;
+using Deployment.Server;
 using Newtonsoft.Json;
 using SharedLib;
 
@@ -11,7 +12,7 @@ public class RemoteBuildResponse : IRemoteControllable
 	[JsonIgnore] public byte[]? Data { get; set; }
 	public string? Error { get; set; }
 
-	public string Process()
+	public ServerResponse Process()
 	{
 		if (!string.IsNullOrEmpty(Error))
 			throw new Exception(Error);
@@ -21,7 +22,7 @@ public class RemoteBuildResponse : IRemoteControllable
 		
 		Logger.Log($"BuildId: {BuildId}, {Data?.ToMegaByteString()}");
 		BuildPipeline.Current.RemoteBuildReceived(BuildId, BuildPath, Data).FireAndForget();
-		return "";
+		return ServerResponse.Default;
 	}
 
 	public void Write(BinaryWriter writer)

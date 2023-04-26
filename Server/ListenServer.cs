@@ -119,6 +119,7 @@ public class ListenServer
 	{
 		// check authorisation
 		var authToken = request.Headers[HttpRequestHeader.Authorization.ToString()] ?? string.Empty;
+		
 		if (!IsAuthorised(authToken))
 			return new ServerResponse(HttpStatusCode.Unauthorized, "You are not authorized to perform this action");
 
@@ -139,8 +140,7 @@ public class ListenServer
 	{
 		try
 		{
-			var responseMessage = packet.Process();
-			return new ServerResponse(HttpStatusCode.OK, responseMessage);
+			return packet.Process();
 		}
 		catch (Exception e)
 		{

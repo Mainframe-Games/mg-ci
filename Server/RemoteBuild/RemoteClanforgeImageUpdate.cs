@@ -1,5 +1,6 @@
 using Deployment.Configs;
 using Deployment.Deployments;
+using Deployment.Server;
 using Server.Configs;
 using SharedLib;
 using SharedLib.Webhooks;
@@ -11,10 +12,10 @@ public class RemoteClanforgeImageUpdate : IRemoteControllable
 	public ClanforgeConfig? Config { get; set; }
 	public string? Desc { get; set; }
 
-	public string Process()
+	public ServerResponse Process()
 	{
 		ProcessInternalAsync().FireAndForget();
-		return "ok";
+		return ServerResponse.Default;
 	}
 
 	private async Task ProcessInternalAsync()
