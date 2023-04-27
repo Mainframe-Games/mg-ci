@@ -207,11 +207,8 @@ public class Workspace
 		return changeLog;
 	}
 	
-	public void CommitNewVersionNumber(int currentChangeSetId, string buildVersion, string messagePrefix = "Build Version")
+	public void CommitNewVersionNumber(int currentChangeSetId, string commitMessage)
 	{
-		if (string.IsNullOrEmpty(buildVersion))
-			return;
-		
 		// write new prev changeset id
 		File.WriteAllText(PrevChangesetIdPath, currentChangeSetId.ToString());
 
@@ -229,9 +226,8 @@ public class Workspace
 		
 		// commit changes
 		var filesStr = $"\"{string.Join("\" \"", filesToCommit)}\"";
-		var fullCommitMessage = $"{messagePrefix}: {buildVersion}";
-		Logger.Log($"Commiting new build version \"{fullCommitMessage}\"");
-		Cmd.Run("cm", $"ci {filesStr} -c=\"{fullCommitMessage}\"");
+		Logger.Log($"Commiting new build version \"{commitMessage}\"");
+		Cmd.Run("cm", $"ci {filesStr} -c=\"{commitMessage}\"");
 	}
 
 	private static void DeleteIfExist(FileSystemInfo fileSystemInfo)

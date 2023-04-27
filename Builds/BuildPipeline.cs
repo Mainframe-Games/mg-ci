@@ -43,7 +43,7 @@ public class BuildPipeline
 	public Workspace Workspace { get; }
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{DateTime.Now - StartTime:hh\\:mm\\:ss}";
-	private string BuildVersionTitle => $"Build Version: {_buildVersion}\ncs: {_currentChangeSetId}\nguid: {_currentGuid}";
+	private string BuildVersionTitle => $"Build Version: {_buildVersion}";
 
 	/// <summary>
 	/// The change set id that was current when build started
@@ -229,7 +229,7 @@ public class BuildPipeline
 			: Array.Empty<string>();
 		
 		// committing new version must be done after collecting changeLogs as the prev changesetid will be updated
-		Workspace.CommitNewVersionNumber(_currentChangeSetId, _buildVersion);
+		Workspace.CommitNewVersionNumber(_currentChangeSetId, $"{BuildVersionTitle}\ncs: {_currentChangeSetId}\nguid: {_currentGuid}");
 		
 		if (_config.Hooks == null)
 			return;
@@ -251,6 +251,8 @@ public class BuildPipeline
 				var hookMessage = new StringBuilder();
 				hookMessage.AppendLine($"Total Time: {TimeSinceStart}");
 				hookMessage.AppendLine(clanforgeMessage);
+				hookMessage.AppendLine($"ChangesetId: {_currentChangeSetId}");
+				hookMessage.AppendLine($"GUID: {_currentGuid}");
 				hookMessage.AppendLine(discord.ToString());
 				Discord.PostMessage(hook.Url, hookMessage.ToString(), hook.Title, BuildVersionTitle, Discord.Colour.GREEN);
 			}
@@ -259,6 +261,8 @@ public class BuildPipeline
 				var hookMessage = new StringBuilder();
 				hookMessage.AppendLine($"{hook.Title} | {BuildVersionTitle}");
 				hookMessage.AppendLine($"Total Time: {TimeSinceStart}");
+				hookMessage.AppendLine($"ChangesetId: {_currentChangeSetId}");
+				hookMessage.AppendLine($"GUID: {_currentGuid}");
 				hookMessage.AppendLine(clanforgeMessage);
 				Slack.PostMessage(hook.Url, hookMessage.ToString());
 			}
