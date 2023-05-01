@@ -229,7 +229,7 @@ public class BuildPipeline
 			: Array.Empty<string>();
 		
 		// committing new version must be done after collecting changeLogs as the prev changesetid will be updated
-		Workspace.CommitNewVersionNumber(_currentChangeSetId, $"{BuildVersionTitle}\ncs: {_currentChangeSetId}\nguid: {_currentGuid}");
+		Workspace.CommitNewVersionNumber(_currentChangeSetId, $"{BuildVersionTitle} | cs: {_currentChangeSetId} | guid: {_currentGuid}");
 		
 		if (_config.Hooks == null)
 			return;
