@@ -78,12 +78,22 @@ public class TargetConfig
 	public string? VersionExtension { get; set; }
 }
 
+/// <summary>
+/// Src: https://docs.unity3d.com/Manual/EditorCommandLineArguments.html Build Arguments
+/// </summary>
 public enum UnityTarget
 {
 	None,
+	Standalone,
+	Win,
 	Win64,
 	OSXUniversal,
-	Linux64
+	Linux64,
+	iOS,
+	Android,
+	WebGL,
+	WindowsStoreApps,
+	tvOS
 }
 
 public enum PreBuildType
