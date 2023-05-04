@@ -34,13 +34,14 @@ namespace BuildSystem
 			var options = settings.GetBuildOptions(buildPathRoot);
 			
 			RunPrebuild(settings, options);
-			
+			SetAndroidKeystore(settings);
+
 			if (!EnsureBuildDirectoryExists(options))
 			{
 				ExitWithResult(BuildResult.Failed);
 				return;
 			}
-			
+
 			Application.logMessageReceived += OnLogReceived;
 			PrintBuildOptions(options);
 			var report = BuildPipeline.BuildPlayer(options);
@@ -163,6 +164,23 @@ namespace BuildSystem
 					break;
 				}
 			}
+		}
+
+		private static void SetAndroidKeystore(BuildSettings settings)
+		{
+			if (settings.Target != BuildTarget.Android) 
+				return;
+
+			EditorUserBuildSettings.buildAppBundle = true;
+			EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
+			EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
+			PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
+			PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARMv7 | AndroidArchitecture.ARM64;
+			PlayerSettings.Android.useCustomKeystore = true;
+			PlayerSettings.Android.keystoreName = settings.KeystorePath;
+			PlayerSettings.Android.keystorePass = settings.KeystorePassword;
+			PlayerSettings.Android.keyaliasName = settings.KeystoreAlias;
+			PlayerSettings.Android.keyaliasPass = settings.KeystorePassword;
 		}
 
 		private static void DumpErrorLog(BuildReport report)

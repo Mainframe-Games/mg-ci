@@ -32,6 +32,11 @@ namespace BuildSystem
 		[Tooltip("Deletes all the files at LocationPath before building")]
 		public bool DeleteFiles;
 
+		[Header("Android")] 
+		public string KeystorePath;
+		public string KeystoreAlias;
+		public string KeystorePassword;
+
 		public BuildPlayerOptions GetBuildOptions(string rootDirectoryPath = null)
 		{
 			// if no override given use default
