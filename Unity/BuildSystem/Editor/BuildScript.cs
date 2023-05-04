@@ -218,7 +218,7 @@ namespace BuildSystem
 			{
 				var path = AssetDatabase.GUIDToAssetPath(guids[i]);
 				var config = AssetDatabase.LoadAssetAtPath<BuildSettings>(path);
-				if (config.name == buildSettingsName)
+				if (config.name.Equals(buildSettingsName, StringComparison.OrdinalIgnoreCase))
 					return config;
 			}
 
