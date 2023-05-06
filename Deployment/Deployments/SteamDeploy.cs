@@ -1,4 +1,5 @@
-﻿using SharedLib;
+﻿using System.Text;
+using SharedLib;
 
 namespace Deployment.Deployments;
 
@@ -7,13 +8,15 @@ public class SteamDeploy
 	private readonly string? _path; // steamcmd path
 	private readonly string? _username;
 	private readonly string? _password;
+	private readonly string? _guardCode;
 	private readonly string? _vdfPath;
 
-	public SteamDeploy(string? vdfPath, string? password, string? username, string? path)
+	public SteamDeploy(string? vdfPath, string? password, string? username, string? guardCode, string? path)
 	{
 		_vdfPath = vdfPath;
 		_password = password;
 		_username = username;
+		_guardCode = guardCode;
 		_path = path;
 	}
 
@@ -21,8 +24,17 @@ public class SteamDeploy
 	{
 		var vdfPath = Path.Combine(Environment.CurrentDirectory, _vdfPath);
 		SetVdfProperties(vdfPath, ("Desc", description));
-		var args = $"+login {_username} {_password} +run_app_build \"{vdfPath}\" +quit";
-		Cmd.Run(_path, args);
+
+		var args = new StringBuilder();
+		args.Append("+login");
+		args.Append($" {_username}");
+		args.Append($" {_password}");
+		if (!string.IsNullOrEmpty(_guardCode))
+			args.Append($" {_guardCode}");
+		args.Append($" +run_app_build \"{vdfPath}\"");
+		args.Append(" +quit");
+		
+		Cmd.Run(_path, args.ToString());
 	}
 
 	private static void SetVdfProperties(string vdfPath, params (string key, string value)[] values)

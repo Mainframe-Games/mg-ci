@@ -90,7 +90,8 @@ public static class App
 				var path = Config.Steam.Path;
 				var password = Config.Steam.Password;
 				var username = Config.Steam.Username;
-				var steam = new SteamDeploy(vdfPath, password, username, path);
+				var guardCode = Config.Steam.GuardCode;
+				var steam = new SteamDeploy(vdfPath, password, username, guardCode, path);
 				steam.Deploy(buildVersionTitle);
 			}
 		}
