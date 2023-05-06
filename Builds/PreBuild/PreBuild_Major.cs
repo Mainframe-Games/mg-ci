@@ -16,6 +16,6 @@ public class PreBuild_Major : PreBuildBase
 		BuildVersion = arr[0].ToString();
 
 		// apply changes
-		ReplaceVersions(BuildVersion);
+		_projectSettingsWriter.ReplaceVersions(BuildVersion);
 	}
 }

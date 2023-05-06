@@ -16,6 +16,6 @@ public class PreBuild_Major_Minor : PreBuildBase
 		BuildVersion = string.Join(".", arr);
 		
 		// apply changes
-		ReplaceVersions(BuildVersion);
+		_projectSettingsWriter.ReplaceVersions(BuildVersion);
 	}
 }

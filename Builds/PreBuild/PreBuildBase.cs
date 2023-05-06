@@ -5,8 +5,6 @@ namespace Builds.PreBuild;
 
 public abstract class PreBuildBase
 {
-
-
 	/// <summary>
 	/// Static method for created prebuild class from config type
 	/// </summary>
@@ -25,6 +23,7 @@ public abstract class PreBuildBase
 	}
 
 	protected readonly Workspace _workspace;
+	protected readonly ProjectSettingsWriter _projectSettingsWriter;
 	
 	/// <summary>
 	/// Format 0.0000 (buildnumber.changesetid)
@@ -34,51 +33,8 @@ public abstract class PreBuildBase
 	public PreBuildBase(Workspace workspace)
 	{
 		_workspace = workspace;
+		_projectSettingsWriter = new ProjectSettingsWriter(workspace.ProjectSettingsPath);
 	}
 
 	public abstract void Run();
-
-	/// <summary>
-	/// Replaces the version in all the places within ProjectSettings.asset
-	/// </summary>
-	public void ReplaceVersions(string? newBundleVersion)
-	{
-		var lines = File.ReadAllLines(_workspace.ProjectSettingsPath);
-
-		var isBundleVersionFound = false;
-		var isBuildNumFound = false;
-		var isBuildNumStandaloneFound = false;
-
-		for (int i = 0; i < lines.Length; i++)
-		{
-			// bundle version
-			if (!isBundleVersionFound && lines[i].Contains("bundleVersion:"))
-			{
-				lines[i] = ReplaceText(lines[i], newBundleVersion);
-				isBundleVersionFound = true;
-			}
-
-			// build number
-			if (!isBuildNumFound && lines[i].Contains("buildNumber:"))
-				isBuildNumFound = true;
-
-			if (!isBuildNumFound)
-				continue;
-
-			if (!isBuildNumStandaloneFound && lines[i].Contains("Standalone:"))
-			{
-				lines[i] = ReplaceText(lines[i], newBundleVersion);
-				isBuildNumStandaloneFound = true;
-			}
-		}
-
-		File.WriteAllText(_workspace.ProjectSettingsPath, string.Join("\n", lines));
-	}
-
-	private static string ReplaceText(string line, string version)
-	{
-		var ver = line.Split(":").Last().Trim();
-		var replacement = line.Replace(ver, version);
-		return replacement;
-	}
 }

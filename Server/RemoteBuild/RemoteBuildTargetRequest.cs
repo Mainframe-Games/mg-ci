@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Builder;
+using Builds;
 using Builds.PreBuild;
 using Deployment;
 using Deployment.Configs;
@@ -43,8 +44,8 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 			throw new DirectoryNotFoundException($"Directory doesn't exist: {workspace.Directory}");
 		
 		// set build version in project settings
-		var preBuild = new PreBuild_None(workspace);
-		preBuild.ReplaceVersions(Packet.BuildVersion);
+		var projWriter = new ProjectSettingsWriter(workspace.ProjectSettingsPath);
+		projWriter.ReplaceVersions(Packet.BuildVersion);
 		
 		await ClonesManager.CloneProject(workspace.Directory, Packet.ParallelBuild.Links, Packet.ParallelBuild.Copies, Packet.Builds.Values);
 
