@@ -19,6 +19,7 @@ internal class ServerConfig
 	public UnityServicesConfig? UnityServices { get; set; }
 	public SteamServerConfig? Steam { get; set; }
 	public ClanforgeConfig? Clanforge { get; set; }
+	public XcodeConfig? Xcode { get; set; }
 
 	public static ServerConfig Load()
 	{

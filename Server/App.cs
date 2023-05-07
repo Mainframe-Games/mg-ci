@@ -95,6 +95,10 @@ public static class App
 				steam.Deploy(buildVersionTitle);
 			}
 		}
+		
+		// apple store
+		if (deploy.AppleStore == true)
+			XcodeDeploy.Deploy(Config.Xcode.AppleId, Config.Xcode.AppSpecificPassword);
 
 		// clanforge
 		if (deploy.Clanforge == true)

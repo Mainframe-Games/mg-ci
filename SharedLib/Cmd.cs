@@ -8,7 +8,7 @@ public static class Cmd
 	public static (int exitCode, string output) Run(string fileName, string ags, bool logOutput = true)
 	{
 		if (logOutput)
-			Logger.Log($"{fileName} {ags}");
+			Logger.Log($"[CMD] {fileName} {ags}");
 
 		try
 		{
