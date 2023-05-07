@@ -104,11 +104,22 @@ public class Workspace
 	
 	public string GetAppVersion()
 	{
-		var appVer = File.ReadAllLines(ProjectSettingsPath)
-			.Single(x => x.Contains("bundleVersion:"))
-			.Replace("bundleVersion: ", string.Empty)
+		return GetProjPropertyValue("bundleVersion:");
+	}
+	
+	public int GetAndroidBuildCode()
+	{
+		var verStr = GetProjPropertyValue("AndroidBundleVersionCode:");
+		return int.Parse(verStr);
+	}
+
+	private string GetProjPropertyValue(string propertyName)
+	{
+		var val = File.ReadAllLines(ProjectSettingsPath)
+			.Single(x => x.Contains(propertyName))
+			.Replace(propertyName, string.Empty)
 			.Trim();
-		return appVer;
+		return val;
 	}
 	
 	public int[] GetVersionArray()

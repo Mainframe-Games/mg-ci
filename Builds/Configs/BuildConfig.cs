@@ -7,11 +7,11 @@ namespace Deployment.Configs;
 /// </summary>
 public class BuildConfig
 {
-	public PreBuild? PreBuild { get; set; }
-	public PostBuild? PostBuild { get; set; }
-	public ParallelBuild? ParallelBuild { get; set; }
+	public PreBuildConfig? PreBuild { get; set; }
+	public PostBuildConfig? PostBuild { get; set; }
+	public ParallelBuildConfig? ParallelBuild { get; set; }
 	public TargetConfig[]? Builds { get; set; }
-	public DeployContainer? Deploy { get; set; }
+	public DeployContainerConfig? Deploy { get; set; }
 	public HooksConfig[]? Hooks { get; set; }
 
 	public static BuildConfig GetConfig(string? workingDirectory)
@@ -30,17 +30,18 @@ public class BuildConfig
 	}
 }
 
-public class PreBuild
+public class PreBuildConfig
 {
-	public PreBuildType Type { get; set; }
+	public int BumpIndex { get; set; }
+	public VersionsConfig Versions { get; set; }
 }
 
-public class PostBuild
+public class PostBuildConfig
 {
 	public bool ChangeLog { get; set; }
 }
 
-public class ParallelBuild
+public class ParallelBuildConfig
 {
 	/// <summary>
 	/// Additional directories to symlink
@@ -53,7 +54,7 @@ public class ParallelBuild
 	public string[]? Copies { get; set; }
 }
 
-public class DeployContainer
+public class DeployContainerConfig
 {
 	public string[]? Steam { get; set; }
 	public bool? Clanforge { get; set; }
@@ -78,6 +79,13 @@ public class TargetConfig
 	public string? VersionExtension { get; set; }
 }
 
+public class VersionsConfig
+{
+	public bool? BundleVersion { get; set; }
+	public bool? AndroidVersionCode { get; set; }
+	public string[]? BuildNumbers { get; set; }
+}
+
 /// <summary>
 /// Src: https://docs.unity3d.com/Manual/EditorCommandLineArguments.html Build Arguments
 /// </summary>
@@ -94,24 +102,4 @@ public enum UnityTarget
 	WebGL,
 	WindowsStoreApps,
 	tvOS
-}
-
-public enum PreBuildType
-{
-	/// <summary>
-	/// No prebuild
-	/// </summary>
-	None,
-	
-	/// <summary>
-	/// MAJOR - Single number increments
-	/// </summary>
-	Major,
-	
-	/// <summary>
-	/// MAJOR.MINOR - Minor version increments. MAJOR must be done manually.
-	/// </summary>
-	Major_Minor,
-	
-	// TODO: add MAJOR_MINOR_PATCH
 }

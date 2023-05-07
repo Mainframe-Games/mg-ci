@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Text;
 using Builder;
-using Builds.PreBuild;
+using Builds;
 using Deployment.Configs;
 using SharedLib;
 using SharedLib.ChangeLogBuilders;
@@ -12,10 +12,10 @@ namespace Deployment;
 public class OffloadServerPacket
 {
 	public string? WorkspaceName { get; set; }
-	public string? BuildVersion { get; set; }
+	public BuildVersions? BuildVersion { get; set; }
 	public int ChangesetId { get; set; }
 	public bool CleanBuild { get; set; }
-	public ParallelBuild? ParallelBuild { get; set; }
+	public ParallelBuildConfig? ParallelBuild { get; set; }
 	
 	/// <summary>
 	/// BuildId, Config
@@ -29,7 +29,7 @@ public class BuildPipeline
 
 	public delegate void OffloadBuildReqPacket(OffloadServerPacket packet);
 	public delegate string? ExtraHookLogs();
-	public delegate Task DeployDelegate(DeployContainer deploy, string buildVersionTitle);
+	public delegate Task DeployDelegate(DeployContainerConfig deploy, string buildVersionTitle);
 	
 	public event OffloadBuildReqPacket OffloadBuildNeeded;
 	public event ExtraHookLogs GetExtraHookLogs;
@@ -43,7 +43,7 @@ public class BuildPipeline
 	public Workspace Workspace { get; }
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{DateTime.Now - StartTime:hh\\:mm\\:ss}";
-	private string BuildVersionTitle => $"Build Version: {_buildVersion}";
+	private string BuildVersionTitle => $"Build Version: {_buildVersion.BundleVersion}";
 
 	/// <summary>
 	/// The change set id that was current when build started
@@ -51,7 +51,7 @@ public class BuildPipeline
 	private int _currentChangeSetId;
 	private string _currentGuid;
 	private int _previousChangeSetId;
-	private string _buildVersion;
+	private BuildVersions _buildVersion;
 
 	/// <summary>
 	/// build ids we are waiting for offload server
@@ -113,9 +113,14 @@ public class BuildPipeline
 		
 		_config = BuildConfig.GetConfig(Workspace.Directory); // refresh config
 
-		var buildType = _config.PreBuild?.Type ?? default;
-		var preBuild = PreBuildBase.Create(buildType, Workspace);
-		preBuild.Run();
+		// pre build runner
+		var preBuild = new PreBuild(Workspace);
+		preBuild.Run(_config.PreBuild);
+		
+		// write to disk
+		var writer = new ProjectSettingsWriter(Workspace.ProjectSettingsPath);
+		writer.ReplaceVersions(preBuild.BuildVersion);
+		
 		_buildVersion = preBuild.BuildVersion;
 		await Task.CompletedTask;
 	}

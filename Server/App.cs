@@ -80,7 +80,7 @@ public static class App
 		Web.SendAsync(HttpMethod.Post, Config.OffloadServerUrl, body: body).FireAndForget();
 	}
 
-	private static async Task BuildPipelineOnDeployEvent(DeployContainer deploy, string buildVersionTitle)
+	private static async Task BuildPipelineOnDeployEvent(DeployContainerConfig deploy, string buildVersionTitle)
 	{
 		// steam
 		if (deploy.Steam != null)

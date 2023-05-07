@@ -1,5 +1,12 @@
 namespace Builds;
 
+public class BuildVersions
+{
+	public string? BundleVersion { get; set; }
+	public string? AndroidVersionCode { get; set; }
+	public Dictionary<string, string>? BuildNumbers { get; set; }
+}
+
 public class ProjectSettingsWriter
 {
 	private readonly string? _path;
@@ -14,20 +21,24 @@ public class ProjectSettingsWriter
 	/// <summary>
 	/// Replaces the version in all the places within ProjectSettings.asset
 	/// </summary>
-	public void ReplaceVersions(string? newBundleVersion, string? androidVersionCode = null)
+	public void ReplaceVersions(BuildVersions? buildVersions)
 	{
-		if (!WriteBundleVersion(newBundleVersion))
+		if (buildVersions == null)
+			return;
+		
+		if (!WriteBundleVersion(buildVersions.BundleVersion))
 			throw new Exception("Failed to WriteBundleVersion");
-		
-		if (!WritePlatformBuildNumber(newBundleVersion, "Standalone"))
-			throw new Exception("Failed to WritePlatformBuildNumber 'Standalone'");
-		
-		if (!WritePlatformBuildNumber(newBundleVersion, "iPhone"))
-			throw new Exception("Failed to WritePlatformBuildNumber 'iPhone'");
 
-		if (!string.IsNullOrEmpty(androidVersionCode))
+		if (buildVersions.BuildNumbers != null)
 		{
-			if (!WriteAndroidBundleVersionCode(androidVersionCode))
+			foreach (var buildNumber in buildVersions.BuildNumbers)
+				if (!WritePlatformBuildNumber(buildNumber.Key, buildNumber.Value))
+					throw new Exception($"Failed to WritePlatformBuildNumber '{buildNumber.Key}'");
+		}
+
+		if (!string.IsNullOrEmpty(buildVersions.AndroidVersionCode))
+		{
+			if (!WriteAndroidBundleVersionCode(buildVersions.AndroidVersionCode))
 				throw new Exception("Failed to WriteAndroidBundleVersionCode");
 		}
 		
@@ -49,7 +60,7 @@ public class ProjectSettingsWriter
 		return false;
 	}
 
-	private bool WritePlatformBuildNumber(string? newBundleVersion, string platform)
+	private bool WritePlatformBuildNumber(string platform, string? newBundleVersion)
 	{
 		var isBuildNumFound = false;
 
@@ -72,7 +83,7 @@ public class ProjectSettingsWriter
 		return false;
 	}
 
-	private bool WriteAndroidBundleVersionCode(string androidVersionCode)
+	private bool WriteAndroidBundleVersionCode(string? androidVersionCode)
 	{
 		for (int i = 0; i < _lines.Length; i++)
 		{
@@ -86,7 +97,7 @@ public class ProjectSettingsWriter
 		return false;
 	}
 	
-	private static string ReplaceText(string line, string version)
+	private static string ReplaceText(string? line, string? version)
 	{
 		var ver = line.Split(":").Last().Trim();
 		var replacement = line.Replace(ver, version);
