@@ -4,14 +4,22 @@ namespace SharedLib;
 
 public class Workspace
 {
-	public string? Name { get; private init; }
-	public string? Directory { get; private init; }
+	public string? Name { get; }
+	public string? Directory { get; }
 	public string? UnityVersion { get; private set; }
+	public ProjectSettings ProjectSettings { get; }
 
 	[JsonIgnore] public string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", "ProjectSettings.asset");
 	[JsonIgnore] private string PrevChangesetIdPath => Path.Combine(Directory, "BuildScripts", "previous-changesetId.txt");
-	[JsonIgnore] private string SteamDirPath => Path.Combine(Directory, "BuildScripts", "Steam");
 
+	private Workspace(string? name, string? directory, string? unityVersion)
+	{
+		Name = name;
+		Directory = directory;
+		UnityVersion = unityVersion;
+		ProjectSettings = new ProjectSettings(ProjectSettingsPath);
+	}
+	
 	public override string ToString()
 	{
 		return $"{Name} @ {Directory} | UnityVersion: {UnityVersion}";
@@ -33,12 +41,7 @@ public class Workspace
 			var name = split[0];
 			var path = split[1].Replace(Environment.MachineName, string.Empty).Trim();
 			var unityVersion = GetUnityVersion(path);
-			var ws = new Workspace
-			{
-				Name = name,
-				Directory = path,
-				UnityVersion = unityVersion
-			};
+			var ws = new Workspace(name, path, unityVersion);
 			workspaces.Add(ws);
 		}
 
@@ -47,9 +50,6 @@ public class Workspace
 
 	public static Workspace GetWorkspace()
 	{
-		//if (Args.Environment.IsFlag("-config"))
-		//	return GetCustomWorkspace();
-
 		var (exitCode, output) = Cmd.Run("cm", "workspace", false);
 
 		if (exitCode != 0)
@@ -67,21 +67,6 @@ public class Workspace
 	{
 		var workspaces = GetAvailableWorkspaces();
 		return workspaces.First(x => x.Name == workspaceName);
-	}
-
-	private static Workspace GetCustomWorkspace()
-	{
-		var args = Environment.GetCommandLineArgs();
-		var index = Array.IndexOf(args, "-config");
-		var path = args[index + 1].Trim();
-		var workspaceName = path.Split(Path.DirectorySeparatorChar)[^1];
-		var unityVersion = GetUnityVersion(path);
-		return new Workspace
-		{
-			Name = workspaceName,
-			Directory = path,
-			UnityVersion = unityVersion
-		};
 	}
 
 	private static string GetUnityVersion(string? workingDirectory)
@@ -102,29 +87,20 @@ public class Workspace
 		return string.Empty;
 	}
 	
-	public string GetAppVersion()
-	{
-		return GetProjPropertyValue("bundleVersion:");
-	}
-	
 	public int GetAndroidBuildCode()
 	{
-		var verStr = GetProjPropertyValue("AndroidBundleVersionCode:");
-		return int.Parse(verStr);
-	}
-
-	private string GetProjPropertyValue(string propertyName)
-	{
-		var val = File.ReadAllLines(ProjectSettingsPath)
-			.Single(x => x.Contains(propertyName))
-			.Replace(propertyName, string.Empty)
-			.Trim();
-		return val;
+		var verStr = ProjectSettings.GetProjPropertyValue("AndroidBundleVersionCode:");
+		return int.Parse(verStr ?? "0");
 	}
 	
+	public string? GetAppVersion()
+	{
+		return ProjectSettings.GetProjPropertyValue("bundleVersion:");
+	}
+
 	public int[] GetVersionArray()
 	{
-		var verStr = GetAppVersion();
+		var verStr = GetAppVersion() ?? string.Empty;
 		var ver = verStr.Split(".");
 		var arr = new int[ver.Length];
 

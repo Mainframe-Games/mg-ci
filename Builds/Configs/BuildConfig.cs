@@ -59,6 +59,7 @@ public class DeployContainerConfig
 	public string[]? Steam { get; set; }
 	public bool? Clanforge { get; set; }
 	public bool? AppleStore { get; set; }
+	public bool? GoogleStore { get; set; }
 }
 
 public class HooksConfig

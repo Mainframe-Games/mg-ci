@@ -43,7 +43,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 			throw new DirectoryNotFoundException($"Directory doesn't exist: {workspace.Directory}");
 		
 		// set build version in project settings
-		var projWriter = new ProjectSettingsWriter(workspace.ProjectSettingsPath);
+		var projWriter = new ProjectSettings(workspace.ProjectSettingsPath);
 		projWriter.ReplaceVersions(Packet.BuildVersion);
 		
 		await ClonesManager.CloneProject(workspace.Directory, Packet.ParallelBuild.Links, Packet.ParallelBuild.Copies, Packet.Builds.Values);

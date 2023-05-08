@@ -1,4 +1,4 @@
-namespace Builds;
+namespace SharedLib;
 
 public class BuildVersions
 {
@@ -7,16 +7,48 @@ public class BuildVersions
 	public Dictionary<string, string>? BuildNumbers { get; set; }
 }
 
-public class ProjectSettingsWriter
+public class ProjectSettings
 {
 	private readonly string? _path;
 	private readonly string[] _lines;
 
-	public ProjectSettingsWriter(string? path)
+	public ProjectSettings(string? path)
 	{
 		_path = path;
 		_lines = File.ReadAllLines(path);
 	}
+
+	#region Reads
+
+	public string? GetProjPropertyValue(params string[] propertyNames)
+	{
+		var index = 0;
+		var isBuildNumFound = index == propertyNames.Length - 1;
+
+		foreach (var line in _lines)
+		{
+			// build number
+			if (!isBuildNumFound && line.Contains($"{propertyNames[index]}:"))
+				index++;
+
+			if (index != propertyNames.Length - 1)
+				continue;
+
+			var propName = $"{propertyNames[^1]}:";
+
+			if (line.Contains(propName))
+				continue;
+
+			var res = line.Replace(propName, string.Empty).Trim();
+			return res;
+		}
+
+		return null;
+	}
+
+	#endregion
+
+	#region Writes
 
 	/// <summary>
 	/// Replaces the version in all the places within ProjectSettings.asset
@@ -103,4 +135,6 @@ public class ProjectSettingsWriter
 		var replacement = line.Replace(ver, version);
 		return replacement;
 	}
+	
+	#endregion
 }

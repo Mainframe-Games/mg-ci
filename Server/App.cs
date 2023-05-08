@@ -80,12 +80,14 @@ public static class App
 		Web.SendAsync(HttpMethod.Post, Config.OffloadServerUrl, body: body).FireAndForget();
 	}
 
-	private static async Task BuildPipelineOnDeployEvent(DeployContainerConfig deploy, string buildVersionTitle)
+	private static async Task BuildPipelineOnDeployEvent(BuildPipeline pipeline)
 	{
+		var buildVersionTitle = pipeline.BuildVersionTitle;
+		
 		// steam
-		if (deploy.Steam != null)
+		if (pipeline.Config.Deploy.Steam != null)
 		{
-			foreach (var vdfPath in deploy.Steam)
+			foreach (var vdfPath in pipeline.Config.Deploy.Steam)
 			{
 				var path = Config.Steam.Path;
 				var password = Config.Steam.Password;
@@ -96,12 +98,29 @@ public static class App
 			}
 		}
 		
+		// google store
+		if (pipeline.Config.Deploy.GoogleStore != null)
+		{
+			var packageName = pipeline.Workspace.ProjectSettings.GetProjPropertyValue("applicationIdentifier", "Android");
+			var changeLogArr = pipeline.GetChangeLog();
+			var changeLog = string.Join("\n", changeLogArr);
+			var androidBuild = pipeline.Config.Builds.First(x => x.Target == UnityTarget.Android);
+			var aabFile = new DirectoryInfo(androidBuild.BuildPath).GetFiles("*.aab").First().FullName;
+			
+			await GooglePlayDeploy.Deploy(
+				packageName,
+				aabFile,
+				Config.GoogleStore.CredentialsPath,
+				Config.GoogleStore.ServiceUsername,
+				changeLog);
+		}
+		
 		// apple store
-		if (deploy.AppleStore == true)
-			XcodeDeploy.Deploy(Config.Xcode.AppleId, Config.Xcode.AppSpecificPassword);
+		if (pipeline.Config.Deploy.AppleStore == true)
+			XcodeDeploy.Deploy(Config.AppleStore.AppleId, Config.AppleStore.AppSpecificPassword);
 
 		// clanforge
-		if (deploy.Clanforge == true)
+		if (pipeline.Config.Deploy.Clanforge == true)
 		{
 			var clanforge = new ClanForgeDeploy(Config.Clanforge, buildVersionTitle);
 			await clanforge.Deploy();

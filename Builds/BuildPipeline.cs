@@ -29,7 +29,7 @@ public class BuildPipeline
 
 	public delegate void OffloadBuildReqPacket(OffloadServerPacket packet);
 	public delegate string? ExtraHookLogs();
-	public delegate Task DeployDelegate(DeployContainerConfig deploy, string buildVersionTitle);
+	public delegate Task DeployDelegate(BuildPipeline pipeline);
 	
 	public event OffloadBuildReqPacket OffloadBuildNeeded;
 	public event ExtraHookLogs GetExtraHookLogs;
@@ -38,12 +38,12 @@ public class BuildPipeline
 	private readonly Args _args;
 	private readonly string? _offloadUrl;
 	private readonly List<UnityTarget> _offloadTargets;
-	private BuildConfig _config;
 
 	public Workspace Workspace { get; }
+	public BuildConfig Config { get; private set; }
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{DateTime.Now - StartTime:hh\\:mm\\:ss}";
-	private string BuildVersionTitle => $"Build Version: {_buildVersion.BundleVersion}";
+	public string BuildVersionTitle => $"Build Version: {_buildVersion.BundleVersion}";
 
 	/// <summary>
 	/// The change set id that was current when build started
@@ -93,7 +93,7 @@ public class BuildPipeline
 
 	private async Task Prebuild()
 	{
-		_config = BuildConfig.GetConfig(Workspace.Directory); // need to get config even if -noprebuild flag
+		Config = BuildConfig.GetConfig(Workspace.Directory); // need to get config even if -noprebuild flag
 		
 		if (_args.IsFlag("-noprebuild"))
 			return;
@@ -111,14 +111,14 @@ public class BuildPipeline
 		_previousChangeSetId = Workspace.GetPreviousChangeSetId();
 		Logger.Log($"[CHANGESET] cs:{_previousChangeSetId} \u2192 cs:{_currentChangeSetId}, guid:{_currentGuid}");
 		
-		_config = BuildConfig.GetConfig(Workspace.Directory); // refresh config
+		Config = BuildConfig.GetConfig(Workspace.Directory); // refresh config
 
 		// pre build runner
 		var preBuild = new PreBuild(Workspace);
-		preBuild.Run(_config.PreBuild);
+		preBuild.Run(Config.PreBuild);
 		
 		// write to disk
-		var writer = new ProjectSettingsWriter(Workspace.ProjectSettingsPath);
+		var writer = new ProjectSettings(Workspace.ProjectSettingsPath);
 		writer.ReplaceVersions(preBuild.BuildVersion);
 		
 		_buildVersion = preBuild.BuildVersion;
@@ -130,14 +130,14 @@ public class BuildPipeline
 		if (_args.IsFlag("-nobuild"))
 			return;
 		
-		if (_config?.Builds == null)
+		if (Config?.Builds == null)
 			throw new NullReferenceException();
 		
-		if (_config.ParallelBuild != null)
+		if (Config.ParallelBuild != null)
 			await ClonesManager.CloneProject(Workspace.Directory,
-				_config.ParallelBuild.Links,
-				_config.ParallelBuild.Copies,
-				_config.Builds.Where(x => !IsOffload(x)));
+				Config.ParallelBuild.Links,
+				Config.ParallelBuild.Copies,
+				Config.Builds.Where(x => !IsOffload(x)));
 		
 		Logger.Log("Build process started...");
 		var buildStartTime = DateTime.Now;
@@ -146,11 +146,11 @@ public class BuildPipeline
 
 		OffloadServerPacket? offloadBuilds = null;
 
-		foreach (var build in _config.Builds)
+		foreach (var build in Config.Builds)
 		{
 			var unity = new LocalUnityBuild(Workspace.UnityVersion);
 			
-			if (unity == null || _config?.Builds == null)
+			if (unity == null || Config?.Builds == null)
 				throw new NullReferenceException();
 			
 			// offload build
@@ -162,7 +162,7 @@ public class BuildPipeline
 					ChangesetId = _currentChangeSetId,
 					BuildVersion = _buildVersion,
 					CleanBuild = _args.IsFlag("-cleanbuild"),
-					ParallelBuild = _config.ParallelBuild,
+					ParallelBuild = Config.ParallelBuild,
 					Builds = new Dictionary<string, TargetConfig>()
 				};
 				
@@ -173,7 +173,7 @@ public class BuildPipeline
 			// local build
 			else
 			{
-				if (_config.ParallelBuild != null)
+				if (Config.ParallelBuild != null)
 				{
 					build.BuildPath = Path.Combine(Workspace.Directory, build.BuildPath);
 					var targetPath = ClonesManager.GetTargetPath(Workspace.Directory, build);
@@ -215,10 +215,19 @@ public class BuildPipeline
 		if (_args.IsFlag("-nodeploy"))
 			return;
 		
-		if (_config.Deploy == null)
+		if (Config.Deploy == null)
 			return;
 		
-		await DeployEvent.Invoke(_config.Deploy, BuildVersionTitle);
+		await DeployEvent.Invoke(this);
+	}
+
+	public string[] GetChangeLog()
+	{
+		// collect change logs
+		var commits = Config.PostBuild?.ChangeLog == true
+			? Workspace.GetChangeLog(_currentChangeSetId, _previousChangeSetId)
+			: Array.Empty<string>();
+		return commits;
 	}
 	
 	private async Task PostBuild()
@@ -229,22 +238,20 @@ public class BuildPipeline
 		Logger.Log("PostBuild process started...");
 		
 		// collect change logs
-		var commits = _config.PostBuild?.ChangeLog == true
-			? Workspace.GetChangeLog(_currentChangeSetId, _previousChangeSetId)
-			: Array.Empty<string>();
+		var commits = GetChangeLog();
 		
 		// committing new version must be done after collecting changeLogs as the prev changesetid will be updated
 		Workspace.CommitNewVersionNumber(_currentChangeSetId, $"{BuildVersionTitle} | cs: {_currentChangeSetId} | guid: {_currentGuid}");
 		
-		if (_config.Hooks == null)
+		if (Config.Hooks == null)
 			return;
 
 		// optional message from clanforge
-		var clanforgeMessage = _config.Deploy?.Clanforge == true 
+		var clanforgeMessage = Config.Deploy?.Clanforge == true 
 			? GetExtraHookLogs?.Invoke()
 			: null;
 
-		foreach (var hook in _config.Hooks)
+		foreach (var hook in Config.Hooks)
 		{
 			if (hook.IsErrorChannel)
 				continue;
@@ -304,13 +311,13 @@ public class BuildPipeline
 
 	private void SendErrorHook(Exception e)
 	{
-		if(_config.Hooks == null)
+		if(Config.Hooks == null)
 			return;
 		
 		var hookMessage = new StringBuilder();
 		var errorMessage = $"{e.GetType()}: {e.Message}";
 		
-		foreach (var hook in _config.Hooks)
+		foreach (var hook in Config.Hooks)
 		{
 			if (!hook.IsErrorChannel)
 				continue;
