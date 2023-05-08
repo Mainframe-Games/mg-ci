@@ -22,28 +22,29 @@ public class ProjectSettings
 
 	public string? GetProjPropertyValue(params string[] propertyNames)
 	{
+		var index = GetProjPropertyLineIndex(propertyNames);
+		return _lines[index].Replace($"{propertyNames[^1]}:", string.Empty).Trim();
+	}
+	
+	public int GetProjPropertyLineIndex(params string[] propertyNames)
+	{
 		var index = 0;
-		var isBuildNumFound = index == propertyNames.Length - 1;
 
-		foreach (var line in _lines)
+		for (var i = 0; i < _lines.Length; i++)
 		{
-			// build number
-			if (!isBuildNumFound && line.Contains($"{propertyNames[index]}:"))
-				index++;
+			var line = _lines[i];
+			var propName = $"{propertyNames[index]}:";
 
-			if (index != propertyNames.Length - 1)
-				continue;
+			// last index, return value
+			if (index == propertyNames.Length - 1 && _lines[i].Contains(propName))
+				return i;
 
-			var propName = $"{propertyNames[^1]}:";
-
+			// increase index when prop found
 			if (line.Contains(propName))
-				continue;
-
-			var res = line.Replace(propName, string.Empty).Trim();
-			return res;
+				index++;
 		}
 
-		return null;
+		throw new KeyNotFoundException($"Failed to find path: '{string.Join(", ", propertyNames)}'");
 	}
 
 	#endregion
@@ -57,82 +58,48 @@ public class ProjectSettings
 	{
 		if (buildVersions == null)
 			return;
-		
-		if (!WriteBundleVersion(buildVersions.BundleVersion))
-			throw new Exception("Failed to WriteBundleVersion");
+
+		WriteBundleVersion(buildVersions.BundleVersion);
 
 		if (buildVersions.BuildNumbers != null)
-		{
 			foreach (var buildNumber in buildVersions.BuildNumbers)
-				if (!WritePlatformBuildNumber(buildNumber.Key, buildNumber.Value))
-					throw new Exception($"Failed to WritePlatformBuildNumber '{buildNumber.Key}'");
-		}
+				WritePlatformBuildNumber(buildNumber.Key, buildNumber.Value);
 
 		if (!string.IsNullOrEmpty(buildVersions.AndroidVersionCode))
-		{
-			if (!WriteAndroidBundleVersionCode(buildVersions.AndroidVersionCode))
-				throw new Exception("Failed to WriteAndroidBundleVersionCode");
-		}
+			WriteAndroidBundleVersionCode(buildVersions.AndroidVersionCode);
 		
 		File.WriteAllText(_path, string.Join("\n", _lines));
 	}
 
-	private bool WriteBundleVersion(string? newBundleVersion)
+	private void WriteBundleVersion(string? newBundleVersion)
 	{
-		for (int i = 0; i < _lines.Length; i++)
-		{
-			// bundle version
-			if (!_lines[i].Contains("bundleVersion:")) 
-				continue;
-			
-			_lines[i] = ReplaceText(_lines[i], newBundleVersion);
-			return true;
-		}
-
-		return false;
+		var index = GetProjPropertyLineIndex("bundleVersion");
+		_lines[index] = ReplaceText(_lines[index], newBundleVersion);
 	}
 
-	private bool WritePlatformBuildNumber(string platform, string? newBundleVersion)
+	private void WritePlatformBuildNumber(string platform, string? newBundleVersion)
 	{
-		var isBuildNumFound = false;
-
-		for (int i = 0; i < _lines.Length; i++)
-		{
-			// build number
-			if (!isBuildNumFound && _lines[i].Contains("buildNumber:"))
-				isBuildNumFound = true;
-
-			if (!isBuildNumFound)
-				continue;
-
-			if (_lines[i].Contains($"{platform}:"))
-				continue;
-			
-			_lines[i] = ReplaceText(_lines[i], newBundleVersion);
-			return true;
-		}
-
-		return false;
+		var index = GetProjPropertyLineIndex("buildNumber", platform);
+		_lines[index] = ReplaceText(_lines[index], newBundleVersion);
 	}
 
-	private bool WriteAndroidBundleVersionCode(string? androidVersionCode)
+	private void WriteAndroidBundleVersionCode(string? androidVersionCode)
 	{
-		for (int i = 0; i < _lines.Length; i++)
-		{
-			if (_lines[i].Contains("AndroidBundleVersionCode:")) 
-				continue;
-			
-			_lines[i] = ReplaceText(_lines[i], androidVersionCode);
-			return true;
-		}
-
-		return false;
+		var index = GetProjPropertyLineIndex("AndroidBundleVersionCode");
+		_lines[index] = ReplaceText(_lines[index], androidVersionCode);
 	}
 	
-	private static string ReplaceText(string? line, string? version)
+	private static string ReplaceText(string? line, string? newValue)
 	{
-		var ver = line.Split(":").Last().Trim();
-		var replacement = line.Replace(ver, version);
+		if (line == null)
+			throw new ArgumentNullException($"{nameof(line)} params is null");
+		
+		var oldValue = line.Split(":").Last().Trim();
+
+		if (string.IsNullOrEmpty(oldValue))
+			throw new NullReferenceException($"{nameof(oldValue)} is null on line '{line}'");
+		
+		var replacement = line.Replace(oldValue, newValue);
 		return replacement;
 	}
 	

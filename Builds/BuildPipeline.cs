@@ -70,7 +70,7 @@ public class BuildPipeline
 	
 	#region Build Steps
 
-	public async Task RunAsync()
+	public async Task<bool> RunAsync()
 	{
 		try
 		{
@@ -81,6 +81,7 @@ public class BuildPipeline
 			await DeployAsync();
 			await PostBuild();
 			Logger.LogTimeStamp("Pipeline Completed", StartTime);
+			return true;
 		}
 		catch (Exception e)
 		{
@@ -89,6 +90,7 @@ public class BuildPipeline
 		}
 		
 		Current = null;
+		return false;
 	}
 
 	private async Task Prebuild()

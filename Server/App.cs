@@ -13,6 +13,8 @@ public static class App
 	private static ListenServer? Server { get; set; }
 	private static ServerConfig? Config { get; set; }
 	
+	private static bool IsLocal { get; set; }
+	
 	public static async Task RunAsync(string[]? args)
 	{
 		Config = ServerConfig.Load();
@@ -20,8 +22,10 @@ public static class App
 		
 		Logger.Log($"Config: {Config}");
 
+		IsLocal = Args.Environment.IsFlag("-local");
+
 		// for locally running the build process without a listen server
-		if (Args.Environment.IsFlag("-local"))
+		if (IsLocal)
 		{
 			var workspace = Workspace.GetWorkspace();
 			await RunBuildPipe(workspace, args);
@@ -61,8 +65,9 @@ public static class App
 		pipe.OffloadBuildNeeded += SendRemoteBuildRequest;
 		pipe.GetExtraHookLogs += BuildPipelineOnGetExtraHookLog;
 		pipe.DeployEvent += BuildPipelineOnDeployEvent;
-		await pipe.RunAsync();
-		DumpLogs();
+		var isSuccessful = await pipe.RunAsync();
+		if (isSuccessful)
+			DumpLogs();
 	}
 	
 	/// <summary>
@@ -92,8 +97,7 @@ public static class App
 				var path = Config.Steam.Path;
 				var password = Config.Steam.Password;
 				var username = Config.Steam.Username;
-				var guardCode = Config.Steam.GuardCode;
-				var steam = new SteamDeploy(vdfPath, password, username, guardCode, path);
+				var steam = new SteamDeploy(vdfPath, password, username, path);
 				steam.Deploy(buildVersionTitle);
 			}
 		}

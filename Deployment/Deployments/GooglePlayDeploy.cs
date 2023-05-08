@@ -24,8 +24,7 @@ public static class GooglePlayDeploy
 			.CreateScoped(AndroidPublisherService.Scope.Androidpublisher);
 
 		var credentials = googleCredentials.UnderlyingCredential as ServiceAccountCredential;
-		var oauthToken =
-			await credentials.GetAccessTokenForRequestAsync(AndroidPublisherService.Scope.Androidpublisher);
+		var oauthToken = await credentials.GetAccessTokenForRequestAsync(AndroidPublisherService.Scope.Androidpublisher);
 		var service = new AndroidPublisherService();
 
 		var edit = service.Edits.Insert(new AppEdit { ExpiryTimeSeconds = "3600" }, packageName);

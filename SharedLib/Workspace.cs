@@ -89,13 +89,14 @@ public class Workspace
 	
 	public int GetAndroidBuildCode()
 	{
-		var verStr = ProjectSettings.GetProjPropertyValue("AndroidBundleVersionCode:");
+		var verStr = ProjectSettings.GetProjPropertyValue("AndroidBundleVersionCode");
 		return int.Parse(verStr ?? "0");
 	}
 	
 	public string? GetAppVersion()
 	{
-		return ProjectSettings.GetProjPropertyValue("bundleVersion:");
+		var verStr = ProjectSettings.GetProjPropertyValue("bundleVersion");
+		return verStr;
 	}
 
 	public int[] GetVersionArray()

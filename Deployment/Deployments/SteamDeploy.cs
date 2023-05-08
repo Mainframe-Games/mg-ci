@@ -8,15 +8,13 @@ public class SteamDeploy
 	private readonly string? _path; // steamcmd path
 	private readonly string? _username;
 	private readonly string? _password;
-	private readonly string? _guardCode;
 	private readonly string? _vdfPath;
 
-	public SteamDeploy(string? vdfPath, string? password, string? username, string? guardCode, string? path)
+	public SteamDeploy(string? vdfPath, string? password, string? username, string? path)
 	{
 		_vdfPath = vdfPath;
 		_password = password;
 		_username = username;
-		_guardCode = guardCode;
 		_path = path;
 	}
 
@@ -29,12 +27,13 @@ public class SteamDeploy
 		args.Append("+login");
 		args.Append($" {_username}");
 		args.Append($" {_password}");
-		if (!string.IsNullOrEmpty(_guardCode))
-			args.Append($" {_guardCode}");
 		args.Append($" +run_app_build \"{vdfPath}\"");
 		args.Append(" +quit");
 		
-		Cmd.Run(_path, args.ToString());
+		var (code, output) = Cmd.Run(_path, args.ToString());
+		
+		if (output.Contains("FAILED", StringComparison.OrdinalIgnoreCase))
+			throw new Exception($"Steam upload failed ({code}): {output}");
 	}
 
 	private static void SetVdfProperties(string vdfPath, params (string key, string value)[] values)
