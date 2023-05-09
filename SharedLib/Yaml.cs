@@ -1,15 +1,18 @@
+using Newtonsoft.Json.Linq;
+using YamlDotNet.Serialization;
+
 namespace SharedLib;
 
 /// <summary>
 /// YAML helper
-/// TODO: Get an actual YAML parser for C#
 /// </summary>
 public class Yaml
 {
 	protected readonly string? _path;
 	protected readonly string[] _lines;
+	private readonly JObject _jObject;
 
-	public Yaml(string? path)
+	public Yaml(string? path, int skip = 3)
 	{
 		var file = new FileInfo(path);
 		if (!file.Exists)
@@ -17,6 +20,31 @@ public class Yaml
 		
 		_path = path;
 		_lines = File.ReadAllLines(path);
+		_jObject = YamlToJson(path, skip);
+	}
+	
+	private static JObject YamlToJson(string path, int skipLines = 3)
+	{
+		var ymlLines = File.ReadAllLines(path);
+		var yml = string.Join("\n", ymlLines.Skip(skipLines));
+
+		// convert string/file to YAML object
+		var r = new StringReader(yml);
+		var deserializer = new Deserializer();
+		var yamlObject = deserializer.Deserialize(r);
+
+		var serializer = new Newtonsoft.Json.JsonSerializer();
+		var writer = new StringWriter();
+		serializer.Serialize(writer, yamlObject);
+		var json = writer.ToString();
+		var jObj = JObject.Parse(json);
+		return jObj;
+	}
+	
+	public T GetValue<T>(string path)
+	{
+		var token = _jObject.SelectToken(path, true);
+		return token.Value<T>() ?? default(T);
 	}
 	
 	public string? GetProjPropertyValue(params string[] propertyNames)
