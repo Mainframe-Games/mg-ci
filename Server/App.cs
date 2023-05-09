@@ -116,6 +116,7 @@ public static class App
 				aabFile,
 				Config.GoogleStore.CredentialsPath,
 				Config.GoogleStore.ServiceUsername,
+				buildVersionTitle,
 				changeLog);
 		}
 		

@@ -34,7 +34,7 @@ public static class XcodeDeploy
 			$"-exportOptionsPlist exportOptions.plist -exportPath \"{exportPath}\" -allowProvisioningUpdates");
 
 		// upload
-		var ipaName = new DirectoryInfo($"{Environment.CurrentDirectory}/exportPath").GetFiles("*.ipa").First().Name;
+		var ipaName = new DirectoryInfo($"{Environment.CurrentDirectory}/{exportPath}").GetFiles("*.ipa").First().Name;
 		Cmd.Run("xcrun",
 			$"altool --upload-app -f \"{exportPath}/{ipaName}\" -t ios -u {appleId} -p {appSpecificPassword}");
 
