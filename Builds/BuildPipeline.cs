@@ -258,26 +258,27 @@ public class BuildPipeline
 			if (hook.IsErrorChannel)
 				continue;
 			
+			var hookMessage = new StringBuilder();
+
 			if (hook.IsDiscord())
 			{
 				var discord = new ChangeLogBuilderDiscord();
 				discord.BuildLog(commits);
-				var hookMessage = new StringBuilder();
 				hookMessage.AppendLine($"Total Time: {TimeSinceStart}");
 				hookMessage.AppendLine(clanforgeMessage);
-				hookMessage.AppendLine($"ChangesetId: {_currentChangeSetId}");
-				hookMessage.AppendLine($"GUID: {_currentGuid}");
+				hookMessage.AppendLine($"cs: {_currentChangeSetId}");
+				hookMessage.AppendLine($"guid: {_currentGuid}");
 				hookMessage.AppendLine(discord.ToString());
 				Discord.PostMessage(hook.Url, hookMessage.ToString(), hook.Title, BuildVersionTitle, Discord.Colour.GREEN);
 			}
 			else if (hook.IsSlack())
 			{
-				var hookMessage = new StringBuilder();
-				hookMessage.AppendLine($"{hook.Title} | {BuildVersionTitle}");
+				hookMessage.AppendLine($"*{hook.Title}*");
+				hookMessage.AppendLine(BuildVersionTitle);
 				hookMessage.AppendLine($"Total Time: {TimeSinceStart}");
-				hookMessage.AppendLine($"ChangesetId: {_currentChangeSetId}");
-				hookMessage.AppendLine($"GUID: {_currentGuid}");
 				hookMessage.AppendLine(clanforgeMessage);
+				hookMessage.AppendLine($"cs: {_currentChangeSetId}");
+				hookMessage.AppendLine($"guid: {_currentGuid}");
 				Slack.PostMessage(hook.Url, hookMessage.ToString());
 			}
 		}
