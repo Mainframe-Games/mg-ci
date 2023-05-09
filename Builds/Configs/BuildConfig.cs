@@ -28,6 +28,17 @@ public class BuildConfig
 		
 		return configClass;
 	}
+
+	public TargetConfig GetBuildTarget(UnityTarget target)
+	{
+		foreach (var build in Builds)
+		{
+			if (build.Target == target)
+				return build;
+		}
+
+		throw new Exception($"Target not found: {target}");
+	}
 }
 
 public class PreBuildConfig
@@ -77,8 +88,16 @@ public class TargetConfig
 	public UnityTarget? Target { get; set; }
 	public string? Settings { get; set; }
 	public string? ExecuteMethod { get; set; }
+	[Obsolete("Move towards using .asset YAML from disk")]
 	public string? BuildPath { get; set; }
 	public string? VersionExtension { get; set; }
+
+	public BuildSettingsAsset GetBuildSettingsAsset(string? buildSettingsDir)
+	{
+		var path = Path.Combine(buildSettingsDir, $"{Settings}.asset");
+		var asset = new BuildSettingsAsset(path);
+		return asset;
+	}
 }
 
 public class VersionsConfig

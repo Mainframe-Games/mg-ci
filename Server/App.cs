@@ -108,12 +108,19 @@ public static class App
 			var packageName = pipeline.Workspace.ProjectSettings.GetProjPropertyValue("applicationIdentifier", "Android");
 			var changeLogArr = pipeline.GetChangeLog();
 			var changeLog = string.Join("\n", changeLogArr);
-			var androidBuild = pipeline.Config.Builds.First(x => x.Target == UnityTarget.Android);
-			var aabFile = new DirectoryInfo(androidBuild.BuildPath).GetFiles("*.aab").First().FullName;
+			var androidBuild = pipeline.Config.GetBuildTarget(UnityTarget.Android);
+			var buildSettingsAsset = androidBuild.GetBuildSettingsAsset(pipeline.Workspace.BuildSettingsDirPath);
+			var productName = buildSettingsAsset.GetProjPropertyValue("ProductName");
+			var buildPath = buildSettingsAsset.GetProjPropertyValue("BuildPath");
+			var path = Path.Combine(buildPath, $"{productName}.aab");
+			var aabFile = new FileInfo(path);
+
+			if (!aabFile.Exists)
+				throw new FileNotFoundException($"aab file not found: {path}");
 			
 			await GooglePlayDeploy.Deploy(
 				packageName,
-				aabFile,
+				aabFile.FullName,
 				Config.GoogleStore.CredentialsPath,
 				Config.GoogleStore.ServiceUsername,
 				buildVersionTitle,
@@ -122,7 +129,18 @@ public static class App
 		
 		// apple store
 		if (pipeline.Config.Deploy.AppleStore == true)
-			XcodeDeploy.Deploy(Config.AppleStore.AppleId, Config.AppleStore.AppSpecificPassword);
+		{
+			var iosBuild = pipeline.Config.GetBuildTarget(UnityTarget.iOS);
+			var buildSettingsAsset = iosBuild.GetBuildSettingsAsset(pipeline.Workspace.BuildSettingsDirPath);
+			var productName = buildSettingsAsset.GetProjPropertyValue("ProductName");
+			var buildPath = buildSettingsAsset.GetProjPropertyValue("BuildPath");
+			var workingDir = Path.Combine(buildPath, productName);
+
+			XcodeDeploy.Deploy(
+				workingDir,
+				Config.AppleStore.AppleId, 
+				Config.AppleStore.AppSpecificPassword);
+		}
 
 		// clanforge
 		if (pipeline.Config.Deploy.Clanforge == true)

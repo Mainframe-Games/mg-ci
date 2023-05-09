@@ -8,20 +8,20 @@ public static class XcodeDeploy
 	private const string SCHEME = "Unity-iPhone";
 	private const string CONFIG = "Release";
 
-	public static void Deploy(string appleId, string appSpecificPassword)
+	public static void Deploy(string workingDir, string appleId, string appSpecificPassword)
 	{
 		var originalDir = Environment.CurrentDirectory;
-		Environment.CurrentDirectory = "Builds/ios/";
+		Environment.CurrentDirectory = workingDir;
 
 		const string projectName = "AppArchive";
 		const string exportPath = "IpaBuild";
 
 		// clean
-		Cmd.Run("xcodebuild",
+		Xcodebuild(
 			$"-project {PROJECT} -scheme {SCHEME} -sdk iphoneos -configuration {CONFIG} clean");
 
 		// archive
-		Cmd.Run("xcodebuild",
+		Xcodebuild(
 			$"-project {PROJECT} -scheme {SCHEME} -sdk iphoneos archive -configuration {CONFIG} " +
 			$"-archivePath \"XCodeArchives/{projectName}.xcarchive\"");
 
@@ -29,15 +29,29 @@ public static class XcodeDeploy
 		File.Copy("../../BuildScripts/ios/exportOptions.plist", "exportOptions.plist", true);
 
 		// export ipa file
-		Cmd.Run("xcodebuild",
-			$"-exportArchive -archivePath \"XCodeArchives/{projectName}.xcarchive\" " +
-			$"-exportOptionsPlist exportOptions.plist -exportPath \"{exportPath}\" -allowProvisioningUpdates");
+		Xcodebuild($"-exportArchive -archivePath \"XCodeArchives/{projectName}.xcarchive\" " +
+		           $"-exportOptionsPlist exportOptions.plist -exportPath \"{exportPath}\" -allowProvisioningUpdates");
 
 		// upload
 		var ipaName = new DirectoryInfo($"{Environment.CurrentDirectory}/{exportPath}").GetFiles("*.ipa").First().Name;
-		Cmd.Run("xcrun",
-			$"altool --upload-app -f \"{exportPath}/{ipaName}\" -t ios -u {appleId} -p {appSpecificPassword}");
+		XcRun($"altool --upload-app -f \"{exportPath}/{ipaName}\" -t ios -u {appleId} -p {appSpecificPassword}");
 
 		Environment.CurrentDirectory = originalDir;
+	}
+
+	private static void Xcodebuild(string args)
+	{
+		var (code, output ) = Cmd.Run("xcodebuild", args);
+		
+		if (code != 0)
+			throw new Exception(output);
+	}
+
+	private static void XcRun(string args)
+	{
+		var (code, output ) = Cmd.Run("xcrun", args);
+
+		if (code != 0)
+			throw new Exception(output);
 	}
 }
