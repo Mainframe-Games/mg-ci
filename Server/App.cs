@@ -135,11 +135,16 @@ public static class App
 			var productName = buildSettingsAsset.GetProjPropertyValue("ProductName");
 			var buildPath = buildSettingsAsset.GetProjPropertyValue("BuildPath");
 			var workingDir = Path.Combine(buildPath, productName);
+			var exportOptionPlist = "BuildScripts/ios/exportOptions.plist";
 
+			if (File.Exists(exportOptionPlist))
+				throw new FileNotFoundException(exportOptionPlist);
+			
 			XcodeDeploy.Deploy(
 				workingDir,
 				Config.AppleStore.AppleId, 
-				Config.AppleStore.AppSpecificPassword);
+				Config.AppleStore.AppSpecificPassword,
+				exportOptionPlist);
 		}
 
 		// clanforge

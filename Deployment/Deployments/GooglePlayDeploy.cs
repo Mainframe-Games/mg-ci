@@ -60,6 +60,10 @@ public static class GooglePlayDeploy
 
 		Console.WriteLine($"[{nameof(GooglePlayDeploy)}] Upload {uploadProgress.Status}");
 
+		// releaseNotes max is 500 (set by google)
+		if (releaseNotes.Length > 500)
+			releaseNotes = releaseNotes[..500];
+
 		var tracksUpdate = service.Edits.Tracks.Update(new Track
 		{
 			Releases = new List<TrackRelease>(new[]

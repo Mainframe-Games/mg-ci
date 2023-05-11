@@ -8,7 +8,7 @@ public static class XcodeDeploy
 	private const string SCHEME = "Unity-iPhone";
 	private const string CONFIG = "Release";
 
-	public static void Deploy(string workingDir, string appleId, string appSpecificPassword)
+	public static void Deploy(string workingDir, string appleId, string appSpecificPassword, string exportOptionsPlist)
 	{
 		var originalDir = Environment.CurrentDirectory;
 		Environment.CurrentDirectory = workingDir;
@@ -26,14 +26,14 @@ public static class XcodeDeploy
 			$"-archivePath \"XCodeArchives/{projectName}.xcarchive\"");
 
 		// copy exportOptions to folder
-		File.Copy("../../BuildScripts/ios/exportOptions.plist", "exportOptions.plist", true);
+		File.Copy(exportOptionsPlist, "exportOptions.plist", true);
 
 		// export ipa file
 		Xcodebuild($"-exportArchive -archivePath \"XCodeArchives/{projectName}.xcarchive\" " +
 		           $"-exportOptionsPlist exportOptions.plist -exportPath \"{exportPath}\" -allowProvisioningUpdates");
 
 		// upload
-		var ipaName = new DirectoryInfo($"{Environment.CurrentDirectory}/{exportPath}").GetFiles("*.ipa").First().Name;
+		var ipaName = new DirectoryInfo($"{workingDir}/{exportPath}").GetFiles("*.ipa").First().Name;
 		XcRun($"altool --upload-app -f \"{exportPath}/{ipaName}\" -t ios -u {appleId} -p {appSpecificPassword}");
 
 		Environment.CurrentDirectory = originalDir;
