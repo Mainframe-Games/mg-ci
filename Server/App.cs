@@ -135,9 +135,9 @@ public static class App
 			var productName = buildSettingsAsset.GetProjPropertyValue("ProductName");
 			var buildPath = buildSettingsAsset.GetProjPropertyValue("BuildPath");
 			var workingDir = Path.Combine(buildPath, productName);
-			var exportOptionPlist = "BuildScripts/ios/exportOptions.plist";
+			var exportOptionPlist = $"{pipeline.Workspace.Directory}/BuildScripts/ios/exportOptions.plist";
 
-			if (File.Exists(exportOptionPlist))
+			if (!File.Exists(exportOptionPlist))
 				throw new FileNotFoundException(exportOptionPlist);
 			
 			XcodeDeploy.Deploy(

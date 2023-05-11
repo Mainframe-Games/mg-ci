@@ -19,21 +19,21 @@ public static class XcodeDeploy
 		// clean
 		Xcodebuild(
 			$"-project {PROJECT} -scheme {SCHEME} -sdk iphoneos -configuration {CONFIG} clean");
-
+		
 		// archive
 		Xcodebuild(
 			$"-project {PROJECT} -scheme {SCHEME} -sdk iphoneos archive -configuration {CONFIG} " +
 			$"-archivePath \"XCodeArchives/{projectName}.xcarchive\"");
-
+		
 		// copy exportOptions to folder
 		File.Copy(exportOptionsPlist, "exportOptions.plist", true);
-
+		
 		// export ipa file
 		Xcodebuild($"-exportArchive -archivePath \"XCodeArchives/{projectName}.xcarchive\" " +
 		           $"-exportOptionsPlist exportOptions.plist -exportPath \"{exportPath}\" -allowProvisioningUpdates");
 
 		// upload
-		var ipaName = new DirectoryInfo($"{workingDir}/{exportPath}").GetFiles("*.ipa").First().Name;
+		var ipaName = new DirectoryInfo(exportPath).GetFiles("*.ipa").First().Name;
 		XcRun($"altool --upload-app -f \"{exportPath}/{ipaName}\" -t ios -u {appleId} -p {appSpecificPassword}");
 
 		Environment.CurrentDirectory = originalDir;
