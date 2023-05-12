@@ -49,7 +49,7 @@ public class Workspace
 		return workspaces;
 	}
 
-	public static Workspace GetWorkspace()
+	public static Workspace AskWorkspace()
 	{
 		var (exitCode, output) = Cmd.Run("cm", "workspace", false);
 

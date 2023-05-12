@@ -27,7 +27,7 @@ public static class App
 		// for locally running the build process without a listen server
 		if (IsLocal)
 		{
-			var workspace = Workspace.GetWorkspace();
+			var workspace = Workspace.AskWorkspace();
 			await RunBuildPipe(workspace, args);
 		}
 		else
