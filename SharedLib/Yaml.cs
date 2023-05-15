@@ -21,14 +21,13 @@ public class Yaml
 
 		_path = path;
 		_lines = File.ReadAllLines(path);
-		_jObject = YamlToJson(path, skip);
+		
+		var yml = string.Join("\n", _lines.Skip(skip));
+		_jObject = YamlToJson(yml);
 	}
 
-	private static JObject YamlToJson(string path, int skipLines = 3)
+	private static JObject YamlToJson(string yml)
 	{
-		var ymlLines = File.ReadAllLines(path);
-		var yml = string.Join("\n", ymlLines.Skip(skipLines));
-
 		// convert string/file to YAML object
 		var r = new StringReader(yml);
 		var deserializer = new Deserializer();
