@@ -14,7 +14,7 @@ internal class ServerConfig
 	public ushort Port { get; set; } = 8080;
 	public List<string>? AuthTokens { get; set; }
 	public string? OffloadServerUrl { get; set; }
-	public List<UnityTarget>? OffloadTargets { get; set; }
+	public OffloadConfig? Offload { get; set; }
 	public HooksConfig[]? Hooks { get; set; }
 	public UnityServicesConfig? UnityServices { get; set; }
 	public SteamServerConfig? Steam { get; set; }
@@ -42,4 +42,10 @@ internal class ServerConfig
 	{
 		return Json.Serialise(this);
 	}
+}
+
+public class OffloadConfig
+{
+	public bool Parallel { get; set; }
+	public List<UnityTarget>? Targets { get; set; }
 }

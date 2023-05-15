@@ -1,3 +1,4 @@
+using System.Dynamic;
 using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
 
@@ -40,17 +41,21 @@ public class Yaml
 		var jObj = JObject.Parse(json);
 		return jObj;
 	}
+	
+	private static string JsonToYaml(JToken jsonObject)
+	{
+		var obj = jsonObject.ToObject<ExpandoObject>();
+		var serializer = new Serializer();
+		using var writer = new StringWriter();
+		serializer.Serialize(writer, obj);
+		var yaml = writer.ToString();
+		return yaml;
+	}
 
 	public T GetValue<T>(string path)
 	{
 		var token = _jObject.SelectToken(path, true);
 		return token.Value<T>() ?? default(T);
-	}
-
-	public string? GetProjPropertyValue(params string[] propertyNames)
-	{
-		var index = GetProjPropertyLineIndex(propertyNames);
-		return _lines[index].Replace($"{propertyNames[^1]}:", string.Empty).Trim();
 	}
 
 	public int GetProjPropertyLineIndex(params string[] propertyNames)

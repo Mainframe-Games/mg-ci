@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using Deployment;
 using Deployment.RemoteBuild;
 using Deployment.Server;
 using SharedLib;
@@ -19,15 +18,13 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 		Logger.Log($"Chosen workspace: {workspace}");
 		workspace.Update();
 
-		if (BuildPipeline.Current != null)
-			throw new Exception($"A build process already active. {BuildPipeline.Current.Workspace}");
-		
 		App.RunBuildPipe(workspace, Args).FireAndForget();
 		workspace.GetCurrent(out var changeSetId, out var guid);
 
 		return new ServerResponse
 		{
 			StatusCode = HttpStatusCode.OK,
+			PipelineId = App.NextPipelineId - 1,
 			Message = workspace.Name,
 			UnityVersion = workspace.UnityVersion,
 			ChangesetId = changeSetId,

@@ -5,6 +5,7 @@ namespace Deployment.Server;
 public class ServerResponse
 {
 	public HttpStatusCode StatusCode { get; set; } = HttpStatusCode.OK;
+	public ulong? PipelineId { get; set; }
 	public string? Message { get; set; }
 	public int? ChangesetId { get; set; }
 	public string? ChangesetGuid { get; set; }

@@ -45,13 +45,21 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		// set build version in project settings
 		var projWriter = new ProjectSettings(workspace.ProjectSettingsPath);
 		projWriter.ReplaceVersions(Packet.BuildVersion);
-		
-		await ClonesManager.CloneProject(workspace.Directory, Packet.ParallelBuild.Links, Packet.ParallelBuild.Copies, Packet.Builds.Values);
 
-		Packet.Builds
-			.Select(x => Task.Run(() => StartBuilder(x.Key, x.Value, workspace)))
-			.ToList()
-			.WaitForAll();
+		if (Packet.ParallelBuild != null)
+		{
+			await ClonesManager.CloneProject(workspace.Directory, Packet.ParallelBuild.Links, Packet.ParallelBuild.Copies, Packet.Builds.Values);
+			
+			Packet.Builds
+				.Select(x => Task.Run(() => StartBuilder(Packet.PipelineId, x.Key, x.Value, workspace)))
+				.ToList()
+				.WaitForAll();
+		}
+		else
+		{
+			foreach (var build in Packet.Builds)
+				await StartBuilder(Packet.PipelineId, build.Key, build.Value, workspace);
+		}
 		
 		// clean up after build
 		workspace.Clear();
@@ -62,7 +70,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	/// Fire and forget method for starting a build
 	/// </summary>
 	/// <exception cref="WebException"></exception>
-	private async Task StartBuilder(string buildId, TargetConfig config, Workspace workspace)
+	private async Task StartBuilder(ulong pipelineId, string buildId, TargetConfig config, Workspace workspace)
 	{
 		var originalBuildPath = config.BuildPath;
 			
@@ -84,6 +92,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 
 				response = new RemoteBuildResponse
 				{
+					PipelineId = pipelineId,
 					BuildId = buildId,
 					BuildPath = originalBuildPath,
 					Data = zipBytes
@@ -92,7 +101,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 			else
 			{
 				// send web request to sender about the build failing
-				response = BuildErrorResponse(buildId, originalBuildPath, builder.Errors);
+				response = BuildErrorResponse(pipelineId, buildId, originalBuildPath, builder.Errors);
 			}
 
 			await RespondBackToMasterServer(response);
@@ -100,15 +109,16 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		catch (Exception e)
 		{
 			Logger.Log(e);
-			var res = BuildErrorResponse(buildId, originalBuildPath, e.Message);
+			var res = BuildErrorResponse(pipelineId, buildId, originalBuildPath, e.Message);
 			await RespondBackToMasterServer(res);
 		}
 	}
 
-	private static RemoteBuildResponse BuildErrorResponse(string? buildId, string? originalBuildPath, string? message = null)
+	private static RemoteBuildResponse BuildErrorResponse(ulong pipelineId, string? buildId, string? originalBuildPath, string? message)
 	{
 		return new RemoteBuildResponse
 		{
+			PipelineId = pipelineId,
 			BuildId = buildId,
 			BuildPath = originalBuildPath,
 			Error = message ?? "build failed for reasons unknown"

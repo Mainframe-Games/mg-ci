@@ -14,7 +14,10 @@ public static class App
 	private static ServerConfig? Config { get; set; }
 	
 	private static bool IsLocal { get; set; }
-	
+
+	public static ulong NextPipelineId { get; private set; }
+	public static readonly Dictionary<ulong, BuildPipeline> Pipelines = new();
+
 	public static async Task RunAsync(string[]? args)
 	{
 		Config = ServerConfig.Load();
@@ -61,13 +64,19 @@ public static class App
 	
 	public static async Task RunBuildPipe(Workspace workspace, string[]? args)
 	{
-		var pipe = new BuildPipeline(workspace, args, Config.OffloadServerUrl, Config.OffloadTargets);
+		var pipe = new BuildPipeline(NextPipelineId++, workspace, args, Config.OffloadServerUrl, Config.Offload.Parallel, Config.Offload.Targets);
+
+		Pipelines.Add(pipe.Id, pipe);
+		
 		pipe.OffloadBuildNeeded += SendRemoteBuildRequest;
 		pipe.GetExtraHookLogs += BuildPipelineOnGetExtraHookLog;
 		pipe.DeployEvent += BuildPipelineOnDeployEvent;
+		
 		var isSuccessful = await pipe.RunAsync();
 		if (isSuccessful)
 			DumpLogs();
+		
+		Pipelines.Remove(pipe.Id);
 	}
 	
 	/// <summary>
@@ -105,13 +114,13 @@ public static class App
 		// google store
 		if (pipeline.Config.Deploy.GoogleStore != null)
 		{
-			var packageName = pipeline.Workspace.ProjectSettings.GetProjPropertyValue("applicationIdentifier", "Android");
+			var packageName = pipeline.Workspace.ProjectSettings.GetValue<string>("applicationIdentifier.Android");
 			var changeLogArr = pipeline.GetChangeLog();
 			var changeLog = string.Join("\n", changeLogArr);
 			var androidBuild = pipeline.Config.GetBuildTarget(UnityTarget.Android);
 			var buildSettingsAsset = androidBuild.GetBuildSettingsAsset(pipeline.Workspace.BuildSettingsDirPath);
-			var productName = buildSettingsAsset.GetProjPropertyValue("ProductName");
-			var buildPath = buildSettingsAsset.GetProjPropertyValue("BuildPath");
+			var productName = buildSettingsAsset.GetValue<string>("ProductName");
+			var buildPath = buildSettingsAsset.GetValue<string>("BuildPath");
 			var path = Path.Combine(buildPath, $"{productName}.aab");
 			var aabFile = new FileInfo(path);
 
@@ -132,8 +141,8 @@ public static class App
 		{
 			var iosBuild = pipeline.Config.GetBuildTarget(UnityTarget.iOS);
 			var buildSettingsAsset = iosBuild.GetBuildSettingsAsset(pipeline.Workspace.BuildSettingsDirPath);
-			var productName = buildSettingsAsset.GetProjPropertyValue("ProductName");
-			var buildPath = buildSettingsAsset.GetProjPropertyValue("BuildPath");
+			var productName = buildSettingsAsset.GetValue<string>("ProductName");
+			var buildPath = buildSettingsAsset.GetValue<string>("BuildPath");
 			var workingDir = Path.Combine(buildPath, productName);
 			var exportOptionPlist = $"{pipeline.Workspace.Directory}/BuildScripts/ios/exportOptions.plist";
 

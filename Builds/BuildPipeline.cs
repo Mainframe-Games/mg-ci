@@ -16,6 +16,7 @@ public class OffloadServerPacket
 	public int ChangesetId { get; set; }
 	public bool CleanBuild { get; set; }
 	public ParallelBuildConfig? ParallelBuild { get; set; }
+	public ulong PipelineId { get; set; }
 	
 	/// <summary>
 	/// BuildId, Config
@@ -25,8 +26,6 @@ public class OffloadServerPacket
 
 public class BuildPipeline
 {
-	public static BuildPipeline? Current { get; private set; }
-
 	public delegate void OffloadBuildReqPacket(OffloadServerPacket packet);
 	public delegate string? ExtraHookLogs();
 	public delegate Task DeployDelegate(BuildPipeline pipeline);
@@ -34,9 +33,11 @@ public class BuildPipeline
 	public event OffloadBuildReqPacket OffloadBuildNeeded;
 	public event ExtraHookLogs GetExtraHookLogs;
 	public event DeployDelegate DeployEvent;
-
+	
+	public readonly ulong Id;
 	private readonly Args _args;
 	private readonly string? _offloadUrl;
+	private readonly bool _offloadParallel;
 	private readonly List<UnityTarget> _offloadTargets;
 
 	public Workspace Workspace { get; }
@@ -58,14 +59,16 @@ public class BuildPipeline
 	/// </summary>
 	private readonly List<string> _buildIds = new();
 
-	public BuildPipeline(Workspace workspace, string[]? args, string? offloadUrl, List<UnityTarget>? offloadTargets)
+
+	public BuildPipeline(ulong id, Workspace workspace, string[]? args, string? offloadUrl, bool offloadParallel, List<UnityTarget>? offloadTargets)
 	{
+		Id = id;
 		Workspace = workspace;
 		_args = new Args(args);
 		_offloadUrl = offloadUrl;
+		_offloadParallel = offloadParallel;
 		_offloadTargets = offloadTargets ?? new List<UnityTarget>();
 		Environment.CurrentDirectory = workspace.Directory;
-		Current = this;
 	}
 	
 	#region Build Steps
@@ -89,7 +92,6 @@ public class BuildPipeline
 			SendErrorHook(e);
 		}
 		
-		Current = null;
 		return false;
 	}
 
@@ -164,7 +166,7 @@ public class BuildPipeline
 					ChangesetId = _currentChangeSetId,
 					BuildVersion = _buildVersion,
 					CleanBuild = _args.IsFlag("-cleanbuild"),
-					ParallelBuild = Config.ParallelBuild,
+					ParallelBuild = _offloadParallel ? Config.ParallelBuild : null,
 					Builds = new Dictionary<string, TargetConfig>()
 				};
 				
