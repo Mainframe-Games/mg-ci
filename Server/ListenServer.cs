@@ -91,7 +91,7 @@ public class ListenServer
 			"GET" => await HandleGet(request),
 			"POST" => await HandlePost(request),
 			"PUT" => await HandlePut(request),
-			_ => throw new WebException($"HttpMethod not supported: {request.HttpMethod}")
+			_ => new ServerResponse(HttpStatusCode.MethodNotAllowed, $"HttpMethod not supported: {request.HttpMethod}")
 		};
 
 		Respond(context, response);
@@ -157,7 +157,7 @@ public class ListenServer
 			var response = context.Response;
 			response.StatusCode = (int)serverResponse.StatusCode;
 			response.ContentType = "application/json";
-			var resJson = JsonConvert.SerializeObject(serverResponse);
+			var resJson = Json.Serialise(serverResponse);
 			var bytes = Encoding.UTF8.GetBytes(resJson);
 			response.OutputStream.Write(bytes);
 			response.OutputStream.Close();

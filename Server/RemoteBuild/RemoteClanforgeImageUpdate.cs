@@ -1,7 +1,6 @@
 using Deployment.Configs;
 using Deployment.Deployments;
 using Deployment.Server;
-using Server.Configs;
 using SharedLib;
 using SharedLib.Webhooks;
 
@@ -11,6 +10,7 @@ public class RemoteClanforgeImageUpdate : IRemoteControllable
 {
 	public ClanforgeConfig? Config { get; set; }
 	public string? Desc { get; set; }
+	public HooksConfig[]? Hooks { get; set; }
 
 	public ServerResponse Process()
 	{
@@ -32,12 +32,12 @@ public class RemoteClanforgeImageUpdate : IRemoteControllable
 		}
 	}
 
-	private static void SendHook(string? header, string? message, bool isError = false)
+	private void SendHook(string? header, string? message, bool isError = false)
 	{
-		if (ServerConfig.Instance.Hooks == null)
+		if (Hooks == null)
 			return;
 
-		foreach (var hook in ServerConfig.Instance.Hooks)
+		foreach (var hook in Hooks)
 		{
 			if (hook.IsDiscord())
 				Discord.PostMessage(hook.Url, message, hook.Title, header, isError ? Discord.Colour.RED : Discord.Colour.GREEN);
