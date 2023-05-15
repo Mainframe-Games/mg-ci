@@ -20,44 +20,21 @@ public class PreBuild
 			throw new NullReferenceException("Config con not be null");
 		if (config.Versions == null)
 			throw new NullReferenceException("Config.Versions con not be null");
-		
-		string? bundleVersion = null;
-		
+
 		if (config.Versions.BundleVersion != null)
 		{
 			var verArr = _workspace.GetVersionArray();
-			bundleVersion = SetBundleVersion(verArr, config.BumpIndex);
+			verArr[config.BumpIndex]++;
+			BuildVersion.BundleVersion = string.Join(".", verArr);
 		}
 		
 		if (config.Versions.AndroidVersionCode != null)
 		{
 			var code = _workspace.GetAndroidBuildCode();
-			BundleAndroidBuildCode(code);
+			BuildVersion.AndroidVersionCode = (code + 1).ToString();
 		}
-		
+
 		if (config.Versions.BuildNumbers != null)
-			SetBuildVersionNumbers(config.Versions.BuildNumbers, bundleVersion);
-	}
-
-	private string SetBundleVersion(int[] verArr , int index)
-	{
-		verArr[index]++;
-		var newVersion = string.Join(".", verArr);
-		BuildVersion.BundleVersion = newVersion;
-		return newVersion;
-	}
-
-	private void BundleAndroidBuildCode(int oldCode)
-	{
-		var newCode = oldCode + 1;
-		BuildVersion.AndroidVersionCode = newCode.ToString();
-	}
-
-	private void SetBuildVersionNumbers(IEnumerable<string>? buildNumbers, string? bundleVersion)
-	{
-		BuildVersion.BuildNumbers ??= new();
-
-		foreach (var buildNumber in buildNumbers)
-			BuildVersion.BuildNumbers[buildNumber] = bundleVersion;
+			BuildVersion.BuildNumbers = config.Versions.BuildNumbers;
 	}
 }

@@ -4,7 +4,7 @@ public class BuildVersions
 {
 	public string? BundleVersion { get; set; }
 	public string? AndroidVersionCode { get; set; }
-	public Dictionary<string, string>? BuildNumbers { get; set; }
+	public string[]? BuildNumbers { get; set; }
 }
 
 public class ProjectSettings : Yaml
@@ -25,7 +25,7 @@ public class ProjectSettings : Yaml
 
 		if (buildVersions.BuildNumbers != null)
 			foreach (var buildNumber in buildVersions.BuildNumbers)
-				WritePlatformBuildNumber(buildNumber.Key, buildNumber.Value);
+				WritePlatformBuildNumber(buildNumber, buildVersions.BundleVersion);
 
 		if (!string.IsNullOrEmpty(buildVersions.AndroidVersionCode))
 			WriteAndroidBundleVersionCode(buildVersions.AndroidVersionCode);

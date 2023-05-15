@@ -63,11 +63,11 @@ public class Yaml
 			var propName = $"{propertyNames[index]}:";
 
 			// last index, return value
-			if (index == propertyNames.Length - 1 && _lines[i].Contains(propName))
+			if (index == propertyNames.Length - 1 && _lines[i].Contains(propName, StringComparison.OrdinalIgnoreCase))
 				return i;
 
 			// increase index when prop found
-			if (line.Contains(propName))
+			if (line.Contains(propName, StringComparison.OrdinalIgnoreCase))
 				index++;
 		}
 
