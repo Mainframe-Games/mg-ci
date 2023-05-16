@@ -78,7 +78,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		{
 			var targetPath = clone
 				? ClonesManager.GetTargetPath(workspace.Directory, config)
-				: config.BuildPath;
+				: workspace.Directory;
 			
 			// build 
 			var builder = new LocalUnityBuild(workspace.UnityVersion);
