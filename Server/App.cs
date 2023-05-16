@@ -99,70 +99,82 @@ public static class App
 	private static async Task BuildPipelineOnDeployEvent(BuildPipeline pipeline)
 	{
 		var buildVersionTitle = pipeline.BuildVersionTitle;
-		
-		// steam
-		if (pipeline.Config.Deploy.Steam != null)
-		{
-			foreach (var vdfPath in pipeline.Config.Deploy.Steam)
-			{
-				var path = Config.Steam.Path;
-				var password = Config.Steam.Password;
-				var username = Config.Steam.Username;
-				var steam = new SteamDeploy(vdfPath, password, username, path);
-				steam.Deploy(buildVersionTitle);
-			}
-		}
-		
-		// google store
-		if (pipeline.Config.Deploy.GoogleStore != null)
-		{
-			var packageName = pipeline.Workspace.ProjectSettings.GetValue<string>("applicationIdentifier.Android");
-			var changeLogArr = pipeline.GetChangeLog();
-			var changeLog = string.Join("\n", changeLogArr);
-			var androidBuild = pipeline.Config.GetBuildTarget(UnityTarget.Android);
-			var buildSettingsAsset = androidBuild.GetBuildSettingsAsset(pipeline.Workspace.BuildSettingsDirPath);
-			var productName = buildSettingsAsset.GetValue<string>("ProductName");
-			var buildPath = buildSettingsAsset.GetValue<string>("BuildPath");
-			var path = Path.Combine(buildPath, $"{productName}.aab");
-			var aabFile = new FileInfo(path);
+		DeploySteam(pipeline.Config.Deploy?.Steam, buildVersionTitle);
+		await DeployGoogle(pipeline, buildVersionTitle);
+		DeployApple(pipeline);
+		await DeployClanforge(pipeline, buildVersionTitle);
+	}
 
-			if (!aabFile.Exists)
-				throw new FileNotFoundException($"aab file not found: {path}");
-			
-			await GooglePlayDeploy.Deploy(
-				packageName,
-				aabFile.FullName,
-				Config.GoogleStore.CredentialsPath,
-				Config.GoogleStore.ServiceUsername,
-				buildVersionTitle,
-				changeLog);
-		}
+	private static async Task DeployClanforge(BuildPipeline pipeline, string buildVersionTitle)
+	{
+		if (pipeline.Config.Deploy?.Clanforge == false)
+			return;
 		
-		// apple store
-		if (pipeline.Config.Deploy.AppleStore == true)
-		{
-			var iosBuild = pipeline.Config.GetBuildTarget(UnityTarget.iOS);
-			var buildSettingsAsset = iosBuild.GetBuildSettingsAsset(pipeline.Workspace.BuildSettingsDirPath);
-			var productName = buildSettingsAsset.GetValue<string>("ProductName");
-			var buildPath = buildSettingsAsset.GetValue<string>("BuildPath");
-			var workingDir = Path.Combine(buildPath, productName);
-			var exportOptionPlist = $"{pipeline.Workspace.Directory}/BuildScripts/ios/exportOptions.plist";
+		var clanforge = new ClanForgeDeploy(Config.Clanforge, buildVersionTitle);
+		await clanforge.Deploy();
+	}
 
-			if (!File.Exists(exportOptionPlist))
-				throw new FileNotFoundException(exportOptionPlist);
-			
-			XcodeDeploy.Deploy(
-				workingDir,
-				Config.AppleStore.AppleId, 
-				Config.AppleStore.AppSpecificPassword,
-				exportOptionPlist);
-		}
+	private static void DeployApple(BuildPipeline pipeline)
+	{
+		if (pipeline.Config.Deploy?.AppleStore == false)
+			return;
+		
+		var iosBuild = pipeline.Config.GetBuildTarget(UnityTarget.iOS);
+		var buildSettingsAsset = iosBuild.GetBuildSettingsAsset(pipeline.Workspace.BuildSettingsDirPath);
+		var productName = buildSettingsAsset.GetValue<string>("ProductName");
+		var buildPath = buildSettingsAsset.GetValue<string>("BuildPath");
+		var workingDir = Path.Combine(buildPath, productName);
+		var exportOptionPlist = $"{pipeline.Workspace.Directory}/BuildScripts/ios/exportOptions.plist";
 
-		// clanforge
-		if (pipeline.Config.Deploy.Clanforge == true)
+		if (!File.Exists(exportOptionPlist))
+			throw new FileNotFoundException(exportOptionPlist);
+
+		XcodeDeploy.Deploy(
+			workingDir,
+			Config.AppleStore.AppleId,
+			Config.AppleStore.AppSpecificPassword,
+			exportOptionPlist);
+	}
+
+	private static async Task DeployGoogle(BuildPipeline pipeline, string buildVersionTitle)
+	{
+		if (pipeline.Config.Deploy?.GoogleStore == null)
+			return;
+		
+		var packageName = pipeline.Workspace.ProjectSettings.GetValue<string>("applicationIdentifier.Android");
+		var changeLogArr = pipeline.GetChangeLog();
+		var changeLog = string.Join("\n", changeLogArr);
+		var androidBuild = pipeline.Config.GetBuildTarget(UnityTarget.Android);
+		var buildSettingsAsset = androidBuild.GetBuildSettingsAsset(pipeline.Workspace.BuildSettingsDirPath);
+		var productName = buildSettingsAsset.GetValue<string>("ProductName");
+		var buildPath = buildSettingsAsset.GetValue<string>("BuildPath");
+		var path = Path.Combine(buildPath, $"{productName}.aab");
+		var aabFile = new FileInfo(path);
+
+		if (!aabFile.Exists)
+			throw new FileNotFoundException($"aab file not found: {path}");
+
+		await GooglePlayDeploy.Deploy(
+			packageName,
+			aabFile.FullName,
+			Config.GoogleStore.CredentialsPath,
+			Config.GoogleStore.ServiceUsername,
+			buildVersionTitle,
+			changeLog);
+	}
+
+	private static void DeploySteam(string[]? deploySteam, string buildVersionTitle)
+	{
+		if (deploySteam == null)
+			return;
+		
+		foreach (var vdfPath in deploySteam)
 		{
-			var clanforge = new ClanForgeDeploy(Config.Clanforge, buildVersionTitle);
-			await clanforge.Deploy();
+			var path = Config.Steam.Path;
+			var password = Config.Steam.Password;
+			var username = Config.Steam.Username;
+			var steam = new SteamDeploy(vdfPath, password, username, path);
+			steam.Deploy(buildVersionTitle);
 		}
 	}
 

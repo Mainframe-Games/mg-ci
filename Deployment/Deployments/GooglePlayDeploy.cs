@@ -14,6 +14,7 @@ public static class GooglePlayDeploy
 	/// <param name="aabfile"></param>
 	/// <param name="credfile"></param>
 	/// <param name="serviceUsername"></param>
+	/// <param name="buildVersionTitle"></param>
 	/// <param name="releaseNotes"></param>
 	public static async Task Deploy(
 		string packageName,
@@ -34,11 +35,16 @@ public static class GooglePlayDeploy
 		var oauthToken = await credentials.GetAccessTokenForRequestAsync(AndroidPublisherService.Scope.Androidpublisher);
 		var service = new AndroidPublisherService();
 
+		// --- Insert Track
+		
 		var edit = service.Edits.Insert(new AppEdit { ExpiryTimeSeconds = "3600" }, packageName);
 		edit.Credential = credentials;
 		var activeEditSession = await edit.ExecuteAsync();
 		Logger.Log($"[{nameof(GooglePlayDeploy)}] Edits started with id {activeEditSession.Id}");
 
+		
+		// --- List Tracks
+		
 		var tracksList = service.Edits.Tracks.List(packageName, activeEditSession.Id);
 		tracksList.Credential = credentials;
 		var tracksResponse = await tracksList.ExecuteAsync();
@@ -49,11 +55,13 @@ public static class GooglePlayDeploy
 			foreach (var rel in track.Releases)
 				Logger.Log($"\t{rel.Name} version: {rel.VersionCodes?.FirstOrDefault()} - Status: {rel.Status}");
 		}
-
-		await using var fileStream = File.OpenRead(aabfile);
+		
+		
+		// --- Upload aab file
 		
 		Logger.Log($"[{nameof(GooglePlayDeploy)}] Uploading bundle... {aabfile}");
 
+		await using var fileStream = File.OpenRead(aabfile);
 		var upload = service.Edits.Bundles.Upload(packageName, activeEditSession.Id, fileStream, "application/octet-stream");
 		upload.OauthToken = oauthToken;
 		var uploadProgress = await upload.UploadAsync();
@@ -63,6 +71,9 @@ public static class GooglePlayDeploy
 
 		Logger.Log($"[{nameof(GooglePlayDeploy)}] Upload {uploadProgress.Status}");
 
+		
+		// --- Update track
+		
 		// releaseNotes max is 500 (set by google)
 		if (releaseNotes.Length > 500)
 			releaseNotes = releaseNotes[..500];

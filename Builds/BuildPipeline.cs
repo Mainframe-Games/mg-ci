@@ -44,7 +44,7 @@ public class BuildPipeline
 	public BuildConfig Config { get; private set; }
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{DateTime.Now - StartTime:hh\\:mm\\:ss}";
-	public string BuildVersionTitle => $"Build Version: {_buildVersion.BundleVersion}";
+	public string BuildVersionTitle => $"Build Version: {_buildVersion?.BundleVersion}";
 
 	/// <summary>
 	/// The change set id that was current when build started
