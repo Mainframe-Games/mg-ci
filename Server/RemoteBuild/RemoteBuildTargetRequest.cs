@@ -51,14 +51,14 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 			await ClonesManager.CloneProject(workspace.Directory, Packet.ParallelBuild.Links, Packet.ParallelBuild.Copies, Packet.Builds.Values);
 			
 			Packet.Builds
-				.Select(x => Task.Run(() => StartBuilder(Packet.PipelineId, x.Key, x.Value, workspace)))
+				.Select(x => Task.Run(() => StartBuilder(Packet.PipelineId, x.Key, x.Value, workspace, true)))
 				.ToList()
 				.WaitForAll();
 		}
 		else
 		{
 			foreach (var build in Packet.Builds)
-				await StartBuilder(Packet.PipelineId, build.Key, build.Value, workspace);
+				await StartBuilder(Packet.PipelineId, build.Key, build.Value, workspace, false);
 		}
 		
 		// clean up after build
@@ -70,13 +70,15 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	/// Fire and forget method for starting a build
 	/// </summary>
 	/// <exception cref="WebException"></exception>
-	private async Task StartBuilder(ulong pipelineId, string buildId, TargetConfig config, Workspace workspace)
+	private async Task StartBuilder(ulong pipelineId, string buildId, TargetConfig config, Workspace workspace, bool clone)
 	{
 		var originalBuildPath = config.BuildPath;
 			
 		try
 		{
-			var targetPath = ClonesManager.GetTargetPath(workspace.Directory, config);
+			var targetPath = clone
+				? ClonesManager.GetTargetPath(workspace.Directory, config)
+				: config.BuildPath;
 			
 			// build 
 			var builder = new LocalUnityBuild(workspace.UnityVersion);
