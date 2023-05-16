@@ -247,7 +247,7 @@ public class BuildPipeline
 		// committing new version must be done after collecting changeLogs as the prev changesetid will be updated
 		Workspace.CommitNewVersionNumber(_currentChangeSetId, $"{BuildVersionTitle} | cs: {_currentChangeSetId} | guid: {_currentGuid}");
 		
-		if (Config.Hooks == null)
+		if (Config.Hooks == null || _args.IsFlag("-nohooks"))
 			return;
 
 		// optional message from clanforge
