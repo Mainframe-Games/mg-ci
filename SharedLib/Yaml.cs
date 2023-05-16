@@ -9,11 +9,11 @@ namespace SharedLib;
 /// </summary>
 public class Yaml
 {
-	protected readonly string? _path;
+	private readonly string? _path;
 	protected readonly string[] _lines;
 	private readonly JObject _jObject;
 
-	public Yaml(string? path, int skip = 3)
+	protected Yaml(string? path, int skip = 3)
 	{
 		var file = new FileInfo(path);
 		if (!file.Exists)
@@ -50,8 +50,13 @@ public class Yaml
 		var yaml = writer.ToString();
 		return yaml;
 	}
+	
+	protected void SaveToFile()
+	{
+		File.WriteAllText(_path, string.Join("\n", _lines));
+	}
 
-	public T GetValue<T>(string path)
+	public virtual T GetValue<T>(string path)
 	{
 		var token = _jObject.SelectToken(path, true);
 		return token.Value<T>() ?? default(T);

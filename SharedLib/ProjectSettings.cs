@@ -29,8 +29,13 @@ public class ProjectSettings : Yaml
 
 		if (!string.IsNullOrEmpty(buildVersions.AndroidVersionCode))
 			WriteAndroidBundleVersionCode(buildVersions.AndroidVersionCode);
-		
-		File.WriteAllText(_path, string.Join("\n", _lines));
+
+		SaveToFile();
+	}
+
+	public override T GetValue<T>(string path)
+	{
+		return base.GetValue<T>($"PlayerSettings.{path}");
 	}
 
 	private void WriteBundleVersion(string? newBundleVersion)
