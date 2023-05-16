@@ -1,6 +1,7 @@
 using Google.Apis.AndroidPublisher.v3;
 using Google.Apis.AndroidPublisher.v3.Data;
 using Google.Apis.Auth.OAuth2;
+using SharedLib;
 
 namespace Deployment.Deployments;
 
@@ -22,7 +23,7 @@ public static class GooglePlayDeploy
 		string buildVersionTitle,
 		string releaseNotes)
 	{
-		Console.WriteLine($"Using credentials {credfile} with package {packageName} for aab file {aabfile}");
+		Logger.Log($"Using credentials {credfile} with package {packageName} for aab file {aabfile}");
 
 		var keyDataStream = File.OpenRead(credfile);
 		var googleCredentials = GoogleCredential.FromStream(keyDataStream)
@@ -36,20 +37,22 @@ public static class GooglePlayDeploy
 		var edit = service.Edits.Insert(new AppEdit { ExpiryTimeSeconds = "3600" }, packageName);
 		edit.Credential = credentials;
 		var activeEditSession = await edit.ExecuteAsync();
-		Console.WriteLine($"[{nameof(GooglePlayDeploy)}] Edits started with id {activeEditSession.Id}");
+		Logger.Log($"[{nameof(GooglePlayDeploy)}] Edits started with id {activeEditSession.Id}");
 
 		var tracksList = service.Edits.Tracks.List(packageName, activeEditSession.Id);
 		tracksList.Credential = credentials;
 		var tracksResponse = await tracksList.ExecuteAsync();
 		foreach (var track in tracksResponse.Tracks)
 		{
-			Console.WriteLine($"[{nameof(GooglePlayDeploy)}] Track: {track.TrackValue}");
-			Console.WriteLine($"[{nameof(GooglePlayDeploy)}] Releases: ");
+			Logger.Log($"[{nameof(GooglePlayDeploy)}] Track: {track.TrackValue}");
+			Logger.Log($"[{nameof(GooglePlayDeploy)}] Releases: ");
 			foreach (var rel in track.Releases)
-				Console.WriteLine($"\t{rel.Name} version: {rel.VersionCodes?.FirstOrDefault()} - Status: {rel.Status}");
+				Logger.Log($"\t{rel.Name} version: {rel.VersionCodes?.FirstOrDefault()} - Status: {rel.Status}");
 		}
 
 		await using var fileStream = File.OpenRead(aabfile);
+		
+		Logger.Log($"[{nameof(GooglePlayDeploy)}] Uploading bundle... {aabfile}");
 
 		var upload = service.Edits.Bundles.Upload(packageName, activeEditSession.Id, fileStream, "application/octet-stream");
 		upload.OauthToken = oauthToken;
@@ -58,7 +61,7 @@ public static class GooglePlayDeploy
 		if (uploadProgress is not { Exception: null })
 			throw uploadProgress?.Exception ?? new Exception($"[{nameof(GooglePlayDeploy)}] Failed to upload");
 
-		Console.WriteLine($"[{nameof(GooglePlayDeploy)}] Upload {uploadProgress.Status}");
+		Logger.Log($"[{nameof(GooglePlayDeploy)}] Upload {uploadProgress.Status}");
 
 		// releaseNotes max is 500 (set by google)
 		if (releaseNotes.Length > 500)
@@ -71,7 +74,7 @@ public static class GooglePlayDeploy
 				new TrackRelease
 				{
 					Name = buildVersionTitle,
-					Status = "draft",
+					Status = "completed", // "draft"
 					InAppUpdatePriority = 5,
 					// CountryTargeting = new CountryTargeting { IncludeRestOfWorld = true },
 					ReleaseNotes = new List<LocalizedText>(new[] { new LocalizedText { Language = "en-US", Text = releaseNotes } }),
@@ -80,14 +83,18 @@ public static class GooglePlayDeploy
 			})
 		}, packageName, activeEditSession.Id, "internal");
 
+		Logger.Log($"[{nameof(GooglePlayDeploy)}] Uploading track... {tracksUpdate.Track}");
+
 		tracksUpdate.Credential = credentials;
 		var trackResult = await tracksUpdate.ExecuteAsync();
-		Console.WriteLine($"Track {trackResult?.TrackValue}");
+		Logger.Log($"Track {trackResult?.TrackValue}");
+
+		Logger.Log($"[{nameof(GooglePlayDeploy)}] Committing edit... {packageName}, {activeEditSession.Id}");
 
 		var commitResult = service.Edits.Commit(packageName, activeEditSession.Id);
 		commitResult.Credential = credentials;
 		await commitResult.ExecuteAsync();
 
-		Console.WriteLine($"[{nameof(GooglePlayDeploy)}] {commitResult.EditId} has been committed");
+		Logger.Log($"[{nameof(GooglePlayDeploy)}] {commitResult.EditId} has been committed");
 	}
 }
