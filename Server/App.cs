@@ -64,8 +64,10 @@ public static class App
 	
 	public static async Task RunBuildPipe(Workspace workspace, string[]? args)
 	{
-		var pipe = new BuildPipeline(NextPipelineId++, workspace, args, Config.OffloadServerUrl, Config.Offload.Parallel, Config.Offload.Targets);
-
+		var parallel = Config?.Offload?.Parallel ?? false;
+		var targets = Config?.Offload?.Targets ?? null;
+		
+		var pipe = new BuildPipeline(NextPipelineId++, workspace, args, Config?.OffloadServerUrl, parallel, targets);
 		Pipelines.Add(pipe.Id, pipe);
 		
 		pipe.OffloadBuildNeeded += SendRemoteBuildRequest;

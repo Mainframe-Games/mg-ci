@@ -13,7 +13,7 @@ public class Yaml
 	protected readonly string[] _lines;
 	private readonly JObject _jObject;
 
-	protected Yaml(string? path, int skip = 3)
+	public Yaml(string? path, int skip = 3)
 	{
 		var file = new FileInfo(path);
 		if (!file.Exists)
@@ -50,7 +50,12 @@ public class Yaml
 		var yaml = writer.ToString();
 		return yaml;
 	}
-	
+
+	public override string ToString()
+	{
+		return _jObject?.ToString() ?? string.Empty;
+	}
+
 	protected void SaveToFile()
 	{
 		File.WriteAllText(_path, string.Join("\n", _lines));
