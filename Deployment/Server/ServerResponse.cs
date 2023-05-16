@@ -13,11 +13,11 @@ public class ServerResponse
 
 	public ServerResponse() {}
 	
-	public ServerResponse(HttpStatusCode statusCode, string message)
+	public ServerResponse(HttpStatusCode statusCode, string? message)
 	{
 		StatusCode = statusCode;
 		Message = message;
 	}
 
-	public static readonly ServerResponse Default = new(HttpStatusCode.OK, "ok");
+	public static readonly ServerResponse Default = new();
 }
