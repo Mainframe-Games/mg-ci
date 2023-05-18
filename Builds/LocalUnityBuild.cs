@@ -1,4 +1,5 @@
-﻿using Deployment.Configs;
+﻿using System.Text;
+using Deployment.Configs;
 using SharedLib;
 
 namespace Deployment;
@@ -32,6 +33,7 @@ public class LocalUnityBuild
 	{
 		var logPath = $"{targetConfig.BuildPath}.log";
 		var errorPath = $"{targetConfig.BuildPath}_errors.log";
+		var buildReport = $"{targetConfig.BuildPath}_build_report.log";
 		
 		// delete error logs file
 		if (File.Exists(errorPath))
@@ -60,6 +62,7 @@ public class LocalUnityBuild
 		}
 		
 		Logger.LogTimeStamp($"Build Success! {targetConfig.Settings}, Build Time: ", buildStartTime);
+		WriteBuildReport(logPath, buildReport);
 	}
 
 	private static string BuildCliParams(TargetConfig targetConfig, string projectPath, string executeMethod, string logPath)
@@ -82,5 +85,25 @@ public class LocalUnityBuild
 		cliparams.Add($"-standaloneBuildSubtarget {subTarget}");
 
 		return string.Join(" ", cliparams);
+	}
+	
+	private static void WriteBuildReport(string filePath, string outputPath)
+	{
+		var lines = File.ReadAllLines(filePath);
+		var started = false;
+		var report = new StringBuilder(); 
+	
+		foreach (var line in lines)
+		{
+			if (!started && line == "Build Report")
+				started = true;
+			else if (started && line.Contains("----"))
+				break;
+
+			if (started)
+				report.AppendLine(line);
+		}
+	
+		File.WriteAllText(outputPath, report.ToString());
 	}
 }
