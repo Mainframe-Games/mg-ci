@@ -29,8 +29,6 @@ public class ProductionRequest : IRemoteControllable
 		if (clanforge == null)
 			return;
 
-		clanforge.IsProduction = true;
-		
 		// get highest build version
 		var pro = new RemoteClanforgeImageUpdate
 		{
@@ -39,9 +37,8 @@ public class ProductionRequest : IRemoteControllable
 				AccessKey = clanforge.AccessKey,
 				SecretKey = clanforge.SecretKey,
 				Asid = clanforge.Asid,
-				Url = clanforge.Url,
-				ImageIdProfileNames = clanforge.ImageIdProfileNames,
 				MachineId = clanforge.MachineId,
+				Profiles = clanforge.Profiles,
 				IsProduction = true
 			},
 			Desc = $"Build Version: {buildVersion}",

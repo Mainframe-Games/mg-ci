@@ -1,5 +1,4 @@
 using System.Text;
-using Newtonsoft.Json;
 
 namespace Deployment.Configs;
 
@@ -9,31 +8,49 @@ public class ClanforgeConfig
 	public string? SecretKey { get; set; }
 	public uint Asid { get; set; }
 	public uint MachineId { get; set; }
-	public string? Url { get; set; }
 	public bool IsProduction { get; set; }
-	public Dictionary<string, string>? ImageIdProfileNames { get; set; }
+	public Dictionary<string, ClanforgeProfile> Profiles { get; set; }
 
-	[JsonIgnore] private string Tag => IsProduction ? "Production" : "Development";
+	private ClanforgeProfile GetProfile()
+	{
+		var profile = IsProduction ? "production" : "development";
+		
+		if (Profiles.TryGetValue(profile, out var p))
+			return p;
+
+		throw new KeyNotFoundException($"Profile not found: {profile}");
+	}
 
 	public string BuildHookMessage(string status)
 	{
 		var str = new StringBuilder();
+		var profile = GetProfile();
 		
-		foreach (var (imageId, profileName) in ImageIdProfileNames)
-		{
-			if (profileName.Contains(Tag))
-				str.AppendLine($"Game Image {status}: {profileName} ({imageId})");
-		}
+		foreach (var image in profile.Images)
+			str.AppendLine($"Game Image {status}: {image.Name} ({image.Id})");
 		
 		return str.ToString();
 	}
 
-	public IEnumerable<uint> GetImageIds()
+	public IEnumerable<uint>? GetImageIds()
 	{
-		foreach (var (imageId, profileName) in ImageIdProfileNames)
-		{
-			if (profileName.Contains(Tag))
-				yield return uint.Parse(imageId);
-		}
+		return GetProfile().Images?.Select(x => x.Id);
 	}
+
+	public string? GetUrl()
+	{
+		return GetProfile().Url;
+	}
+}
+
+public class ClanforgeProfile
+{
+	public string? Url { get; set; }
+	public ClanforgeImage[]? Images { get; set; }
+}
+
+public class ClanforgeImage
+{
+	public uint Id { get; set; }
+	public string? Name;
 }

@@ -1,6 +1,7 @@
 using Deployment.Configs;
 using Deployment.Deployments;
 using Deployment.Server;
+using Server.Configs;
 using SharedLib;
 using SharedLib.Webhooks;
 
@@ -25,6 +26,7 @@ public class RemoteClanforgeImageUpdate : IRemoteControllable
 			var clanforge = new ClanForgeDeploy(Config, Desc);
 			await clanforge.Deploy();
 			SendHook(Desc, Config?.BuildHookMessage("Updated"));
+			Logger.Log("ClanForgeDeploy complete");
 		}
 		catch (Exception e)
 		{
@@ -34,6 +36,8 @@ public class RemoteClanforgeImageUpdate : IRemoteControllable
 
 	private void SendHook(string? header, string? message, bool isError = false)
 	{
+		Hooks ??= ServerConfig.Instance.Hooks;
+	
 		if (Hooks == null)
 			return;
 

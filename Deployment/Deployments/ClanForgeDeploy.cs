@@ -31,8 +31,8 @@ public class ClanForgeDeploy
 		AuthToken = $"Basic {Base64Key.Generate(clanforgeConfig.AccessKey, clanforgeConfig.SecretKey)}";
 		ASID = clanforgeConfig.Asid;
 		MachineId = clanforgeConfig.MachineId;
-		ImageIds = clanforgeConfig.GetImageIds().ToArray();
-		Url = Uri.EscapeDataString(clanforgeConfig.Url ?? string.Empty);
+		ImageIds = clanforgeConfig.GetImageIds()?.ToArray() ?? Array.Empty<uint>();
+		Url = Uri.EscapeDataString(clanforgeConfig.GetUrl() ?? string.Empty);
 		Desc = desc ?? string.Empty;
 	}
 
