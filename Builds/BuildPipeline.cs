@@ -122,8 +122,7 @@ public class BuildPipeline
 		preBuild.Run(Config.PreBuild);
 		
 		// write to disk
-		var writer = new ProjectSettings(Workspace.ProjectSettingsPath);
-		writer.ReplaceVersions(preBuild.BuildVersion);
+		Workspace.ProjectSettings.ReplaceVersions(preBuild.BuildVersion);
 		
 		_buildVersion = preBuild.BuildVersion;
 		await Task.CompletedTask;

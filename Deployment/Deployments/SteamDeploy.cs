@@ -30,7 +30,7 @@ public class SteamDeploy
 		args.Append($" +run_app_build \"{vdfPath}\"");
 		args.Append(" +quit");
 		
-		var (code, output) = Cmd.Run(_path, args.ToString());
+		var (code, output) = Cmd.Run(_path, args.ToString(), false);
 		
 		if (output.Contains("FAILED", StringComparison.OrdinalIgnoreCase))
 			throw new Exception($"Steam upload failed ({code}): {output}");

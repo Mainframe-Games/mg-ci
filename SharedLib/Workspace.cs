@@ -7,7 +7,7 @@ public class Workspace
 	public string? Name { get; }
 	public string? Directory { get; }
 	public string? UnityVersion { get; private set; }
-	public ProjectSettings ProjectSettings { get; }
+	public ProjectSettings ProjectSettings { get; private set; }
 
 	[JsonIgnore] public string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", "ProjectSettings.asset");
 	[JsonIgnore] private string PrevChangesetIdPath => Path.Combine(Directory, "BuildScripts", "previous-changesetId.txt");
@@ -28,7 +28,7 @@ public class Workspace
 	
 	public static List<Workspace> GetAvailableWorkspaces()
 	{
-		var (exitCode, output) = Cmd.Run("cm", "workspace", false);
+		var (exitCode, output) = Cmd.Run("cm", "workspace", logOutput: false);
 
 		if (exitCode != 0)
 			throw new Exception(output);
@@ -51,7 +51,7 @@ public class Workspace
 
 	public static Workspace AskWorkspace()
 	{
-		var (exitCode, output) = Cmd.Run("cm", "workspace", false);
+		var (exitCode, output) = Cmd.Run("cm", "workspace", logOutput: false);
 
 		if (exitCode != 0)
 			throw new Exception(output);
@@ -115,6 +115,7 @@ public class Workspace
 	{
 		Cmd.Run("cm", $"unco -a \"{Directory}\"");
 		UnityVersion = GetUnityVersion(Directory);
+		ProjectSettings = new ProjectSettings(ProjectSettingsPath);
 	}
 
 	/// <summary>
@@ -160,7 +161,11 @@ public class Workspace
 	{
 		var currentDir = Environment.CurrentDirectory;
 		Environment.CurrentDirectory = Directory;
-		var cmdRes = Cmd.Run("cm", "find changeset \"where branch='main'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid} {guid}\" --nototal", false);
+		
+		var cmdRes = Cmd.Run(
+			"cm", "find changeset \"where branch='main'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid} {guid}\" --nototal",
+			logOutput: false);
+		
 		Environment.CurrentDirectory = currentDir;
 
 		var split = cmdRes.output.Split(' ');

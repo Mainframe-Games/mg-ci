@@ -1,6 +1,7 @@
 using Google.Apis.AndroidPublisher.v3;
 using Google.Apis.AndroidPublisher.v3.Data;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Http;
 using SharedLib;
 
 namespace Deployment.Deployments;
@@ -85,7 +86,7 @@ public static class GooglePlayDeploy
 				new TrackRelease
 				{
 					Name = buildVersionTitle,
-					Status = "completed", // "draft"
+					Status = "draft",
 					InAppUpdatePriority = 5,
 					// CountryTargeting = new CountryTargeting { IncludeRestOfWorld = true },
 					ReleaseNotes = new List<LocalizedText>(new[] { new LocalizedText { Language = "en-US", Text = releaseNotes } }),
@@ -107,5 +108,36 @@ public static class GooglePlayDeploy
 		await commitResult.ExecuteAsync();
 
 		Logger.Log($"[{nameof(GooglePlayDeploy)}] {commitResult.EditId} has been committed");
+		
+		try
+		{
+			// update to completed
+			await UpdateTrackToCompleted(service, packageName, activeEditSession, credentials);
+		}
+		catch (Exception e)
+		{
+			Logger.Log(e);
+		}
+	}
+
+	private static async Task UpdateTrackToCompleted(
+		AndroidPublisherService service, 
+		string packageName, 
+		AppEdit activeEditSession,
+		IHttpExecuteInterceptor credentials)
+	{
+		var tracksUpdate = service.Edits.Tracks.Update(new Track
+		{
+			Releases = new List<TrackRelease>(new[]
+			{
+				new TrackRelease { Status = "completed" }
+			})
+		}, packageName, activeEditSession.Id, "internal");
+		
+		Logger.Log($"[{nameof(GooglePlayDeploy)}] Uploading track to completed... {tracksUpdate.Track}");
+		tracksUpdate.Credential = credentials;
+		var trackResult = await tracksUpdate.ExecuteAsync();
+		
+		Logger.Log($"Track {trackResult?.TrackValue}");
 	}
 }

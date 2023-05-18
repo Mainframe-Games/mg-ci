@@ -5,7 +5,7 @@ namespace SharedLib;
 
 public static class Cmd
 {
-	public static (int exitCode, string output) Run(string fileName, string ags, bool logOutput = true)
+	public static (int exitCode, string output) Run(string fileName, string ags, bool redirectOutput = true, bool logOutput = true)
 	{
 		if (logOutput)
 			Logger.Log($"[CMD] {fileName} {ags}");
@@ -15,8 +15,8 @@ public static class Cmd
 			var procStartInfo = new ProcessStartInfo(fileName)
 			{
 				RedirectStandardError = true,
-				RedirectStandardOutput = true,
-				RedirectStandardInput = true,
+				RedirectStandardOutput = redirectOutput,
+				// RedirectStandardInput = true,
 				UseShellExecute = false,
 				CreateNoWindow = true,
 				WorkingDirectory = Environment.CurrentDirectory,
@@ -25,9 +25,14 @@ public static class Cmd
 
 			var proc = Process.Start(procStartInfo);
 			var sb = new StringBuilder();
-			proc.OutputDataReceived += (_, e) => { Write(sb, e.Data, logOutput); };
 			proc.ErrorDataReceived += (_, e) => { Write(sb, e.Data, logOutput); };
-			proc.BeginOutputReadLine();
+			
+			if (procStartInfo.RedirectStandardOutput)
+			{
+				proc.OutputDataReceived += (_, e) => { Write(sb, e.Data, logOutput); };
+				proc.BeginOutputReadLine();
+			}
+			
 			proc.BeginErrorReadLine();
 			proc.WaitForExit();
 			var code = proc.ExitCode;
