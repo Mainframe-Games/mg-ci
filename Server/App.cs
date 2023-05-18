@@ -107,7 +107,7 @@ public static class App
 
 	private static async Task DeployClanforge(BuildPipeline pipeline, string buildVersionTitle)
 	{
-		if (pipeline.Config.Deploy?.Clanforge == false)
+		if (pipeline.Config.Deploy == null || pipeline.Config.Deploy.Clanforge == false)
 			return;
 		
 		var clanforge = new ClanForgeDeploy(Config.Clanforge, buildVersionTitle);
@@ -116,7 +116,7 @@ public static class App
 
 	private static void DeployApple(BuildPipeline pipeline)
 	{
-		if (pipeline.Config.Deploy?.AppleStore == false)
+		if (pipeline.Config.Deploy == null || pipeline.Config.Deploy.AppleStore == false)
 			return;
 		
 		var iosBuild = pipeline.Config.GetBuildTarget(UnityTarget.iOS);
