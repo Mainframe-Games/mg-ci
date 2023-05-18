@@ -80,6 +80,7 @@ public static class ClonesManager
 						{
 							// Skip Library if already exists to speed up process.
 							case "Library":
+								DeleteSubDirectories(destination, "PackageCache");
 								return;
 							
 							// Need to clear out Assets folder first as there could be deleted files that will cause compile issues
@@ -100,6 +101,18 @@ public static class ClonesManager
 		Console.WriteLine();
 		Logger.LogTimeStamp("Copying complete", sw);
 		sw.Stop();
+	}
+
+	private static void DeleteSubDirectories(DirectoryInfo rootDir, params string[] directoryNames)
+	{
+		foreach (var subDir in rootDir.GetDirectories())
+		{
+			foreach (var directoryName in directoryNames)
+			{
+				if (directoryName == subDir.Name)
+					subDir.Delete(true);
+			}
+		}
 	}
 
 	private static long GetTotalBytesToCopy(IEnumerable<DirectoryInfo> sources)
