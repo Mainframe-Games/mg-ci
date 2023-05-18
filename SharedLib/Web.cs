@@ -51,7 +51,7 @@ public static class Web
 		
 		using var res = await client.SendAsync(msg);
 		
-		if (res.StatusCode != HttpStatusCode.OK)
+		if (!res.IsSuccessStatusCode)
 			throw new WebException($"Failed with code: {res.StatusCode}. Reason: {res.ReasonPhrase}");
 		
 		return await GetSuccess(res);
