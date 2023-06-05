@@ -23,14 +23,27 @@ public class AmazonS3Deploy
 		var s3Client = new AmazonS3Client(credentials, RegionEndpoint.APSoutheast2);
 		var fileTransferUtility = new TransferUtility(s3Client);
 
-		var files = Directory.GetFiles(rootDirPath, "*.*", SearchOption.AllDirectories);
+
+		var dir = new DirectoryInfo(rootDirPath);
+		var files = dir.GetFiles();
+		var subDirs = dir.GetDirectories();
 
 		foreach (var file in files)
 		{
-			var info = new FileInfo(file);
-			var path = info.FullName;
-			var key = info.Name;
+			var path = file.FullName;
+			var key = file.Name;
+			if (key == ".DS_Store")
+				continue;
+			
+			Logger.Log($"[S3] Uploading File: {file.Name}");
 			await fileTransferUtility.UploadAsync(path, bucketName, key);
+		}
+
+		foreach (var subDir in subDirs)
+		{
+			Logger.Log($"[S3] Uploading Dir: {subDir.Name}");
+			await fileTransferUtility.UploadDirectoryAsync(subDir.FullName, $"{bucketName}/{subDir.Name}");
+
 		}
 		
 		Logger.Log($"AmazonS3 bucket: {bucketName} COMPLETED");
