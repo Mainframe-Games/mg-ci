@@ -2,6 +2,7 @@ using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Transfer;
+using SharedLib;
 
 namespace Deployment.Deployments;
 
@@ -22,5 +23,6 @@ public class AmazonS3Deploy
 		var s3Client = new AmazonS3Client(credentials, RegionEndpoint.APSoutheast2);
 		var fileTransferUtility = new TransferUtility(s3Client);
 		await fileTransferUtility.UploadDirectoryAsync(rootDirPath, bucketName);
+		Logger.Log($"AmazonS3 bucket: {bucketName} COMPLETED");
 	}
 }

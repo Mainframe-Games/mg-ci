@@ -37,6 +37,8 @@ public static class XcodeDeploy
 		XcRun($"altool --upload-app -f \"{exportPath}/{ipaName}\" -t ios -u {appleId} -p {appSpecificPassword}");
 
 		Environment.CurrentDirectory = originalDir;
+		
+		Logger.Log("Xcode Deploy COMPLETED");
 	}
 
 	private static void Xcodebuild(string args)
