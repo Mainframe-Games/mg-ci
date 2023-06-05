@@ -22,7 +22,17 @@ public class AmazonS3Deploy
 		var credentials = new BasicAWSCredentials(_accessKey, _secretKey);
 		var s3Client = new AmazonS3Client(credentials, RegionEndpoint.APSoutheast2);
 		var fileTransferUtility = new TransferUtility(s3Client);
-		await fileTransferUtility.UploadDirectoryAsync(rootDirPath, bucketName);
+
+		var files = Directory.GetFiles(rootDirPath, "*.*", SearchOption.AllDirectories);
+
+		foreach (var file in files)
+		{
+			var info = new FileInfo(file);
+			var path = info.FullName;
+			var key = info.Name;
+			await fileTransferUtility.UploadAsync(path, bucketName, key);
+		}
+		
 		Logger.Log($"AmazonS3 bucket: {bucketName} COMPLETED");
 	}
 }
