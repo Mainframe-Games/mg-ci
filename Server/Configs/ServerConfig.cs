@@ -18,6 +18,7 @@ internal class ServerConfig
 	public HooksConfig[]? Hooks { get; set; }
 	public UnityServicesConfig? UnityServices { get; set; }
 	public SteamServerConfig? Steam { get; set; }
+	public AmazonS3Config? S3 { get; set; }
 	public ClanforgeConfig? Clanforge { get; set; }
 	public XcodeConfig? AppleStore { get; set; }
 	public GooglePlayConfig? GoogleStore { get; set; }

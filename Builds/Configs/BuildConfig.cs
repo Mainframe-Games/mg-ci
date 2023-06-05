@@ -29,12 +29,17 @@ public class BuildConfig
 		return configClass;
 	}
 
-	public TargetConfig GetBuildTarget(UnityTarget target)
+	public TargetConfig GetBuildTarget(UnityTarget target, bool isServer = false)
 	{
 		foreach (var build in Builds)
 		{
-			if (build.Target == target)
-				return build;
+			if (build.Target != target)
+				continue;
+			
+			if (isServer && !build.Settings.Contains("Server", StringComparison.OrdinalIgnoreCase))
+				continue;
+				
+			return build;
 		}
 
 		throw new Exception($"Target not found: {target}");

@@ -12,7 +12,6 @@ public static class App
 	private static string? RootDirectory { get; set; }
 	private static ListenServer? Server { get; set; }
 	private static ServerConfig? Config { get; set; }
-	
 	private static bool IsLocal { get; set; }
 
 	public static ulong NextPipelineId { get; private set; }
@@ -99,10 +98,21 @@ public static class App
 	private static async Task BuildPipelineOnDeployEvent(BuildPipeline pipeline)
 	{
 		var buildVersionTitle = pipeline.BuildVersionTitle;
+		await DeployToS3Bucket(pipeline);
 		DeploySteam(pipeline.Config.Deploy?.Steam, buildVersionTitle);
 		await DeployGoogle(pipeline, buildVersionTitle);
 		DeployApple(pipeline);
 		await DeployClanforge(pipeline, buildVersionTitle);
+	}
+
+	private static async Task DeployToS3Bucket(BuildPipeline pipeline)
+	{
+		if (Config?.S3 == null)
+			return;
+		
+		var pathToBuild = pipeline.Config.GetBuildTarget(UnityTarget.Linux64, true).BuildPath;
+		var s3 = new AmazonS3Deploy(Config.S3.AccessKey, Config.S3.SecretKey);
+		await s3.DeployAsync(pathToBuild, Config.S3.BucketName);
 	}
 
 	private static async Task DeployClanforge(BuildPipeline pipeline, string buildVersionTitle)
