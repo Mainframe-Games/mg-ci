@@ -9,7 +9,7 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 {
 	public string? WorkspaceName { get; set; }
 	public string? BranchPath { get; set; } = "main";
-	public string[]? Args { get; set; }
+	public string? Args { get; set; }
 	
 	public ServerResponse Process()
 	{
@@ -20,7 +20,8 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 		workspace.Update();
 		workspace.SwitchBranch(BranchPath);
 
-		App.RunBuildPipe(workspace, Args).FireAndForget();
+		var argsArray = Args?.Split(' ');
+		App.RunBuildPipe(workspace, argsArray).FireAndForget();
 		workspace.GetCurrent(out var changeSetId, out var guid);
 
 		return new ServerResponse

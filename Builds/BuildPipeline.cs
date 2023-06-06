@@ -35,12 +35,12 @@ public class BuildPipeline
 	public event DeployDelegate DeployEvent;
 	
 	public readonly ulong Id;
-	private readonly Args _args;
 	private readonly string? _offloadUrl;
 	private readonly bool _offloadParallel;
 	private readonly List<UnityTarget> _offloadTargets;
 
 	public Workspace Workspace { get; }
+	public Args Args { get; private set; }
 	public BuildConfig Config { get; private set; }
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{DateTime.Now - StartTime:hh\\:mm\\:ss}";
@@ -64,7 +64,7 @@ public class BuildPipeline
 	{
 		Id = id;
 		Workspace = workspace;
-		_args = new Args(args);
+		Args = new Args(args);
 		_offloadUrl = offloadUrl;
 		_offloadParallel = offloadParallel;
 		_offloadTargets = offloadTargets ?? new List<UnityTarget>();
@@ -99,16 +99,16 @@ public class BuildPipeline
 	{
 		Config = BuildConfig.GetConfig(Workspace.Directory); // need to get config even if -noprebuild flag
 		
-		if (_args.IsFlag("-noprebuild"))
+		if (Args.IsFlag("-noprebuild"))
 			return;
 
 		Logger.Log("PreBuild process started...");
 
-		if (_args.IsFlag("-cleanbuild"))
+		if (Args.IsFlag("-cleanbuild"))
 			Workspace.CleanBuild();
 		
 		Workspace.Clear();
-		_args.TryGetArg("-changeSetId", 0, out int id);
+		Args.TryGetArg("-changeSetId", 0, out int id);
 		Workspace.Update(id);
 
 		Workspace.GetCurrent(out _currentChangeSetId, out _currentGuid);
@@ -130,7 +130,7 @@ public class BuildPipeline
 	
 	private async Task Build()
 	{
-		if (_args.IsFlag("-nobuild"))
+		if (Args.IsFlag("-nobuild"))
 			return;
 		
 		if (Config?.Builds == null)
@@ -164,7 +164,7 @@ public class BuildPipeline
 					WorkspaceName = Workspace.Name,
 					ChangesetId = _currentChangeSetId,
 					BuildVersion = _buildVersion,
-					CleanBuild = _args.IsFlag("-cleanbuild"),
+					CleanBuild = Args.IsFlag("-cleanbuild"),
 					ParallelBuild = _offloadParallel ? Config.ParallelBuild : null,
 					Builds = new Dictionary<string, TargetConfig>()
 				};
@@ -215,7 +215,7 @@ public class BuildPipeline
 
 	private async Task DeployAsync()
 	{
-		if (_args.IsFlag("-nodeploy"))
+		if (Args.IsFlag("-nodeploy"))
 			return;
 		
 		if (Config.Deploy == null)
@@ -235,7 +235,7 @@ public class BuildPipeline
 	
 	private async Task PostBuild()
 	{
-		if (_args.IsFlag("-nopostbuild"))
+		if (Args.IsFlag("-nopostbuild"))
 			return;
 
 		Logger.Log("PostBuild process started...");
@@ -246,7 +246,7 @@ public class BuildPipeline
 		// committing new version must be done after collecting changeLogs as the prev changesetid will be updated
 		Workspace.CommitNewVersionNumber(_currentChangeSetId, $"{BuildVersionTitle} | cs: {_currentChangeSetId} | guid: {_currentGuid}");
 		
-		if (Config.Hooks == null || _args.IsFlag("-nohooks"))
+		if (Config.Hooks == null || Args.IsFlag("-nohooks"))
 			return;
 
 		// optional message from clanforge

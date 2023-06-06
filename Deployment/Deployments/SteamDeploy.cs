@@ -18,10 +18,10 @@ public class SteamDeploy
 		_path = path;
 	}
 
-	public void Deploy(string description)
+	public void Deploy(string description, string setLive)
 	{
 		var vdfPath = Path.Combine(Environment.CurrentDirectory, _vdfPath);
-		SetVdfProperties(vdfPath, ("Desc", description));
+		SetVdfProperties(vdfPath, ("Desc", description), ("SetLive", setLive));
 
 		var args = new StringBuilder();
 		args.Append("+login");
@@ -45,6 +45,9 @@ public class SteamDeploy
 
 		foreach ((string key, string value) in values)
 		{
+			if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
+				continue;
+			
 			foreach (var line in vdfLines)
 			{
 				if (!line.Contains($"\"{key}\""))

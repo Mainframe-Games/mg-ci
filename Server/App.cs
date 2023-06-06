@@ -99,7 +99,7 @@ public static class App
 	{
 		var buildVersionTitle = pipeline.BuildVersionTitle;
 		await DeployToS3Bucket(pipeline);
-		DeploySteam(pipeline.Config.Deploy?.Steam, buildVersionTitle);
+		DeploySteam(pipeline, buildVersionTitle);
 		await DeployGoogle(pipeline, buildVersionTitle);
 		DeployApple(pipeline);
 		await DeployClanforge(pipeline, buildVersionTitle);
@@ -174,18 +174,21 @@ public static class App
 			changeLog);
 	}
 
-	private static void DeploySteam(string[]? deploySteam, string buildVersionTitle)
+	private static void DeploySteam(BuildPipeline pipeline, string buildVersionTitle)
 	{
-		if (deploySteam == null)
+		var vdfPaths = pipeline.Config.Deploy?.Steam;
+		pipeline.Args.TryGetArg("-setlive", out var setLive);
+		
+		if (vdfPaths == null)
 			return;
 		
-		foreach (var vdfPath in deploySteam)
+		foreach (var vdfPath in vdfPaths)
 		{
 			var path = Config.Steam.Path;
 			var password = Config.Steam.Password;
 			var username = Config.Steam.Username;
 			var steam = new SteamDeploy(vdfPath, password, username, path);
-			steam.Deploy(buildVersionTitle);
+			steam.Deploy(buildVersionTitle, setLive);
 		}
 	}
 
