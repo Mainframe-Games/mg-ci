@@ -237,7 +237,9 @@ public class Workspace
 	
 	public void SwitchBranch(string? branchPath)
 	{
-		Cmd.Run("cm", $"switch {branchPath}");
+		var res = Cmd.Run("cm", $"switch {branchPath} --workspace=\"{Directory}\"");
+		if (res.exitCode != 0)
+			throw new Exception(res.output);
 		Branch = branchPath;
 	}
 }
