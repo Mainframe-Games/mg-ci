@@ -14,6 +14,7 @@ public class OffloadServerPacket
 	public string? WorkspaceName { get; set; }
 	public BuildVersions? BuildVersion { get; set; }
 	public int ChangesetId { get; set; }
+	public string? Branch { get; set; }
 	public bool CleanBuild { get; set; }
 	public ParallelBuildConfig? ParallelBuild { get; set; }
 	public ulong PipelineId { get; set; }
@@ -22,6 +23,7 @@ public class OffloadServerPacket
 	/// BuildId, Config
 	/// </summary>
 	public Dictionary<string, TargetConfig> Builds { get; set; }
+
 }
 
 public class BuildPipeline
@@ -145,17 +147,13 @@ public class BuildPipeline
 		Logger.Log("Build process started...");
 		var buildStartTime = DateTime.Now;
 		
-		var tasks = new List<Task>();
+		var parallelTasks = new List<Task>(); // for parallel builds
+		var localBuilds = new List<TargetConfig>(); // for sequential builds
 
 		OffloadServerPacket? offloadBuilds = null;
 
 		foreach (var build in Config.Builds)
 		{
-			var unity = new LocalUnityBuild(Workspace.UnityVersion);
-			
-			if (unity == null || Config?.Builds == null)
-				throw new NullReferenceException();
-			
 			// offload build
 			if (IsOffload(build))
 			{
@@ -165,6 +163,7 @@ public class BuildPipeline
 					ChangesetId = _currentChangeSetId,
 					BuildVersion = _buildVersion,
 					CleanBuild = Args.IsFlag("-cleanbuild"),
+					Branch = Workspace.Branch,
 					ParallelBuild = _offloadParallel ? Config.ParallelBuild : null,
 					Builds = new Dictionary<string, TargetConfig>()
 				};
@@ -180,23 +179,39 @@ public class BuildPipeline
 				{
 					build.BuildPath = Path.Combine(Workspace.Directory, build.BuildPath);
 					var targetPath = ClonesManager.GetTargetPath(Workspace.Directory, build);
+					var unity = new LocalUnityBuild(Workspace.UnityVersion);
 					var task = Task.Run(() => unity.Build(targetPath, build));
-					tasks.Add(task);
+					parallelTasks.Add(task);
 				}
 				else
 				{
-					unity.Build(Workspace.Directory, build);
+					localBuilds.Add(build);
 				}
 			}
 		}
 
-		// send offload builds
+		// send offload builds first
 		if (offloadBuilds != null)
 			OffloadBuildNeeded?.Invoke(offloadBuilds);
 
-		if (tasks.Count > 0)
-			tasks.WaitForAll();
+		// then wait for local builds
+		if (parallelTasks.Count > 0)
+		{
+			parallelTasks.WaitForAll();
+		}
+		else
+		{
+			// local sequential builds
+			// this needs to be after off loads event is invoked otherwise
+			// we'll just be idling doing nothing while offload builds could be running
+			foreach (var localBuild in localBuilds)
+			{
+				var unity = new LocalUnityBuild(Workspace.UnityVersion);
+				unity.Build(Workspace.Directory, localBuild);
+			}
+		}
 		
+		// wait for offload builds to complete
 		await WaitBuildIds();
 		Logger.LogTimeStamp("Build time", buildStartTime);
 	}

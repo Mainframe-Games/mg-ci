@@ -7,6 +7,7 @@ public class Workspace
 	public string? Name { get; }
 	public string? Directory { get; }
 	public string? UnityVersion { get; private set; }
+	public string? Branch { get; set; }
 	public ProjectSettings ProjectSettings { get; private set; }
 
 	[JsonIgnore] public string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", "ProjectSettings.asset");
@@ -237,5 +238,6 @@ public class Workspace
 	public void SwitchBranch(string? branchPath)
 	{
 		Cmd.Run("cm", $"switch {branchPath}");
+		Branch = branchPath;
 	}
 }

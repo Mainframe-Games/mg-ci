@@ -37,6 +37,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 			workspace.CleanBuild();
 		
 		workspace.Clear();
+		workspace.SwitchBranch(Packet.Branch);
 		workspace.Update(Packet.ChangesetId);
 
 		if (workspace.Directory == null || !Directory.Exists(workspace.Directory))
