@@ -1,4 +1,3 @@
-using Deployment.Configs;
 using Deployment.Server;
 using Deployment.Server.Unity;
 using Server.Configs;
@@ -24,25 +23,11 @@ public class ProductionRequest : IRemoteControllable
 
 	private void ClanforgeProcess(string buildVersion)
 	{
-		var clanforge = ServerConfig.Instance.Clanforge;
-		
-		if (clanforge == null)
-			return;
-
 		// get highest build version
 		var pro = new RemoteClanforgeImageUpdate
 		{
-			Config = new ClanforgeConfig
-			{
-				AccessKey = clanforge.AccessKey,
-				SecretKey = clanforge.SecretKey,
-				Asid = clanforge.Asid,
-				MachineId = clanforge.MachineId,
-				Profiles = clanforge.Profiles,
-				IsProduction = true
-			},
-			Desc = $"Build Version: {buildVersion}",
-			Hooks = ServerConfig.Instance.Hooks
+			Profile = "proda",
+			Desc = $"Build Version: {buildVersion}"
 		};
 
 		pro.Process();

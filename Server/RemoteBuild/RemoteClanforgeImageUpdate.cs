@@ -9,9 +9,8 @@ namespace Server.RemoteBuild;
 
 public class RemoteClanforgeImageUpdate : IRemoteControllable
 {
-	public ClanforgeConfig? Config { get; set; }
+	public string? Profile { get; set; }
 	public string? Desc { get; set; }
-	public HooksConfig[]? Hooks { get; set; }
 
 	public ServerResponse Process()
 	{
@@ -21,22 +20,25 @@ public class RemoteClanforgeImageUpdate : IRemoteControllable
 
 	private async Task ProcessInternalAsync()
 	{
+		if (ServerConfig.Instance.Clanforge?.Clone() is not ClanforgeConfig clanforgeConfig)
+			throw new Exception($"Issue with {nameof(ClanforgeConfig)}");
+		
 		try
 		{
-			var clanforge = new ClanForgeDeploy(Config, Desc);
+			var clanforge = new ClanForgeDeploy(clanforgeConfig, Profile, Desc);
 			await clanforge.Deploy();
-			SendHook(Desc, Config?.BuildHookMessage("Updated"));
+			SendHook(Desc, clanforgeConfig?.BuildHookMessage(Profile, "Updated"));
 			Logger.Log("ClanForgeDeploy complete");
 		}
 		catch (Exception e)
 		{
-			SendHook(Config?.BuildHookMessage($"Failed ({e.GetType().Name})"), e.Message, true);
+			SendHook(clanforgeConfig?.BuildHookMessage(Profile, $"Failed ({e.GetType().Name})"), e.Message, true);
 		}
 	}
 
-	private void SendHook(string? header, string? message, bool isError = false)
+	private static void SendHook(string? header, string? message, bool isError = false)
 	{
-		Hooks ??= ServerConfig.Instance.Hooks;
+		var Hooks = ServerConfig.Instance.Hooks;
 	
 		if (Hooks == null)
 			return;

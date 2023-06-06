@@ -117,10 +117,11 @@ public static class App
 
 	private static async Task DeployClanforge(BuildPipeline pipeline, string buildVersionTitle)
 	{
-		if (pipeline.Config.Deploy == null || pipeline.Config.Deploy.Clanforge is null or false)
+		if (pipeline.Config.Deploy?.Clanforge is null)
 			return;
-		
-		var clanforge = new ClanForgeDeploy(Config.Clanforge, buildVersionTitle);
+
+		var profile = pipeline.Config.Deploy.Clanforge.Profile;
+		var clanforge = new ClanForgeDeploy(Config.Clanforge, profile, buildVersionTitle);
 		await clanforge.Deploy();
 	}
 
@@ -188,9 +189,9 @@ public static class App
 		}
 	}
 
-	private static string? BuildPipelineOnGetExtraHookLog()
+	private static string? BuildPipelineOnGetExtraHookLog(string? profile)
 	{
-		return Config.Clanforge?.BuildHookMessage("Updated");
+		return Config.Clanforge?.BuildHookMessage(profile, "Updated");
 	}
 	
 	#endregion

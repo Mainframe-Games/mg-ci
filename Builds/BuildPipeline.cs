@@ -27,7 +27,7 @@ public class OffloadServerPacket
 public class BuildPipeline
 {
 	public delegate void OffloadBuildReqPacket(OffloadServerPacket packet);
-	public delegate string? ExtraHookLogs();
+	public delegate string? ExtraHookLogs(string? profile);
 	public delegate Task DeployDelegate(BuildPipeline pipeline);
 	
 	public event OffloadBuildReqPacket OffloadBuildNeeded;
@@ -250,8 +250,8 @@ public class BuildPipeline
 			return;
 
 		// optional message from clanforge
-		var clanforgeMessage = Config.Deploy?.Clanforge == true 
-			? GetExtraHookLogs?.Invoke()
+		var clanforgeMessage = Config.Deploy?.Clanforge != null
+			? GetExtraHookLogs?.Invoke(Config.Deploy.Clanforge?.Profile)
 			: null;
 
 		foreach (var hook in Config.Hooks)

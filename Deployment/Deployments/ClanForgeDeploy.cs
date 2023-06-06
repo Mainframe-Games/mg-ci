@@ -19,11 +19,11 @@ public class ClanForgeDeploy
 	private string AuthToken { get; }
 	private uint ASID { get; }
 	private uint MachineId { get; }
-	private uint[] ImageIds { get; }
+	private uint ImageId { get; }
 	private string Desc { get; }
 	private string Url { get; }
 
-	public ClanForgeDeploy(ClanforgeConfig? clanforgeConfig, string? desc)
+	public ClanForgeDeploy(ClanforgeConfig? clanforgeConfig, string? profile, string? desc)
 	{
 		if (clanforgeConfig == null)
 			throw new NullReferenceException($"Param {nameof(clanforgeConfig)} can not be null");
@@ -31,15 +31,14 @@ public class ClanForgeDeploy
 		AuthToken = $"Basic {Base64Key.Generate(clanforgeConfig.AccessKey, clanforgeConfig.SecretKey)}";
 		ASID = clanforgeConfig.Asid;
 		MachineId = clanforgeConfig.MachineId;
-		ImageIds = clanforgeConfig.GetImageIds()?.ToArray() ?? Array.Empty<uint>();
-		Url = Uri.EscapeDataString(clanforgeConfig.GetUrl() ?? string.Empty);
+		ImageId = clanforgeConfig.GetImageId(profile);
+		Url = Uri.EscapeDataString(clanforgeConfig.Url ?? string.Empty);
 		Desc = desc ?? string.Empty;
 	}
 
 	public async Task Deploy()
 	{
-		var tasks = ImageIds.Select(DeployInternal);
-		await Task.WhenAll(tasks);
+		await DeployInternal(ImageId);
 	}
 
 	/// <summary>
