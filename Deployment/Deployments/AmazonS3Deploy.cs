@@ -8,44 +8,43 @@ namespace Deployment.Deployments;
 
 public class AmazonS3Deploy
 {
-	private readonly string? _accessKey;
-	private readonly string? _secretKey;
+	private readonly string? _bucketName;
+	private readonly TransferUtility _fileTransferUtility;
+	private readonly ProgressBar _progressBar = new();
 
-	public AmazonS3Deploy(string? accessKey, string? secretKey)
+	public AmazonS3Deploy(string? accessKey, string? secretKey, string? bucketName)
 	{
-		_accessKey = accessKey;
-		_secretKey = secretKey;
+		_bucketName = bucketName;
+		
+		var credentials = new BasicAWSCredentials(accessKey, secretKey);
+		var s3Client = new AmazonS3Client(credentials, RegionEndpoint.APSoutheast2);
+		_fileTransferUtility = new TransferUtility(s3Client);
 	}
 
-	public async Task DeployAsync(string? rootDirPath, string? bucketName)
+	public async Task DeployAsync(string? rootDirPath)
 	{
-		var credentials = new BasicAWSCredentials(_accessKey, _secretKey);
-		var s3Client = new AmazonS3Client(credentials, RegionEndpoint.APSoutheast2);
-		var fileTransferUtility = new TransferUtility(s3Client);
-
-
-		var dir = new DirectoryInfo(rootDirPath);
-		var files = dir.GetFiles();
-		var subDirs = dir.GetDirectories();
-
-		foreach (var file in files)
+		var request = new TransferUtilityUploadDirectoryRequest
 		{
-			var path = file.FullName;
-			var key = file.Name;
-			if (key == ".DS_Store")
-				continue;
-			
-			Logger.Log($"[S3] Uploading File: {file.Name}");
-			await fileTransferUtility.UploadAsync(path, bucketName, key);
-		}
-
-		foreach (var subDir in subDirs)
-		{
-			Logger.Log($"[S3] Uploading Dir: {subDir.Name}");
-			await fileTransferUtility.UploadDirectoryAsync(subDir.FullName, $"{bucketName}/{subDir.Name}");
-
-		}
+			BucketName = _bucketName,
+			Directory = rootDirPath,
+			SearchOption = SearchOption.AllDirectories,
+		};
 		
-		Logger.Log($"AmazonS3 bucket: {bucketName} COMPLETED");
+		Logger.Log($"AmazonS3 bucket: {_bucketName} STARTED");
+		
+		request.UploadDirectoryProgressEvent += RequestOnUploadDirectoryProgressEvent;
+		await _fileTransferUtility.UploadDirectoryAsync(request);
+		
+		_progressBar.Dispose();
+		_fileTransferUtility.Dispose();
+		
+		Logger.Log($"AmazonS3 bucket: {_bucketName} COMPLETED");
+	}
+
+	private void RequestOnUploadDirectoryProgressEvent(object? sender, UploadDirectoryProgressArgs e)
+	{
+		var fileInfp = new FileInfo(e.CurrentFile);
+		_progressBar.SetContext($"AmazonS3 uploading... {fileInfp.Name}");
+		_progressBar.Report(e.TransferredBytes / (double)e.TotalBytes);
 	}
 }

@@ -111,8 +111,8 @@ public static class App
 			return;
 		
 		var pathToBuild = pipeline.Config.GetBuildTarget(UnityTarget.Linux64, true).BuildPath;
-		var s3 = new AmazonS3Deploy(Config.S3.AccessKey, Config.S3.SecretKey);
-		await s3.DeployAsync(pathToBuild, Config.S3.BucketName);
+		var s3 = new AmazonS3Deploy(Config.S3.AccessKey, Config.S3.SecretKey, Config.S3.BucketName);
+		await s3.DeployAsync(pathToBuild);
 	}
 
 	private static async Task DeployClanforge(BuildPipeline pipeline, string buildVersionTitle)
