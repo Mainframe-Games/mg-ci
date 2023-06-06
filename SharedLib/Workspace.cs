@@ -233,4 +233,9 @@ public class Workspace
 		else
 			fileSystemInfo.Delete();
 	}
+	
+	public void SwitchBranch(string? branchPath)
+	{
+		Cmd.Run("cm", $"switch {branchPath}");
+	}
 }
