@@ -17,6 +17,7 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 		var workspaceName = mapping.GetRemapping(WorkspaceName);
 		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
 		Logger.Log($"Chosen workspace: {workspace}");
+		workspace.Clear();
 		workspace.Update();
 		workspace.SwitchBranch(Branch);
 		
