@@ -164,7 +164,7 @@ public class Workspace
 		Environment.CurrentDirectory = Directory;
 		
 		var cmdRes = Cmd.Run(
-			"cm", "find changeset \"where branch='main'\" \"order by date desc\" \"limit 1\" --format=\"{changesetid} {guid}\" --nototal",
+			"cm", $"find changeset \"where branch='{Branch}'\" \"order by date desc\" \"limit 1\" --format=\"{{changesetid}} {{guid}}\" --nototal",
 			logOutput: false);
 		
 		Environment.CurrentDirectory = currentDir;
