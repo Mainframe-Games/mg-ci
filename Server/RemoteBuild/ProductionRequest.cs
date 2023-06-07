@@ -8,6 +8,8 @@ namespace Server.RemoteBuild;
 public class ProductionRequest : IRemoteControllable
 {
 	public string? WorkspaceName { get; set; }
+	public string? Profile { get; set; }
+	public string? Branch { get; set; }
 
 	public ServerResponse Process()
 	{
@@ -26,7 +28,8 @@ public class ProductionRequest : IRemoteControllable
 		// get highest build version
 		var pro = new RemoteClanforgeImageUpdate
 		{
-			Profile = "proda",
+			Profile = Profile,
+			Branch = Branch,
 			Desc = $"Build Version: {buildVersion}"
 		};
 

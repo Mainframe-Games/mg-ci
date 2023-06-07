@@ -1,3 +1,4 @@
+using System.Web;
 using SharedLib;
 
 namespace Deployment.Configs;
@@ -28,6 +29,18 @@ public class ClanforgeConfig : ICloneable
 	public uint GetImageId(string? profileId)
 	{
 		return GetProfile(profileId).Id;
+	}
+
+	public string GetUrl(string? branch)
+	{
+		if (string.IsNullOrEmpty(branch))
+			return Url ?? string.Empty;
+
+		var uriBuilder = new UriBuilder(Url ?? string.Empty);
+		var query = HttpUtility.ParseQueryString(uriBuilder.Query);
+		query["beta"] = branch;
+		uriBuilder.Query = query.ToString();
+		return uriBuilder.ToString();
 	}
 
 	public object Clone()
