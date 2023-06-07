@@ -112,7 +112,7 @@ public static class GooglePlayDeploy
 		try
 		{
 			// update to completed
-			await UpdateTrackToCompleted(service, packageName, activeEditSession, credentials);
+			// await UpdateTrackToCompleted(service, packageName, activeEditSession, credentials);
 		}
 		catch (Exception e)
 		{
