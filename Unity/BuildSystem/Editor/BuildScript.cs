@@ -49,10 +49,10 @@ namespace BuildSystem
 
 			PrintReportSummary(report.summary);
 			DumpErrorLog(report);
-			ExitWithResult(report.summary.result);
+			ExitWithResult(report.summary.result, report);
 		}
 
-		private static void ExitWithResult(BuildResult result)
+		private static void ExitWithResult(BuildResult result, BuildReport report = null)
 		{
 			switch (result)
 			{
@@ -61,7 +61,22 @@ namespace BuildSystem
 					Exit(0);
 					break;
 				case BuildResult.Failed:
-					Log("Build failed!", LogType.Error);
+					if (report != null)
+					{
+						var errors = report.steps
+							.SelectMany(x => x.messages)
+							.Where(x => x.type is LogType.Error or LogType.Exception or LogType.Assert)
+							.Select(x => $"[{x.type.ToString().ToUpper()}] {x.content}")
+							.Reverse()
+							.ToArray();
+						
+						Log(string.Join("\n", errors), LogType.Error);
+					}
+					else
+					{
+						Log("Build failed!", LogType.Error);
+					}
+
 					Exit(101);
 					break;
 				case BuildResult.Cancelled:

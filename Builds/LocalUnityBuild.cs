@@ -50,7 +50,10 @@ public class LocalUnityBuild
 
 		if (exitCode != 0)
 		{
-			var verboseLog = $"Verbose log file: {Path.Combine(Environment.CurrentDirectory, logPath)}\nRAW OUTPUT: {output}";
+			var verboseLog = $"Verbose log file: {Path.Combine(Environment.CurrentDirectory, logPath)}";
+
+			if (!string.IsNullOrEmpty(output))
+				verboseLog += $"\nRAW OUTPUT: {output}";
 			
 			if (File.Exists(errorPath))
 			{
@@ -105,5 +108,26 @@ public class LocalUnityBuild
 		}
 	
 		File.WriteAllText(outputPath, report.ToString());
+	}
+	
+	public static void __TEST__()
+	{
+		const string UNITY_VERSION = "2021.3.25f1";
+		const string PATH = "../../../../Unity/BuildTest";
+		
+		var dir = new DirectoryInfo(PATH);
+		
+		if (!dir.Exists)
+			throw new DirectoryNotFoundException(dir.FullName);
+		
+		var target = new TargetConfig
+		{
+			Target = UnityTarget.Win64,
+			Settings = "BuildSettings_Win64",
+			BuildPath = "Builds/win64",
+		};
+		
+		var unity = new LocalUnityBuild(UNITY_VERSION);
+		unity.Build(dir.FullName, target);
 	}
 }
