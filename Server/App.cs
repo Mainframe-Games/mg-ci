@@ -95,11 +95,15 @@ public static class App
 	private static async Task BuildPipelineOnDeployEvent(BuildPipeline pipeline)
 	{
 		var buildVersionTitle = pipeline.BuildVersionTitle;
-		await DeployToS3Bucket(pipeline);
+		
+		// client deploys
 		DeploySteam(pipeline, buildVersionTitle);
+		DeployApple(pipeline); // apple before google as apple takes longer to process on appstore connect
 		await DeployGoogle(pipeline, buildVersionTitle);
-		DeployApple(pipeline);
+		
+		// server deploys
 		await DeployClanforge(pipeline, buildVersionTitle);
+		await DeployToS3Bucket(pipeline);
 	}
 
 	private static async Task DeployToS3Bucket(BuildPipeline pipeline)
