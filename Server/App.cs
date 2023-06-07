@@ -118,7 +118,7 @@ public static class App
 			return;
 
 		var profile = pipeline.Config.Deploy.Clanforge.Profile;
-		pipeline.Args.TryGetArg("-clanfordgebeta", out var branch);
+		pipeline.Args.TryGetArg("-clanforgebeta", out var branch);
 		var clanforge = new ClanForgeDeploy(Config.Clanforge, profile, buildVersionTitle, branch);
 		await clanforge.Deploy();
 	}
