@@ -114,6 +114,10 @@ public class BuildPipeline
 		Workspace.Update(id);
 
 		Workspace.GetCurrent(out _currentChangeSetId, out _currentGuid);
+
+		if (_currentChangeSetId == 0)
+			throw new Exception("current change set shouldn't be 0");
+		
 		_previousChangeSetId = Workspace.GetPreviousChangeSetId();
 		Logger.Log($"[CHANGESET] cs:{_previousChangeSetId} \u2192 cs:{_currentChangeSetId}, guid:{_currentGuid}");
 		
