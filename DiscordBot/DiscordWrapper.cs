@@ -42,7 +42,7 @@ public class DiscordWrapper
 	private SlashCommandOptionBuilder BuildArgumentsOptions()
 	{
 		var opt = new SlashCommandOptionBuilder()
-			.WithName("build-args")
+			.WithName("args")
 			.WithDescription("Arguments send to build server")
 			// .AddChoice("-noprebuild", 0)
 			// .AddChoice("-nobuild", 1)
