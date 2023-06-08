@@ -194,8 +194,9 @@ public static class App
 		}
 	}
 
-	private static string? BuildPipelineOnGetExtraHookLog(string? profile)
+	private static string? BuildPipelineOnGetExtraHookLog(BuildPipeline pipeline)
 	{
+		pipeline.Args.TryGetArg("-clanforge", out var profile, "deva");
 		return Config.Clanforge?.BuildHookMessage(profile, "Updated");
 	}
 	
