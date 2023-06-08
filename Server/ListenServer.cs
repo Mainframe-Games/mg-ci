@@ -89,7 +89,8 @@ public class ListenServer
 			_ => new ServerResponse(HttpStatusCode.MethodNotAllowed, $"HttpMethod not supported: {request.HttpMethod}")
 		};
 
-		Respond(context, response);
+		var data = response.Data != null ? JObject.FromObject(response.Data) : null;
+		Respond(context, response.StatusCode, data);
 	}
 
 	private static async Task<ServerResponse> HandleGet(HttpListenerRequest request)
@@ -101,8 +102,8 @@ public class ListenServer
 		switch (path)
 		{
 			case "/workspaces":
-				var workspaces = Workspace.GetAvailableWorkspaces().Select(x => x.Name);
-				return new ServerResponse(HttpStatusCode.OK, JArray.FromObject(workspaces).ToString());
+				var workspaces = Workspace.GetAvailableWorkspaces().Select(x => x.Name).ToArray();
+				return new ServerResponse(HttpStatusCode.OK, workspaces);
 			
 			default:
 				return new ServerResponse(HttpStatusCode.OK, "ok");
@@ -155,17 +156,21 @@ public class ListenServer
 		}
 	}
 
-	private void Respond(HttpListenerContext context, ServerResponse serverResponse)
+	private void Respond(HttpListenerContext context, HttpStatusCode responseCode, object? data)
 	{
 		try
 		{
 			var response = context.Response;
-			response.StatusCode = (int)serverResponse.StatusCode;
+			response.StatusCode = (int)responseCode;
 			response.ContentType = "application/json";
-			var resJson = Json.Serialise(serverResponse);
-			var bytes = Encoding.UTF8.GetBytes(resJson);
-			response.OutputStream.Write(bytes);
-			response.OutputStream.Close();
+			
+			if (data != null)
+			{
+				var resJson = Json.Serialise(data);
+				var bytes = Encoding.UTF8.GetBytes(resJson);
+				response.OutputStream.Write(bytes);
+				response.OutputStream.Close();
+			}
 
 			// start listening again
 			Receive();

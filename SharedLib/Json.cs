@@ -19,14 +19,30 @@ public static class Json
 			new StringEnumConverter(),
 		}
 	};
-	
+
 	public static string Serialise(object? obj)
 	{
-		return JsonConvert.SerializeObject(obj, _settings);
+		try
+		{
+			return JsonConvert.SerializeObject(obj, _settings);
+		}
+		catch (Exception e)
+		{
+			Logger.Log($"Failed to serialise object: {obj}");
+			return string.Empty;
+		}
 	}
-	
+
 	public static T? Deserialise<T>(string jsonStr)
 	{
-		return JsonConvert.DeserializeObject<T>(jsonStr, _settings);
+		try
+		{
+			return JsonConvert.DeserializeObject<T>(jsonStr, _settings);
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine($"Failed to deserialise to type: {typeof(T).Name}, json: {jsonStr}");
+			throw;
+		}
 	}
 }

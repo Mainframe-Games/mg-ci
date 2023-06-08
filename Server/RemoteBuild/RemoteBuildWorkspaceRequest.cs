@@ -31,12 +31,25 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 		return new ServerResponse
 		{
 			StatusCode = HttpStatusCode.OK,
-			PipelineId = App.NextPipelineId - 1,
-			Message = workspace.Name,
-			UnityVersion = workspace.UnityVersion,
-			ChangesetId = changeSetId,
-			ChangesetGuid = guid,
-			Branch = branch
+			Data = new BuildPipelineResponse
+			{
+				PipelineId = App.NextPipelineId - 1,
+				Message = workspace.Name,
+				UnityVersion = workspace.UnityVersion,
+				ChangesetId = changeSetId,
+				ChangesetGuid = guid,
+				Branch = branch
+			}
 		};
 	}
+}
+
+public class BuildPipelineResponse
+{
+	public ulong? PipelineId { get; set; }
+	public string? Message { get; set; }
+	public int? ChangesetId { get; set; }
+	public string? ChangesetGuid { get; set; }
+	public string? Branch { get; set; }
+	public string? UnityVersion { get; set; }
 }
