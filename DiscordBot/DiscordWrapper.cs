@@ -1,4 +1,3 @@
-using System.Net;
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
@@ -15,7 +14,8 @@ public class DiscordWrapper
 
 	public DiscordWrapper(Configs.DiscordConfig config)
 	{
-		_client = new DiscordSocketClient();
+		var socketConfig = new DiscordSocketConfig { UseInteractionSnowflakeDate = false };
+		_client = new DiscordSocketClient(socketConfig);
 		_client.Log += OnLog;
 		_client.Ready += ClientReady;
 		_client.SlashCommandExecuted += SlashCommandHandler;
@@ -45,31 +45,30 @@ public class DiscordWrapper
 		var opt = new SlashCommandOptionBuilder()
 			.WithName("build-args")
 			.WithDescription("Arguments send to build server")
-			.AddChoice("-noprebuild", 0)
-			.AddChoice("-nobuild", 1)
-			.AddChoice("-nopostbuild", 2)
-			.AddChoice("-nosteamdeploy", 3)
+			// .AddChoice("-noprebuild", 0)
+			// .AddChoice("-nobuild", 1)
+			// .AddChoice("-nopostbuild", 2)
+			// .AddChoice("-nosteamdeploy", 3)
 			.WithType(ApplicationCommandOptionType.String);
 		return opt;
 	}
 
 	private async Task ClientReady()
 	{
-		// Let's build a guild command! We're going to need a guild so lets just put that in a variable.
 		var guild = _client.GetGuild(_config.GuildId);
 
 		var cmd = new SlashCommandBuilder()
 			.WithName(_config.CommandName)
 			.WithDescription("Starts a build from discord")
-			.AddOption(WorkspaceOptions())
-			.AddOption(BuildArgumentsOptions());
+			.AddOptions(WorkspaceOptions())
+			.AddOptions(BuildArgumentsOptions());
 
 		var built = cmd.Build();
 
 		try
 		{
-			await guild.CreateApplicationCommandAsync(built);
-			await _client.CreateGlobalApplicationCommandAsync(built);
+			await guild.CreateApplicationCommandAsync(built); // guild only
+			// await _client.CreateGlobalApplicationCommandAsync(built); // global
 		}
 		catch (HttpException exception)
 		{
@@ -109,6 +108,12 @@ public class DiscordWrapper
 			}
 		}
 
+		if (string.IsNullOrEmpty(workspaceName))
+		{
+			await command.RespondError(user, "Error", "No Workspace chosen");
+			return;
+		}
+		
 		await command.DeferAsync(true);
 
 		try

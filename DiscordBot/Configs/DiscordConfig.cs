@@ -11,10 +11,15 @@ public class DiscordConfig
 
     public string? BuildServerUrl { get; set; }
 	public string? Token { get; set; }
+	/// <summary>
+	/// Channel Id
+	/// </summary>
 	public ulong GuildId { get; set; }
 	public List<string>? AuthorisedRoles { get; set; }
-	[JsonIgnore] public List<string>? WorkspaceNames { get; set; }
 	public string? CommandName { get; set; }
+	
+	[JsonIgnore]
+	public List<string?>? WorkspaceNames { get; private set; }
 
 	public static DiscordConfig? Load()
 	{
