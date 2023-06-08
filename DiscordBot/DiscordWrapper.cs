@@ -81,7 +81,7 @@ public class DiscordWrapper
 	{
 		// We need to extract the user parameter from the command. since we only have one option and it's required, we can just use the first option.
 		var user = (SocketGuildUser)command.User;
-		_config.Refresh();
+		await _config.RefreshAsync();
 
 		if (!IsAuthorised(user))
 		{

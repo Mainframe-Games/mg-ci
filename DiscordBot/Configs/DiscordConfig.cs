@@ -1,3 +1,4 @@
+using System.Net;
 using Newtonsoft.Json;
 using SharedLib;
 
@@ -21,20 +22,17 @@ public class DiscordConfig
 	[JsonIgnore]
 	public List<string?>? WorkspaceNames { get; private set; }
 
-	public static DiscordConfig? Load()
+	public static async Task<DiscordConfig?> LoadAsync()
 	{
-		var configStr = File.ReadAllText(ConfigPath);
+		var configStr = await File.ReadAllTextAsync(ConfigPath);
 		var config = Json.Deserialise<DiscordConfig>(configStr);
-		
-		if (config != null)
-			config.WorkspaceNames = Workspace.GetAvailableWorkspaces().Select(x => x.Name).ToList();
-		
+		await config.SetWorkspaceNamesAsync();
 		return config;
 	}
 
-	public void Refresh()
+	public async Task RefreshAsync()
 	{
-		var updated = Load();
+		var updated = await LoadAsync();
 		
 		if (updated == null)
 			return;
@@ -43,5 +41,16 @@ public class DiscordConfig
 		CommandName = updated.CommandName;
 		AuthorisedRoles = updated.AuthorisedRoles;
 		WorkspaceNames = updated.WorkspaceNames;
+	}
+
+	private async Task SetWorkspaceNamesAsync()
+	{
+		var res = await Web.SendAsync(HttpMethod.Get, $"{BuildServerUrl}/workspaces");
+		
+		if (res.StatusCode != HttpStatusCode.OK)
+			throw new WebException(res.Content);
+		
+		var list = Json.Deserialise<List<string?>?>(res.Content);
+		WorkspaceNames = list;
 	}
 }

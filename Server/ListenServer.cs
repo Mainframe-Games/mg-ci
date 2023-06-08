@@ -3,6 +3,7 @@ using System.Text;
 using Deployment.RemoteBuild;
 using Deployment.Server;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Server.RemoteBuild;
 using SharedLib;
 
@@ -94,7 +95,18 @@ public class ListenServer
 	private static async Task<ServerResponse> HandleGet(HttpListenerRequest request)
 	{
 		await Task.CompletedTask;
-		return new ServerResponse(HttpStatusCode.OK, "ok");
+
+		var path = request.RawUrl ?? string.Empty;
+
+		switch (path)
+		{
+			case "/workspaces":
+				var workspaces = Workspace.GetAvailableWorkspaces().Select(x => x.Name);
+				return new ServerResponse(HttpStatusCode.OK, JArray.FromObject(workspaces).ToString());
+			
+			default:
+				return new ServerResponse(HttpStatusCode.OK, "ok");
+		}
 	}
 	
 	private static async Task<ServerResponse> HandlePut(HttpListenerRequest request)
