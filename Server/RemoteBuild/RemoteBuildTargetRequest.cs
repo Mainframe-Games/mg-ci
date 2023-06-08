@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using Builder;
-using Builds;
 using Deployment;
 using Deployment.Configs;
 using Deployment.RemoteBuild;
@@ -37,6 +36,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 			workspace.CleanBuild();
 		
 		workspace.Clear();
+		workspace.Update();
 		workspace.SwitchBranch(Packet.Branch);
 		workspace.Update(Packet.ChangesetId);
 

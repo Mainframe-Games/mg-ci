@@ -89,7 +89,11 @@ public static class App
 		};
 		
 		var body = new RemoteBuildPacket { BuildTargetRequest = remoteBuild };
-		Web.SendAsync(HttpMethod.Post, Config.OffloadServerUrl, body: body).FireAndForget();
+		Web.SendAsync(HttpMethod.Post, Config.OffloadServerUrl, body: body)
+			.FireAndForget(e =>
+			{
+				Logger.Log($"Error at {nameof(SendRemoteBuildRequest)}: {e}");
+			});
 	}
 
 	private static async Task BuildPipelineOnDeployEvent(BuildPipeline pipeline)
