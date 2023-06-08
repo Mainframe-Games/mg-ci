@@ -121,8 +121,7 @@ public class DiscordWrapper
 			// request to build server
 			var body = new BuildRequest { WorkspaceBuildRequest = new WorkspaceReq { WorkspaceName = workspaceName, Args = args } };
 			var res = await Web.SendAsync(HttpMethod.Post, _config.BuildServerUrl, body: body);
-			var resData = JObject.Parse(res.Content)["data"]?.ToString();
-			await command.RespondSuccessDelayed(user, "Build Started", resData ?? "Unknown Workspace");
+			await command.RespondSuccessDelayed(user, "Build Started", res.Content);
 		}
 		catch (Exception e)
 		{
