@@ -2,7 +2,6 @@ using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 using DiscordBot.Configs;
-using Newtonsoft.Json.Linq;
 using SharedLib;
 
 namespace DiscordBot;
@@ -102,7 +101,7 @@ public class DiscordWrapper
 					workspaceName = _config.WorkspaceNames[index];
 					break;
 				
-				case "build-args":
+				case "args":
 					args = option.Value?.ToString();
 					break;
 			}
