@@ -73,14 +73,9 @@ public class ParallelBuildConfig
 public class DeployContainerConfig
 {
 	public string[]? Steam { get; set; }
-	public ClanforgeBuildConfig? Clanforge { get; set; }
+	public bool? Clanforge { get; set; }
 	public bool? AppleStore { get; set; }
 	public bool? GoogleStore { get; set; }
-}
-
-public class ClanforgeBuildConfig
-{
-	public string? Profile { get; set; }
 }
 
 public class HooksConfig

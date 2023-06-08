@@ -118,11 +118,11 @@ public static class App
 
 	private static async Task DeployClanforge(BuildPipeline pipeline, string buildVersionTitle)
 	{
-		if (pipeline.Config.Deploy?.Clanforge is null)
+		if (pipeline.Config.Deploy?.Clanforge is null or false)
 			return;
 
-		var profile = pipeline.Config.Deploy.Clanforge.Profile;
-		pipeline.Args.TryGetArg("-clanforgebeta", out var branch);
+		pipeline.Args.TryGetArg("-setlive", out var branch);
+		pipeline.Args.TryGetArg("-clanforge", out var profile, "deva");
 		var clanforge = new ClanForgeDeploy(Config.Clanforge, profile, buildVersionTitle, branch);
 		await clanforge.Deploy();
 	}
