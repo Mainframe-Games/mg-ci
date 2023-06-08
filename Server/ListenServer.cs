@@ -80,12 +80,6 @@ public class ListenServer
 
 		var context = _listener.EndGetContext(result);
 		var request = context.Request;
-
-		// do something with the request
-		Logger.Log($"{request.HttpMethod} {request.Url}");
-		if (!string.IsNullOrEmpty(request.ContentType))
-			Logger.Log($"Content-Type: {request.ContentType}");
-
 		var response = request.HttpMethod switch
 		{
 			"GET" => await HandleGet(request),
@@ -153,7 +147,6 @@ public class ListenServer
 	{
 		try
 		{
-			Logger.Log(serverResponse.StatusCode);
 			var response = context.Response;
 			response.StatusCode = (int)serverResponse.StatusCode;
 			response.ContentType = "application/json";
