@@ -17,11 +17,11 @@ public static class App
 	public static ulong NextPipelineId { get; private set; }
 	public static readonly Dictionary<ulong, BuildPipeline> Pipelines = new();
 
-	public static async Task RunAsync(string[]? args)
+	public static async Task RunAsync(Args args)
 	{
 		Config = ServerConfig.Load();
 		RootDirectory = Environment.CurrentDirectory;
-		IsLocal = Args.Environment.IsFlag("-local");
+		IsLocal = args.IsFlag("-local");
 
 		// for locally running the build process without a listen server
 		if (IsLocal)
@@ -31,8 +31,8 @@ public static class App
 		}
 		else
 		{
-			Args.Environment.TryGetArg("-server", 0, out string ip, Config.IP);
-			Args.Environment.TryGetArg("-server", 1, out int port, Config.Port);
+			args.TryGetArg("-server", 0, out string ip, Config.IP);
+			args.TryGetArg("-server", 1, out int port, Config.Port);
 			Server = new ListenServer(ip, (ushort)port);
 			
 			if (Config.AuthTokens is { Count: > 0 })
@@ -58,7 +58,7 @@ public static class App
 
 	#region Build Pipeline
 	
-	public static async Task RunBuildPipe(Workspace workspace, string[]? args)
+	public static async Task RunBuildPipe(Workspace workspace, Args args)
 	{
 		var parallel = Config?.Offload?.Parallel ?? false;
 		var targets = Config?.Offload?.Targets ?? null;

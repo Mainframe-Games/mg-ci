@@ -62,11 +62,11 @@ public class BuildPipeline
 	private readonly List<string> _buildIds = new();
 
 
-	public BuildPipeline(ulong id, Workspace workspace, string[]? args, string? offloadUrl, bool offloadParallel, List<UnityTarget>? offloadTargets)
+	public BuildPipeline(ulong id, Workspace workspace, Args args, string? offloadUrl, bool offloadParallel, List<UnityTarget>? offloadTargets)
 	{
 		Id = id;
 		Workspace = workspace;
-		Args = new Args(args);
+		Args = args;
 		_offloadUrl = offloadUrl;
 		_offloadParallel = offloadParallel;
 		_offloadTargets = offloadTargets ?? new List<UnityTarget>();

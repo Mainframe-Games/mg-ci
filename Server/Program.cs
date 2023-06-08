@@ -5,7 +5,8 @@ using SharedLib;
 
 try
 {
-	await App.RunAsync(args);
+	var argsObj = new Args(args);
+	await App.RunAsync(argsObj);
 }
 catch (Exception e)
 {

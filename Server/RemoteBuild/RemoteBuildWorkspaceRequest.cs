@@ -8,21 +8,24 @@ namespace Server.RemoteBuild;
 public class RemoteBuildWorkspaceRequest : IRemoteControllable
 {
 	public string? WorkspaceName { get; set; }
-	public string? Branch { get; set; } = "main";
 	public string? Args { get; set; }
 	
 	public ServerResponse Process()
 	{
+		var argsArray = Args?.Split(' ');
+		var args = new Args(argsArray);
+		args.TryGetArg("-branch", out var branch, "main");
+
 		var mapping = new WorkspaceMapping();
 		var workspaceName = mapping.GetRemapping(WorkspaceName);
 		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
 		Logger.Log($"Chosen workspace: {workspace}");
+		
 		workspace.Clear();
 		workspace.Update();
-		workspace.SwitchBranch(Branch);
-		
-		var argsArray = Args?.Split(' ');
-		App.RunBuildPipe(workspace, argsArray).FireAndForget();
+		workspace.SwitchBranch(branch);
+
+		App.RunBuildPipe(workspace, args).FireAndForget();
 		workspace.GetCurrent(out var changeSetId, out var guid);
 
 		return new ServerResponse
@@ -33,7 +36,7 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 			UnityVersion = workspace.UnityVersion,
 			ChangesetId = changeSetId,
 			ChangesetGuid = guid,
-			Branch = Branch
+			Branch = branch
 		};
 	}
 }
