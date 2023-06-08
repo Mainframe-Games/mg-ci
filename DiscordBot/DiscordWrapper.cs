@@ -90,7 +90,7 @@ public class DiscordWrapper
 		}
 
 		string? workspaceName = null;
-		string[]? args = null;
+		string? args = null;
 
 		// user options
 		foreach (var option in command.Data.Options)
@@ -103,7 +103,7 @@ public class DiscordWrapper
 					break;
 				
 				case "build-args":
-					args = option.Value?.ToString()?.Split(' ');
+					args = option.Value?.ToString();
 					break;
 			}
 		}
@@ -119,8 +119,8 @@ public class DiscordWrapper
 		try
 		{
 			// request to build server
-			var req = new BuildRequest { WorkspaceBuildRequest = new WorkspaceReq { WorkspaceName = workspaceName, Args = args } };
-			var res = await Web.SendAsync(HttpMethod.Post, _config.BuildServerUrl, command.User.Id.ToString(), req);
+			var body = new BuildRequest { WorkspaceBuildRequest = new WorkspaceReq { WorkspaceName = workspaceName, Args = args } };
+			var res = await Web.SendAsync(HttpMethod.Post, _config.BuildServerUrl, body: body);
 			var resData = JObject.Parse(res.Content)["data"]?.ToString();
 			await command.RespondSuccessDelayed(user, "Build Started", resData ?? "Unknown Workspace");
 		}
