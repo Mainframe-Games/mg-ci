@@ -89,8 +89,7 @@ public class ListenServer
 			_ => new ServerResponse(HttpStatusCode.MethodNotAllowed, $"HttpMethod not supported: {request.HttpMethod}")
 		};
 
-		var data = response.Data != null ? JObject.FromObject(response.Data) : null;
-		Respond(context, response.StatusCode, data);
+		Respond(context, response.StatusCode, response.Data);
 	}
 
 	private static async Task<ServerResponse> HandleGet(HttpListenerRequest request)
