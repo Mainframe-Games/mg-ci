@@ -86,10 +86,17 @@ public class ListenServer
 			"GET" => await HandleGet(request),
 			"POST" => await HandlePost(request),
 			"PUT" => await HandlePut(request),
+			"OPTIONS" => await HandleOptions(request),
 			_ => new ServerResponse(HttpStatusCode.MethodNotAllowed, $"HttpMethod not supported: {request.HttpMethod}")
 		};
 
 		Respond(context, response.StatusCode, response.Data);
+	}
+
+	private async Task<ServerResponse> HandleOptions(HttpListenerRequest request)
+	{
+		// TODO: handle CORS
+		return new ServerResponse(HttpStatusCode.OK, "ok");
 	}
 
 	private static async Task<ServerResponse> HandleGet(HttpListenerRequest request)
@@ -168,8 +175,9 @@ public class ListenServer
 				var resJson = Json.Serialise(data);
 				var bytes = Encoding.UTF8.GetBytes(resJson);
 				response.OutputStream.Write(bytes);
-				response.OutputStream.Close();
 			}
+			
+			response.OutputStream.Close();
 
 			// start listening again
 			Receive();
