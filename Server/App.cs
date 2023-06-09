@@ -1,6 +1,8 @@
-﻿using Deployment;
+﻿using System.Net;
+using Deployment;
 using Deployment.Configs;
 using Deployment.Deployments;
+using Newtonsoft.Json.Linq;
 using Server.Configs;
 using Server.RemoteBuild;
 using SharedLib;
@@ -115,9 +117,37 @@ public static class App
 		if (Config?.S3 == null)
 			return;
 		
+		// upload to s3
 		var pathToBuild = pipeline.Config.GetBuildTarget(UnityTarget.Linux64, true).BuildPath;
 		var s3 = new AmazonS3Deploy(Config.S3.AccessKey, Config.S3.SecretKey, Config.S3.BucketName);
 		await s3.DeployAsync(pathToBuild);
+		
+		
+		// refresh on unity's end
+		var url =
+			$"https://services.unity.com/api/multiplay/builds/v4" +
+			$"/projects/{Config.UnityServices.ProjectId}" +
+			$"/environments/{Config.UnityServices.EnvironmentId}" +
+			$"/builds/{Config.UnityServices.ServerHosting.BuildId}" +
+			$"/versions";
+
+		var body = new JObject
+		{
+			["forceRollout"] = new JObject
+			{
+				["s3URI"] = Config.S3.Url,
+				["accessKey"] = Config.S3.AccessKey,
+				["secretKey"] = Config.S3.SecretKey,
+			}
+		};
+
+		var token = Base64Key.Generate(Config.UnityServices.AccessKey, Config.UnityServices.SecretKey);
+		var res = await Web.SendAsync(HttpMethod.Post, url, $"Basic {token}", body);
+		
+		if (res.StatusCode != HttpStatusCode.OK)
+			throw new WebException(res.Content);
+		
+		Logger.Log("Unity server updated");
 	}
 
 	private static async Task DeployClanforge(BuildPipeline pipeline, string buildVersionTitle)
