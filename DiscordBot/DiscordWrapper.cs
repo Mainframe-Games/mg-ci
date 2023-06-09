@@ -113,7 +113,7 @@ public class DiscordWrapper
 			return;
 		}
 		
-		await command.DeferAsync(true);
+		await command.DeferAsync(/*true,*/);
 
 		try
 		{
