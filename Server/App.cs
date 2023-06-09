@@ -101,9 +101,9 @@ public static class App
 		var buildVersionTitle = pipeline.BuildVersionTitle;
 		
 		// client deploys
-		DeploySteam(pipeline, buildVersionTitle);
-		DeployApple(pipeline); // apple before google as apple takes longer to process on appstore connect
+		DeployApple(pipeline); // apple first as apple takes longer to process on appstore connect
 		await DeployGoogle(pipeline, buildVersionTitle);
+		DeploySteam(pipeline, buildVersionTitle);
 		
 		// server deploys
 		await DeployClanforge(pipeline, buildVersionTitle);
