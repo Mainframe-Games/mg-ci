@@ -166,6 +166,7 @@ public class BuildPipeline
 					WorkspaceName = Workspace.Name,
 					ChangesetId = _currentChangeSetId,
 					BuildVersion = _buildVersion,
+					PipelineId = Id,
 					CleanBuild = Args.IsFlag("-cleanbuild"),
 					Branch = Workspace.Branch,
 					ParallelBuild = _offloadParallel ? Config.ParallelBuild : null,
