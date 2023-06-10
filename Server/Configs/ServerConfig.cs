@@ -16,7 +16,7 @@ internal class ServerConfig
 	public string? OffloadServerUrl { get; set; }
 	public OffloadConfig? Offload { get; set; }
 	public HooksConfig[]? Hooks { get; set; }
-	public UnityServicesConfig? UnityServices { get; set; }
+	public UnityServicesConfig? Ugs { get; set; }
 	public SteamServerConfig? Steam { get; set; }
 	public AmazonS3Config? S3 { get; set; }
 	public ClanforgeConfig? Clanforge { get; set; }
