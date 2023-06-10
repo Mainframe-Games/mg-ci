@@ -7,18 +7,14 @@ public class UnityRemoteConfigRequest : UnityWebRequest
 {
 	private string? ConfigId { get; }
 
-	public delegate string UrlBuilder(string pathRoot, string endPoint);
-
-	public UrlBuilder OnUrlReq;
-	
-	public UnityRemoteConfigRequest(string accessKey, string secretKey, string configId) : base(accessKey, secretKey)
+	public UnityRemoteConfigRequest(string keyId, string secretKey, string configId) : base(keyId, secretKey)
 	{
 		ConfigId = configId;
 	}
 
-	public async Task UpdateConfig(string? key, object? value)
+	public async Task UpdateConfig(string projectId, string? key, object? value)
 	{
-		var url = OnUrlReq?.Invoke("remote-config", $"configs/{ConfigId}");
+		var url = $"https://services.api.unity.com/remote-config/v1/projects/{projectId}/configs/{ConfigId}";
 		var currentConfig = await Web.SendAsync(HttpMethod.Get, url, AuthToken);
 		var json = JObject.Parse(currentConfig.Content);
 

@@ -36,18 +36,19 @@ public class ProductionRequest : IRemoteControllable
 		pro.Process();
 	}
 
-	private static void RemoteConfigProcess(string buildVersion)
+	private void RemoteConfigProcess(string buildVersion)
 	{
 		if (ServerConfig.Instance.UnityServices == null)
 			return;
 
 		var unityServices = ServerConfig.Instance.UnityServices;
-		var accessKey = unityServices.AccessKey;
+		var accessKey = unityServices.KeyId;
 		var secretKey = unityServices.SecretKey;
 		var remoteConfig = unityServices.RemoteConfig;
+
+		var project = ServerConfig.Instance.UnityServices.GetProjectFromName(WorkspaceName);
 		
 		var unityRemoteConfig = new UnityRemoteConfigRequest(accessKey, secretKey, remoteConfig.ConfigId);
-		unityRemoteConfig.OnUrlReq += unityServices.BuildUrl;
-		unityRemoteConfig.UpdateConfig(remoteConfig.ValueKey, buildVersion).FireAndForget();
+		unityRemoteConfig.UpdateConfig(project.ProjectId, remoteConfig.ValueKey, buildVersion).FireAndForget();
 	}
 }

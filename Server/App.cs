@@ -2,6 +2,7 @@
 using Deployment;
 using Deployment.Configs;
 using Deployment.Deployments;
+using Deployment.Server.Unity;
 using Newtonsoft.Json.Linq;
 using Server.Configs;
 using Server.RemoteBuild;
@@ -122,31 +123,19 @@ public static class App
 		var s3 = new AmazonS3Deploy(Config.S3.AccessKey, Config.S3.SecretKey, Config.S3.BucketName);
 		await s3.DeployAsync(pathToBuild);
 		
-		
-		// refresh on unity's end
-		var url =
-			$"https://services.unity.com/api/multiplay/builds/v4" +
-			$"/projects/{Config.UnityServices.ProjectId}" +
-			$"/environments/{Config.UnityServices.EnvironmentId}" +
-			$"/builds/{Config.UnityServices.ServerHosting.BuildId}" +
-			$"/versions";
+		if (Config.UnityServices?.ServerHosting == null)
+			return;
 
-		var body = new JObject
-		{
-			["forceRollout"] = new JObject
-			{
-				["s3URI"] = Config.S3.Url,
-				["accessKey"] = Config.S3.AccessKey,
-				["secretKey"] = Config.S3.SecretKey,
-			}
-		};
+		var project = Config.UnityServices.GetProjectFromName(pipeline.Workspace.Name);
+		var gameServer = new UnityGameServerRequest(Config.UnityServices.KeyId, Config.UnityServices.SecretKey);
+		await gameServer.CreateNewBuildVersion(
+			project.ProjectId,
+			project.EnvironmentId,
+			Config.UnityServices.ServerHosting.BuildId,
+			Config.S3.Url,
+			Config.S3.AccessKey,
+			Config.S3.SecretKey);
 
-		var token = Base64Key.Generate(Config.UnityServices.AccessKey, Config.UnityServices.SecretKey);
-		var res = await Web.SendAsync(HttpMethod.Post, url, $"Basic {token}", body);
-		
-		if (res.StatusCode != HttpStatusCode.OK)
-			throw new WebException(res.Content);
-		
 		Logger.Log("Unity server updated");
 	}
 

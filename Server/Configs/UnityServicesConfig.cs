@@ -2,16 +2,15 @@ namespace Server.Configs;
 
 public class UnityServicesConfig
 {
-	public string? AccessKey { get; set; }
+	public string? KeyId { get; set; }
 	public string? SecretKey { get; set; }
-	public string? ProjectId { get; set; }
-	public string? EnvironmentId { get; set; }
+	public UnityProject[]? Projects { get; set; }
 	public UnityRemoteConfigConfig? RemoteConfig { get; set; }
-	public UnityGameServerHostingConfig ServerHosting { get; set; }
+	public UnityGameServerHostingConfig? ServerHosting { get; set; }
 
-	public string BuildUrl(string pathRoot, string endpoint)
+	public UnityProject? GetProjectFromName(string projName)
 	{
-		return $"https://services.api.unity.com/{pathRoot}/v1/projects/{ProjectId}/{endpoint}";
+		return Projects?.First(x => x.Name == projName);
 	}
 }
 
@@ -23,5 +22,12 @@ public class UnityRemoteConfigConfig
 
 public class UnityGameServerHostingConfig
 {
-	public int BuildId { get; set; }
+	public ulong BuildId { get; set; }
+}
+
+public class UnityProject
+{
+	public string? Name { get; set; }
+	public string? ProjectId { get; set; }
+	public string? EnvironmentId { get; set; }
 }
