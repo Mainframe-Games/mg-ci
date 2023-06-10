@@ -38,15 +38,15 @@ public class ProductionRequest : IRemoteControllable
 
 	private void RemoteConfigProcess(string buildVersion)
 	{
-		if (ServerConfig.Instance.UnityServices == null)
+		if (ServerConfig.Instance.Ugs == null)
 			return;
 
-		var unityServices = ServerConfig.Instance.UnityServices;
+		var unityServices = ServerConfig.Instance.Ugs;
 		var accessKey = unityServices.KeyId;
 		var secretKey = unityServices.SecretKey;
 		var remoteConfig = unityServices.RemoteConfig;
 
-		var project = ServerConfig.Instance.UnityServices.GetProjectFromName(WorkspaceName);
+		var project = ServerConfig.Instance.Ugs.GetProjectFromName(WorkspaceName);
 		
 		var unityRemoteConfig = new UnityRemoteConfigRequest(accessKey, secretKey, remoteConfig.ConfigId);
 		unityRemoteConfig.UpdateConfig(project.ProjectId, remoteConfig.ValueKey, buildVersion).FireAndForget();

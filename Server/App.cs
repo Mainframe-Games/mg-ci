@@ -123,15 +123,15 @@ public static class App
 		var s3 = new AmazonS3Deploy(Config.S3.AccessKey, Config.S3.SecretKey, Config.S3.BucketName);
 		await s3.DeployAsync(pathToBuild);
 		
-		if (Config.UnityServices?.ServerHosting == null)
+		if (Config.Ugs?.ServerHosting == null)
 			return;
 
-		var project = Config.UnityServices.GetProjectFromName(pipeline.Workspace.Name);
-		var gameServer = new UnityGameServerRequest(Config.UnityServices.KeyId, Config.UnityServices.SecretKey);
+		var project = Config.Ugs.GetProjectFromName(pipeline.Workspace.Name);
+		var gameServer = new UnityGameServerRequest(Config.Ugs.KeyId, Config.Ugs.SecretKey);
 		await gameServer.CreateNewBuildVersion(
 			project.ProjectId,
 			project.EnvironmentId,
-			Config.UnityServices.ServerHosting.BuildId,
+			Config.Ugs.ServerHosting.BuildId,
 			Config.S3.Url,
 			Config.S3.AccessKey,
 			Config.S3.SecretKey);
