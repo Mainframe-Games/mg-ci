@@ -72,7 +72,7 @@ public class DiscordWrapper
 		try
 		{
 			// clear currents
-			await FlushCommandsAsync();
+			await FlushCommandsAsync(_config.GuildId);
 			
 			// guild only
 			await guild.CreateApplicationCommandAsync(built);
