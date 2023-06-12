@@ -6,6 +6,10 @@ using SharedLib;
 
 namespace DiscordBot;
 
+/// <summary>
+/// Discord.NET Docs: https://discordnet.dev/guides/int_basics/application-commands/intro.html 
+/// Web API Docs: https://discord.com/developers/docs/interactions/application-commands#slash-commands
+/// </summary>
 public class DiscordWrapper
 {
 	private readonly DiscordSocketClient _client;
@@ -44,6 +48,7 @@ public class DiscordWrapper
 		var opt = new SlashCommandOptionBuilder()
 			.WithName("args")
 			.WithDescription("Arguments send to build server")
+			// TODO: create dynamic way of adding args from master server
 			// .AddChoice("-noprebuild", 0)
 			// .AddChoice("-nobuild", 1)
 			// .AddChoice("-nopostbuild", 2)
@@ -66,20 +71,35 @@ public class DiscordWrapper
 
 		try
 		{
-			
 			// clear currents
-			await guild.DeleteApplicationCommandsAsync();
+			await FlushCommandsAsync();
 			
 			// guild only
 			await guild.CreateApplicationCommandAsync(built);
-			
-			// global -- TODO: probably remove this
-			// await _client.CreateGlobalApplicationCommandAsync(built);
 		}
 		catch (HttpException exception)
 		{
 			var json = Json.Serialise(exception.Message);
 			Logger.Log(json);
+		}
+	}
+	
+	private async Task FlushCommandsAsync(params ulong[] guilds)
+	{
+		/*
+		 * Note: Currently there aren't any global commands 
+		 */
+		
+		// globals
+		var cmds = await _client.GetGlobalApplicationCommandsAsync();
+		foreach (var c in cmds)
+			await c.DeleteAsync();
+		
+		// guilds
+		foreach (var guildId in guilds)
+		{
+			var guild = _client.GetGuild(guildId);
+			await guild.DeleteApplicationCommandsAsync();
 		}
 	}
 
@@ -157,6 +177,4 @@ public class DiscordWrapper
 		Logger.Log(log.ToString());
 		await Task.CompletedTask;
 	}
-	
-	
 }
