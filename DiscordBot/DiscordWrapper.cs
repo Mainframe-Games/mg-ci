@@ -66,8 +66,15 @@ public class DiscordWrapper
 
 		try
 		{
-			await guild.CreateApplicationCommandAsync(built); // guild only
-			// await _client.CreateGlobalApplicationCommandAsync(built); // global
+			
+			// clear currents
+			await guild.DeleteApplicationCommandsAsync();
+			
+			// guild only
+			await guild.CreateApplicationCommandAsync(built);
+			
+			// global -- TODO: probably remove this
+			// await _client.CreateGlobalApplicationCommandAsync(built);
 		}
 		catch (HttpException exception)
 		{

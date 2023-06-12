@@ -45,6 +45,12 @@ public class DiscordConfig
 
 	private async Task SetWorkspaceNamesAsync()
 	{
+		if (string.IsNullOrEmpty(BuildServerUrl) || Args.Environment.IsFlag("-local"))
+		{
+			WorkspaceNames = Workspace.GetAvailableWorkspaces().Select(x => x.Name).ToList();
+			return;
+		}
+		
 		var res = await Web.SendAsync(HttpMethod.Get, $"{BuildServerUrl}/workspaces");
 		
 		if (res.StatusCode != HttpStatusCode.OK)
