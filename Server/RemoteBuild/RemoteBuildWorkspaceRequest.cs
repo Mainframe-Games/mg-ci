@@ -34,7 +34,8 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 			Data = new BuildPipelineResponse
 			{
 				PipelineId = App.NextPipelineId - 1,
-				Message = workspace.Name,
+				Workspace = workspace.Name,
+				Args = Args,
 				UnityVersion = workspace.UnityVersion,
 				ChangesetId = changeSetId,
 				ChangesetGuid = guid,
@@ -47,9 +48,10 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 public class BuildPipelineResponse
 {
 	public ulong? PipelineId { get; set; }
-	public string? Message { get; set; }
+	public string? Workspace { get; set; }
+	public string? Args { get; set; }
+	public string? Branch { get; set; }
 	public int? ChangesetId { get; set; }
 	public string? ChangesetGuid { get; set; }
-	public string? Branch { get; set; }
 	public string? UnityVersion { get; set; }
 }
