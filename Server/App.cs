@@ -147,9 +147,9 @@ public static class App
 		if (pipeline.Config.Deploy?.Clanforge is null or false)
 			return;
 
-		pipeline.Args.TryGetArg("-setlive", out var branch);
-		pipeline.Args.TryGetArg("-clanforge", out var profile, "deva");
-		var clanforge = new ClanForgeDeploy(Config.Clanforge, profile, buildVersionTitle, branch);
+		pipeline.Args.TryGetArg("-setlive", out var beta, Config.Steam.DefaultSetLive);
+		pipeline.Args.TryGetArg("-clanforge", out var profile, Config.Clanforge.DefaultProfile);
+		var clanforge = new ClanForgeDeploy(Config.Clanforge, profile, buildVersionTitle, beta);
 		await clanforge.Deploy();
 	}
 
@@ -205,10 +205,11 @@ public static class App
 	private static void DeploySteam(BuildPipeline pipeline, string buildVersionTitle)
 	{
 		var vdfPaths = pipeline.Config.Deploy?.Steam;
-		pipeline.Args.TryGetArg("-setlive", out var setLive);
 		
 		if (vdfPaths == null)
 			return;
+		
+		pipeline.Args.TryGetArg("-setlive", out var setLive, Config.Steam.DefaultSetLive);
 		
 		foreach (var vdfPath in vdfPaths)
 		{
@@ -222,7 +223,7 @@ public static class App
 
 	private static string? BuildPipelineOnGetExtraHookLog(BuildPipeline pipeline)
 	{
-		pipeline.Args.TryGetArg("-clanforge", out var profile, "deva");
+		pipeline.Args.TryGetArg("-clanforge", out var profile, Config.Clanforge.DefaultProfile);
 		return Config.Clanforge?.BuildHookMessage(profile, "Updated");
 	}
 	

@@ -10,6 +10,7 @@ public class ClanforgeConfig : ICloneable
 	public uint Asid { get; set; }
 	public uint MachineId { get; set; }
 	public string? Url { get; set; }
+	public string? DefaultProfile { get; set; }
 	public Dictionary<string, ClanforgeProfile> Profiles { get; set; }
 
 	private ClanforgeProfile GetProfile(string? profile)
@@ -31,14 +32,14 @@ public class ClanforgeConfig : ICloneable
 		return GetProfile(profileId).Id;
 	}
 
-	public string GetUrl(string? branch)
+	public string GetUrl(string? beta)
 	{
-		if (string.IsNullOrEmpty(branch))
+		if (string.IsNullOrEmpty(beta))
 			return Url ?? string.Empty;
 
 		var uriBuilder = new UriBuilder(Url ?? string.Empty);
 		var query = HttpUtility.ParseQueryString(uriBuilder.Query);
-		query["beta"] = branch;
+		query["beta"] = beta;
 		uriBuilder.Query = query.ToString();
 		return uriBuilder.ToString();
 	}
