@@ -126,6 +126,9 @@ public static class App
 		if (Config.Ugs?.ServerHosting == null)
 			return;
 
+		if (Config.Ugs.ServerHosting.BuildId == 0)
+			throw new Exception("Invalid build Id");
+
 		var project = Config.Ugs.GetProjectFromName(pipeline.Workspace.Name);
 		var gameServer = new UnityGameServerRequest(Config.Ugs.KeyId, Config.Ugs.SecretKey);
 		await gameServer.CreateNewBuildVersion(
