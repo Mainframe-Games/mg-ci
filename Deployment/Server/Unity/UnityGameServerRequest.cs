@@ -48,6 +48,6 @@ public class UnityGameServerRequest : UnityWebRequest
 			}
 		};
 
-		await Web.SendAsync(HttpMethod.Post, url, $"Basic {AuthToken}", body);
+		await Web.SendAsync(HttpMethod.Post, url, AuthToken, body);
 	}
 }
