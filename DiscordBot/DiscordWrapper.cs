@@ -1,8 +1,9 @@
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
-using DiscordBot.Configs;
+using DiscordBot.Commands;
 using SharedLib;
+using DiscordConfig = DiscordBot.Configs.DiscordConfig;
 
 namespace DiscordBot;
 
@@ -13,9 +14,11 @@ namespace DiscordBot;
 public class DiscordWrapper
 {
 	private readonly DiscordSocketClient _client;
-	private readonly Configs.DiscordConfig _config;
+	private readonly DiscordConfig _config;
+	
+	private Command[] Commands { get; set; }
 
-	public DiscordWrapper(Configs.DiscordConfig config)
+	public DiscordWrapper(DiscordConfig config)
 	{
 		var socketConfig = new DiscordSocketConfig { UseInteractionSnowflakeDate = false };
 		_client = new DiscordSocketClient(socketConfig);
@@ -23,6 +26,8 @@ public class DiscordWrapper
 		_client.Ready += ClientReady;
 		_client.SlashCommandExecuted += SlashCommandHandler;
 		_config = config;
+
+		RefreshCommand.OnRefreshed += RefreshCommands;
 	}
 
 	public async Task Init()
@@ -32,58 +37,11 @@ public class DiscordWrapper
 		await Task.Delay(-1);
 	}
 
-	private SlashCommandOptionBuilder WorkspaceOptions()
-	{
-		var opt = new SlashCommandOptionBuilder()
-			.WithName("workspaces")
-			.WithDescription("List of available workspaces")
-			.WithType(ApplicationCommandOptionType.Integer);
-		for (int i = 0; i < _config.WorkspaceNames.Count; i++)
-			opt.AddChoice(_config.WorkspaceNames[i], i);
-		return opt;
-	}
-	
-	private SlashCommandOptionBuilder BuildArgumentsOptions()
-	{
-		var opt = new SlashCommandOptionBuilder()
-			.WithName("args")
-			.WithDescription("Arguments send to build server")
-			// TODO: create dynamic way of adding args from master server
-			// .AddChoice("-noprebuild", 0)
-			// .AddChoice("-nobuild", 1)
-			// .AddChoice("-nopostbuild", 2)
-			// .AddChoice("-nosteamdeploy", 3)
-			.WithType(ApplicationCommandOptionType.String);
-		return opt;
-	}
-
 	private async Task ClientReady()
 	{
-		var guild = _client.GetGuild(_config.GuildId);
-
-		var cmd = new SlashCommandBuilder()
-			.WithName(_config.CommandName)
-			.WithDescription("Starts a build from discord")
-			.AddOptions(WorkspaceOptions())
-			.AddOptions(BuildArgumentsOptions());
-
-		var built = cmd.Build();
-
-		try
-		{
-			// clear currents
-			await FlushCommandsAsync(_config.GuildId);
-			
-			// guild only
-			await guild.CreateApplicationCommandAsync(built);
-		}
-		catch (HttpException exception)
-		{
-			var json = Json.Serialise(exception.Message);
-			Logger.Log(json);
-		}
+		await RefreshCommands();
 	}
-	
+
 	private async Task FlushCommandsAsync(params ulong[] guilds)
 	{
 		/*
@@ -103,6 +61,31 @@ public class DiscordWrapper
 		}
 	}
 
+	private async Task RefreshCommands()
+	{
+		// clear currents
+		await FlushCommandsAsync(_config.GuildId);
+
+		Commands = new Command[]
+		{
+			new BuildCommand(_config.CommandName, "Starts a build from discord", _config.BuildServerUrl, _config.WorkspaceNames),
+			new RefreshCommand("refresh-workspaces", "Refreshes to workspaces on the master server", _config),
+			new ServerCommand("update-server-image", "Requests to master server to update game server images")
+		};
+		
+		try
+		{
+			var guild = _client.GetGuild(_config.GuildId);
+			foreach (var cmd in Commands)
+				await guild.CreateApplicationCommandAsync(cmd.Build());
+		}
+		catch (HttpException exception)
+		{
+			var json = Json.Serialise(exception.Message);
+			Logger.Log(json);
+		}
+	}
+
 	private async Task SlashCommandHandler(SocketSlashCommand command)
 	{
 		// We need to extract the user parameter from the command. since we only have one option and it's required, we can just use the first option.
@@ -111,48 +94,19 @@ public class DiscordWrapper
 
 		if (!IsAuthorised(user))
 		{
-			await command.RespondError(user, "Error", "You are not authorised for this command");
+			await command.RespondError(user, "Unauthorised", "You are not authorised for this command");
 			return;
 		}
 
-		string? workspaceName = null;
-		string? args = null;
+		var cmd = Commands.FirstOrDefault(x => command.CommandName == x.CommandName);
 
-		// user options
-		foreach (var option in command.Data.Options)
+		if (cmd != null)
 		{
-			switch (option.Name)
-			{
-				case "workspaces":
-					var index = (int)(long)option.Value;
-					workspaceName = _config.WorkspaceNames[index];
-					break;
-				
-				case "args":
-					args = option.Value?.ToString();
-					break;
-			}
+			await cmd.ExecuteAsync(command, user);
 		}
-
-		if (string.IsNullOrEmpty(workspaceName))
+		else
 		{
-			await command.RespondError(user, "Error", "No Workspace chosen");
-			return;
-		}
-		
-		await command.DeferAsync(/*true,*/);
-
-		try
-		{
-			// request to build server
-			var body = new BuildRequest { WorkspaceBuildRequest = new WorkspaceReq { WorkspaceName = workspaceName, Args = args } };
-			var res = await Web.SendAsync(HttpMethod.Post, _config.BuildServerUrl, body: body);
-			await command.RespondSuccessDelayed(user, "Build Started", res.Content);
-		}
-		catch (Exception e)
-		{
-			Logger.Log(e);
-			await command.RespondErrorDelayed(user, "Build Server request failed", e.Message);
+			await command.RespondError(user, "Not Recognised", $"Command not recognised: {command.CommandName}");
 		}
 	}
 

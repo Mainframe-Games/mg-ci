@@ -43,7 +43,7 @@ public class DiscordConfig
 		WorkspaceNames = updated.WorkspaceNames;
 	}
 
-	private async Task SetWorkspaceNamesAsync()
+	public async Task SetWorkspaceNamesAsync()
 	{
 		if (string.IsNullOrEmpty(BuildServerUrl) || Args.Environment.IsFlag("-local"))
 		{
