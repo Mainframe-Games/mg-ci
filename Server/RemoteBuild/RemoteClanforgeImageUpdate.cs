@@ -10,7 +10,7 @@ namespace Server.RemoteBuild;
 public class RemoteClanforgeImageUpdate : IRemoteControllable
 {
 	public string? Profile { get; set; }
-	public string? Branch { get; set; }
+	public string? Beta { get; set; }
 	public string? Desc { get; set; }
 
 	public ServerResponse Process()
@@ -26,7 +26,7 @@ public class RemoteClanforgeImageUpdate : IRemoteControllable
 		
 		try
 		{
-			var clanforge = new ClanForgeDeploy(clanforgeConfig, Profile, Desc, Branch);
+			var clanforge = new ClanForgeDeploy(clanforgeConfig, Profile, Desc, Beta);
 			await clanforge.Deploy();
 			SendHook(Desc, clanforgeConfig?.BuildHookMessage(Profile, "Updated"));
 			Logger.Log("ClanForgeDeploy complete");

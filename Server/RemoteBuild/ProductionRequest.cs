@@ -29,7 +29,7 @@ public class ProductionRequest : IRemoteControllable
 		var pro = new RemoteClanforgeImageUpdate
 		{
 			Profile = Profile,
-			Branch = Branch,
+			Beta = Branch,
 			Desc = $"Build Version: {buildVersion}"
 		};
 
