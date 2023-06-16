@@ -82,7 +82,8 @@ public class DiscordWrapper
 			new BuildCommand(_config.CommandName, "Starts a build from discord", _config.BuildServerUrl, _config.WorkspaceNames),
 			new RefreshCommand("refresh-workspaces", "Refreshes to workspaces on the master server", _config),
 			// new GameServerUpdateCommand("update-server-image", "Requests to master server to update game server images"),
-			new ClanforgeCommand("server-update-clanforge", "Updates the clanforge game image", _config.BuildServerUrl)
+			new ClanforgeCommand("server-update-clanforge", "Updates the clanforge game image", _config.BuildServerUrl),
+			new ProductionCommand("production", "Puts steps in place for production release", _config.BuildServerUrl),
 		};
 		
 		try

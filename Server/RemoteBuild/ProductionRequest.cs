@@ -1,3 +1,4 @@
+using System.Net;
 using Deployment.Server;
 using Deployment.Server.Unity;
 using Server.Configs;
@@ -10,6 +11,7 @@ public class ProductionRequest : IRemoteControllable
 	public string? WorkspaceName { get; set; }
 	public string? Profile { get; set; }
 	public string? Branch { get; set; }
+	public string? Password { get; set; }
 
 	public ServerResponse Process()
 	{
@@ -17,10 +19,13 @@ public class ProductionRequest : IRemoteControllable
 		workspace.Update();
 		var buildVersion = workspace.GetAppVersion();
 
+		if (buildVersion != Password)
+			return new ServerResponse(HttpStatusCode.BadRequest, "Incorrect Password");
+
 		Environment.CurrentDirectory = workspace.Directory;
 		ClanforgeProcess(buildVersion);
 		RemoteConfigProcess(buildVersion);
-		return ServerResponse.Default;
+		return new ServerResponse(HttpStatusCode.OK, this);
 	}
 
 	private void ClanforgeProcess(string buildVersion)

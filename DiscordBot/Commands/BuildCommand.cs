@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using DiscordBot.Configs;
+using Newtonsoft.Json.Linq;
 using SharedLib;
 
 namespace DiscordBot.Commands;
@@ -26,21 +27,21 @@ public class BuildCommand : Command
 
 	public override async Task ExecuteAsync(SocketSlashCommand command)
 	{
-		var workspaceName = GetOptionValueString(command, "workspace");
-		var args = GetOptionValueString(command, "args");
-
-		if (string.IsNullOrEmpty(workspaceName))
-		{
-			await command.RespondError(command.User, "Error", "No Workspace chosen");
-			return;
-		}
-
-		await command.DeferAsync();
-
 		try
 		{
+			var workspaceName = GetOptionValueString(command, "workspace");
+			var args = GetOptionValueString(command, "args");
+			await command.DeferAsync();
+			
 			// request to build server
-			var body = new BuildRequest { WorkspaceBuildRequest = new WorkspaceReq { WorkspaceName = workspaceName, Args = args } };
+			var body = new JObject
+			{
+				["workspaceBuildRequest"] = new JObject
+				{
+					["workspaceName"] = workspaceName,
+					["args"] = args,
+				}
+			};
 			var res = await Web.SendAsync(HttpMethod.Post, BuildServerUrl, body: body);
 			await command.RespondSuccessDelayed(command.User, "Build Started", res.Content);
 		}

@@ -17,11 +17,7 @@ public class RemoteClanforgeImageUpdate : IRemoteControllable
 	public ServerResponse Process()
 	{
 		ProcessInternalAsync().FireAndForget();
-		return new ServerResponse
-		{
-			StatusCode = HttpStatusCode.OK,
-			Data = this
-		};
+		return new ServerResponse(HttpStatusCode.OK, this);
 	}
 
 	private async Task ProcessInternalAsync()

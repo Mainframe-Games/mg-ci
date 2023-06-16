@@ -5,6 +5,9 @@ using SharedLib;
 
 namespace DiscordBot.Commands;
 
+/// <summary>
+///  TODO: need to work out how to do interactions ... need a URL
+/// </summary>
 public class GameServerUpdateCommand : Command
 {
 	public string? BuildServerUrl { get; set; }
