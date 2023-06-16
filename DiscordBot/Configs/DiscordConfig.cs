@@ -18,9 +18,8 @@ public class DiscordConfig
 	public ulong GuildId { get; set; }
 	public List<string>? AuthorisedRoles { get; set; }
 	public string? CommandName { get; set; }
-	
-	[JsonIgnore]
-	public List<string?>? WorkspaceNames { get; private set; }
+
+	[JsonIgnore] public List<string?>? WorkspaceNames { get; private set; } = new();
 
 	public static async Task<DiscordConfig?> LoadAsync()
 	{
@@ -30,19 +29,6 @@ public class DiscordConfig
 		return config;
 	}
 
-	public async Task RefreshAsync()
-	{
-		var updated = await LoadAsync();
-		
-		if (updated == null)
-			return;
-		
-		BuildServerUrl = updated.BuildServerUrl;
-		CommandName = updated.CommandName;
-		AuthorisedRoles = updated.AuthorisedRoles;
-		WorkspaceNames = updated.WorkspaceNames;
-	}
-
 	public async Task SetWorkspaceNamesAsync()
 	{
 		if (string.IsNullOrEmpty(BuildServerUrl) || Args.Environment.IsFlag("-local"))
@@ -50,13 +36,16 @@ public class DiscordConfig
 			WorkspaceNames = Workspace.GetAvailableWorkspaces().Select(x => x.Name).ToList();
 			return;
 		}
-		
-		var res = await Web.SendAsync(HttpMethod.Get, $"{BuildServerUrl}/workspaces");
-		
-		if (res.StatusCode != HttpStatusCode.OK)
-			throw new WebException(res.Content);
-		
-		var list = Json.Deserialise<List<string?>?>(res.Content);
-		WorkspaceNames = list;
+
+		try
+		{
+			var res = await Web.SendAsync(HttpMethod.Get, $"{BuildServerUrl}/workspaces");
+			var list = Json.Deserialise<List<string?>?>(res.Content);
+			WorkspaceNames = list;
+		}
+		catch (HttpRequestException)
+		{
+			Logger.Log($"Connection to '{BuildServerUrl}' count not be made");
+		}
 	}
 }

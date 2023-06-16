@@ -19,7 +19,7 @@ public class ProductionCommand : Command
 		var password = new SlashCommandOptionBuilder()
 			.WithName("password")
 			.WithRequired(true)
-			.WithDescription("Password is just to compare the version of the game you intend to release. Just adds a bit of protection")
+			.WithDescription("Password is version of the game you intend to release")
 			.WithType(ApplicationCommandOptionType.String);
 		
 		return CreateCommand()
