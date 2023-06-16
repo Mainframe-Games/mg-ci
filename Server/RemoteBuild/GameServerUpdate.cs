@@ -5,7 +5,7 @@ namespace Server.RemoteBuild;
 
 public class GameServerUpdate : IRemoteControllable
 {
-	public RemoteClanforgeImageUpdate? Usg { get; set; }
+	public MultiplayServerUpdate? Usg { get; set; }
 	public RemoteClanforgeImageUpdate? Clanforge { get; set; }
 	
 	public ServerResponse Process()

@@ -1,3 +1,4 @@
+using System.Net;
 using Deployment.Configs;
 using Deployment.Deployments;
 using Deployment.Server;
@@ -16,7 +17,11 @@ public class RemoteClanforgeImageUpdate : IRemoteControllable
 	public ServerResponse Process()
 	{
 		ProcessInternalAsync().FireAndForget();
-		return ServerResponse.Default;
+		return new ServerResponse
+		{
+			StatusCode = HttpStatusCode.OK,
+			Data = this
+		};
 	}
 
 	private async Task ProcessInternalAsync()
