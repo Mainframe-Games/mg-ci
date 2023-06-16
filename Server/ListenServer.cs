@@ -1,9 +1,6 @@
 ﻿using System.Net;
 using System.Text;
-using Deployment.RemoteBuild;
 using Deployment.Server;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Server.RemoteBuild;
 using SharedLib;
 
@@ -17,14 +14,19 @@ public class ListenServer
 	private readonly string _ip;
 	private readonly ushort _port;
 
+	public DateTime ServerStartTime { get; }
+
 	public ListenServer(string ip, ushort port = 8080)
 	{
 		_ip = ip;
 		_port = port;
-		
+
 		_listener = new HttpListener();
 		_listener.Prefixes.Add($"http://{ip}:{port}/");
 		_listener.Start();
+		
+		ServerStartTime = DateTime.Now;
+		
 		CheckIfServerStillListening();
 	}
 
@@ -99,7 +101,7 @@ public class ListenServer
 		return new ServerResponse(HttpStatusCode.OK, "ok");
 	}
 
-	private static async Task<ServerResponse> HandleGet(HttpListenerRequest request)
+	private async Task<ServerResponse> HandleGet(HttpListenerRequest request)
 	{
 		await Task.CompletedTask;
 
@@ -111,8 +113,11 @@ public class ListenServer
 				var workspaces = Workspace.GetAvailableWorkspaces().Select(x => x.Name).ToArray();
 				return new ServerResponse(HttpStatusCode.OK, workspaces);
 			
+			case "/info": 
+				return new ServerInfo(this).Process();
+			
 			default:
-				return new ServerResponse(HttpStatusCode.OK, "ok");
+				return ServerResponse.Default;
 		}
 	}
 	
