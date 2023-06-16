@@ -7,8 +7,8 @@ namespace DiscordBot.Commands;
 
 public class BuildCommand : Command
 {
-	public string? BuildServerUrl { get; set; }
-	public List<string?>? WorkspaceNames { get; set; }
+	private string? BuildServerUrl { get; }
+	private List<string?>? WorkspaceNames { get; }
 	
 	public BuildCommand(string? commandName, string? description, string buildServerUrl, List<string?>? workspaceNames) : base(commandName, description)
 	{
@@ -24,57 +24,44 @@ public class BuildCommand : Command
 			.Build();
 	}
 
-	public override async Task ExecuteAsync(SocketSlashCommand command, IUser user)
+	public override async Task ExecuteAsync(SocketSlashCommand command)
 	{
-		string? workspaceName = null;
-		string? args = null;
-
-		// user options
-		foreach (var option in command.Data.Options)
-		{
-			switch (option.Name)
-			{
-				case "workspaces":
-					var index = (int)(long)option.Value;
-					workspaceName = WorkspaceNames[index];
-					break;
-
-				case "args":
-					args = option.Value?.ToString();
-					break;
-			}
-		}
+		var workspaceName = GetOptionValueString(command, "workspace");
+		var args = GetOptionValueString(command, "args");
 
 		if (string.IsNullOrEmpty(workspaceName))
 		{
-			await command.RespondError(user, "Error", "No Workspace chosen");
+			await command.RespondError(command.User, "Error", "No Workspace chosen");
 			return;
 		}
 
-		await command.DeferAsync(/*true,*/);
+		await command.DeferAsync();
 
 		try
 		{
 			// request to build server
 			var body = new BuildRequest { WorkspaceBuildRequest = new WorkspaceReq { WorkspaceName = workspaceName, Args = args } };
 			var res = await Web.SendAsync(HttpMethod.Post, BuildServerUrl, body: body);
-			await command.RespondSuccessDelayed(user, "Build Started", res.Content);
+			await command.RespondSuccessDelayed(command.User, "Build Started", res.Content);
 		}
 		catch (Exception e)
 		{
 			Logger.Log(e);
-			await command.RespondErrorDelayed(user, "Build Server request failed", e.Message);
+			await command.RespondErrorDelayed(command.User, "Build Server request failed", e.Message);
 		}
 	}
 	
 	private SlashCommandOptionBuilder WorkspaceOptions()
 	{
 		var opt = new SlashCommandOptionBuilder()
-			.WithName("workspaces")
+			.WithName("workspace")
 			.WithDescription("List of available workspaces")
-			.WithType(ApplicationCommandOptionType.Integer);
-		for (int i = 0; i < WorkspaceNames.Count; i++)
-			opt.AddChoice(WorkspaceNames[i], i);
+			.WithRequired(true)
+			.WithType(ApplicationCommandOptionType.String);
+		
+		foreach (var workspace in WorkspaceNames)
+			opt.AddChoice(workspace, workspace);
+
 		return opt;
 	}
 	

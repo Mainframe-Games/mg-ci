@@ -19,7 +19,12 @@ public abstract class Command
 		return CreateCommand().Build();
 	}
 	
-	public abstract Task ExecuteAsync(SocketSlashCommand command, IUser user);
+	public abstract Task ExecuteAsync(SocketSlashCommand command);
+	
+	public virtual async Task ModifyOptions(SocketSlashCommand socketSlashCommand, SocketInteraction socketInteraction)
+	{
+		await Task.CompletedTask;
+	}
 	
 	protected SlashCommandBuilder CreateCommand()
 	{
@@ -28,8 +33,29 @@ public abstract class Command
 			.WithDescription(Description);
 	}
 
-	protected static async Task NotImplemented(SocketSlashCommand command, IUser user)
+	protected static string? GetOptionValueString(SocketSlashCommand command, string optionName)
 	{
-		await command.RespondError(user, "Not Implemented", "Command not implemented yet");
+		foreach (var option in command.Data.Options)
+		{
+			if (option.Name == optionName)
+				return option.Value?.ToString();
+		}
+		return null;
+	}
+	
+	protected static int GetOptionValueInt(SocketSlashCommand command, string optionName)
+	{
+		foreach (var option in command.Data.Options)
+		{
+			if (option.Name == optionName)
+				return (int)(long)option.Value;
+		}
+		return -1;
+	}
+	
+
+	protected static async Task NotImplemented(SocketSlashCommand command)
+	{
+		await command.RespondError(command.User, "Not Implemented", "Command not implemented yet");
 	}
 }

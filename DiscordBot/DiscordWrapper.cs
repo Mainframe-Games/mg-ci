@@ -25,9 +25,20 @@ public class DiscordWrapper
 		_client.Log += OnLog;
 		_client.Ready += ClientReady;
 		_client.SlashCommandExecuted += SlashCommandHandler;
+		_client.InteractionCreated += HandleInteractionAsync;
 		_config = config;
 
 		RefreshCommand.OnRefreshed += RefreshCommands;
+	}
+
+	private async Task HandleInteractionAsync(SocketInteraction interaction)
+	{
+		if (interaction is not SocketSlashCommand command) 
+			return;
+		
+		var cmd = Commands.FirstOrDefault(x => command.CommandName == x.CommandName);
+		if (cmd != null)
+			await cmd.ModifyOptions(command, interaction);
 	}
 
 	public async Task Init()
@@ -70,7 +81,8 @@ public class DiscordWrapper
 		{
 			new BuildCommand(_config.CommandName, "Starts a build from discord", _config.BuildServerUrl, _config.WorkspaceNames),
 			new RefreshCommand("refresh-workspaces", "Refreshes to workspaces on the master server", _config),
-			new ServerCommand("update-server-image", "Requests to master server to update game server images")
+			// new GameServerUpdateCommand("update-server-image", "Requests to master server to update game server images"),
+			new ClanforgeCommand("server-update-clanforge", "Updates the clanforge game image", _config.BuildServerUrl)
 		};
 		
 		try
@@ -88,26 +100,21 @@ public class DiscordWrapper
 
 	private async Task SlashCommandHandler(SocketSlashCommand command)
 	{
-		// We need to extract the user parameter from the command. since we only have one option and it's required, we can just use the first option.
-		var user = (SocketGuildUser)command.User;
-		await _config.RefreshAsync();
-
-		if (!IsAuthorised(user))
+		// check auth
+		if (!IsAuthorised((SocketGuildUser)command.User))
 		{
-			await command.RespondError(user, "Unauthorised", "You are not authorised for this command");
+			await command.RespondError(command.User, "Unauthorised", "You are not authorised for this command");
 			return;
 		}
 
+		// find command
 		var cmd = Commands.FirstOrDefault(x => command.CommandName == x.CommandName);
 
+		// execute or fail
 		if (cmd != null)
-		{
-			await cmd.ExecuteAsync(command, user);
-		}
+			await cmd.ExecuteAsync(command);
 		else
-		{
-			await command.RespondError(user, "Not Recognised", $"Command not recognised: {command.CommandName}");
-		}
+			await command.RespondError(command.User, "Not Recognised", $"Command not recognised: {command.CommandName}");
 	}
 
 	private bool IsAuthorised(SocketGuildUser guildUser)

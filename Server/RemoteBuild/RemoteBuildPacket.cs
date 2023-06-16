@@ -1,4 +1,5 @@
 ﻿using Deployment.Server;
+using SharedLib;
 
 namespace Server.RemoteBuild;
 
@@ -23,9 +24,9 @@ public class RemoteBuildPacket : IRemoteControllable
 	public RemoteBuildResponse? BuildResponse { get; set; }
 	
 	/// <summary>
-	/// For updating a clanforge image via API request
+	/// For updating game servers
 	/// </summary>
-	public RemoteClanforgeImageUpdate? ClanforgeImageUpdate { get; set; }
+	public GameServerUpdate? GameServerUpdate { get; set; }
 	
 	/// <summary>
 	/// Used to do any automation after switch `default` on Steam
@@ -41,8 +42,8 @@ public class RemoteBuildPacket : IRemoteControllable
 		if (WorkspaceBuildRequest != null) return WorkspaceBuildRequest.Process();
 		if (BuildTargetRequest != null) return BuildTargetRequest.Process();
 		if (BuildResponse != null) return BuildResponse.Process();
-		if (ClanforgeImageUpdate != null) return ClanforgeImageUpdate.Process();
+		if (GameServerUpdate != null) return GameServerUpdate.Process();
 		if (ProductionProcess != null) return ProductionProcess.Process();
-		throw new Exception($"Issue with {nameof(RemoteBuildPacket)}. Neither {nameof(BuildTargetRequest)} or {nameof(BuildResponse)} is valid");
+		throw new Exception($"Issue with {nameof(RemoteBuildPacket)}. {Json.Serialise(this)}");
 	}
 }

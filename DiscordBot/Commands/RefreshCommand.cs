@@ -1,6 +1,5 @@
-﻿using Discord;
-using Discord.WebSocket;
-using DiscordConfig = DiscordBot.Configs.DiscordConfig;
+﻿using Discord.WebSocket;
+using DiscordBot.Configs;
 
 namespace DiscordBot.Commands;
 
@@ -14,11 +13,11 @@ public class RefreshCommand : Command
 		_config = config;
 	}
 
-	public override async Task ExecuteAsync(SocketSlashCommand command, IUser user)
+	public override async Task ExecuteAsync(SocketSlashCommand command)
 	{
 		await command.DeferAsync();
 		await _config.SetWorkspaceNamesAsync();
-		await command.RespondSuccessDelayed(user, "Workspaces Updated", string.Join("\n", _config.WorkspaceNames));
+		await command.RespondSuccessDelayed(command.User, "Workspaces Updated", string.Join("\n", _config.WorkspaceNames));
 		await OnRefreshed.Invoke();
 	}
 }
