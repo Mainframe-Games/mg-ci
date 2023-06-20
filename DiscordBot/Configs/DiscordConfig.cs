@@ -1,4 +1,3 @@
-using System.Net;
 using Newtonsoft.Json;
 using SharedLib;
 
@@ -10,14 +9,14 @@ public class DiscordConfig
 	    ? configPath 
 	    : "config-discord.json";
 
-    public string? BuildServerUrl { get; set; }
+    public string? BuildServerUrl { get; set; } = "http://127.0.0.1:8080";
 	public string? Token { get; set; }
 	/// <summary>
 	/// Channel Id
 	/// </summary>
 	public ulong GuildId { get; set; }
 	public List<string>? AuthorisedRoles { get; set; }
-	public string? CommandName { get; set; }
+	public string? CommandName { get; set; } = "start-build";
 
 	[JsonIgnore] public List<string?>? WorkspaceNames { get; private set; } = new();
 

@@ -12,18 +12,28 @@ Supported build targets:
 - [x] Windows
 - [x] Mac
 - [x] Linux
-- [ ] iOS
-- [ ] Android
+- [x] iOS
+- [x] Android
 - [ ] Nintendo Switch
 - [ ] Xbox
 - [ ] Playstation
 
 Supported deploy targets:
+
+Client Deployments
 - [x] Steam
-- [x] Itchio (Stopped support, but its still in there just needs the class to be hooked up)
-- [x] Clanforge (Will eventually be for UGS Multiplay)
-- [ ] Apple Store
-- [ ] Android Store
+- [x] Apple Store
+- [x] Android Store
+- [ ] Nintendo Switch Store
+- [ ] Xbox Store
+- [ ] Playstation Store
+
+Server Deployments:
+- [x] Unity Game Server Hosting (Multiplay)
+  - [x] Amazing S3 Bucket
+  - [ ] Container Image
+  - [ ] Unity CCD
+- [x] Clanforge
 
 # Server Config
 

@@ -32,9 +32,9 @@ public static class App
 		}
 		else
 		{
-			args.TryGetArg("-server", 0, out string ip, Config.IP);
-			args.TryGetArg("-server", 1, out int port, Config.Port);
-			Server = new ListenServer(ip, (ushort)port);
+			args.TryGetArg("-ip", out var ip, Config.IP);
+			args.TryGetArg("-port", out var port, Config.Port.ToString());
+			Server = new ListenServer(ip, ushort.Parse(port));
 			
 			if (Config.AuthTokens is { Count: > 0 })
 			{

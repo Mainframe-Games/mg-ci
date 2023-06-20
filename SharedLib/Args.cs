@@ -37,7 +37,7 @@ public class Args
 	/// <param name="cmd"></param>
 	/// <param name="args"></param>
 	/// <returns></returns>
-	public bool TryGetArgs(string cmd, out List<string> args)
+	private bool TryGetArgs(string cmd, out List<string> args)
 		=> _cmds.TryGetValue(cmd, out args);
 
 	public bool TryGetArg(string cmd, out string arg, string defaultValue = null)
@@ -57,13 +57,7 @@ public class Args
 		return TryGetArgs(cmd, out var args) && TryGetArg(args, index, out arg, defaultValue);
 	}
 
-	public bool TryGetArg(string cmd, int index, out int arg, int defaultValue = -1)
-	{
-		arg = defaultValue;
-		return TryGetArgs(cmd, out var args) && TryGetArg(args, index, out arg, defaultValue);
-	}
-
-	public bool TryGetArg(IReadOnlyList<string> args, int index, out string arg, string defaultValue = null)
+	private static bool TryGetArg(IReadOnlyList<string> args, int index, out string arg, string defaultValue = null)
 	{
 		arg = defaultValue;
 
@@ -71,15 +65,6 @@ public class Args
 			return false;
 
 		arg = args[index];
-		return true;
-	}
-
-	public bool TryGetArg(IReadOnlyList<string> args, int index, out int arg, int defaultValue = -1)
-	{
-		arg = defaultValue;
-		if (!TryGetArg(args, index, out string str, defaultValue.ToString()))
-			return false;
-		arg = Convert.ToInt32(str);
 		return true;
 	}
 

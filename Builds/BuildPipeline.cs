@@ -110,7 +110,8 @@ public class BuildPipeline
 			Workspace.CleanBuild();
 		
 		Workspace.Clear();
-		Args.TryGetArg("-changeSetId", 0, out int id);
+		Args.TryGetArg("-changesetid", out var idStr);
+		var id = int.Parse(idStr);
 		Workspace.Update(id);
 
 		Workspace.GetCurrent(out _currentChangeSetId, out _currentGuid);
