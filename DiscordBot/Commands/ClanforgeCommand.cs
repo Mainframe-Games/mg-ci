@@ -7,12 +7,8 @@ namespace DiscordBot.Commands;
 
 public class ClanforgeCommand : Command
 {
-	private string BuildServerUrl { get; }
-	
-	public ClanforgeCommand(string? commandName, string? description, string buildServerUrl) : base(commandName, description)
-	{
-		BuildServerUrl = buildServerUrl;
-	}
+	public override string? CommandName => "server-update-clanforge";
+	public override string? Description => "Updates the clanforge game image";
 
 	public override SlashCommandProperties Build()
 	{
@@ -71,7 +67,7 @@ public class ClanforgeCommand : Command
 				}
 			};
 			
-			var res = await Web.SendAsync(HttpMethod.Post, BuildServerUrl, body: body);
+			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl, body: body);
 			await command.RespondSuccessDelayed(command.User, "Game Server Update Started", res.Content);
 		}
 		catch (Exception e)

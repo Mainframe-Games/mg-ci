@@ -5,19 +5,15 @@ namespace DiscordBot.Commands;
 
 public class RefreshCommand : Command
 {
-	private readonly DiscordConfig _config;
 	public static event Func<Task> OnRefreshed;
-	
-	public RefreshCommand(string? commandName, string? description, DiscordConfig config) : base(commandName, description)
-	{
-		_config = config;
-	}
+	public override string? CommandName => "refresh-workspaces";
+	public override string? Description => "Refreshes the workspaces on the master server so you don't need to restart server";
 
 	public override async Task ExecuteAsync(SocketSlashCommand command)
 	{
 		await command.DeferAsync();
-		await _config.SetWorkspaceNamesAsync();
-		await command.RespondSuccessDelayed(command.User, "Workspaces Updated", string.Join("\n", _config.WorkspaceNames));
+		await DiscordWrapper.Config.SetWorkspaceNamesAsync();
+		await command.RespondSuccessDelayed(command.User, "Workspaces Updated", string.Join("\n", DiscordWrapper.Config.WorkspaceNames));
 		await OnRefreshed.Invoke();
 	}
 }

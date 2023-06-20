@@ -1,3 +1,4 @@
+using System.Reflection;
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
@@ -14,8 +15,8 @@ namespace DiscordBot;
 public class DiscordWrapper
 {
 	private readonly DiscordSocketClient _client;
-	private readonly DiscordConfig _config;
 	
+	public static DiscordConfig Config { get; private set; }
 	private Command[] Commands { get; set; }
 
 	public DiscordWrapper(DiscordConfig config)
@@ -26,7 +27,7 @@ public class DiscordWrapper
 		_client.Ready += ClientReady;
 		_client.SlashCommandExecuted += SlashCommandHandler;
 		_client.InteractionCreated += HandleInteractionAsync;
-		_config = config;
+		Config = config;
 
 		RefreshCommand.OnRefreshed += RefreshCommands;
 	}
@@ -43,7 +44,7 @@ public class DiscordWrapper
 
 	public async Task Init()
 	{
-		await _client.LoginAsync(TokenType.Bot, _config.Token);
+		await _client.LoginAsync(TokenType.Bot, Config.Token);
 		await _client.StartAsync();
 		await Task.Delay(-1);
 	}
@@ -75,20 +76,17 @@ public class DiscordWrapper
 	private async Task RefreshCommands()
 	{
 		// clear currents
-		await FlushCommandsAsync(_config.GuildId);
+		await FlushCommandsAsync(Config.GuildId);
 
-		Commands = new Command[]
-		{
-			new BuildCommand(_config.CommandName, "Starts a build from discord", _config.BuildServerUrl, _config.WorkspaceNames),
-			new RefreshCommand("refresh-workspaces", "Refreshes to workspaces on the master server", _config),
-			// new GameServerUpdateCommand("update-server-image", "Requests to master server to update game server images"),
-			new ClanforgeCommand("server-update-clanforge", "Updates the clanforge game image", _config.BuildServerUrl),
-			new ProductionCommand("production", "Puts steps in place for production release", _config.BuildServerUrl),
-		};
+		Commands = Assembly.GetExecutingAssembly()
+			.GetTypes()
+			.Where(t => t.IsSubclassOf(typeof(Command)) && !t.IsAbstract)
+			.Select(t => (Command)Activator.CreateInstance(t))
+			.ToArray();
 		
 		try
 		{
-			var guild = _client.GetGuild(_config.GuildId);
+			var guild = _client.GetGuild(Config.GuildId);
 			foreach (var cmd in Commands)
 				await guild.CreateApplicationCommandAsync(cmd.Build());
 		}
@@ -118,13 +116,13 @@ public class DiscordWrapper
 			await command.RespondError(command.User, "Not Recognised", $"Command not recognised: {command.CommandName}");
 	}
 
-	private bool IsAuthorised(SocketGuildUser guildUser)
+	private static bool IsAuthorised(SocketGuildUser guildUser)
 	{
 		var roles = guildUser.Roles.Select(x => x.Name);
 		
 		foreach (var role in roles)
 		{
-			foreach (var authorisedRole in _config.AuthorisedRoles)
+			foreach (var authorisedRole in Config.AuthorisedRoles)
 			{
 				if (authorisedRole.Equals(role, StringComparison.CurrentCultureIgnoreCase))
 					return true;

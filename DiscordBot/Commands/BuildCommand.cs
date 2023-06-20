@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using DiscordBot.Configs;
 using Newtonsoft.Json.Linq;
 using SharedLib;
 
@@ -8,15 +7,9 @@ namespace DiscordBot.Commands;
 
 public class BuildCommand : Command
 {
-	private string? BuildServerUrl { get; }
-	private List<string?>? WorkspaceNames { get; }
-	
-	public BuildCommand(string? commandName, string? description, string buildServerUrl, List<string?>? workspaceNames) : base(commandName, description)
-	{
-		BuildServerUrl = buildServerUrl;
-		WorkspaceNames = workspaceNames;
-	}
-	
+	public override string? CommandName => DiscordWrapper.Config.CommandName ?? "start-build";
+	public override string? Description => "Starts a build from discord";
+
 	public override SlashCommandProperties Build()
 	{
 		return CreateCommand()
@@ -42,7 +35,7 @@ public class BuildCommand : Command
 					["args"] = args,
 				}
 			};
-			var res = await Web.SendAsync(HttpMethod.Post, BuildServerUrl, body: body);
+			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl, body: body);
 			await command.RespondSuccessDelayed(command.User, "Build Started", res.Content);
 		}
 		catch (Exception e)
@@ -52,7 +45,7 @@ public class BuildCommand : Command
 		}
 	}
 	
-	private SlashCommandOptionBuilder WorkspaceOptions()
+	private static SlashCommandOptionBuilder WorkspaceOptions()
 	{
 		var opt = new SlashCommandOptionBuilder()
 			.WithName("workspace")
@@ -60,7 +53,7 @@ public class BuildCommand : Command
 			.WithRequired(true)
 			.WithType(ApplicationCommandOptionType.String);
 		
-		foreach (var workspace in WorkspaceNames)
+		foreach (var workspace in DiscordWrapper.Config.WorkspaceNames)
 			opt.AddChoice(workspace, workspace);
 
 		return opt;

@@ -10,11 +10,8 @@ namespace DiscordBot.Commands;
 /// </summary>
 public class GameServerUpdateCommand : Command
 {
-	public string? BuildServerUrl { get; set; }
-
-	public GameServerUpdateCommand(string? commandName, string? description) : base(commandName, description)
-	{
-	}
+	public override string? CommandName => "update-server-image";
+	public override string? Description => "Requests to master server to update game server images";
 
 	public override SlashCommandProperties Build()
 	{
@@ -46,7 +43,7 @@ public class GameServerUpdateCommand : Command
 				}
 			};
 			
-			var res = await Web.SendAsync(HttpMethod.Post, BuildServerUrl, body: body);
+			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl, body: body);
 			await command.RespondSuccessDelayed(command.User, "Game Server Update Started", res.Content);
 		}
 		catch (Exception e)

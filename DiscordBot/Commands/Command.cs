@@ -1,18 +1,13 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using DiscordConfig = DiscordBot.Configs.DiscordConfig;
 
 namespace DiscordBot.Commands;
 
 public abstract class Command
 {
-	public string? CommandName { get; }
-	public string? Description { get; }
-
-	protected Command(string? commandName, string? description)
-	{
-		CommandName = commandName;
-		Description = description;
-	}
+	public abstract string? CommandName { get; }
+	public abstract string? Description { get; }
 
 	public virtual SlashCommandProperties Build()
 	{

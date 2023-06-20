@@ -7,12 +7,8 @@ namespace DiscordBot.Commands;
 
 public class ProductionCommand : Command
 {
-	private string? BuildServerUrl { get; }
-
-	public ProductionCommand(string? commandName, string? description, string? buildServerUrl) : base(commandName, description)
-	{
-		BuildServerUrl = buildServerUrl;
-	}
+	public override string? CommandName => "production";
+	public override string? Description => "Puts steps in place for production release";
 
 	public override SlashCommandProperties Build()
 	{
@@ -47,7 +43,7 @@ public class ProductionCommand : Command
 				}
 			};
 			
-			var res = await Web.SendAsync(HttpMethod.Post, BuildServerUrl, body: body);
+			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl, body: body);
 			await command.RespondSuccessDelayed(command.User, "Production Process Started", res.Content);
 		}
 		catch (Exception e)
