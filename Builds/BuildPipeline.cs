@@ -110,7 +110,7 @@ public class BuildPipeline
 			Workspace.CleanBuild();
 		
 		Workspace.Clear();
-		Args.TryGetArg("-changesetid", out var idStr);
+		Args.TryGetArg("-changesetid", out var idStr, "-1");
 		var id = int.Parse(idStr);
 		Workspace.Update(id);
 
