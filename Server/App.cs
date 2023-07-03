@@ -113,7 +113,7 @@ public static class App
 
 	private static async Task DeployToS3Bucket(BuildPipeline pipeline)
 	{
-		if (Config?.S3 == null)
+		if (Config?.S3 == null || pipeline.Config.Deploy?.S3 is not true)
 			return;
 		
 		// upload to s3

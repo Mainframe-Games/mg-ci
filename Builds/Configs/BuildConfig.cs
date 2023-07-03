@@ -76,6 +76,7 @@ public class DeployContainerConfig
 	public bool? Clanforge { get; set; }
 	public bool? AppleStore { get; set; }
 	public bool? GoogleStore { get; set; }
+	public bool? S3 { get; set; }
 }
 
 public class HooksConfig
