@@ -35,6 +35,8 @@ namespace BuildSystem
 		private DateTime _lastDeployTime;
 		public bool AutoSwitchBack;
 
+		private static string SteamCmdExtension => Environment.OSVersion.Platform is PlatformID.MacOSX ? "sh" : "exe";
+		
 		private static bool NeedsBuild
 		{
 			get => PlayerPrefs.GetInt("NeedsBuild") == 1;
@@ -82,7 +84,7 @@ namespace BuildSystem
 			{
 				DrawTextField(nameof(SteamSdk), ref SteamSdk, true);
 				if (GUILayout.Button("...", GUILayout.Width(30)))
-					OpenFilePanel("Steam SDK", "exe", ref SteamSdk);
+					OpenFilePanel("Steam SDK", SteamCmdExtension, ref SteamSdk);
 			}
 			EditorGUILayout.EndHorizontal();
 
