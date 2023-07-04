@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEngine;
@@ -133,7 +133,7 @@ namespace BuildSystem
 
 			var canDeploy = CanDeploy(out var buildFile);
 			if (DrawButton("Deploy To Steam", 30, () => canDeploy))
-				Deploy().Forget();
+				Deploy();
 			EditorGUILayout.EndHorizontal();
 
 			// meta data
@@ -224,7 +224,7 @@ namespace BuildSystem
 			return new FileInfo(path);
 		}
 
-		private async UniTask Deploy()
+		private async void Deploy()
 		{
 			SetVdfProperties(SteamVdf,
 				("Desc", $"v{InternalVersion.Version}"),
@@ -271,7 +271,7 @@ namespace BuildSystem
 			File.WriteAllText(vdfPath, string.Join("\n", vdfLines));
 		}
 
-		private static async UniTask Run(string fileName, string ags)
+		private static async Task Run(string fileName, string ags)
 		{
 			Debug.Log($"[CMD] {fileName} {ags}");
 
@@ -293,7 +293,7 @@ namespace BuildSystem
 			};
 
 			while (!process.HasExited)
-				await UniTask.Yield();
+				await Task.Yield();
 			
 			Debug.Log($"Exit: {process.ExitCode}");
 		}
