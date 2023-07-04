@@ -1,7 +1,10 @@
 {
     "name": "BuildSystem.Editor",
     "rootNamespace": "BuildSystem",
-    "references": [],
+    "references": [
+        "GUID:f476f95e969c25b41b9b8b1d706c3ec2",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23"
+    ],
     "includePlatforms": [
         "Editor"
     ],
