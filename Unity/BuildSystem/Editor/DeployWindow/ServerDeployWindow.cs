@@ -33,6 +33,7 @@ namespace BuildSystem
 		private SerializedProperty _buildSettings;
 
 		private DateTime _lastDeployTime;
+		public bool AutoSwitchBack;
 
 		private static bool NeedsBuild
 		{
@@ -52,9 +53,9 @@ namespace BuildSystem
 			_so = new SerializedObject(this);
 			_buildSettings = _so.FindProperty(nameof(BuildSettings));
 
-			SteamSdk = PlayerPrefs.GetString(nameof(SteamSdk), "");
-			SteamVdf = PlayerPrefs.GetString(nameof(SteamVdf), "");
-			SteamSetLive = PlayerPrefs.GetString(nameof(SteamSetLive), "");
+			SteamSdk = PlayerPrefs.GetString(nameof(SteamSdk), string.Empty);
+			SteamVdf = PlayerPrefs.GetString(nameof(SteamVdf), string.Empty);
+			SteamSetLive = PlayerPrefs.GetString(nameof(SteamSetLive), string.Empty);
 
 			var savedDeployTime = PlayerPrefs.GetString(nameof(_lastDeployTime));
 			_lastDeployTime = DateTime.TryParse(savedDeployTime, out var dt) ? dt : DateTime.MinValue;
@@ -90,7 +91,6 @@ namespace BuildSystem
 				DrawTextField(nameof(SteamVdf), ref SteamVdf, true);
 				if (GUILayout.Button("...", GUILayout.Width(30)))
 					OpenFilePanel("Steam VDF", "vdf", ref SteamVdf);
-
 			}
 			EditorGUILayout.EndHorizontal();
 
@@ -102,6 +102,7 @@ namespace BuildSystem
 			// build settings
 			EditorGUILayout.PropertyField(_buildSettings);
 			EditorGUILayout.LabelField(nameof(InternalVersion), InternalVersion.Version);
+			AutoSwitchBack = EditorGUILayout.Toggle(nameof(AutoSwitchBack), AutoSwitchBack);
 			
 			// build
 			DrawButtons();
@@ -192,7 +193,9 @@ namespace BuildSystem
 			InternalVersion.Bump();
 			Debug.Log("Building Player...");
 			BuildScript.BuildPlayer(BuildSettings);
-			SwitchTarget(BuildGroup.DefaultPlatform);
+			
+			if (AutoSwitchBack)
+				SwitchTarget(BuildGroup.DefaultPlatform);
 		}
 
 		private static void SwitchTarget(BuildGroup build, bool triggerBuild = false)
