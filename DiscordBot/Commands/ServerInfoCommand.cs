@@ -11,6 +11,6 @@ public class ServerInfoCommand : Command
 	{
 		await command.DeferAsync();
 		var res = await Web.SendAsync(HttpMethod.Get, $"{DiscordWrapper.Config.BuildServerUrl}/info");
-		await command.RespondAsync(res.Content);
+		await command.RespondSuccessDelayed(command.User, "Build Server Info", res.Content);
 	}
 }
