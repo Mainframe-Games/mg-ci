@@ -18,17 +18,16 @@ public class CommitsCommand : Command
 			.Build();
 	}
 	
-	public override async Task ExecuteAsync(SocketSlashCommand command)
+	public override async Task<CommandResponse> ExecuteAsync(SocketSlashCommand command)
 	{
 		var workspace = GetOptionValueString(command, "workspace");
 		var csfrom = GetOptionValueString(command, "csfrom");
 		var csto = GetOptionValueString(command, "csto");
 		
-		await command.DeferAsync();
-
 		var url = $"{DiscordWrapper.Config.BuildServerUrl}/commits?workspace={workspace}&csfrom={csfrom}&csto={csto}";
 		var res = await Web.SendAsync(HttpMethod.Get, url);
 		await command.RespondSuccessDelayed(command.User, $"Commits from {csfrom} to {csto}", res.Content);
+		return new CommandResponse($"Commits from {csfrom} to {csto}", res.Content);
 	}
 	
 	private static SlashCommandOptionBuilder BuildArgumentsOptions(string name, string desc)

@@ -8,8 +8,9 @@ public class DocsCommand : Command
 	public override string? CommandName => "docs";
 	public override string? Description => "Takes you to docs page";
 	
-	public override async Task ExecuteAsync(SocketSlashCommand command)
+	public override async Task<CommandResponse> ExecuteAsync(SocketSlashCommand command)
 	{
-		await command.RespondAsync(DOCS_URL);
+		await Task.CompletedTask;
+		return new CommandResponse("Docs", DOCS_URL);
 	}
 }

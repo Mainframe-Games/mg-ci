@@ -14,7 +14,7 @@ public abstract class Command
 		return CreateCommand().Build();
 	}
 	
-	public abstract Task ExecuteAsync(SocketSlashCommand command);
+	public abstract Task<CommandResponse> ExecuteAsync(SocketSlashCommand command);
 	
 	public virtual async Task ModifyOptions(SocketSlashCommand socketSlashCommand, SocketInteraction socketInteraction)
 	{

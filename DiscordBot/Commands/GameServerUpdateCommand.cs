@@ -27,12 +27,10 @@ public class GameServerUpdateCommand : Command
 			.Build();
 	}
 
-	public override async Task ExecuteAsync(SocketSlashCommand command)
+	public override async Task<CommandResponse> ExecuteAsync(SocketSlashCommand command)
 	{
 		try
 		{
-			await command.DeferAsync();
-			
 			// TODO: Dynamic way of getting options
 
 			var body = new JObject
@@ -44,12 +42,12 @@ public class GameServerUpdateCommand : Command
 			};
 			
 			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl, body: body);
-			await command.RespondSuccessDelayed(command.User, "Game Server Update Started", res.Content);
+			return new CommandResponse("Game Server Update Started", res.Content);
 		}
 		catch (Exception e)
 		{
 			Logger.Log(e);
-			await command.RespondErrorDelayed(command.User, "Build Server request failed", e.Message);
+			return new CommandResponse("Build Server request failed", e.Message, true);
 		}
 	}
 

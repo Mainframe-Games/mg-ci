@@ -111,10 +111,20 @@ public class DiscordWrapper
 
 		// find command
 		var cmd = Commands.FirstOrDefault(x => command.CommandName == x.CommandName);
-
+		var commandFull = $"/{command} {string.Join(" ", command.Data?.Options?.Select(x => $"{x.Name} {x.Value}") ?? Array.Empty<string>())}";
+		
 		// execute or fail
 		if (cmd != null)
-			await cmd.ExecuteAsync(command);
+		{
+			await command.DeferAsync();
+			var res = await cmd.ExecuteAsync(command);
+			var fullResponse = $"{commandFull}\n{res.Content}";
+			
+			if (res.IsError)
+				await command.RespondErrorDelayed(command.User, res.Title, fullResponse);
+			else
+				await command.RespondSuccessDelayed(command.User, res.Title, fullResponse);
+		}
 		else
 			await command.RespondError(command.User, "Not Recognised", $"Command not recognised: {command.CommandName}");
 	}

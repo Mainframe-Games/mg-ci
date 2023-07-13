@@ -25,7 +25,7 @@ public class ProductionCommand : Command
 			.Build();
 	}
 
-	public override async Task ExecuteAsync(SocketSlashCommand command)
+	public override async Task<CommandResponse> ExecuteAsync(SocketSlashCommand command)
 	{
 		try
 		{
@@ -50,12 +50,12 @@ public class ProductionCommand : Command
 			if (res.StatusCode != HttpStatusCode.OK)
 				throw new Exception(res.Content);
 			
-			await command.RespondSuccessDelayed(command.User, "Production Process Started", res.Content);
+			return new CommandResponse("Production Process Started", res.Content);
 		}
 		catch (Exception e)
 		{
 			Logger.Log(e);
-			await command.RespondErrorDelayed(command.User, "Build Server request failed", e.Message);
+			return new CommandResponse("Build Server request failed", e.Message);
 		}
 	}
 }
