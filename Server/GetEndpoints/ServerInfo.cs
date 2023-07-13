@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using Deployment.Server;
 using Server.RemoteBuild;
-using SharedLib;
 
 namespace Server;
 
@@ -13,13 +12,13 @@ public class ServerInfo : IRemoteControllable
 
 	public ServerInfo(ListenServer listenServer)
 	{
-		Version = AppVersion.VERSION;// Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+		Version = App.Version;
 		StartTime = listenServer.ServerStartTime.ToString("u");
 
 		var runTime = DateTime.Now - listenServer.ServerStartTime;
 		RunTime = $"{runTime.Days}d {runTime.Hours}h {runTime.Minutes}m";
 	}
-		
+
 	public ServerResponse Process()
 	{
 		return new ServerResponse(HttpStatusCode.OK, this);

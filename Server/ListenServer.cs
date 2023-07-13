@@ -116,6 +116,9 @@ public class ListenServer
 			case "/info": 
 				return new ServerInfo(this).Process();
 			
+			case "/commits": 
+				return new Commits(request.QueryString).Process();
+			
 			default:
 				return ServerResponse.Default;
 		}

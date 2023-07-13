@@ -7,7 +7,7 @@ public class ServerResponse
 	public static readonly ServerResponse Default = new();
 
 	public HttpStatusCode StatusCode { get; set; } = HttpStatusCode.OK;
-	public object? Data { get; set; }
+	public object? Data { get; set; } = "ok";
 
 	public ServerResponse()
 	{

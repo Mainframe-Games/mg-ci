@@ -67,7 +67,7 @@ public class Workspace
 	public static Workspace? GetWorkspaceFromName(string? workspaceName)
 	{
 		var workspaces = GetAvailableWorkspaces();
-		return workspaces.FirstOrDefault(x => x.Name == workspaceName);
+		return workspaces.FirstOrDefault(x => string.Equals(x.Name, workspaceName, StringComparison.OrdinalIgnoreCase));
 	}
 
 	private static string GetUnityVersion(string? workingDirectory)
@@ -185,6 +185,20 @@ public class Workspace
 		
 		var cs = int.Parse(req.output);
 		return cs;
+	}
+	
+	/// <summary>
+	/// Gets all change logs between two changeSetIds
+	/// </summary>
+	public string[] GetChangeLogInst(int curId, int prevId, bool print = true)
+	{
+		var raw = Cmd.Run("cm", $"log {Directory} --from=cs:{prevId} cs:{curId} --csformat=\"{{comment}}\"").output;
+		var changeLog = raw.Split(Environment.NewLine).Reverse().ToArray();
+		
+		if (print)
+			Logger.Log($"___Change Logs___\n{string.Join("\n", changeLog)}");
+		
+		return changeLog;
 	}
 	
 	/// <summary>
