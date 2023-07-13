@@ -11,6 +11,7 @@ namespace Server;
 
 public static class App
 {
+	public static string Version => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty;
 	private static string? RootDirectory { get; set; }
 	private static ListenServer? Server { get; set; }
 	private static ServerConfig? Config { get; set; }

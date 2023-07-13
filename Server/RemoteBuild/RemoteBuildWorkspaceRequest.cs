@@ -42,7 +42,7 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 			StatusCode = HttpStatusCode.OK,
 			Data = new BuildPipelineResponse
 			{
-				ServerVersion = AppVersion.VERSION,
+				ServerVersion = App.Version,
 				PipelineId = pipeline.Id,
 				Workspace = workspace.Name,
 				Args = Args,
