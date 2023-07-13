@@ -26,7 +26,7 @@ public class CommitsCommand : Command
 		
 		await command.DeferAsync();
 
-		var url = $"{DiscordWrapper.Config.BuildServerUrl}?workspace={workspace}&csfrom={csfrom}&csto={csto}";
+		var url = $"{DiscordWrapper.Config.BuildServerUrl}/commits?workspace={workspace}&csfrom={csfrom}&csto={csto}";
 		var res = await Web.SendAsync(HttpMethod.Get, url);
 		await command.RespondSuccessDelayed(command.User, $"Commits from {csfrom} to {csto}", res.Content);
 	}
