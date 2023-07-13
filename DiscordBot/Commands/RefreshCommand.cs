@@ -1,5 +1,4 @@
 ﻿using Discord.WebSocket;
-using DiscordBot.Configs;
 
 namespace DiscordBot.Commands;
 

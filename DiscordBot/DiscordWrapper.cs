@@ -88,7 +88,10 @@ public class DiscordWrapper
 		{
 			var guild = _client.GetGuild(Config.GuildId);
 			foreach (var cmd in Commands)
+			{
+				Logger.Log($"Creating command: {cmd.CommandName}...");
 				await guild.CreateApplicationCommandAsync(cmd.Build());
+			}
 		}
 		catch (HttpException exception)
 		{
