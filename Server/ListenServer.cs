@@ -105,7 +105,7 @@ public class ListenServer
 	{
 		await Task.CompletedTask;
 
-		var path = request.RawUrl ?? string.Empty;
+		var path = request.Url?.LocalPath ?? string.Empty;
 
 		switch (path)
 		{
@@ -113,7 +113,7 @@ public class ListenServer
 				var workspaces = Workspace.GetAvailableWorkspaces().Select(x => x.Name).ToArray();
 				return new ServerResponse(HttpStatusCode.OK, workspaces);
 			
-			case "/info": 
+			case "/info":
 				return new ServerInfo(this).Process();
 			
 			case "/commits": 
