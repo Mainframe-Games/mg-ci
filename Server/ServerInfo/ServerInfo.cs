@@ -15,7 +15,9 @@ public class ServerInfo : IRemoteControllable
 	{
 		Version = AppVersion.VERSION;// Assembly.GetExecutingAssembly().GetName().Version?.ToString();
 		StartTime = listenServer.ServerStartTime.ToString("u");
-		RunTime = (DateTime.Now - listenServer.ServerStartTime).ToString();
+
+		var runTime = DateTime.Now - listenServer.ServerStartTime;
+		RunTime = $"{runTime.Days}d {runTime.Hours}h {runTime.Minutes}m";
 	}
 		
 	public ServerResponse Process()
