@@ -34,7 +34,7 @@ public class ClanforgeCommand : Command
 		var desc = new SlashCommandOptionBuilder()
 			.WithName("description")
 			.WithRequired(true)
-			.WithDescription("Build Version: XXX")
+			.WithDescription("Version of the build to help differentiate each upload")
 			.WithType(ApplicationCommandOptionType.String);
 		
 		return CreateCommand()

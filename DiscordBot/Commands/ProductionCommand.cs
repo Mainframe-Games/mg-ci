@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using System.Net;
+using Discord;
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using SharedLib;
@@ -19,6 +20,7 @@ public class ProductionCommand : Command
 			.WithType(ApplicationCommandOptionType.String);
 		
 		return CreateCommand()
+			.AddOptions(CommandUtils.WorkspaceOptions())
 			.AddOption(password)
 			.Build();
 	}
@@ -44,6 +46,10 @@ public class ProductionCommand : Command
 			};
 			
 			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl, body: body);
+
+			if (res.StatusCode != HttpStatusCode.OK)
+				throw new Exception(res.Content);
+			
 			await command.RespondSuccessDelayed(command.User, "Production Process Started", res.Content);
 		}
 		catch (Exception e)
@@ -52,5 +58,4 @@ public class ProductionCommand : Command
 			await command.RespondErrorDelayed(command.User, "Build Server request failed", e.Message);
 		}
 	}
-
 }

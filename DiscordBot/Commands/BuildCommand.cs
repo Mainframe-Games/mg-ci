@@ -13,7 +13,7 @@ public class BuildCommand : Command
 	public override SlashCommandProperties Build()
 	{
 		return CreateCommand()
-			.AddOptions(WorkspaceOptions())
+			.AddOptions(CommandUtils.WorkspaceOptions())
 			.AddOptions(BuildArgumentsOptions())
 			.Build();
 	}
@@ -44,21 +44,7 @@ public class BuildCommand : Command
 			await command.RespondErrorDelayed(command.User, "Build Server request failed", e.Message);
 		}
 	}
-	
-	private static SlashCommandOptionBuilder WorkspaceOptions()
-	{
-		var opt = new SlashCommandOptionBuilder()
-			.WithName("workspace")
-			.WithDescription("List of available workspaces")
-			.WithRequired(true)
-			.WithType(ApplicationCommandOptionType.String);
-		
-		foreach (var workspace in DiscordWrapper.Config.WorkspaceNames)
-			opt.AddChoice(workspace, workspace);
 
-		return opt;
-	}
-	
 	private static SlashCommandOptionBuilder BuildArgumentsOptions()
 	{
 		var opt = new SlashCommandOptionBuilder()

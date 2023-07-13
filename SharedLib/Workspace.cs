@@ -65,10 +65,10 @@ public class Workspace
 		return workspace;
 	}
 
-	public static Workspace GetWorkspaceFromName(string? workspaceName)
+	public static Workspace? GetWorkspaceFromName(string? workspaceName)
 	{
 		var workspaces = GetAvailableWorkspaces();
-		return workspaces.First(x => x.Name == workspaceName);
+		return workspaces.FirstOrDefault(x => x.Name == workspaceName);
 	}
 
 	private static string GetUnityVersion(string? workingDirectory)

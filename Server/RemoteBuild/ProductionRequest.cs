@@ -16,6 +16,10 @@ public class ProductionRequest : IRemoteControllable
 	public ServerResponse Process()
 	{
 		var workspace = Workspace.GetWorkspaceFromName(WorkspaceName);
+		
+		if (workspace == null)
+			return new ServerResponse(HttpStatusCode.BadRequest, $"Given namespace is not valid: {WorkspaceName}");
+		
 		workspace.Update();
 		var buildVersion = workspace.GetAppVersion();
 
