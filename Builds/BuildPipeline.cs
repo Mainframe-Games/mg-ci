@@ -28,6 +28,11 @@ public class OffloadServerPacket
 
 public class BuildPipeline
 {
+	/// <summary>
+	/// Key to use to tag version bump commit and find previous build commit
+	/// </summary>
+	private const string BUILD_VERSION = "Build Version:";
+	
 	public delegate void OffloadBuildReqPacket(OffloadServerPacket packet);
 	public delegate string? ExtraHookLogs(BuildPipeline pipeline);
 	public delegate Task DeployDelegate(BuildPipeline pipeline);
@@ -42,37 +47,54 @@ public class BuildPipeline
 	private readonly List<UnityTarget> _offloadTargets;
 
 	public Workspace Workspace { get; }
-	public Args Args { get; private set; }
+	public Args Args { get; }
 	public BuildConfig Config { get; private set; }
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{DateTime.Now - StartTime:hh\\:mm\\:ss}";
-	public string BuildVersionTitle => $"Build Version: {_buildVersion?.BundleVersion}";
+	public string BuildVersionTitle => $"{BUILD_VERSION} {_buildVersion?.BundleVersion}";
 
 	/// <summary>
 	/// The change set id that was current when build started
 	/// </summary>
-	private int _currentChangeSetId;
-	private string _currentGuid;
-	private int _previousChangeSetId;
+	private readonly int _currentChangeSetId;
+	private readonly string _currentGuid;
 	private BuildVersions _buildVersion;
 
+	public string[] ChangeLog { get; }
+	
 	/// <summary>
 	/// build ids we are waiting for offload server
 	/// </summary>
 	private readonly List<string> _buildIds = new();
-
 
 	public BuildPipeline(ulong id, Workspace workspace, Args args, string? offloadUrl, bool offloadParallel, List<UnityTarget>? offloadTargets)
 	{
 		Id = id;
 		Workspace = workspace;
 		Args = args;
+		
 		_offloadUrl = offloadUrl;
 		_offloadParallel = offloadParallel;
 		_offloadTargets = offloadTargets ?? new List<UnityTarget>();
+		
 		Environment.CurrentDirectory = workspace.Directory;
+		
+		// clear and update workspace 
+		if (Args.IsFlag("-cleanbuild"))
+			Workspace.CleanBuild();
+		
+		Workspace.Clear();
+		Args.TryGetArg("-changesetid", out var idStr, "-1");
+		Workspace.Update(int.Parse(idStr));
+		Workspace.GetCurrent(out _currentChangeSetId, out _currentGuid);
+		
+		var prevChangeSetId = Workspace.GetPreviousChangeSetId(BUILD_VERSION);
+		Logger.Log($"[CHANGESET] cs:{prevChangeSetId} \u2192 cs:{_currentChangeSetId}, guid:{_currentGuid}");
+
+		Config = BuildConfig.GetConfig(Workspace.Directory);
+		ChangeLog = Workspace.GetChangeLog(_currentChangeSetId, prevChangeSetId);
 	}
-	
+
 	#region Build Steps
 
 	public async Task<bool> RunAsync()
@@ -99,36 +121,16 @@ public class BuildPipeline
 
 	private async Task Prebuild()
 	{
-		Config = BuildConfig.GetConfig(Workspace.Directory); // need to get config even if -noprebuild flag
-		
 		if (Args.IsFlag("-noprebuild"))
 			return;
 
 		Logger.Log("PreBuild process started...");
 
-		if (Args.IsFlag("-cleanbuild"))
-			Workspace.CleanBuild();
-		
-		Workspace.Clear();
-		Args.TryGetArg("-changesetid", out var idStr, "-1");
-		var id = int.Parse(idStr);
-		Workspace.Update(id);
-
-		Workspace.GetCurrent(out _currentChangeSetId, out _currentGuid);
-
-		if (_currentChangeSetId == 0)
-			throw new Exception("current change set shouldn't be 0");
-		
-		_previousChangeSetId = Workspace.GetPreviousChangeSetId();
-		Logger.Log($"[CHANGESET] cs:{_previousChangeSetId} \u2192 cs:{_currentChangeSetId}, guid:{_currentGuid}");
-		
-		Config = BuildConfig.GetConfig(Workspace.Directory); // refresh config
-
 		// pre build runner
 		var preBuild = new PreBuild(Workspace);
 		preBuild.Run(Config.PreBuild);
 		
-		// write to disk
+		// write new versions to disk
 		Workspace.ProjectSettings.ReplaceVersions(preBuild.BuildVersion);
 		
 		_buildVersion = preBuild.BuildVersion;
@@ -245,15 +247,6 @@ public class BuildPipeline
 		await DeployEvent.Invoke(this);
 	}
 
-	public string[] GetChangeLog()
-	{
-		// collect change logs
-		var commits = Config.PostBuild?.ChangeLog == true
-			? Workspace.GetChangeLog(_currentChangeSetId, _previousChangeSetId)
-			: Array.Empty<string>();
-		return commits;
-	}
-	
 	private async Task PostBuild()
 	{
 		if (Args.IsFlag("-nopostbuild"))
@@ -261,11 +254,8 @@ public class BuildPipeline
 
 		Logger.Log("PostBuild process started...");
 		
-		// collect change logs
-		var commits = GetChangeLog();
-		
 		// committing new version must be done after collecting changeLogs as the prev changesetid will be updated
-		Workspace.CommitNewVersionNumber(_currentChangeSetId, $"{BuildVersionTitle} | cs: {_currentChangeSetId} | guid: {_currentGuid}");
+		Workspace.CommitNewVersionNumber($"{BuildVersionTitle} | cs: {_currentChangeSetId} | guid: {_currentGuid}");
 		
 		if (Config.Hooks == null || Args.IsFlag("-nohooks"))
 			return;
@@ -285,7 +275,10 @@ public class BuildPipeline
 			if (hook.IsDiscord())
 			{
 				var discord = new ChangeLogBuilderDiscord();
-				discord.BuildLog(commits);
+				
+				if (Config.PostBuild?.ChangeLog == true)
+					discord.BuildLog(ChangeLog);
+				
 				hookMessage.AppendLine($"Total Time: {TimeSinceStart}");
 				hookMessage.AppendLine(clanforgeMessage);
 				hookMessage.AppendLine($"cs: {_currentChangeSetId}");

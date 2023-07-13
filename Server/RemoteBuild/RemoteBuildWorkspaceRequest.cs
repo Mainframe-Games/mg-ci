@@ -19,13 +19,22 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 		var mapping = new WorkspaceMapping();
 		var workspaceName = mapping.GetRemapping(WorkspaceName);
 		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
+		
+		if (workspace == null)
+			return new ServerResponse(HttpStatusCode.BadRequest, $"Given namespace is not valid: {WorkspaceName}");
+		
 		Logger.Log($"Chosen workspace: {workspace}");
 		
 		workspace.Clear();
 		workspace.Update();
 		workspace.SwitchBranch(branch);
 
-		App.RunBuildPipe(workspace, args).FireAndForget();
+		var pipeline = App.CreateBuildPipeline(workspace, args);
+
+		if (pipeline.ChangeLog.Length == 0)
+			return new ServerResponse(HttpStatusCode.NotAcceptable, "No changes to build");
+		
+		App.RunBuildPipe(pipeline).FireAndForget();
 		workspace.GetCurrent(out var changeSetId, out var guid);
 
 		return new ServerResponse
@@ -33,13 +42,14 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 			StatusCode = HttpStatusCode.OK,
 			Data = new BuildPipelineResponse
 			{
-				PipelineId = App.NextPipelineId - 1,
+				PipelineId = pipeline.Id,
 				Workspace = workspace.Name,
 				Args = Args,
 				UnityVersion = workspace.UnityVersion,
 				ChangesetId = changeSetId,
 				ChangesetGuid = guid,
-				Branch = branch
+				Branch = branch,
+				ChangeCount = pipeline.ChangeLog.Length,
 			}
 		};
 	}
@@ -54,4 +64,5 @@ public class BuildPipelineResponse
 	public int? ChangesetId { get; set; }
 	public string? ChangesetGuid { get; set; }
 	public string? UnityVersion { get; set; }
+	public int? ChangeCount { get; set; }
 }

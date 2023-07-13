@@ -15,7 +15,7 @@ public static class App
 	private static ServerConfig? Config { get; set; }
 	private static bool IsLocal { get; set; }
 
-	public static ulong NextPipelineId { get; private set; }
+	private static ulong NextPipelineId { get; set; }
 	public static readonly Dictionary<ulong, BuildPipeline> Pipelines = new();
 
 	public static async Task RunAsync(Args args)
@@ -28,7 +28,13 @@ public static class App
 		if (IsLocal)
 		{
 			var workspace = Workspace.AskWorkspace();
-			await RunBuildPipe(workspace, args);
+			var pipeline = CreateBuildPipeline(workspace, args);
+			if (pipeline.ChangeLog.Length == 0)
+			{
+				Logger.Log("No changes to build");
+				return;
+			}
+			await RunBuildPipe(pipeline);
 		}
 		else
 		{
@@ -58,24 +64,30 @@ public static class App
 	}
 
 	#region Build Pipeline
-	
-	public static async Task RunBuildPipe(Workspace workspace, Args args)
+
+	public static BuildPipeline CreateBuildPipeline(Workspace workspace, Args args)
 	{
 		var parallel = Config?.Offload?.Parallel ?? false;
 		var targets = Config?.Offload?.Targets ?? null;
+		var offloadUrl = Config?.OffloadServerUrl;
+		var pipeline = new BuildPipeline(NextPipelineId++, workspace, args, offloadUrl, parallel, targets);
+		return pipeline;
+	}
+	
+	public static async Task RunBuildPipe(BuildPipeline pipeline)
+	{
+		Pipelines.Add(pipeline.Id, pipeline);
 		
-		var pipe = new BuildPipeline(NextPipelineId++, workspace, args, Config?.OffloadServerUrl, parallel, targets);
-		Pipelines.Add(pipe.Id, pipe);
+		pipeline.OffloadBuildNeeded += SendRemoteBuildRequest;
+		pipeline.GetExtraHookLogs += BuildPipelineOnGetExtraHookLog;
+		pipeline.DeployEvent += BuildPipelineOnDeployEvent;
 		
-		pipe.OffloadBuildNeeded += SendRemoteBuildRequest;
-		pipe.GetExtraHookLogs += BuildPipelineOnGetExtraHookLog;
-		pipe.DeployEvent += BuildPipelineOnDeployEvent;
+		var isSuccessful = await pipeline.RunAsync();
 		
-		var isSuccessful = await pipe.RunAsync();
 		if (isSuccessful)
 			DumpLogs();
 		
-		Pipelines.Remove(pipe.Id);
+		Pipelines.Remove(pipeline.Id);
 	}
 	
 	/// <summary>
@@ -179,7 +191,7 @@ public static class App
 			return;
 		
 		var packageName = pipeline.Workspace.ProjectSettings.GetValue<string>("applicationIdentifier.Android");
-		var changeLogArr = pipeline.GetChangeLog();
+		var changeLogArr = pipeline.ChangeLog;
 		var changeLog = string.Join("\n", changeLogArr);
 		var androidBuild = pipeline.Config.GetBuildTarget(UnityTarget.Android);
 		var buildSettingsAsset = androidBuild.GetBuildSettingsAsset(pipeline.Workspace.BuildSettingsDirPath);

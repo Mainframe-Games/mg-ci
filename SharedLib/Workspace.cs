@@ -11,7 +11,6 @@ public class Workspace
 	public ProjectSettings ProjectSettings { get; private set; }
 
 	[JsonIgnore] public string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", "ProjectSettings.asset");
-	[JsonIgnore] private string PrevChangesetIdPath => Path.Combine(Directory, "BuildScripts", "previous-changesetId.txt");
 	[JsonIgnore] public string BuildSettingsDirPath => Path.Combine(Directory, "Assets", "Settings", "BuildSettings");
 
 	private Workspace(string? name, string? directory, string? unityVersion)
@@ -178,13 +177,14 @@ public class Workspace
 	/// Gets previous changeSetId based on commit message
 	/// </summary>
 	/// <returns></returns>
-	public int GetPreviousChangeSetId()
+	public int GetPreviousChangeSetId(string key)
 	{
-		var str = File.Exists(PrevChangesetIdPath)
-			? File.ReadAllText(PrevChangesetIdPath)
-			: "0";
+		var req = Cmd.Run("cm", 
+			$"find changeset \"where branch='{Branch}' and comment like '%{key}%'\" \"order by date desc\" \"limit 1\" --format=\"{{changesetid}}\" --nototal",
+			logOutput: false);
 		
-		return int.TryParse(str, out var id) ? id : 0;
+		var cs = int.Parse(req.output);
+		return cs;
 	}
 	
 	/// <summary>
@@ -201,11 +201,8 @@ public class Workspace
 		return changeLog;
 	}
 	
-	public void CommitNewVersionNumber(int currentChangeSetId, string commitMessage)
+	public void CommitNewVersionNumber(string commitMessage)
 	{
-		// write new prev changeset id
-		File.WriteAllText(PrevChangesetIdPath, currentChangeSetId.ToString());
-
 		// update in case there are new changes in coming otherwise it will fail
 		// TODO: need to find a way to automatically resolve conflicts with cloud
 		Update();
