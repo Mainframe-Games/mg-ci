@@ -111,7 +111,7 @@ public class DiscordWrapper
 
 		// find command
 		var cmd = Commands.FirstOrDefault(x => command.CommandName == x.CommandName);
-		var commandFull = $"/{command} {string.Join(" ", command.Data?.Options?.Select(x => $"{x.Name} {x.Value}") ?? Array.Empty<string>())}";
+		var commandFull = $"/{command.CommandName} {string.Join(" ", command.Data?.Options?.Select(x => $"{x.Name} {x.Value}") ?? Array.Empty<string>())}";
 		
 		// execute or fail
 		if (cmd != null)
