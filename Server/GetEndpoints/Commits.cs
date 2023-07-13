@@ -3,7 +3,6 @@ using System.Net;
 using Deployment.Server;
 using Server.RemoteBuild;
 using SharedLib;
-using SharedLib.ChangeLogBuilders;
 
 namespace Server;
 
@@ -20,7 +19,7 @@ public class Commits : IRemoteControllable
 		_query = query;
 	}
 
-	private static string LogToFileSteam(string workspaceName, string csFrom, string csTo)
+	private static string[] LogToFileSteam(string workspaceName, string csFrom, string csTo)
 	{
 		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
 
@@ -28,10 +27,7 @@ public class Commits : IRemoteControllable
 			throw new Exception($"Workspace not found with name '{workspaceName}'");
 		
 		var changeLog = workspace.GetChangeLogInst(int.Parse(csTo), int.Parse(csFrom), false);
-		
-		var discord = new ChangeLogBuilderSteam();
-		discord.BuildLog(changeLog);
-		return discord.ToString();
+		return changeLog;
 	}
 	
 	public ServerResponse Process()
