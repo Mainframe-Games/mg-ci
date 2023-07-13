@@ -42,6 +42,7 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 			StatusCode = HttpStatusCode.OK,
 			Data = new BuildPipelineResponse
 			{
+				ServerVersion = AppVersion.VERSION,
 				PipelineId = pipeline.Id,
 				Workspace = workspace.Name,
 				Args = Args,
@@ -49,7 +50,7 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 				ChangesetId = changeSetId,
 				ChangesetGuid = guid,
 				Branch = branch,
-				ChangeCount = pipeline.ChangeLog.Length,
+				ChangesetCount = pipeline.ChangeLog.Length,
 			}
 		};
 	}
@@ -57,6 +58,7 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 
 public class BuildPipelineResponse
 {
+	public string? ServerVersion { get; set; }
 	public ulong? PipelineId { get; set; }
 	public string? Workspace { get; set; }
 	public string? Args { get; set; }
@@ -64,5 +66,5 @@ public class BuildPipelineResponse
 	public int? ChangesetId { get; set; }
 	public string? ChangesetGuid { get; set; }
 	public string? UnityVersion { get; set; }
-	public int? ChangeCount { get; set; }
+	public int? ChangesetCount { get; set; }
 }
