@@ -27,7 +27,7 @@ public class Commits : IRemoteControllable
 		if (workspace == null)
 			throw new Exception($"Workspace not found with name '{workspaceName}'");
 		
-		var changeLog = workspace.GetChangeLogInst(int.Parse(csTo), int.Parse(csFrom));
+		var changeLog = workspace.GetChangeLogInst(int.Parse(csTo), int.Parse(csFrom), false);
 		
 		var discord = new ChangeLogBuilderSteam();
 		discord.BuildLog(changeLog);

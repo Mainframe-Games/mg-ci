@@ -192,12 +192,10 @@ public class Workspace
 	/// </summary>
 	public string[] GetChangeLogInst(int curId, int prevId, bool print = true)
 	{
-		var raw = Cmd.Run("cm", $"log {Directory} --from=cs:{prevId} cs:{curId} --csformat=\"{{comment}}\"").output;
-		var changeLog = raw.Split(Environment.NewLine).Reverse().ToArray();
-		
-		if (print)
-			Logger.Log($"___Change Logs___\n{string.Join("\n", changeLog)}");
-		
+		var dirBefore = Environment.CurrentDirectory;
+		Environment.CurrentDirectory = Directory;
+		var changeLog = GetChangeLog(curId, prevId, print);
+		Environment.CurrentDirectory = dirBefore;
 		return changeLog;
 	}
 	
