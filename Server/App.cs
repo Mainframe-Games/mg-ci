@@ -167,7 +167,7 @@ public static class App
 
 	private static void DeployApple(BuildPipeline pipeline)
 	{
-		if (pipeline.Config.Deploy == null || pipeline.Config.Deploy.AppleStore is null or false)
+		if (pipeline.Config.Deploy?.AppleStore is not true)
 			return;
 		
 		var iosBuild = pipeline.Config.GetBuildTarget(UnityTarget.iOS);
@@ -189,7 +189,7 @@ public static class App
 
 	private static async Task DeployGoogle(BuildPipeline pipeline, string buildVersionTitle)
 	{
-		if (pipeline.Config.Deploy?.GoogleStore == null)
+		if (pipeline.Config.Deploy?.GoogleStore is not true)
 			return;
 		
 		var packageName = pipeline.Workspace.ProjectSettings.GetValue<string>("applicationIdentifier.Android");
