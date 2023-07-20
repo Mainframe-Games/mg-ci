@@ -32,10 +32,11 @@ public class ListenServer
 
 	public void CheckIfServerStillListening()
 	{
-		if (_listener.IsListening)
-			Logger.Log($"... Server listening on '{_ip}:{_port}'");
-		else
+		if (!_listener.IsListening)
 			throw new Exception("Server died");
+
+		Logger.Log($"[Server] Listening on '{_ip}:{_port}'");
+		Logger.Log($"[Server] Version: {App.Version}");
 	}
 
 	public async Task RunAsync()
