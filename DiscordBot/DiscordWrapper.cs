@@ -114,19 +114,23 @@ public class DiscordWrapper
 		var commandFull = $"`/{command.CommandName} {string.Join(" ", command.Data?.Options?.Select(x => $"{x.Name} {x.Value}") ?? Array.Empty<string>())}`";
 		
 		// execute or fail
-		if (cmd != null)
+		if (cmd == null)
 		{
-			await command.DeferAsync();
-			var res = await cmd.ExecuteAsync(command);
-			var fullResponse = $"{commandFull}\n{res.Content}";
-			
-			if (res.IsError)
-				await command.RespondErrorDelayed(command.User, res.Title, fullResponse);
-			else
-				await command.RespondSuccessDelayed(command.User, res.Title, fullResponse);
-		}
-		else
 			await command.RespondError(command.User, "Not Recognised", $"Command not recognised: {command.CommandName}");
+			return;
+		}
+		
+		await command.DeferAsync();
+		var res = await cmd.ExecuteAsync(command);
+		var fullResponse = $"{commandFull}\n{res.Content}";
+
+		if (res.IsError)
+		{
+			await command.RespondErrorDelayed(command.User, res.Title, fullResponse);
+			return;
+		}
+		
+		await command.RespondSuccessDelayed(command.User, res.Title, fullResponse);
 	}
 
 	private static bool IsAuthorised(SocketGuildUser guildUser)

@@ -5,16 +5,39 @@ namespace DiscordBot;
 
 public static class Extensions
 {
-	public static async Task RespondSuccess(this SocketSlashCommand command, IUser user, string title, string description)
-	{
-		await command.RespondAsync(embed: CreateEmbed(user, title, description, Color.Green), ephemeral: true);
-	}
+	private const int MAX_MESSAGE_SIZE = 4096;
 	
 	public static async Task RespondSuccessDelayed(this SocketSlashCommand command, IUser user, string title, string description)
 	{
+		if (description.Length > MAX_MESSAGE_SIZE)
+		{
+			await RespondSuccessFileDelayed(command, user, title, description);
+		}
+		else
+		{
+			await command.ModifyOriginalResponseAsync(properties =>
+			{
+				properties.Embed = CreateEmbed(user, title, description, Color.Green);
+			});
+		}
+	}
+	
+	private static async Task RespondSuccessFileDelayed(this SocketSlashCommand command, IUser user, string title, string description)
+	{
+		var filePath = Path.Combine(Environment.CurrentDirectory, "large_message.txt");
+		await File.WriteAllTextAsync(filePath, description);
+	
+		var fileInfo = new FileInfo(filePath);
+		if (!fileInfo.Exists)
+			throw new FileNotFoundException($"File not found at: {filePath}");
+
 		await command.ModifyOriginalResponseAsync(properties =>
 		{
-			properties.Embed = CreateEmbed(user, title, description, Color.Green);
+			properties.Embed = CreateEmbed(user, title, null, Color.Green);
+			properties.Attachments = new Optional<IEnumerable<FileAttachment>>(new List<FileAttachment>
+			{
+				new(fileInfo.FullName, fileInfo.Name)
+			});
 		});
 	}
 	
