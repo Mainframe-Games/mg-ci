@@ -31,7 +31,6 @@ public class ProductionCommand : Command
 		{
 			var workspaceName = GetOptionValueString(command, "workspace");
 			var password = GetOptionValueString(command, "password");
-			await command.DeferAsync();
 			
 			// request to build server
 			var body = new JObject
