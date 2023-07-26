@@ -110,6 +110,12 @@ public class Workspace
 
 		return arr;
 	}
+
+	public bool IsIL2CPP(string platform)
+	{
+		var val = ProjectSettings.GetValue<int?>($"scriptingBackend.{platform}");
+		return val == 1;
+	}
 	
 	public void Clear()
 	{

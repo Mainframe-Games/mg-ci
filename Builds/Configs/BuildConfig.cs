@@ -96,7 +96,6 @@ public class TargetConfig
 	public string? ExecuteMethod { get; set; }
 	[Obsolete("Move towards using .asset YAML from disk")]
 	public string? BuildPath { get; set; }
-	public string? VersionExtension { get; set; }
 
 	public BuildSettingsAsset GetBuildSettingsAsset(string? buildSettingsDir)
 	{

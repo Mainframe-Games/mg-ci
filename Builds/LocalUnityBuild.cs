@@ -7,19 +7,29 @@ namespace Deployment;
 public class LocalUnityBuild
 {
 	private const string DEFAULT_EXECUTE_METHOD = "BuildSystem.BuildScript.BuildPlayer";
+
+	private readonly Workspace _workspace;
 	private readonly string? _unityVersion;
 
 	public string? Errors { get; private set; }
 
-	public LocalUnityBuild(string? unityVersion)
+	public LocalUnityBuild(Workspace workspace)
 	{
-		_unityVersion = unityVersion;
+		_workspace = workspace;
+		_unityVersion = workspace.UnityVersion;
 	}
 	
-	private string GetDefaultUnityPath(string? versionExtension)
+	private string GetDefaultUnityPath(TargetConfig? config)
 	{
+		if (OperatingSystem.IsWindows())
+			return $@"C:\Program Files\Unity\Hub\Editor\{_unityVersion}\Editor\Unity.exe";
+
+		var isLinux = config?.Target is UnityTarget.Linux64;
+		var isIL2CPP = isLinux && _workspace.IsIL2CPP(UnityTarget.Standalone.ToString());
+		var x86_64 = isIL2CPP ? "-x86_64" : string.Empty;
+		
 		return OperatingSystem.IsMacOS()
-			? $"/Applications/Unity/Hub/Editor/{_unityVersion}{versionExtension}/Unity.app/Contents/MacOS/Unity"
+			? $"/Applications/Unity/Hub/Editor/{_unityVersion}{x86_64}/Unity.app/Contents/MacOS/Unity"
 			: $@"C:\Program Files\Unity\Hub\Editor\{_unityVersion}\Editor\Unity.exe";
 	}
 
@@ -40,7 +50,7 @@ public class LocalUnityBuild
 			File.Delete(errorPath);
 		
 		var buildStartTime = DateTime.Now;
-		var exePath = GetDefaultUnityPath(targetConfig.VersionExtension);
+		var exePath = GetDefaultUnityPath(targetConfig);
 		var executeMethod = targetConfig.ExecuteMethod ?? DEFAULT_EXECUTE_METHOD;
 
 		Logger.Log($"Started Build: {targetConfig.Settings}");
@@ -127,7 +137,7 @@ public class LocalUnityBuild
 			BuildPath = "Builds/win64",
 		};
 		
-		var unity = new LocalUnityBuild(UNITY_VERSION);
-		unity.Build(dir.FullName, target);
+		// var unity = new LocalUnityBuild(UNITY_VERSION);
+		// unity.Build(dir.FullName, target);
 	}
 }

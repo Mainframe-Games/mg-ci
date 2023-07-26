@@ -187,7 +187,7 @@ public class BuildPipeline
 				{
 					build.BuildPath = Path.Combine(Workspace.Directory, build.BuildPath);
 					var targetPath = ClonesManager.GetTargetPath(Workspace.Directory, build);
-					var unity = new LocalUnityBuild(Workspace.UnityVersion);
+					var unity = new LocalUnityBuild(Workspace);
 					var task = Task.Run(() => unity.Build(targetPath, build));
 					parallelTasks.Add(task);
 				}
@@ -214,7 +214,7 @@ public class BuildPipeline
 			// we'll just be idling doing nothing while offload builds could be running
 			foreach (var localBuild in localBuilds)
 			{
-				var unity = new LocalUnityBuild(Workspace.UnityVersion);
+				var unity = new LocalUnityBuild(Workspace);
 				unity.Build(Workspace.Directory, localBuild);
 			}
 		}
