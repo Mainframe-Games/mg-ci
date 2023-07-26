@@ -93,7 +93,6 @@ public class TargetConfig
 {
 	public UnityTarget? Target { get; set; }
 	public string? Settings { get; set; }
-	public string? ExecuteMethod { get; set; }
 	[Obsolete("Move towards using .asset YAML from disk")]
 	public string? BuildPath { get; set; }
 
