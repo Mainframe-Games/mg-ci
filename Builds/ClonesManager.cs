@@ -21,14 +21,14 @@ public static class ClonesManager
 		"Library"
 	};
 
-	public static string GetTargetPath(string srcDir, TargetConfig targetConfig)
+	public static string GetTargetPath(string srcDir, BuildSettingsAsset targetConfig)
 	{
-		var suffix = targetConfig.BuildPath?.Split("/")[^1];
+		var suffix = targetConfig.BuildPath.Split("/")[^1];
 		var targetDir = $"{srcDir}_{suffix}";
 		return targetDir;
 	}
 
-	public static async Task CloneProject(string srcDir, string[]? links, string[]? copies, IEnumerable<TargetConfig> buildConfigs)
+	public static async Task CloneProject(string srcDir, string[]? links, string[]? copies, IEnumerable<BuildSettingsAsset> buildConfigs)
 	{
 		var sw = Stopwatch.StartNew();
 		

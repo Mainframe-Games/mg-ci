@@ -8,7 +8,7 @@ namespace Server.RemoteBuild;
 public class RemoteBuildResponse : IRemoteControllable
 {
 	public ulong PipelineId { get; set; }
-	public string? BuildId { get; set; }
+	public string? BuildIdGuid { get; set; }
 	public string? BuildPath { get; set; }
 	[JsonIgnore] public byte[]? Data { get; set; }
 	public string? Error { get; set; }
@@ -21,16 +21,16 @@ public class RemoteBuildResponse : IRemoteControllable
 		if (!App.Pipelines.TryGetValue(PipelineId, out var buildPipeline))
 			throw new NullReferenceException($"{nameof(BuildPipeline)} is not active. Id: {PipelineId}");
 		
-		Logger.Log($"BuildId: {BuildId}, {Data?.ToMegaByteString()}");
+		Logger.Log($"BuildId: {BuildIdGuid}, {Data?.ToMegaByteString()}");
 		
-		buildPipeline.RemoteBuildReceived(BuildId, BuildPath, Data).FireAndForget();
+		buildPipeline.RemoteBuildReceived(BuildIdGuid, BuildPath, Data).FireAndForget();
 		return ServerResponse.Default;
 	}
 
 	public void Write(BinaryWriter writer)
 	{
 		writer.Write(PipelineId);
-		writer.Write(BuildId ?? string.Empty);
+		writer.Write(BuildIdGuid ?? string.Empty);
 		writer.Write(BuildPath ?? string.Empty);
 		writer.Write(Data?.Length ?? 0);
 		writer.Write(Data ?? Array.Empty<byte>());
@@ -40,7 +40,7 @@ public class RemoteBuildResponse : IRemoteControllable
 	public void Read(BinaryReader reader)
 	{
 		PipelineId = reader.ReadUInt64();
-		BuildId = reader.ReadString();
+		BuildIdGuid = reader.ReadString();
 		BuildPath = reader.ReadString();
 		var length = reader.ReadInt32();
 		Data = reader.ReadBytes(length);

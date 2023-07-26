@@ -47,16 +47,16 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		var projWriter = new ProjectSettings(workspace.ProjectSettingsPath);
 		projWriter.ReplaceVersions(Packet.BuildVersion);
 
-		if (Packet.ParallelBuild != null)
-		{
-			await ClonesManager.CloneProject(workspace.Directory, Packet.ParallelBuild.Links, Packet.ParallelBuild.Copies, Packet.Builds.Values);
-			
-			Packet.Builds
-				.Select(x => Task.Run(() => StartBuilder(Packet.PipelineId, x.Key, x.Value, workspace, true)))
-				.ToList()
-				.WaitForAll();
-		}
-		else
+		// if (Packet.ParallelBuild != null)
+		// {
+		// 	await ClonesManager.CloneProject(workspace.Directory, Packet.ParallelBuild.Links, Packet.ParallelBuild.Copies, Packet.Builds.Values);
+		// 	
+		// 	Packet.Builds
+		// 		.Select(x => Task.Run(() => StartBuilder(Packet.PipelineId, x.Key, x.Value, workspace, true)))
+		// 		.ToList()
+		// 		.WaitForAll();
+		// }
+		// else
 		{
 			foreach (var build in Packet.Builds)
 				await StartBuilder(Packet.PipelineId, build.Key, build.Value, workspace, false);
@@ -71,32 +71,33 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	/// Fire and forget method for starting a build
 	/// </summary>
 	/// <exception cref="WebException"></exception>
-	private async Task StartBuilder(ulong pipelineId, string buildId, TargetConfig config, Workspace workspace, bool clone)
+	private async Task StartBuilder(ulong pipelineId, string buildIdGuid, string buildTarget, Workspace workspace, bool clone)
 	{
-		var originalBuildPath = config.BuildPath;
+		var asset = workspace.GetBuildTarget(buildTarget);
+		var originalBuildPath = asset.BuildPath;
 			
 		try
 		{
 			var targetPath = clone
-				? ClonesManager.GetTargetPath(workspace.Directory, config)
+				? ClonesManager.GetTargetPath(workspace.Directory, asset)
 				: workspace.Directory;
 			
 			// build 
-			var builder = new LocalUnityBuild(workspace.UnityVersion);
-			config.BuildPath = Path.Combine(workspace.Directory, originalBuildPath); // Todo, consolidate this. Its in BuildPipeline.cs as well
-			builder.Build(targetPath, config);
+			var builder = new LocalUnityBuild(workspace);
+			// asset.BuildPath = Path.Combine(workspace.Directory, originalBuildPath); // Todo, consolidate this. Its in BuildPipeline.cs as well
+			builder.Build(asset);
 
 			RemoteBuildResponse response;
 
 			if (builder.Errors is null)
 			{
 				// send web request back to sender with zip folder of build
-				var zipBytes = await FilePacker.PackRawAsync(config.BuildPath);
+				var zipBytes = await FilePacker.PackRawAsync(asset.BuildPath);
 
 				response = new RemoteBuildResponse
 				{
 					PipelineId = pipelineId,
-					BuildId = buildId,
+					BuildIdGuid = buildIdGuid,
 					BuildPath = originalBuildPath,
 					Data = zipBytes
 				};
@@ -104,7 +105,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 			else
 			{
 				// send web request to sender about the build failing
-				response = BuildErrorResponse(pipelineId, buildId, originalBuildPath, builder.Errors);
+				response = BuildErrorResponse(pipelineId, buildIdGuid, originalBuildPath, builder.Errors);
 			}
 
 			await RespondBackToMasterServer(response);
@@ -112,7 +113,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		catch (Exception e)
 		{
 			Logger.Log(e);
-			var res = BuildErrorResponse(pipelineId, buildId, originalBuildPath, e.Message);
+			var res = BuildErrorResponse(pipelineId, buildIdGuid, originalBuildPath, e.Message);
 			await RespondBackToMasterServer(res);
 		}
 	}
@@ -122,7 +123,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		return new RemoteBuildResponse
 		{
 			PipelineId = pipelineId,
-			BuildId = buildId,
+			BuildIdGuid = buildId,
 			BuildPath = originalBuildPath,
 			Error = message ?? "build failed for reasons unknown"
 		};
@@ -130,7 +131,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 
 	private async Task RespondBackToMasterServer(RemoteBuildResponse response)
 	{
-		Logger.Log($"Sending build '{response.BuildId}' back to: {SendBackUrl}");
+		Logger.Log($"Sending build '{response.BuildIdGuid}' back to: {SendBackUrl}");
 
 		if (string.IsNullOrEmpty(response.Error))
 		{

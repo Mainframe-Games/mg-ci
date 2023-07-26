@@ -20,9 +20,9 @@ public class OffloadServerPacket
 	public ulong PipelineId { get; set; }
 	
 	/// <summary>
-	/// BuildId, Config
+	/// BuildId (GUID), Asset Name <see cref="BuildSettingsAsset"/>
 	/// </summary>
-	public Dictionary<string, TargetConfig> Builds { get; set; }
+	public Dictionary<string, string> Builds { get; set; }
 
 }
 
@@ -136,33 +136,46 @@ public class BuildPipeline
 		_buildVersion = preBuild.BuildVersion;
 		await Task.CompletedTask;
 	}
+
+	private IEnumerable<BuildSettingsAsset> GetTargetsToBuild()
+	{
+		var all = Workspace.GetBuildTargets();
+		
+		if (!Args.TryGetArg("-targets", out string targetsRaw))
+			return all;
+
+		var targets = targetsRaw.Split(',');
+		return all.Where(x => targets.Contains(x.Name));
+	}
 	
 	private async Task Build()
 	{
 		if (Args.IsFlag("-nobuild"))
 			return;
+
 		
-		if (Config?.Builds == null)
-			throw new NullReferenceException();
-		
-		if (Config.ParallelBuild != null)
-			await ClonesManager.CloneProject(Workspace.Directory,
-				Config.ParallelBuild.Links,
-				Config.ParallelBuild.Copies,
-				Config.Builds.Where(x => !IsOffload(x)));
+		// TODO: come back to this if we need parallel builds again.
+		// I can't image we'd need to, it turned out to be slower and complicated things more
+		// if (Config.ParallelBuild != null)
+		// 	await ClonesManager.CloneProject(Workspace.Directory,
+		// 		Config.ParallelBuild.Links,
+		// 		Config.ParallelBuild.Copies,
+		// 		Config.Builds.Where(x => !IsOffload(x)));
 		
 		Logger.Log("Build process started...");
 		var buildStartTime = DateTime.Now;
 		
 		var parallelTasks = new List<Task>(); // for parallel builds
-		var localBuilds = new List<TargetConfig>(); // for sequential builds
+		var localBuilds = new List<BuildSettingsAsset>(); // for sequential builds
 
 		OffloadServerPacket? offloadBuilds = null;
-
-		foreach (var build in Config.Builds)
+		
+		var builds = GetTargetsToBuild().ToArray();
+		
+		foreach (var build in builds)
 		{
 			// offload build
-			if (IsOffload(build))
+			if (IsOffload(build.Target))
 			{
 				offloadBuilds ??= new OffloadServerPacket
 				{
@@ -173,25 +186,26 @@ public class BuildPipeline
 					CleanBuild = Args.IsFlag("-cleanbuild"),
 					Branch = Workspace.Branch,
 					ParallelBuild = _offloadParallel ? Config.ParallelBuild : null,
-					Builds = new Dictionary<string, TargetConfig>()
+					Builds = new()
 				};
 				
 				var buildId = Guid.NewGuid().ToString();
-				offloadBuilds.Builds[buildId] = build;
+				offloadBuilds.Builds[buildId] = build.Name;
 				_buildIds.Add(buildId);
 			}
 			// local build
 			else
 			{
-				if (Config.ParallelBuild != null)
-				{
-					build.BuildPath = Path.Combine(Workspace.Directory, build.BuildPath);
-					var targetPath = ClonesManager.GetTargetPath(Workspace.Directory, build);
-					var unity = new LocalUnityBuild(Workspace);
-					var task = Task.Run(() => unity.Build(targetPath, build));
-					parallelTasks.Add(task);
-				}
-				else
+				// TODO: come back to this if we need parallel builds again.
+				// if (Config.ParallelBuild != null)
+				// {
+				// 	build.BuildPath = Path.Combine(Workspace.Directory, build.BuildPath);
+				// 	var targetPath = ClonesManager.GetTargetPath(Workspace.Directory, build);
+				// 	var unity = new LocalUnityBuild(Workspace);
+				// 	var task = Task.Run(() => unity.Build(targetPath, build));
+				// 	parallelTasks.Add(task);
+				// }
+				// else
 				{
 					localBuilds.Add(build);
 				}
@@ -215,7 +229,7 @@ public class BuildPipeline
 			foreach (var localBuild in localBuilds)
 			{
 				var unity = new LocalUnityBuild(Workspace);
-				unity.Build(Workspace.Directory, localBuild);
+				unity.Build(localBuild);
 			}
 		}
 		
@@ -231,9 +245,9 @@ public class BuildPipeline
 	/// </summary>
 	/// <param name="target"></param>
 	/// <returns></returns>
-	private bool IsOffload(TargetConfig target)
+	private bool IsOffload(UnityTarget target)
 	{
-		return !string.IsNullOrEmpty(_offloadUrl) && _offloadTargets.Contains(target.Target ?? UnityTarget.None);
+		return !string.IsNullOrEmpty(_offloadUrl) && _offloadTargets.Contains(target);
 	}
 
 	private async Task DeployAsync()
@@ -275,9 +289,7 @@ public class BuildPipeline
 			if (hook.IsDiscord())
 			{
 				var discord = new ChangeLogBuilderDiscord();
-				
-				if (Config.PostBuild?.ChangeLog == true)
-					discord.BuildLog(ChangeLog);
+				discord.BuildLog(ChangeLog);
 				
 				hookMessage.AppendLine($"Total Time: {TimeSinceStart}");
 				hookMessage.AppendLine(clanforgeMessage);

@@ -9,52 +9,56 @@ public class LocalUnityBuild
 	private const string DEFAULT_EXECUTE_METHOD = "BuildSystem.BuildScript.BuildPlayer";
 
 	private readonly Workspace _workspace;
-	private readonly string? _unityVersion;
+	private readonly string _projectPath;
+	private readonly string _unityVersion;
 
 	public string? Errors { get; private set; }
 
 	public LocalUnityBuild(Workspace workspace)
 	{
 		_workspace = workspace;
-		_unityVersion = workspace.UnityVersion;
+		_projectPath = workspace.Directory ?? string.Empty;
+		_unityVersion = workspace.UnityVersion ?? string.Empty;
+
+		if (string.IsNullOrEmpty(_projectPath))
+			throw new NullReferenceException($"{nameof(_projectPath)} can not be null or empty");
+		if (string.IsNullOrEmpty(_unityVersion))
+			throw new NullReferenceException($"{nameof(_unityVersion)} can not be null or empty");
 	}
 	
-	private string GetDefaultUnityPath(TargetConfig? config)
+	private string GetDefaultUnityPath(UnityTarget target, UnityBuildTargetGroup group)
 	{
 		if (OperatingSystem.IsWindows())
 			return $@"C:\Program Files\Unity\Hub\Editor\{_unityVersion}\Editor\Unity.exe";
 
-		var isLinux = config?.Target is UnityTarget.Linux64;
-		var isIL2CPP = isLinux && _workspace.IsIL2CPP(UnityTarget.Standalone.ToString());
-		var x86_64 = isIL2CPP ? "-x86_64" : string.Empty;
-		
-		return OperatingSystem.IsMacOS()
-			? $"/Applications/Unity/Hub/Editor/{_unityVersion}{x86_64}/Unity.app/Contents/MacOS/Unity"
-			: $@"C:\Program Files\Unity\Hub\Editor\{_unityVersion}\Editor\Unity.exe";
+		// this only matters for linux builds on a mac server using IL2CPP, it needs to use Intel version of editor
+		var useIntel = target is UnityTarget.Linux64 && _workspace.IsIL2CPP(group);
+		var x86_64 = useIntel ? "-x86_64" : string.Empty;
+		return $"/Applications/Unity/Hub/Editor/{_unityVersion}{x86_64}/Unity.app/Contents/MacOS/Unity";
 	}
 
 	/// <summary>
 	/// Builds the player
 	/// </summary>
-	/// <param name="projectPath">Full path to project folder as not to rely on relative paths</param>
-	/// <param name="targetConfig"></param>
+	/// <param name="asset"></param>
 	/// <returns>Directory of build</returns>
-	public void Build(string projectPath, TargetConfig targetConfig)
+	public void Build(BuildSettingsAsset asset)
 	{
-		var logPath = $"{targetConfig.BuildPath}.log";
-		var errorPath = $"{targetConfig.BuildPath}_errors.log";
-		var buildReport = $"{targetConfig.BuildPath}_build_report.log";
+		var buildPath = asset.BuildPath;
+		var logPath = $"{buildPath}.log";
+		var errorPath = $"{buildPath}_errors.log";
+		var buildReport = $"{buildPath}_build_report.log";
 		
 		// delete error logs file
 		if (File.Exists(errorPath))
 			File.Delete(errorPath);
 		
 		var buildStartTime = DateTime.Now;
-		var exePath = GetDefaultUnityPath(targetConfig);
+		var exePath = GetDefaultUnityPath(asset.Target, asset.BuildTargetGroup);
 
-		Logger.Log($"Started Build: {targetConfig.Settings}");
+		Logger.Log($"Started Build: {asset.Name}");
 		
-		var cliparams = BuildCliParams(targetConfig, projectPath, DEFAULT_EXECUTE_METHOD, logPath);
+		var cliparams = BuildCliParams(asset, _projectPath, DEFAULT_EXECUTE_METHOD, logPath);
 		var (exitCode, output) = Cmd.Run(exePath, cliparams);
 
 		if (exitCode != 0)
@@ -73,28 +77,31 @@ public class LocalUnityBuild
 			throw new Exception($"Build Failed with code '{exitCode}'\n{verboseLog}");
 		}
 		
-		Logger.LogTimeStamp($"Build Success! {targetConfig.Settings}, Build Time: ", buildStartTime);
+		Logger.LogTimeStamp($"Build Success! {asset.Name}, Build Time: ", buildStartTime);
 		WriteBuildReport(logPath, buildReport);
 	}
 
-	private static string BuildCliParams(TargetConfig targetConfig, string projectPath, string executeMethod, string logPath)
+	/// <summary>
+	/// </summary>
+	/// <param name="asset"></param>
+	/// <param name="projectPath"></param>
+	/// <param name="executeMethod"></param>
+	/// <param name="logPath"></param>
+	/// <returns></returns>
+	private static string BuildCliParams(BuildSettingsAsset asset, string projectPath, string executeMethod, string logPath)
 	{
-		var cliparams = new List<string>
+		var cliparams = new[]
 		{
 			"-quit",
 			"-batchmode",
-			$"-buildTarget {targetConfig.Target}",
+			$"-buildTarget {asset.Target}",
 			$"-projectPath \"{projectPath}\"",
-			$"-executeMethod {executeMethod}",
+			$"-executeMethod \"{executeMethod}\"",
 			$"-logFile \"{logPath}\"",
-			$"-settings {targetConfig.Settings}",
-			$"-buildPath \"{targetConfig.BuildPath}\""
+			$"-settings \"{asset.FileName}\"",
+			$"-buildPath \"{asset.BuildPath}\"",
+			$"-standaloneBuildSubtarget \"{asset.SubTarget}\""
 		};
-
-		// for server builds
-		var isServerBuild = targetConfig.Settings?.ToLower().Contains("server") == true;
-		var subTarget = isServerBuild ? "Server" : "Player";
-		cliparams.Add($"-standaloneBuildSubtarget {subTarget}");
 
 		return string.Join(" ", cliparams);
 	}
@@ -119,24 +126,14 @@ public class LocalUnityBuild
 		File.WriteAllText(outputPath, report.ToString());
 	}
 	
-	public static void __TEST__()
-	{
-		const string UNITY_VERSION = "2021.3.25f1";
-		const string PATH = "../../../../Unity/BuildTest";
-		
-		var dir = new DirectoryInfo(PATH);
-		
-		if (!dir.Exists)
-			throw new DirectoryNotFoundException(dir.FullName);
-		
-		var target = new TargetConfig
-		{
-			Target = UnityTarget.Win64,
-			Settings = "BuildSettings_Win64",
-			BuildPath = "Builds/win64",
-		};
-		
-		// var unity = new LocalUnityBuild(UNITY_VERSION);
-		// unity.Build(dir.FullName, target);
-	}
+	// public static void __TEST__()
+	// {
+	// 	const string PATH = "../../../../Unity/BuildTest";
+	//
+	// 	var dir = new DirectoryInfo(PATH);
+	// 	var workspace = new Workspace("Test", dir.FullName);
+	// 	var unity = new LocalUnityBuild(workspace);
+	// 	var targets = workspace.GetBuildTargets();
+	// 	unity.Build(targets[0]);
+	// }
 }

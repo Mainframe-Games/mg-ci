@@ -5,20 +5,19 @@ namespace SharedLib;
 public class Workspace
 {
 	public string? Name { get; }
-	public string? Directory { get; }
+	public string Directory { get; }
 	public string? UnityVersion { get; private set; }
 	public string? Branch { get; set; } = "main";
 	public ProjectSettings ProjectSettings { get; private set; }
 
 	[JsonIgnore] public string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", "ProjectSettings.asset");
-	[JsonIgnore] public string BuildSettingsDirPath => Path.Combine(Directory, "Assets", "Settings", "BuildSettings");
 
-	private Workspace(string? name, string? directory, string? unityVersion)
+	private Workspace(string? name, string directory)
 	{
 		Name = name;
 		Directory = directory;
-		UnityVersion = unityVersion;
 		ProjectSettings = new ProjectSettings(ProjectSettingsPath);
+		UnityVersion = GetUnityVersion(directory);
 	}
 	
 	public override string ToString()
@@ -41,8 +40,7 @@ public class Workspace
 			var split = workspace.Split('@');
 			var name = split[0];
 			var path = split[1].Replace(Environment.MachineName, string.Empty).Trim();
-			var unityVersion = GetUnityVersion(path);
-			var ws = new Workspace(name, path, unityVersion);
+			var ws = new Workspace(name, path);
 			workspaces.Add(ws);
 		}
 
@@ -69,7 +67,7 @@ public class Workspace
 		var workspaces = GetAvailableWorkspaces();
 		return workspaces.FirstOrDefault(x => string.Equals(x.Name, workspaceName, StringComparison.OrdinalIgnoreCase));
 	}
-
+	
 	private static string GetUnityVersion(string? workingDirectory)
 	{
 		if (workingDirectory == null)
@@ -111,17 +109,37 @@ public class Workspace
 		return arr;
 	}
 
-	public bool IsIL2CPP(string platform)
+	public bool IsIL2CPP(UnityBuildTargetGroup group)
 	{
-		var val = ProjectSettings.GetValue<int?>($"scriptingBackend.{platform}");
+		var val = ProjectSettings.GetValue<int?>($"scriptingBackend.{group}");
 		return val == 1;
+	}
+
+	public BuildSettingsAsset[] GetBuildTargets()
+	{
+		var path = Path.Combine(Directory, "Assets", "Settings", "BuildSettings");
+		var settingsFiles = new DirectoryInfo(path);
+		var assetFile = settingsFiles.GetFiles("*.asset");
+
+		return assetFile
+			.Select(x => new BuildSettingsAsset(x.FullName))
+			.ToArray();
+	}
+	
+	public BuildSettingsAsset GetBuildTarget(string name)
+	{
+		foreach (var asset in GetBuildTargets())
+			if (asset.Name == name)
+				return asset;
+
+		throw new FileNotFoundException($"Unable to find {nameof(BuildSettingsAsset)} with name '{name}'");
 	}
 	
 	public void Clear()
 	{
 		Cmd.Run("cm", $"unco -a \"{Directory}\"");
-		UnityVersion = GetUnityVersion(Directory);
 		ProjectSettings = new ProjectSettings(ProjectSettingsPath);
+		UnityVersion = GetUnityVersion(Directory);
 	}
 
 	/// <summary>

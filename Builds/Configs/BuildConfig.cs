@@ -5,21 +5,20 @@ namespace Deployment.Configs;
 /// <summary>
 /// Build config local to each Unity project
 /// </summary>
-public class BuildConfig
+public class BuildConfig : Yaml
 {
 	public PreBuildConfig? PreBuild { get; set; }
-	public PostBuildConfig? PostBuild { get; set; }
 	public ParallelBuildConfig? ParallelBuild { get; set; }
-	public TargetConfig[]? Builds { get; set; }
 	public DeployContainerConfig? Deploy { get; set; }
 	public HooksConfig[]? Hooks { get; set; }
-
-	public static BuildConfig GetConfig(string? workingDirectory)
+	
+	public BuildConfig(string? path, int skip = 3) : base(path, skip)
 	{
-		if (workingDirectory == null)
-			return new BuildConfig();
-		
-		var path = Path.Combine(workingDirectory, "BuildScripts", "buildconfig.json");
+	}
+
+	public static BuildConfig GetConfig(string workingDirectory)
+	{
+		var path = Path.Combine(workingDirectory, "Assets", "Settings", "BuildConfig.asset");
 		var configStr = File.ReadAllText(path);
 		var configClass = Json.Deserialise<BuildConfig>(configStr);
 
@@ -29,32 +28,13 @@ public class BuildConfig
 		return configClass;
 	}
 
-	public TargetConfig GetBuildTarget(UnityTarget target, bool isServer = false)
-	{
-		foreach (var build in Builds)
-		{
-			if (build.Target != target)
-				continue;
-			
-			if (isServer && !build.Settings.Contains("Server", StringComparison.OrdinalIgnoreCase))
-				continue;
-				
-			return build;
-		}
 
-		throw new Exception($"Target not found: {target}");
-	}
 }
 
 public class PreBuildConfig
 {
 	public int BumpIndex { get; set; }
 	public VersionsConfig Versions { get; set; }
-}
-
-public class PostBuildConfig
-{
-	public bool ChangeLog { get; set; }
 }
 
 public class ParallelBuildConfig
@@ -89,42 +69,9 @@ public class HooksConfig
 	public bool IsSlack() => Url?.StartsWith("https://hooks.slack.com/") ?? false;
 }
 
-public class TargetConfig
-{
-	public UnityTarget? Target { get; set; }
-	public string? Settings { get; set; }
-	[Obsolete("Move towards using .asset YAML from disk")]
-	public string? BuildPath { get; set; }
-
-	public BuildSettingsAsset GetBuildSettingsAsset(string? buildSettingsDir)
-	{
-		var path = Path.Combine(buildSettingsDir, $"{Settings}.asset");
-		var asset = new BuildSettingsAsset(path);
-		return asset;
-	}
-}
-
 public class VersionsConfig
 {
 	public bool? BundleVersion { get; set; }
 	public bool? AndroidVersionCode { get; set; }
 	public string[]? BuildNumbers { get; set; }
-}
-
-/// <summary>
-/// Src: https://docs.unity3d.com/Manual/EditorCommandLineArguments.html Build Arguments
-/// </summary>
-public enum UnityTarget
-{
-	None,
-	Standalone,
-	Win,
-	Win64,
-	OSXUniversal,
-	Linux64,
-	iOS,
-	Android,
-	WebGL,
-	WindowsStoreApps,
-	tvOS
 }

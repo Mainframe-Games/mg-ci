@@ -6,9 +6,13 @@ using UnityEngine.Serialization;
 
 namespace BuildSystem
 {
-	[CreateAssetMenu(fileName = "BuildSettings", menuName = "Build Settings/New Settings")]
+	[CreateAssetMenu(fileName = "BuildSettings", menuName = "Build System/New Settings")]
 	public class BuildSettings : ScriptableObject
 	{
+		[Header("File")]
+		public string Name;
+		
+		[Header("Build Config")]
 		[Tooltip("File extension. Include '.'")]
 		public string Extension;
 		public string ProductName;
@@ -72,17 +76,24 @@ namespace BuildSystem
 
 		private void AutoSetExtension()
 		{
+			if (string.IsNullOrEmpty(Name))
+				Name = name.Replace(nameof(BuildSettings), "").Trim('_');
+			
 			// TODO: support more targets just cant be bothered right now. Its all I need
 			Extension = Target switch
 			{
 				BuildTarget.StandaloneWindows or BuildTarget.StandaloneWindows64 => ".exe",
 				BuildTarget.StandaloneOSX => ".app",
 				BuildTarget.StandaloneLinux64 => ".x86_64",
+				BuildTarget.Android => ".aab",
+				BuildTarget.iOS => "",
 				_ => Extension
 			};
 
 			if (string.IsNullOrEmpty(ProductName))
 				ProductName = Application.productName;
+			
+			EditorUtility.SetDirty(this);
 		}
 
 		private static string[] GetEditorSettingsScenes()

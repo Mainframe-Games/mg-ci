@@ -131,7 +131,7 @@ public static class App
 			return;
 		
 		// upload to s3
-		var pathToBuild = pipeline.Config.GetBuildTarget(UnityTarget.Linux64, true).BuildPath;
+		var pathToBuild = pipeline.Workspace.GetBuildTarget($"{UnityTarget.Linux64}_Server").BuildPath;
 		var s3 = new AmazonS3Deploy(Config.S3.AccessKey, Config.S3.SecretKey, Config.S3.BucketName);
 		await s3.DeployAsync(pathToBuild);
 		
@@ -170,8 +170,7 @@ public static class App
 		if (pipeline.Config.Deploy?.AppleStore is not true)
 			return;
 		
-		var iosBuild = pipeline.Config.GetBuildTarget(UnityTarget.iOS);
-		var buildSettingsAsset = iosBuild.GetBuildSettingsAsset(pipeline.Workspace.BuildSettingsDirPath);
+		var buildSettingsAsset = pipeline.Workspace.GetBuildTarget(UnityTarget.iOS.ToString());
 		var productName = buildSettingsAsset.GetValue<string>("ProductName");
 		var buildPath = buildSettingsAsset.GetValue<string>("BuildPath");
 		var workingDir = Path.Combine(buildPath, productName);
@@ -195,8 +194,7 @@ public static class App
 		var packageName = pipeline.Workspace.ProjectSettings.GetValue<string>("applicationIdentifier.Android");
 		var changeLogArr = pipeline.ChangeLog;
 		var changeLog = string.Join("\n", changeLogArr);
-		var androidBuild = pipeline.Config.GetBuildTarget(UnityTarget.Android);
-		var buildSettingsAsset = androidBuild.GetBuildSettingsAsset(pipeline.Workspace.BuildSettingsDirPath);
+		var buildSettingsAsset = pipeline.Workspace.GetBuildTarget(UnityTarget.Android.ToString());
 		var productName = buildSettingsAsset.GetValue<string>("ProductName");
 		var buildPath = buildSettingsAsset.GetValue<string>("BuildPath");
 		var path = Path.Combine(buildPath, $"{productName}.aab");
