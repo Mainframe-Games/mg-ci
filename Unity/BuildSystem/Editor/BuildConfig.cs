@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEditor;
 using UnityEngine;
 
 namespace BuildSystem
@@ -9,6 +10,11 @@ namespace BuildSystem
 		public PreBuild PreBuild;
 		public Deploy Deploy;
 		public WebHook[] Hooks;
+
+		private void OnValidate()
+		{
+			EditorUtility.SetDirty(this);
+		}
 	}
 
 	[Serializable]
@@ -23,7 +29,7 @@ namespace BuildSystem
 	{
 		public bool BundleVersion;
 		public bool AndroidVersionCode;
-		public BuildNumber[] BuildNumbers;
+		public string[] BuildNumbers;
 	}
 
 	[Serializable]
@@ -42,14 +48,5 @@ namespace BuildSystem
 		public string Title;
 		public string url;
 		public bool IsErrorChannel;
-	}
-
-	public enum BuildNumber
-	{
-		Standalone,
-		iPhone,
-		Bratwurst,
-		tvOS,
-		VisionOS,
 	}
 }
