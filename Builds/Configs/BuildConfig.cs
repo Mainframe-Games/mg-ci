@@ -5,30 +5,40 @@ namespace Deployment.Configs;
 /// <summary>
 /// Build config local to each Unity project
 /// </summary>
-public class BuildConfig : Yaml
+public sealed class BuildConfig : Yaml
 {
-	public PreBuildConfig? PreBuild { get; set; }
-	public ParallelBuildConfig? ParallelBuild { get; set; }
-	public DeployContainerConfig? Deploy { get; set; }
-	public HooksConfig[]? Hooks { get; set; }
+	public PreBuildConfig? PreBuild { get; }
+	public ParallelBuildConfig? ParallelBuild { get; }
+	public DeployContainerConfig? Deploy { get; }
+	public HooksConfig[]? Hooks { get; }
 	
 	public BuildConfig(string? path, int skip = 3) : base(path, skip)
 	{
+		PreBuild = GetObject<PreBuildConfig>(nameof(PreBuild));
+		// PreBuild = new PreBuildConfig
+		// {
+		// 	BumpIndex = GetValue<int>($"{nameof(PreBuild)}.{nameof(PreBuild.BumpIndex)}")
+		// };
+		// ParallelBuild = GetObject<ParallelBuildConfig>(nameof(ParallelBuild));
+		Deploy = GetObject<DeployContainerConfig>(nameof(Deploy));
+		Hooks = GetObject<HooksConfig[]>(nameof(Hooks));
+	}
+	
+	public override T GetValue<T>(string path)
+	{
+		return base.GetValue<T>($"MonoBehaviour.{path}");
+	}
+
+	public override T? GetObject<T>(string path) where T : class
+	{
+		return base.GetObject<T>($"MonoBehaviour.{path}");
 	}
 
 	public static BuildConfig GetConfig(string workingDirectory)
 	{
-		var path = Path.Combine(workingDirectory, "Assets", "Settings", "BuildConfig.asset");
-		var configStr = File.ReadAllText(path);
-		var configClass = Json.Deserialise<BuildConfig>(configStr);
-
-		if (configClass == null)
-			throw new NullReferenceException("Failed to parse buildconfig.json");
-		
-		return configClass;
+		var path = Path.Combine(workingDirectory, "Assets", "Settings", "BuildSettings", "BuildConfig.asset");
+		return new BuildConfig(path);
 	}
-
-
 }
 
 public class PreBuildConfig

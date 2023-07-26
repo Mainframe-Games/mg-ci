@@ -7,13 +7,13 @@ namespace SharedLib;
 /// <summary>
 /// YAML helper
 /// </summary>
-public class Yaml
+public abstract class Yaml
 {
 	private readonly string? _path;
 	protected readonly string[] _lines;
 	private readonly JObject _jObject;
 
-	public Yaml(string? path, int skip = 3)
+	protected Yaml(string? path, int skip = 3)
 	{
 		var file = new FileInfo(path);
 		if (!file.Exists)
@@ -65,6 +65,12 @@ public class Yaml
 	{
 		var token = _jObject.SelectToken(path, true);
 		return token.Value<T>() ?? default(T);
+	}
+	
+	public virtual T? GetObject<T>(string path) where T : class
+	{
+		var token = _jObject.SelectToken(path, true);
+		return token.ToObject<T?>() ?? default(T?);
 	}
 
 	public int GetProjPropertyLineIndex(params string[] propertyNames)
