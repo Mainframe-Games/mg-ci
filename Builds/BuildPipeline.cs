@@ -281,7 +281,7 @@ public class BuildPipeline
 
 		foreach (var hook in Config.Hooks)
 		{
-			if (hook.IsErrorChannel)
+			if (hook.IsErrorChannel == 1)
 				continue;
 			
 			var hookMessage = new StringBuilder();
@@ -349,7 +349,7 @@ public class BuildPipeline
 		
 		foreach (var hook in Config.Hooks)
 		{
-			if (!hook.IsErrorChannel)
+			if (hook.IsErrorChannel == 0)
 				continue;
 			
 			hookMessage.Clear();

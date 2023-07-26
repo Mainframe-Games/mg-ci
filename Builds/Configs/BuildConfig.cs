@@ -5,40 +5,28 @@ namespace Deployment.Configs;
 /// <summary>
 /// Build config local to each Unity project
 /// </summary>
-public sealed class BuildConfig : Yaml
+public sealed class BuildConfig
 {
-	public PreBuildConfig? PreBuild { get; }
-	public ParallelBuildConfig? ParallelBuild { get; }
-	public DeployContainerConfig? Deploy { get; }
-	public HooksConfig[]? Hooks { get; }
-	
-	public BuildConfig(string? path, int skip = 3) : base(path, skip)
-	{
-		PreBuild = GetObject<PreBuildConfig>(nameof(PreBuild));
-		// PreBuild = new PreBuildConfig
-		// {
-		// 	BumpIndex = GetValue<int>($"{nameof(PreBuild)}.{nameof(PreBuild.BumpIndex)}")
-		// };
-		// ParallelBuild = GetObject<ParallelBuildConfig>(nameof(ParallelBuild));
-		Deploy = GetObject<DeployContainerConfig>(nameof(Deploy));
-		Hooks = GetObject<HooksConfig[]>(nameof(Hooks));
-	}
-	
-	public override T GetValue<T>(string path)
-	{
-		return base.GetValue<T>($"MonoBehaviour.{path}");
-	}
-
-	public override T? GetObject<T>(string path) where T : class
-	{
-		return base.GetObject<T>($"MonoBehaviour.{path}");
-	}
+	public MonoBehaviour MonoBehaviour { get; set; }
+	public PreBuildConfig? PreBuild => MonoBehaviour.PreBuild;
+	public ParallelBuildConfig? ParallelBuild => MonoBehaviour.ParallelBuild;
+	public DeployContainerConfig? Deploy => MonoBehaviour.Deploy;
+	public HooksConfig[]? Hooks => MonoBehaviour.Hooks;
 
 	public static BuildConfig GetConfig(string workingDirectory)
 	{
 		var path = Path.Combine(workingDirectory, "Assets", "Settings", "BuildSettings", "BuildConfig.asset");
-		return new BuildConfig(path);
+		var config = Yaml.Deserialise<BuildConfig>(path);
+		return config;
 	}
+}
+
+public class MonoBehaviour
+{
+	public PreBuildConfig? PreBuild { get; set; }
+	public ParallelBuildConfig? ParallelBuild { get; set; }
+	public DeployContainerConfig? Deploy { get; set; }
+	public HooksConfig[]? Hooks { get; set; }
 }
 
 public class PreBuildConfig
@@ -73,7 +61,7 @@ public class HooksConfig
 {
 	public string? Url { get; set; }
 	public string? Title { get; set; }
-	public bool IsErrorChannel { get; set; }
+	public int IsErrorChannel { get; set; }
 
 	public bool IsDiscord() => Url?.StartsWith("https://discord.com/") ?? false;
 	public bool IsSlack() => Url?.StartsWith("https://hooks.slack.com/") ?? false;

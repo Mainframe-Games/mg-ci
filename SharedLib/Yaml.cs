@@ -1,6 +1,8 @@
 using System.Dynamic;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace SharedLib;
 
@@ -33,7 +35,7 @@ public abstract class Yaml
 		var deserializer = new Deserializer();
 		var yamlObject = deserializer.Deserialize(r);
 
-		var serializer = new Newtonsoft.Json.JsonSerializer();
+		var serializer = new JsonSerializer();
 		var writer = new StringWriter();
 		serializer.Serialize(writer, yamlObject);
 		var json = writer.ToString();
@@ -106,5 +108,24 @@ public abstract class Yaml
 
 		var replacement = line.Replace(oldValue, newValue);
 		return replacement;
+	}
+	
+	public static T Deserialise<T>(string? path, int skip = 3)
+	{
+		var file = new FileInfo(path);
+		
+		if (!file.Exists)
+			throw new FileNotFoundException(path);
+
+		var lines = File.ReadAllLines(path);
+		var yml = string.Join("\n", lines.Skip(skip));
+		
+		var deserializer = new DeserializerBuilder()
+			.WithNamingConvention(new PascalCaseNamingConvention())
+			.IgnoreUnmatchedProperties()
+			.Build();
+		
+		var obj = deserializer.Deserialize<T>(yml);
+		return obj;
 	}
 }
