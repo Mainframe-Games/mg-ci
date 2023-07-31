@@ -45,6 +45,7 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 				ServerVersion = App.Version,
 				PipelineId = pipeline.Id,
 				Workspace = workspace.Name,
+				Targets = workspace.GetBuildTargets().Select(x => x.Name).ToList(),
 				Args = Args,
 				UnityVersion = workspace.UnityVersion,
 				ChangesetId = changeSetId,
@@ -61,6 +62,7 @@ public class BuildPipelineResponse
 	public string? ServerVersion { get; set; }
 	public ulong? PipelineId { get; set; }
 	public string? Workspace { get; set; }
+	public List<string>? Targets { get; set; }
 	public string? Args { get; set; }
 	public string? Branch { get; set; }
 	public int? ChangesetId { get; set; }
