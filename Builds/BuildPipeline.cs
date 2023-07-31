@@ -140,19 +140,19 @@ public class BuildPipeline
 	private IEnumerable<BuildSettingsAsset> GetTargetsToBuild()
 	{
 		var all = Workspace.GetBuildTargets();
-		
-		if (!Args.TryGetArg("-targets", out string targetsRaw))
-			return all;
+		return all.Where(x => x.GetValue<int>("Ignore") == 0);
 
-		var targets = targetsRaw.Split(',');
-		return all.Where(x => targets.Contains(x.Name));
+		// if (Args.TryGetArg("-targets", out string targetsRaw))
+		// {
+		// 	var targets = targetsRaw.Split(',');
+		// 	return all.Where(x => targets.Contains(x.Name));
+		// }
 	}
 	
 	private async Task Build()
 	{
 		if (Args.IsFlag("-nobuild"))
 			return;
-
 		
 		// TODO: come back to this if we need parallel builds again.
 		// I can't image we'd need to, it turned out to be slower and complicated things more

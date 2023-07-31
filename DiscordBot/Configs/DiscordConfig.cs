@@ -18,7 +18,7 @@ public class DiscordConfig
 	public List<string>? AuthorisedRoles { get; set; }
 	public string? CommandName { get; set; } = "start-build";
 
-	[JsonIgnore] public List<string?>? WorkspaceNames { get; private set; } = new();
+	[JsonIgnore] public List<WorkspacePacket> Workspaces { get; private set; } = new();
 
 	public static async Task<DiscordConfig?> LoadAsync()
 	{
@@ -32,15 +32,15 @@ public class DiscordConfig
 	{
 		if (string.IsNullOrEmpty(BuildServerUrl) || Args.Environment.IsFlag("-local"))
 		{
-			WorkspaceNames = Workspace.GetAvailableWorkspaces().Select(x => x.Name).ToList();
+			Workspaces = WorkspacePacket.GetFromLocal();
 			return;
 		}
 
 		try
 		{
 			var res = await Web.SendAsync(HttpMethod.Get, $"{BuildServerUrl}/workspaces");
-			var list = Json.Deserialise<List<string?>?>(res.Content);
-			WorkspaceNames = list;
+			var list = Json.Deserialise<List<WorkspacePacket>>(res.Content) ?? new List<WorkspacePacket>();
+			Workspaces = list;
 		}
 		catch (HttpRequestException)
 		{

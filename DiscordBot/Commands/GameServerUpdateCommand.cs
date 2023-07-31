@@ -51,7 +51,7 @@ public class GameServerUpdateCommand : Command
 		}
 	}
 
-	public override async Task ModifyOptions(SocketSlashCommand command, SocketInteraction interaction)
+	public override async Task ModifyOptions(SocketSlashCommand command)
 	{
 		// Get the value of the first option
 		var firstOption = command.Data.Options.FirstOrDefault(x => x.Name == "backend");
@@ -70,7 +70,7 @@ public class GameServerUpdateCommand : Command
 			.Build();
 
 		// Modify the original response to update the options
-		await interaction.ModifyOriginalResponseAsync(x =>
+		await command.ModifyOriginalResponseAsync(x =>
 		{
 			x.Content = "Options have been updated.";
 			x.Components = new Optional<MessageComponent>(component);

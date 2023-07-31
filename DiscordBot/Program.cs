@@ -1,6 +1,8 @@
 ﻿using DiscordBot;
 using DiscordBot.Configs;
 
+Console.Title = $"Discord Bot - {DiscordWrapper.Version}";
+
 var config = await DiscordConfig.LoadAsync();
 if (config == null)
 	throw new NullReferenceException("Config is null");

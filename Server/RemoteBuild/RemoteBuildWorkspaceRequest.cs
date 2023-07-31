@@ -8,6 +8,7 @@ namespace Server.RemoteBuild;
 public class RemoteBuildWorkspaceRequest : IRemoteControllable
 {
 	public string? WorkspaceName { get; set; }
+	public string[] Targets { get; set; }
 	public string? Args { get; set; }
 	
 	public ServerResponse Process()

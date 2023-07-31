@@ -115,15 +115,15 @@ public class Workspace
 		return val == 1;
 	}
 
-	public BuildSettingsAsset[] GetBuildTargets()
+	public IEnumerable<BuildSettingsAsset> GetBuildTargets()
 	{
 		var path = Path.Combine(Directory, "Assets", "Settings", "BuildSettings");
 		var settingsFiles = new DirectoryInfo(path);
 		var assetFile = settingsFiles.GetFiles("*.asset");
 
 		return assetFile
-			.Select(x => new BuildSettingsAsset(x.FullName))
-			.ToArray();
+			.Where(x => x.Name.Contains("BuildSettings_"))
+			.Select(x => new BuildSettingsAsset(x.FullName));
 	}
 	
 	public BuildSettingsAsset GetBuildTarget(string name)

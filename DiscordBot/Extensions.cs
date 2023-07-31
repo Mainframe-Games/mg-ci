@@ -41,16 +41,16 @@ public static class Extensions
 		});
 	}
 	
-	public static async Task RespondError(this SocketSlashCommand command, IUser user, string title, string description)
+	public static async Task RespondError(this SocketSlashCommand command, string title, string description)
 	{
-		await command.RespondAsync(embed: CreateEmbed(user, title, description, Color.Red), ephemeral: true);
+		await command.RespondAsync(embed: CreateEmbed(command.User, title, description, Color.Red), ephemeral: true);
 	}
 	
-	public static async Task RespondErrorDelayed(this SocketSlashCommand command, IUser user, string title, string description)
+	public static async Task RespondErrorDelayed(this SocketSlashCommand command, string title, string description)
 	{
 		await command.ModifyOriginalResponseAsync(properties =>
 		{
-			properties.Embed = CreateEmbed(user, title, description, Color.Green);
+			properties.Embed = CreateEmbed(command.User, title, description, Color.Green);
 		});
 	}
 

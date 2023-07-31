@@ -16,7 +16,7 @@ public abstract class Command
 	
 	public abstract Task<CommandResponse> ExecuteAsync(SocketSlashCommand command);
 	
-	public virtual async Task ModifyOptions(SocketSlashCommand socketSlashCommand, SocketInteraction socketInteraction)
+	public virtual async Task ModifyOptions(SocketSlashCommand slashCommand)
 	{
 		await Task.CompletedTask;
 	}
@@ -48,9 +48,8 @@ public abstract class Command
 		return -1;
 	}
 	
-
 	protected static async Task NotImplemented(SocketSlashCommand command)
 	{
-		await command.RespondError(command.User, "Not Implemented", "Command not implemented yet");
+		await command.RespondError("Not Implemented", "Command not implemented yet");
 	}
 }

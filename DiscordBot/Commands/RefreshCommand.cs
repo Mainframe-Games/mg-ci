@@ -12,6 +12,6 @@ public class RefreshCommand : Command
 	{
 		await DiscordWrapper.Config.SetWorkspaceNamesAsync();
 		await OnRefreshed.Invoke();
-		return new CommandResponse("Workspaces Updated", string.Join("\n", DiscordWrapper.Config.WorkspaceNames));
+		return new CommandResponse("Workspaces Updated", string.Join("\n", DiscordWrapper.Config.Workspaces));
 	}
 }

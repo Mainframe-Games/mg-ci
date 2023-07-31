@@ -110,18 +110,10 @@ public class ListenServer
 
 		switch (path)
 		{
-			case "/workspaces":
-				var workspaces = Workspace.GetAvailableWorkspaces().Select(x => x.Name).ToArray();
-				return new ServerResponse(HttpStatusCode.OK, workspaces);
-			
-			case "/info":
-				return new ServerInfo(this).Process();
-			
-			case "/commits": 
-				return new Commits(request.QueryString).Process();
-			
-			default:
-				return ServerResponse.Default;
+			case "/workspaces": return new Workspaces().Process();
+			case "/info": return new ServerInfo(this).Process();
+			case "/commits": return new Commits(request.QueryString).Process();
+			default: return ServerResponse.Default;
 		}
 	}
 	

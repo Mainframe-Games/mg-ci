@@ -14,9 +14,10 @@ namespace DiscordBot;
 /// </summary>
 public class DiscordWrapper
 {
-	private readonly DiscordSocketClient _client;
-	
+	public static string Version => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty;
 	public static DiscordConfig Config { get; private set; }
+	
+	private readonly DiscordSocketClient _client;
 	private Command[] Commands { get; set; }
 
 	public DiscordWrapper(DiscordConfig config)
@@ -27,19 +28,28 @@ public class DiscordWrapper
 		_client.Ready += ClientReady;
 		_client.SlashCommandExecuted += SlashCommandHandler;
 		_client.InteractionCreated += HandleInteractionAsync;
+		_client.SelectMenuExecuted += SelectMenuExecutedAsync;
 		Config = config;
 
 		RefreshCommand.OnRefreshed += RefreshCommands;
 	}
 
+	private async Task SelectMenuExecutedAsync(SocketMessageComponent interaction)
+	{
+		Console.WriteLine("------- SelectMenuExecutedAsync");
+		await Task.CompletedTask;
+	}
+
 	private async Task HandleInteractionAsync(SocketInteraction interaction)
 	{
-		if (interaction is not SocketSlashCommand command) 
-			return;
+		Console.WriteLine("------- HandleInteractionAsync");
 		
+		if (interaction is not SocketSlashCommand command)
+			return;
+
 		var cmd = Commands.FirstOrDefault(x => command.CommandName == x.CommandName);
 		if (cmd != null)
-			await cmd.ModifyOptions(command, interaction);
+			await cmd.ModifyOptions(command);
 	}
 
 	public async Task Init()
@@ -105,7 +115,7 @@ public class DiscordWrapper
 		// check auth
 		if (!IsAuthorised((SocketGuildUser)command.User))
 		{
-			await command.RespondError(command.User, "Unauthorised", "You are not authorised for this command");
+			await command.RespondError("Unauthorised", "You are not authorised for this command");
 			return;
 		}
 
@@ -116,7 +126,7 @@ public class DiscordWrapper
 		// execute or fail
 		if (cmd == null)
 		{
-			await command.RespondError(command.User, "Not Recognised", $"Command not recognised: {command.CommandName}");
+			await command.RespondError("Not Recognised", $"Command not recognised: {command.CommandName}");
 			return;
 		}
 		
@@ -126,7 +136,7 @@ public class DiscordWrapper
 
 		if (res.IsError)
 		{
-			await command.RespondErrorDelayed(command.User, res.Title, fullResponse);
+			await command.RespondErrorDelayed(res.Title, fullResponse);
 			return;
 		}
 		

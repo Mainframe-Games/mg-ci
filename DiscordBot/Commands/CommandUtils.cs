@@ -12,8 +12,8 @@ public static class CommandUtils
 			.WithRequired(true)
 			.WithType(ApplicationCommandOptionType.String);
 		
-		foreach (var workspace in DiscordWrapper.Config.WorkspaceNames)
-			opt.AddChoice(workspace, workspace);
+		foreach (var workspace in DiscordWrapper.Config.Workspaces)
+			opt.AddChoice(workspace.Name, workspace.Name);
 
 		return opt;
 	}

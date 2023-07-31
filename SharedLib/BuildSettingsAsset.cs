@@ -17,6 +17,14 @@ public class BuildSettingsAsset : Yaml
 
 	public override T GetValue<T>(string path)
 	{
-		return base.GetValue<T>($"MonoBehaviour.{path}");
+		try
+		{
+			return base.GetValue<T>($"MonoBehaviour.{path}");
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine($"Failed to find path `{path}` in {FileName}");
+			return default;
+		}
 	}
 }
