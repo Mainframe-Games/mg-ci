@@ -48,7 +48,7 @@ public class BuildPipeline
 
 	public Workspace Workspace { get; }
 	public Args Args { get; }
-	public BuildConfig Config { get; private set; }
+	public BuildConfig Config { get; }
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{DateTime.Now - StartTime:hh\\:mm\\:ss}";
 	public string BuildVersionTitle => $"{BUILD_VERSION} {_buildVersion?.BundleVersion}";
@@ -270,7 +270,7 @@ public class BuildPipeline
 
 		foreach (var hook in Config.Hooks)
 		{
-			if (hook.IsErrorChannel == 1)
+			if (hook.IsErrorChannel is true)
 				continue;
 			
 			var hookMessage = new StringBuilder();
@@ -338,7 +338,7 @@ public class BuildPipeline
 		
 		foreach (var hook in Config.Hooks)
 		{
-			if (hook.IsErrorChannel == 0)
+			if (hook.IsErrorChannel is not true)
 				continue;
 			
 			hookMessage.Clear();
