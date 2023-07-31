@@ -11,7 +11,6 @@ namespace BuildSystem
 	{
 		[Header("File")]
 		public string Name;
-		public bool Ignore;
 		
 		[Header("Build Config")]
 		[Tooltip("File extension. Include '.'")]
