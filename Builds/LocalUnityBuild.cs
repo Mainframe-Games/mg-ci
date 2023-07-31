@@ -26,13 +26,13 @@ public class LocalUnityBuild
 			throw new NullReferenceException($"{nameof(_unityVersion)} can not be null or empty");
 	}
 	
-	private string GetDefaultUnityPath(UnityTarget target, UnityBuildTargetGroup group)
+	private string GetDefaultUnityPath(BuildTargetFlag target, UnityBuildTargetGroup group)
 	{
 		if (OperatingSystem.IsWindows())
 			return $@"C:\Program Files\Unity\Hub\Editor\{_unityVersion}\Editor\Unity.exe";
 
 		// this only matters for linux builds on a mac server using IL2CPP, it needs to use Intel version of editor
-		var useIntel = target is UnityTarget.Linux64 && _workspace.IsIL2CPP(group);
+		var useIntel = target is BuildTargetFlag.Linux64 && _workspace.IsIL2CPP(group);
 		var x86_64 = useIntel ? "-x86_64" : string.Empty;
 		return $"/Applications/Unity/Hub/Editor/{_unityVersion}{x86_64}/Unity.app/Contents/MacOS/Unity";
 	}
@@ -54,7 +54,7 @@ public class LocalUnityBuild
 			File.Delete(errorPath);
 		
 		var buildStartTime = DateTime.Now;
-		var exePath = GetDefaultUnityPath(asset.Target, asset.TargetGroup);
+		var exePath = GetDefaultUnityPath(asset.GetBuildTargetFlag(), asset.TargetGroup);
 
 		Logger.Log($"Started Build: {asset.Name}");
 		
@@ -94,7 +94,7 @@ public class LocalUnityBuild
 		{
 			"-quit",
 			"-batchmode",
-			$"-buildTarget {asset.Target}",
+			$"-buildTarget {asset.GetBuildTargetFlag()}",
 			$"-projectPath \"{projectPath}\"",
 			$"-executeMethod \"{executeMethod}\"",
 			$"-logFile \"{logPath}\"",

@@ -48,5 +48,5 @@ internal class ServerConfig
 public class OffloadConfig
 {
 	public bool Parallel { get; set; }
-	public List<UnityTarget>? Targets { get; set; }
+	public List<BuildTargetFlag>? Targets { get; set; }
 }

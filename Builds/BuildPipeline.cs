@@ -44,7 +44,7 @@ public class BuildPipeline
 	public readonly ulong Id;
 	private readonly string? _offloadUrl;
 	private readonly bool _offloadParallel;
-	private readonly List<UnityTarget> _offloadTargets;
+	private readonly List<BuildTargetFlag> _offloadTargets;
 
 	public Workspace Workspace { get; }
 	public Args Args { get; }
@@ -67,7 +67,7 @@ public class BuildPipeline
 	/// </summary>
 	private readonly List<string> _buildIds = new();
 
-	public BuildPipeline(ulong id, Workspace workspace, Args args, string? offloadUrl, bool offloadParallel, List<UnityTarget>? offloadTargets)
+	public BuildPipeline(ulong id, Workspace workspace, Args args, string? offloadUrl, bool offloadParallel, List<BuildTargetFlag>? offloadTargets)
 	{
 		Id = id;
 		Workspace = workspace;
@@ -75,7 +75,7 @@ public class BuildPipeline
 
 		_offloadUrl = offloadUrl;
 		_offloadParallel = offloadParallel;
-		_offloadTargets = offloadTargets ?? new List<UnityTarget>();
+		_offloadTargets = offloadTargets ?? new List<BuildTargetFlag>();
 		
 		Environment.CurrentDirectory = workspace.Directory;
 		
@@ -164,7 +164,7 @@ public class BuildPipeline
 		foreach (var build in builds)
 		{
 			// offload build
-			if (IsOffload(build.Target))
+			if (IsOffload(build.GetBuildTargetFlag()))
 			{
 				offloadBuilds ??= new OffloadServerPacket
 				{
@@ -234,7 +234,7 @@ public class BuildPipeline
 	/// </summary>
 	/// <param name="target"></param>
 	/// <returns></returns>
-	private bool IsOffload(UnityTarget target)
+	private bool IsOffload(BuildTargetFlag target)
 	{
 		return !string.IsNullOrEmpty(_offloadUrl) && _offloadTargets.Contains(target);
 	}
