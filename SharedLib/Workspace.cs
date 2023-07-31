@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace SharedLib;
 
@@ -119,11 +120,33 @@ public class Workspace
 	{
 		var path = Path.Combine(Directory, "Assets", "Settings", "BuildSettings");
 		var settingsFiles = new DirectoryInfo(path);
-		var assetFile = settingsFiles.GetFiles("*.asset");
+		var assetFiles = settingsFiles.GetFiles("*.asset");
+		var buildConfigPath = assetFiles.FirstOrDefault(x => x.Name.Contains("BuildConfig"));
 
-		return assetFile
-			.Where(x => x.Name.Contains("BuildSettings_"))
-			.Select(x => new BuildSettingsAsset(x.FullName));
+		if (buildConfigPath != null)
+		{
+			var buildConfigFile = new BuildConfigAsset(buildConfigPath.FullName);
+			var targets = buildConfigFile.GetObject<JArray>("Build.BuildTargets");
+			var guids = targets?.Select(x => x["guid"]?.ToString()).ToList();
+			var metas = settingsFiles
+				.GetFiles("*.asset.meta")
+				.Select(x => new BuildSettingsMeta(x.FullName));
+			
+			foreach (var assetMetaFile in metas)
+			{
+				var guid = assetMetaFile.GetValue<string>("guid");
+				if (guids?.Contains(guid) is true)
+					yield return assetMetaFile.GetParentFile();
+			}
+		}
+		else
+		{
+			foreach (var assetFile in assetFiles)
+			{
+				if (assetFile.Name.Contains("BuildSettings_"))
+					yield return new BuildSettingsAsset(assetFile.FullName);
+			}
+		}
 	}
 	
 	public BuildSettingsAsset GetBuildTarget(string name)

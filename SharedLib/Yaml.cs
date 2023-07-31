@@ -72,7 +72,7 @@ public abstract class Yaml
 		}
 		catch (Exception e)
 		{
-			Console.WriteLine($"Failed to find path `{path}`. {e.Message}");
+			Console.WriteLine("{0}\n{1}", e.Message, ToString());
 			return default;
 		}
 	}
@@ -86,7 +86,7 @@ public abstract class Yaml
 		}
 		catch (Exception e)
 		{
-			Console.WriteLine($"Failed to find path `{path}`. {e.Message}");
+			Console.WriteLine("{0}\n{1}", e.Message, ToString());
 			return default;
 		}
 	}

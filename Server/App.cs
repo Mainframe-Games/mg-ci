@@ -72,8 +72,7 @@ public static class App
 		var parallel = Config?.Offload?.Parallel ?? false;
 		var offloadTargets = Config?.Offload?.Targets ?? null;
 		var offloadUrl = Config?.OffloadServerUrl;
-		var targets = Config?.Workspaces?.TryGetValue(workspace.Name, out var t) is true ? t : null;
-		var pipeline = new BuildPipeline(NextPipelineId++, workspace, targets, args, offloadUrl, parallel, offloadTargets);
+		var pipeline = new BuildPipeline(NextPipelineId++, workspace, args, offloadUrl, parallel, offloadTargets);
 		return pipeline;
 	}
 	

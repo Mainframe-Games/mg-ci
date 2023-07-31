@@ -59,7 +59,6 @@ public class BuildPipeline
 	private readonly int _currentChangeSetId;
 	private readonly string _currentGuid;
 	private BuildVersions _buildVersion;
-	private readonly List<string>? _targetsToBuild;
 
 	public string[] ChangeLog { get; }
 	
@@ -68,14 +67,12 @@ public class BuildPipeline
 	/// </summary>
 	private readonly List<string> _buildIds = new();
 
-	public BuildPipeline(ulong id, Workspace workspace, List<string>? targetsToBuild, Args args, string? offloadUrl, bool offloadParallel, List<UnityTarget>? offloadTargets)
+	public BuildPipeline(ulong id, Workspace workspace, Args args, string? offloadUrl, bool offloadParallel, List<UnityTarget>? offloadTargets)
 	{
 		Id = id;
 		Workspace = workspace;
 		Args = args;
 
-		_targetsToBuild = targetsToBuild;
-		
 		_offloadUrl = offloadUrl;
 		_offloadParallel = offloadParallel;
 		_offloadTargets = offloadTargets ?? new List<UnityTarget>();
@@ -140,16 +137,6 @@ public class BuildPipeline
 		await Task.CompletedTask;
 	}
 
-	private IEnumerable<BuildSettingsAsset> GetTargetsToBuild()
-	{
-		var all = Workspace.GetBuildTargets();
-
-		if (_targetsToBuild == null || _targetsToBuild.Count == 0)
-			return all;
-		
-		return all.Where(x => _targetsToBuild.Contains(x.Name));
-	}
-	
 	private async Task Build()
 	{
 		if (Args.IsFlag("-nobuild"))
@@ -171,7 +158,8 @@ public class BuildPipeline
 
 		OffloadServerPacket? offloadBuilds = null;
 		
-		var builds = GetTargetsToBuild().ToArray();
+		var builds = Workspace.GetBuildTargets().ToArray();
+		Logger.Log($"Building targets... {string.Join(", ", builds.Select(x => x.Name))}");
 		
 		foreach (var build in builds)
 		{

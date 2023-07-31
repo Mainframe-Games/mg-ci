@@ -9,6 +9,7 @@ public class Workspaces : IRemoteControllable
 {
 	public ServerResponse Process()
 	{
-		return new ServerResponse(HttpStatusCode.OK, WorkspacePacket.GetFromLocal());
+		var workspaces = Workspace.GetAvailableWorkspaces().Select(x => x.Name).ToList();
+		return new ServerResponse(HttpStatusCode.OK, workspaces);
 	}
 }
