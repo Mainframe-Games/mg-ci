@@ -11,6 +11,7 @@ namespace BuildSystem
 		public Deploy Deploy;
 		public WebHook[] Hooks;
 
+		[ContextMenu("Set Dirty")]
 		private void OnValidate()
 		{
 			EditorUtility.SetDirty(this);

@@ -11,6 +11,7 @@ namespace BuildSystem
 	{
 		[Header("File")]
 		public string Name;
+		public bool Ignore;
 		
 		[Header("Build Config")]
 		[Tooltip("File extension. Include '.'")]
@@ -92,8 +93,8 @@ namespace BuildSystem
 
 			if (string.IsNullOrEmpty(ProductName))
 				ProductName = Application.productName;
-			
-			EditorUtility.SetDirty(this);
+
+			_SetDirty();
 		}
 
 		private static string[] GetEditorSettingsScenes()
@@ -140,6 +141,12 @@ namespace BuildSystem
 			if (SteamId != curSteamId)
 				File.WriteAllText(steamAppId, SteamId.ToString());
 			return true;
+		}
+
+		[ContextMenu("Set Dirty")]
+		private void _SetDirty()
+		{
+			EditorUtility.SetDirty(this);
 		}
 	}
 }
