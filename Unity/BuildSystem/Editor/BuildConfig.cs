@@ -8,6 +8,7 @@ namespace BuildSystem
 	public class BuildConfig : ScriptableObject
 	{
 		public PreBuild PreBuild;
+		public Build Build;
 		public Deploy Deploy;
 		public WebHook[] Hooks;
 
@@ -31,6 +32,12 @@ namespace BuildSystem
 		public bool BundleVersion;
 		public bool AndroidVersionCode;
 		public string[] BuildNumbers;
+	}
+	
+	[Serializable]
+	public struct Build
+	{
+		public BuildSettings[] BuildTargets;
 	}
 
 	[Serializable]
