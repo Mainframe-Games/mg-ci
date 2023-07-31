@@ -45,7 +45,7 @@ public class BuildCommand : Command
 		}
 	}
 
-	// TODO: implement choosing targets
+	// TODO: implement choosing targets. Currently there is no way to choose multiple options in Discord... I think web interface is only way forward with this approach
 	// public override async Task ModifyOptions(SocketSlashCommand slashCommand)
 	// {
 	// 	// Get the user's choice

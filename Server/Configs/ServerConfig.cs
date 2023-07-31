@@ -14,6 +14,7 @@ internal class ServerConfig
 	public ushort Port { get; set; } = 8080;
 	public List<string>? AuthTokens { get; set; }
 	public string? OffloadServerUrl { get; set; }
+	public Dictionary<string, List<string>>? Workspaces { get; set; }
 	public OffloadConfig? Offload { get; set; }
 	public HooksConfig[]? Hooks { get; set; }
 	public UnityServicesConfig? Ugs { get; set; }

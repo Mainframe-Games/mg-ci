@@ -70,9 +70,10 @@ public static class App
 	public static BuildPipeline CreateBuildPipeline(Workspace workspace, Args args)
 	{
 		var parallel = Config?.Offload?.Parallel ?? false;
-		var targets = Config?.Offload?.Targets ?? null;
+		var offloadTargets = Config?.Offload?.Targets ?? null;
 		var offloadUrl = Config?.OffloadServerUrl;
-		var pipeline = new BuildPipeline(NextPipelineId++, workspace, args, offloadUrl, parallel, targets);
+		var targets = Config?.Workspaces?.TryGetValue(workspace.Name, out var t) is true ? t : null;
+		var pipeline = new BuildPipeline(NextPipelineId++, workspace, targets, args, offloadUrl, parallel, offloadTargets);
 		return pipeline;
 	}
 	

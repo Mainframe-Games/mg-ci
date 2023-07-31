@@ -59,6 +59,7 @@ public class BuildPipeline
 	private readonly int _currentChangeSetId;
 	private readonly string _currentGuid;
 	private BuildVersions _buildVersion;
+	private readonly List<string>? _targetsToBuild;
 
 	public string[] ChangeLog { get; }
 	
@@ -67,11 +68,13 @@ public class BuildPipeline
 	/// </summary>
 	private readonly List<string> _buildIds = new();
 
-	public BuildPipeline(ulong id, Workspace workspace, Args args, string? offloadUrl, bool offloadParallel, List<UnityTarget>? offloadTargets)
+	public BuildPipeline(ulong id, Workspace workspace, List<string>? targetsToBuild, Args args, string? offloadUrl, bool offloadParallel, List<UnityTarget>? offloadTargets)
 	{
 		Id = id;
 		Workspace = workspace;
 		Args = args;
+
+		_targetsToBuild = targetsToBuild;
 		
 		_offloadUrl = offloadUrl;
 		_offloadParallel = offloadParallel;
@@ -140,13 +143,11 @@ public class BuildPipeline
 	private IEnumerable<BuildSettingsAsset> GetTargetsToBuild()
 	{
 		var all = Workspace.GetBuildTargets();
-		return all.Where(x => x.GetValue<int>("Ignore") == 0);
 
-		// if (Args.TryGetArg("-targets", out string targetsRaw))
-		// {
-		// 	var targets = targetsRaw.Split(',');
-		// 	return all.Where(x => targets.Contains(x.Name));
-		// }
+		if (_targetsToBuild == null || _targetsToBuild.Count == 0)
+			return all;
+		
+		return all.Where(x => _targetsToBuild.Contains(x.Name));
 	}
 	
 	private async Task Build()

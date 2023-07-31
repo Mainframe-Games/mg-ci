@@ -65,14 +65,30 @@ public abstract class Yaml
 
 	public virtual T GetValue<T>(string path)
 	{
-		var token = _jObject.SelectToken(path, true);
-		return token.Value<T>() ?? default(T);
+		try
+		{
+			var token = _jObject.SelectToken(path, true);
+			return token.Value<T>() ?? default(T);
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine($"Failed to find path `{path}`. {e.Message}");
+			return default;
+		}
 	}
 	
 	public virtual T? GetObject<T>(string path) where T : class
 	{
-		var token = _jObject.SelectToken(path, true);
-		return token.ToObject<T?>() ?? default(T?);
+		try
+		{
+			var token = _jObject.SelectToken(path, true);
+			return token.ToObject<T?>() ?? default(T?);
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine($"Failed to find path `{path}`. {e.Message}");
+			return default;
+		}
 	}
 
 	public int GetProjPropertyLineIndex(params string[] propertyNames)
