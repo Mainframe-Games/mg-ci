@@ -54,7 +54,7 @@ public class LocalUnityBuild
 			File.Delete(errorPath);
 		
 		var buildStartTime = DateTime.Now;
-		var exePath = GetDefaultUnityPath(asset.Target, asset.BuildTargetGroup);
+		var exePath = GetDefaultUnityPath(asset.Target, asset.TargetGroup);
 
 		Logger.Log($"Started Build: {asset.Name}");
 		

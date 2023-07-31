@@ -7,7 +7,7 @@ public class BuildSettingsAsset : Yaml
 	public string BuildPath => GetValue<string>(nameof(BuildPath));
 	public UnityTarget Target => (UnityTarget)GetValue<int>(nameof(Target));
 	public UnitySubTarget SubTarget => (UnitySubTarget)GetValue<int>(nameof(SubTarget));
-	public UnityBuildTargetGroup BuildTargetGroup => (UnityBuildTargetGroup)GetValue<int>(nameof(BuildTargetGroup));
+	public UnityBuildTargetGroup TargetGroup => (UnityBuildTargetGroup)GetValue<int>(nameof(TargetGroup));
 	
 	public BuildSettingsAsset(string? path) : base(path)
 	{
