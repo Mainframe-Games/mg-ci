@@ -54,7 +54,7 @@ namespace BuildSystem
 	public struct WebHook
 	{
 		public string Title;
-		public string url;
+		public string Url;
 		public bool IsErrorChannel;
 	}
 }
