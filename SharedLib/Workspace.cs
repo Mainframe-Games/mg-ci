@@ -226,12 +226,17 @@ public class Workspace
 	/// <returns></returns>
 	public int GetPreviousChangeSetId(string key)
 	{
-		var req = Cmd.Run("cm", 
+		var req = Cmd.Run("cm",
 			$"find changeset \"where branch='{Branch}' and comment like '%{key}%'\" \"order by date desc\" \"limit 1\" --format=\"{{changesetid}}\" --nototal",
 			logOutput: false);
 		
-		var cs = int.Parse(req.output);
-		return cs;
+		// if empty from branch, try again in 'main'
+		if (string.IsNullOrEmpty(req.output))
+			req = Cmd.Run("cm", 
+				$"find changeset \"where branch='main' and comment like '%{key}%'\" \"order by date desc\" \"limit 1\" --format=\"{{changesetid}}\" --nototal",
+				logOutput: false);
+		
+		return int.TryParse(req.output, out var cs) ? cs : 0;
 	}
 	
 	/// <summary>
