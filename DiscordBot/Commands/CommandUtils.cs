@@ -13,7 +13,7 @@ public static class CommandUtils
 			.WithType(ApplicationCommandOptionType.String);
 		
 		foreach (var workspace in DiscordWrapper.Config.Workspaces)
-			opt.AddChoice(workspace.Name, workspace.Name);
+			opt.AddChoice(workspace, workspace);
 
 		return opt;
 	}
