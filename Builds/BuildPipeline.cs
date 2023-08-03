@@ -327,9 +327,9 @@ public class BuildPipeline
 		}
 	}
 
-	private void SendErrorHook(Exception e)
+	public void SendErrorHook(Exception e)
 	{
-		if(Config.Hooks == null)
+		if (Config.Hooks == null)
 			return;
 		
 		var hookMessage = new StringBuilder();

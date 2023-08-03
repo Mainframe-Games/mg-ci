@@ -113,16 +113,24 @@ public static class App
 
 	private static async Task BuildPipelineOnDeployEvent(BuildPipeline pipeline)
 	{
-		var buildVersionTitle = pipeline.BuildVersionTitle;
-		
-		// client deploys
-		DeployApple(pipeline); // apple first as apple takes longer to process on appstore connect
-		await DeployGoogle(pipeline, buildVersionTitle);
-		DeploySteam(pipeline, buildVersionTitle);
-		
-		// server deploys
-		await DeployClanforge(pipeline, buildVersionTitle);
-		await DeployToS3Bucket(pipeline);
+		try
+		{
+			var buildVersionTitle = pipeline.BuildVersionTitle;
+
+			// client deploys
+			DeployApple(pipeline); // apple first as apple takes longer to process on appstore connect
+			await DeployGoogle(pipeline, buildVersionTitle);
+			DeploySteam(pipeline, buildVersionTitle);
+
+			// server deploys
+			await DeployClanforge(pipeline, buildVersionTitle);
+			await DeployToS3Bucket(pipeline);
+		}
+		catch (Exception e)
+		{
+			Logger.Log(e);
+			pipeline?.SendErrorHook(e);
+		}
 	}
 
 	private static async Task DeployToS3Bucket(BuildPipeline pipeline)
