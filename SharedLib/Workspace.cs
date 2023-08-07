@@ -116,16 +116,28 @@ public class Workspace
 		return val == 1;
 	}
 
+	private static BuildConfigAsset? GetBuildConfig(IEnumerable<FileInfo> assetFiles, string targetFileName)
+	{
+		foreach (var file in assetFiles)
+		{
+			var fileName = file.Name.Replace(file.Extension, string.Empty);
+			if (fileName == targetFileName)
+				return new BuildConfigAsset(file.FullName);
+		}
+
+		Logger.Log($"File '{targetFileName}' could not be found");
+		return null;
+	}
+
 	public IEnumerable<BuildSettingsAsset> GetBuildTargets()
 	{
 		var path = Path.Combine(Directory, "Assets", "Settings", "BuildSettings");
 		var settingsFiles = new DirectoryInfo(path);
 		var assetFiles = settingsFiles.GetFiles("*.asset");
-		var buildConfigPath = assetFiles.FirstOrDefault(x => x.Name.Contains("BuildConfig"));
+		var buildConfigFile = GetBuildConfig(assetFiles, "BuildConfig.asset"); // TODO: support multiple build configs
 
-		if (buildConfigPath != null)
+		if (buildConfigFile != null)
 		{
-			var buildConfigFile = new BuildConfigAsset(buildConfigPath.FullName);
 			var targets = buildConfigFile.GetObject<JArray>("Build.BuildTargets");
 			var guids = targets?.Select(x => x["guid"]?.ToString()).ToList();
 			var metas = settingsFiles
