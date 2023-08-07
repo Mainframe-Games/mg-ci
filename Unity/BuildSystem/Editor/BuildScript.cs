@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using BuildSystem.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using UnityEditor;
@@ -45,6 +46,7 @@ namespace BuildSystem
 			Application.logMessageReceived += OnLogReceived;
 			PrintBuildOptions(options);
 			var report = BuildPipeline.BuildPlayer(options);
+			settings.PostBuildProcess(report);
 			Application.logMessageReceived -= OnLogReceived;
 
 			PrintReportSummary(report.summary);
@@ -57,7 +59,7 @@ namespace BuildSystem
 			switch (result)
 			{
 				case BuildResult.Succeeded:
-					Log("Build succeeded!");
+					BS_Logger.Log("Build succeeded!");
 					Exit(0);
 					break;
 				case BuildResult.Failed:
@@ -70,22 +72,22 @@ namespace BuildSystem
 							.Reverse()
 							.ToArray();
 						
-						Log(string.Join("\n", errors), LogType.Error);
+						BS_Logger.Log(string.Join("\n", errors), LogType.Error);
 					}
 					else
 					{
-						Log("Build failed!", LogType.Error);
+						BS_Logger.Log("Build failed!", LogType.Error);
 					}
 
 					Exit(101);
 					break;
 				case BuildResult.Cancelled:
-					Log("Build cancelled!", LogType.Warning);
+					BS_Logger.Log("Build cancelled!", LogType.Warning);
 					Exit(102);
 					break;
 				case BuildResult.Unknown:
 				default:
-					Log("Build result is unknown!", LogType.Error);
+					BS_Logger.Log("Build result is unknown!", LogType.Error);
 					Exit(103);
 					break;
 			}
@@ -99,7 +101,7 @@ namespace BuildSystem
 
 		private static void PrintReportSummary(BuildSummary summary)
 		{
-			Log(
+			BS_Logger.Log(
 				$"{Eol}" +
 				$"###########################{Eol}" +
 				$"#      Build results      #{Eol}" +
@@ -121,7 +123,7 @@ namespace BuildSystem
 				Converters = { new StringEnumConverter() }
 			};
 		
-			Log(
+			BS_Logger.Log(
 				$"{Eol}" +
 				$"###########################{Eol}" +
 				$"#   Build Player Options  #{Eol}" +
@@ -174,7 +176,7 @@ namespace BuildSystem
 				catch (Exception e)
 				{
 					// log exception
-					Log(e, LogType.Exception);
+					BS_Logger.Log(e, LogType.Exception);
 					ExitWithResult(BuildResult.Failed);
 					break;
 				}
@@ -203,7 +205,7 @@ namespace BuildSystem
 			if (report.summary.totalErrors == 0)
 				return;
 			
-			Log($"Build Failed is {report.summary.totalErrors} errors...\n{_builder}");
+			BS_Logger.Log($"Build Failed is {report.summary.totalErrors} errors...\n{_builder}");
 			
 			var logFile = GetArgValue("-logFile");
 			
@@ -250,36 +252,6 @@ namespace BuildSystem
 			}
 
 			return null;
-		}
-
-		private static void Log(object log, LogType logType = LogType.Log)
-		{
-			if (Application.isBatchMode)
-			{
-				Console.WriteLine(log);
-				return;
-			}
-
-			switch (logType)
-			{
-				case LogType.Error:
-					Debug.LogError(log);
-					break;
-				case LogType.Assert:
-					Debug.LogAssertion(log);
-					break;
-				case LogType.Warning:
-					Debug.LogWarning(log);
-					break;
-				case LogType.Log:
-					Debug.Log(log);
-					break;
-				case LogType.Exception:
-					Debug.LogException(log as Exception);
-					break;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(logType), logType, null);
-			}
 		}
 	}
 }

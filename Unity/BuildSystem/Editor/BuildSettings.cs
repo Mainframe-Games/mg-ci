@@ -1,6 +1,9 @@
 using System.IO;
 using System.Linq;
+using BuildSystem.PostProcessors;
+using BuildSystem.PostProcessors.PList;
 using UnityEditor;
+using UnityEditor.Build.Reporting;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -41,6 +44,12 @@ namespace BuildSystem
 		public string KeystoreAlias;
 		public string KeystorePassword;
 
+		[Header("iOS")]
+		public PListElementBool[] PListElementBools;
+		public PListElementString[] PListElementStrings;
+		public PListElementInt[] PListElementInts;
+		public PListElementFloat[] PListElementFloats;
+        
 		public BuildPlayerOptions GetBuildOptions(string rootDirectoryPath = null)
 		{
 			// if no override given use default
@@ -146,6 +155,11 @@ namespace BuildSystem
 		private void _SetDirty()
 		{
 			EditorUtility.SetDirty(this);
+		}
+
+		public void PostBuildProcess(BuildReport report)
+		{
+			iOSPostProcessor.Process(this, report);
 		}
 	}
 }
