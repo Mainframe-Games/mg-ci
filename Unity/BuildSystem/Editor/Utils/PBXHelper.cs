@@ -1,4 +1,6 @@
-﻿using UnityEditor.iOS.Xcode;
+﻿#if UNITY_IOS
+using UnityEditor.iOS.Xcode;
+#endif
 
 namespace BuildSystem.Utils
 {
@@ -6,8 +8,9 @@ namespace BuildSystem.Utils
 	{
 		public string buildPath { get; private set; }
 		public string projectPath { get; private set; }
+#if UNITY_IOS
 		public PBXProject project { get; private set; }
-
+#endif
 		public string mainTarget { get; private set; } // app wrapper
 		public string frameworkTarget { get; private set; } // game
 
@@ -15,10 +18,10 @@ namespace BuildSystem.Utils
 		public string debugConfig { get; private set; }
 		public string releaseConfig { get; private set; }
 
-
 		public PBXHelper(string buildPath)
 		{
 			this.buildPath = buildPath;
+#if UNITY_IOS
 			projectPath = PBXProject.GetPBXProjectPath(buildPath);
 
 			project = new PBXProject();
@@ -30,12 +33,14 @@ namespace BuildSystem.Utils
 			// main configs
 			debugConfig = project.BuildConfigByName(mainTarget, "Debug");
 			releaseConfig = project.BuildConfigByName(mainTarget, "Release");
+#endif
 		}
 
 		public void Save()
 		{
+#if UNITY_IOS
 			project.WriteToFile(projectPath);
+#endif
 		}
 	}
 }
-

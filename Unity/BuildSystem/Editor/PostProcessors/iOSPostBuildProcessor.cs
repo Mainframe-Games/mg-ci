@@ -1,11 +1,10 @@
 using BuildSystem.Utils;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
-using UnityEditor.iOS.Xcode;
 
 namespace BuildSystem.PostProcessors
 {
-	public static class iOSPostProcessor
+	public static class iOSPostBuildProcessor
 	{
 		public static void Process(BuildSettings settings, BuildReport report)
 		{
@@ -15,18 +14,18 @@ namespace BuildSystem.PostProcessors
 			var outputPath = report.summary.outputPath;
 			BS_Logger.Log($"{report.summary.platform} PostProcess. Path: {outputPath}");
 
-			var pbx = new PBXHelper(outputPath);
-			UpdateInfoPlist(settings, pbx.buildPath);
+			// var pbx = new PBXHelper(outputPath);
+			UpdateInfoPlist(settings, outputPath);
 		}
 
 		private static void UpdateInfoPlist(BuildSettings settings, string outputPath)
 		{
 			var plist = new PListHelper(outputPath);
-			SetPListElements(settings, plist.root);
+			SetPListElements(settings, plist);
 			plist.Save();
 		}
 
-		private static void SetPListElements(BuildSettings settings, PlistElementDict plist)
+		private static void SetPListElements(BuildSettings settings, PListHelper plist)
 		{
 			foreach (var p in settings.PListElementBools)
 			{
@@ -36,7 +35,7 @@ namespace BuildSystem.PostProcessors
 
 			foreach (var p in settings.PListElementFloats)
 			{
-				plist.SetReal(p.Key, p.Value);
+				plist.SetFloat(p.Key, p.Value);
 				BS_Logger.Log($"[iOSPostProcessor] Added Info.plist {p.Key}: {p.Value}");
 			}
 

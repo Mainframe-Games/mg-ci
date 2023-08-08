@@ -159,7 +159,7 @@ namespace BuildSystem
 
 		public void PostBuildProcess(BuildReport report)
 		{
-			iOSPostProcessor.Process(this, report);
+			iOSPostBuildProcessor.Process(this, report);
 		}
 	}
 }
