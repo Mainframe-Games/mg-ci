@@ -47,14 +47,16 @@ public static class Cmd
 
 	private static void Write(StringBuilder sb, string? str, bool logOutput)
 	{
-		if (str == null)
-			return;
-		
-		var trimmed = str.Trim();
-		sb.AppendLine(trimmed);
-		
-		if (logOutput)
-			Logger.Log(trimmed);
+		try
+		{
+			sb.AppendLine(str);
+			if (logOutput)
+				Logger.Log(str);
+		}
+		catch (Exception e)
+		{
+			Logger.Log(e);
+		}
 	}
 	
 	public static int Choose(string remark, List<string?> options)

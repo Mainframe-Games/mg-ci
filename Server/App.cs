@@ -111,7 +111,7 @@ public static class App
 			});
 	}
 
-	private static async Task BuildPipelineOnDeployEvent(BuildPipeline pipeline)
+	private static async Task<bool> BuildPipelineOnDeployEvent(BuildPipeline pipeline)
 	{
 		try
 		{
@@ -125,11 +125,14 @@ public static class App
 			// server deploys
 			await DeployClanforge(pipeline, buildVersionTitle);
 			await DeployToS3Bucket(pipeline);
+
+			return true;
 		}
 		catch (Exception e)
 		{
 			Logger.Log(e);
 			pipeline?.SendErrorHook(e);
+			return false;
 		}
 	}
 

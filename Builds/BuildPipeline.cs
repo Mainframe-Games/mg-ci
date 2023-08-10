@@ -34,7 +34,7 @@ public class BuildPipeline
 	
 	public delegate void OffloadBuildReqPacket(OffloadServerPacket packet);
 	public delegate string? ExtraHookLogs(BuildPipeline pipeline);
-	public delegate Task DeployDelegate(BuildPipeline pipeline);
+	public delegate Task<bool> DeployDelegate(BuildPipeline pipeline);
 	
 	public event OffloadBuildReqPacket OffloadBuildNeeded;
 	public event ExtraHookLogs GetExtraHookLogs;
@@ -104,7 +104,7 @@ public class BuildPipeline
 			await PingOffloadServer();
 			await Prebuild();
 			await Build();
-			await DeployAsync();
+			if (!await DeployAsync()) return false;
 			await PostBuild();
 			Logger.LogTimeStamp("Pipeline Completed", StartTime);
 			return true;
@@ -238,15 +238,15 @@ public class BuildPipeline
 		return !string.IsNullOrEmpty(_offloadUrl) && _offloadTargets.Contains(target);
 	}
 
-	private async Task DeployAsync()
+	private async Task<bool> DeployAsync()
 	{
 		if (Args.IsFlag("-nodeploy"))
-			return;
+			return true;
 		
 		if (Config.Deploy == null)
-			return;
+			return true;
 		
-		await DeployEvent.Invoke(this);
+		return await DeployEvent.Invoke(this);
 	}
 
 	private async Task PostBuild()
