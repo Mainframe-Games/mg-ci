@@ -116,17 +116,22 @@ public class Workspace
 		return val == 1;
 	}
 
-	private static BuildConfigAsset? GetBuildConfig(IEnumerable<FileInfo> assetFiles, string targetFileName)
+	private bool TryGetBuildConfig(FileInfo[] assetFiles, string targetFileName, out BuildConfigAsset buildConfig)
 	{
 		foreach (var file in assetFiles)
 		{
 			var fileName = file.Name.Replace(file.Extension, string.Empty);
-			if (fileName == targetFileName)
-				return new BuildConfigAsset(file.FullName);
+			
+			if (targetFileName != fileName) 
+				continue;
+			
+			buildConfig = new BuildConfigAsset(file.FullName);
+			return true;
 		}
 
-		Logger.Log($"File '{targetFileName}' could not be found");
-		return null;
+		Logger.Log($"File '{targetFileName}' could not be found in workspace '{Name}'. Files: {string.Join(", ", assetFiles.Select(x => x.Name.Replace(x.Extension, string.Empty)))}");
+		buildConfig = null;
+		return false;
 	}
 
 	public IEnumerable<BuildSettingsAsset> GetBuildTargets()
@@ -134,9 +139,9 @@ public class Workspace
 		var path = Path.Combine(Directory, "Assets", "Settings", "BuildSettings");
 		var settingsFiles = new DirectoryInfo(path);
 		var assetFiles = settingsFiles.GetFiles("*.asset");
-		var buildConfigFile = GetBuildConfig(assetFiles, "BuildConfig.asset"); // TODO: support multiple build configs
 
-		if (buildConfigFile != null)
+		// TODO: support multiple build configs
+		if (TryGetBuildConfig(assetFiles, "BuildConfig", out var buildConfigFile))
 		{
 			var targets = buildConfigFile.GetObject<JArray>("Build.BuildTargets");
 			var guids = targets?.Select(x => x["guid"]?.ToString()).ToList();
