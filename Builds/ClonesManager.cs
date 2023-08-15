@@ -59,7 +59,7 @@ public static class ClonesManager
 		var copyByte = GetTotalBytesToCopy(sources);
 		var totalBytes = copyByte * tempDirs.Count;
 		var copiedBytes = 0L;
-		var printSize = PrintEx.ToGigaByteString(copyByte, "0.00");
+		var printSize = PrintEx.ToByteSizeString(copyByte, "0.00");
 		Console.Write($"Copying directories ({printSize}) to {tempDirs.Count} locations ... ");
 		
 		var progressBar = new ProgressBar();

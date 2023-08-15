@@ -357,7 +357,7 @@ public class BuildPipeline
 		}
 	}
 	
-	public async Task RemoteBuildReceived(string buildId, string buildPath, byte[] data)
+	public async Task RemoteBuildReceived(string buildId, string buildPath, FilePacker.Entry[] data)
 	{
 		if (!_buildIds.Contains(buildId))
 			throw new Exception($"Build ID not expected: {buildId}");

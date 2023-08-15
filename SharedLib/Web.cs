@@ -61,7 +61,7 @@ public static class Web
 	{
 		using var client = new HttpClient();
 		using var byteContent = new ByteArrayContent(data);
-		Logger.Log($"Sending Data: {data.ToMegaByteString()}");
+		Logger.Log($"Sending Data: {data.ToByteSizeString()}");
 		using var res = await client.PutAsync(url, byteContent);
 		return await GetSuccess(res);
 	}
