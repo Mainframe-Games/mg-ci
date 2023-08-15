@@ -136,7 +136,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		if (string.IsNullOrEmpty(response.Error))
 		{
 			// success
-			using var ms = new MemoryStream();
+			await using var ms = new DynamicMemoryMappedStream(int.MaxValue);
 			await using var steam = new BinaryWriter(ms);
 			response.Write(steam);
 			await Web.SendBytesAsync(SendBackUrl, ms.ToArray());

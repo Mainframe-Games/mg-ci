@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Text;
 
 namespace SharedLib;
 
@@ -89,8 +90,9 @@ public static class FilePacker
 		public string Name;
 		public byte[] Bytes;
 		
-		public ulong SizeOf => (ulong)Name.Length * sizeof(char)
-		                       + (ulong)Bytes.Length;
+		public ulong SizeOf => (ulong)
+			(Encoding.UTF8.GetByteCount(Name)
+			 + Bytes.Length);
 
 		public Entry(string name, byte[] bytes)
 		{

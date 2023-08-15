@@ -4,13 +4,14 @@ public static class PrintEx
 {
 	private const double MB = 1000000;
 	private const double GB = 1073741824d;
+	private const string DEFAULT_FORMAT = "0.0";
 
-	public static string ToByteSizeString(this byte[] bytes, string format = "0")
+	public static string ToByteSizeString(this byte[] bytes, string format = DEFAULT_FORMAT)
 	{
 		return ((ulong)bytes.Length).ToByteSizeString(format);
 	}
 	
-	public static string ToByteSizeString(this double size, string format = "0")
+	public static string ToByteSizeString(this double size, string format = DEFAULT_FORMAT)
 	{
 		return ((ulong)size).ToByteSizeString(format);
 	}
@@ -21,7 +22,7 @@ public static class PrintEx
 	/// <param name="size"></param>
 	/// <param name="format"></param>
 	/// <returns></returns>
-	public static string ToByteSizeString(this ulong size, string format = "0")
+	public static string ToByteSizeString(this ulong size, string format = DEFAULT_FORMAT)
 	{
 		return size < GB
 			? $"{(size / MB).ToString(format)} {nameof(MB)}"
