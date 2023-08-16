@@ -100,11 +100,6 @@ public static class Web
 			await using var fs = file.OpenRead();
 			var bytes = await ReadFully(fs);
 			
-			// log progress
-			CurrentUploadBytes += (ulong)bytes.Length;
-			progressBar.SetContext($"{CurrentUploadBytes.ToByteSizeString()}/{TotalUploadBytes.ToByteSizeString()} | Uploading: {file.FullName} ({bytes.ToByteSizeString()})");
-			progressBar.Report(CurrentUploadBytes / (double)TotalUploadBytes);
-			
 			// add fileName as header
 			var fileLocalName = file.FullName
 				.Replace(rootDirPath, string.Empty)
@@ -113,6 +108,12 @@ public static class Web
 			client.DefaultRequestHeaders.Remove("fileName");
 			client.DefaultRequestHeaders.Add("fileName", fileLocalName);
 			
+			// log progress
+			CurrentUploadBytes += (ulong)bytes.Length;
+			progressBar.SetContext($"{CurrentUploadBytes.ToByteSizeString()}/{TotalUploadBytes.ToByteSizeString()} | Uploading: {fileLocalName} ({bytes.ToByteSizeString()})");
+			progressBar.Report(CurrentUploadBytes / (double)TotalUploadBytes);
+			
+			// upload
 			var content = new ByteArrayContent(bytes);
 			var res = await client.PutAsync(url, content);
 
