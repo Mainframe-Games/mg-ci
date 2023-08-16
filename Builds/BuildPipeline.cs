@@ -357,13 +357,13 @@ public class BuildPipeline
 		}
 	}
 	
-	public async Task RemoteBuildReceived(string buildId, string buildPath, FilePacker.Entry[] data)
+	public void OffloadBuildCompleted(string buildGuid)
 	{
-		if (!_buildIds.Contains(buildId))
-			throw new Exception($"Build ID not expected: {buildId}");
-
-		await FilePacker.UnpackRawAsync($"{buildPath}.zip", data, buildPath);
-		_buildIds.Remove(buildId);
+		if (!_buildIds.Contains(buildGuid))
+			throw new Exception($"{nameof(buildGuid)} not expected: {buildGuid}");
+		
+		Logger.Log($"Offload Completed: {buildGuid}");
+		_buildIds.Remove(buildGuid);
 	}
 
 	/// <summary>

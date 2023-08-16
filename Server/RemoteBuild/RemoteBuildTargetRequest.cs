@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using Builder;
 using Deployment;
 using Deployment.RemoteBuild;
 using Deployment.Server;
@@ -60,48 +59,33 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	/// <exception cref="WebException"></exception>
 	private async Task StartBuilder(ulong pipelineId, string buildIdGuid, string buildTarget, Workspace workspace)
 	{
-		var asset = workspace.GetBuildTarget(buildTarget);
-		var originalBuildPath = asset.BuildPath;
-			
-		try
+        var asset = workspace.GetBuildTarget(buildTarget);
+		
+        try
 		{
-			// build
 			var builder = new LocalUnityBuild(workspace);
 			builder.Build(asset);
 
-			if (builder.Errors is null)
-			{
-				// send web request back to sender with zip folder of build
-				var res = new RemoteBuildResponse
-				{
-					PipelineId = pipelineId,
-					BuildIdGuid = buildIdGuid,
-					BuildPath = originalBuildPath
-				};
-				await Web.StreamToServerAsync(SendBackUrl, res.BuildPath, pipelineId, buildIdGuid);
-			}
-			else
-			{
-				// send web request to sender about the build failing
-				await SendErrorToMasterServerAsync(pipelineId, buildIdGuid, originalBuildPath, builder.Errors);
-			}
+			if (string.IsNullOrEmpty(builder.Errors))
+				await Web.StreamToServerAsync(SendBackUrl, asset.BuildPath, pipelineId, buildIdGuid);
+
+			await SendToMasterServerAsync(pipelineId, buildIdGuid, builder.Errors);
 
 		}
 		catch (Exception e)
 		{
 			Logger.Log(e);
-			await SendErrorToMasterServerAsync(pipelineId, buildIdGuid, originalBuildPath, e.Message);
+			await SendToMasterServerAsync(pipelineId, buildIdGuid, e.Message);
 		}
 	}
 
-	private async Task SendErrorToMasterServerAsync(ulong pipelineId, string? buildId, string? originalBuildPath, string? message)
+	private async Task SendToMasterServerAsync(ulong pipelineId, string? buildGuid, string? error)
 	{
 		var response = new RemoteBuildResponse
 		{
 			PipelineId = pipelineId,
-			BuildIdGuid = buildId,
-			BuildPath = originalBuildPath,
-			Error = message ?? "build failed for reasons unknown"
+			BuildIdGuid = buildGuid,
+			Error = error
 		};
 		
 		Logger.Log($"Sending build '{response.BuildIdGuid}' back to: {SendBackUrl}");

@@ -4,6 +4,7 @@ using Deployment.Server;
 using Server.RemoteBuild;
 using SharedLib;
 using System;
+using Deployment;
 
 namespace Server;
 
@@ -122,11 +123,19 @@ public class ListenServer
 
 		try
 		{
+			// get pipeline
+			var pipelineId = ulong.Parse(request.Headers["pipelineId"] ?? "0");
+			if (!App.Pipelines.TryGetValue(pipelineId, out var buildPipeline))
+				return new ServerResponse(HttpStatusCode.NotFound, $"{nameof(BuildPipeline)} not found with ID: {pipelineId}");
+            
+			// create file
 			var fileName = request.Headers["fileName"] ?? string.Empty;
-			Logger.Log($"HeaderFileName: {fileName}");
-			var path = Path.Combine("uploads", fileName);
+			var path = Path.Combine(buildPipeline.Workspace.BuildsPath, fileName);
 			var fileInfo = new FileInfo(path);
 			fileInfo.Directory?.Create();
+			Logger.Log($"Writing File: {fileInfo.FullName}");
+			
+			// write to file
 			await using var fs = fileInfo.Create();
 			await request.InputStream.CopyToAsync(fs);
 			return new ServerResponse(HttpStatusCode.OK, "File uploaded successfully.");

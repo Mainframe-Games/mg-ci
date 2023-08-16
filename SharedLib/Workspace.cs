@@ -12,6 +12,7 @@ public class Workspace
 	public ProjectSettings ProjectSettings { get; private set; }
 
 	[JsonIgnore] public string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", "ProjectSettings.asset");
+	[JsonIgnore] public string BuildsPath => Path.Combine(Directory, "Builds");
 
 	private Workspace(string name, string directory)
 	{
