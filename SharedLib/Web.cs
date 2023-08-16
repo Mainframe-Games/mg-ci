@@ -67,17 +67,18 @@ public static class Web
 		return await GetSuccess(res);
 	}
 
-	public static async Task StreamToServerAsync(string? url, string dirPath, ulong pipelineId, string buildIdGuid)
+	public static async Task StreamToServerAsync(string? url, string buildPath, ulong pipelineId, string buildIdGuid)
 	{
 		using var client = new HttpClient();
-		var rootDir = new DirectoryInfo(dirPath);
+		var rootDir = new DirectoryInfo(buildPath);
 		
+		client.DefaultRequestHeaders.Add("buildPath", buildPath);
 		client.DefaultRequestHeaders.Add(nameof(pipelineId), pipelineId.ToString());
 		client.DefaultRequestHeaders.Add(nameof(buildIdGuid), buildIdGuid);
 
 		var sw = Stopwatch.StartNew();
 		var totalBytes = rootDir.GetByteSize();
-		Logger.Log($"Uploading contents... {dirPath} ({totalBytes.ToByteSizeString()})");
+		Logger.Log($"Uploading contents... {buildPath} ({totalBytes.ToByteSizeString()})");
 		
 		var progressBar = new ProgressBar();
 		TotalUploadBytes = totalBytes;

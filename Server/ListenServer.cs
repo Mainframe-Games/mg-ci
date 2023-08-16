@@ -130,7 +130,8 @@ public class ListenServer
             
 			// create file
 			var fileName = request.Headers["fileName"] ?? string.Empty;
-			var path = Path.Combine(buildPipeline.Workspace.BuildsPath, fileName);
+			var buildPath = request.Headers["buildPath"] ?? string.Empty;
+			var path = Path.Combine(buildPipeline.Workspace.Directory, buildPath, fileName);
 			var fileInfo = new FileInfo(path);
 			fileInfo.Directory?.Create();
 			Logger.Log($"Writing File: {fileInfo.FullName}");
