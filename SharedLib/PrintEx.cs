@@ -7,14 +7,12 @@ public static class PrintEx
 	private const string DEFAULT_FORMAT = "0.0";
 
 	public static string ToByteSizeString(this byte[] bytes, string format = DEFAULT_FORMAT)
-	{
-		return ((ulong)bytes.Length).ToByteSizeString(format);
-	}
+		=> ((ulong)bytes.Length).ToByteSizeString(format);
 	
 	public static string ToByteSizeString(this double size, string format = DEFAULT_FORMAT)
-	{
-		return ((ulong)size).ToByteSizeString(format);
-	}
+		=> ((ulong)size).ToByteSizeString(format);
+	public static string ToByteSizeString(this DirectoryInfo dir, string format = DEFAULT_FORMAT)
+		=> dir.GetByteSize().ToByteSizeString(format);
 
 	/// <summary>
 	/// Formats size to a MB or GB format
@@ -37,5 +35,20 @@ public static class PrintEx
 			size += f.SizeOf;
 		
 		return size.ToByteSizeString();
+	}
+	
+	public static ulong GetByteSize(this DirectoryInfo dir)
+	{
+		ulong size = 0;
+		
+		// Add file sizes.
+		foreach (var fi in dir.GetFiles())
+			size += (ulong)fi.Length;
+		
+		// Add subdirectory sizes.
+		foreach (var di in dir.GetDirectories())
+			size += di.GetByteSize();
+
+		return size;
 	}
 }

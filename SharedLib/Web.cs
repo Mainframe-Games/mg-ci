@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Text;
 
 namespace SharedLib;
@@ -66,29 +67,54 @@ public static class Web
 		return await GetSuccess(res);
 	}
 
-	public static async Task<Response> StreamToServerAsync(string? url, string dirPath, ulong pipelineId, string buildIdGuid)
+	public static async Task StreamToServerAsync(string? url, string dirPath, ulong pipelineId, string buildIdGuid)
 	{
 		using var client = new HttpClient();
 		var rootDir = new DirectoryInfo(dirPath);
 		
-		// client.DefaultRequestHeaders.Add(nameof(dirPath), dirPath);
 		client.DefaultRequestHeaders.Add(nameof(pipelineId), pipelineId.ToString());
 		client.DefaultRequestHeaders.Add(nameof(buildIdGuid), buildIdGuid);
 
-		var res = await UploadDirectoryAsync(client, url, rootDir, rootDir.FullName);
-		return await GetSuccess(res);
+		var sw = Stopwatch.StartNew();
+		var totalBytes = rootDir.GetByteSize();
+		Logger.Log($"Uploading contents... {dirPath} ({totalBytes.ToByteSizeString()})");
+		
+		var progressBar = new ProgressBar();
+		TotalUploadBytes = totalBytes;
+		CurrentUploadBytes = 0;
+		
+		await UploadDirectoryAsync(client, url, rootDir, rootDir.FullName, progressBar);
+		
+		progressBar.Dispose();
+		Logger.LogTimeStamp("Upload complete:", sw);
 	}
 
-	private static async Task<HttpResponseMessage> UploadDirectoryAsync(HttpClient client, string? url, DirectoryInfo directoryInfo, string rootDirPath)
+	// TODO: could pass this in as params but this is fine for now
+	private static ulong CurrentUploadBytes;
+	private static ulong TotalUploadBytes;
+
+	private static async Task UploadDirectoryAsync(HttpClient client, string? url, DirectoryInfo directoryInfo, string rootDirPath, ProgressBar progressBar)
 	{
-		HttpResponseMessage? res = null;
-		
 		foreach (var file in directoryInfo.GetFiles())
 		{
 			await using var fs = file.OpenRead();
-			var fileContent = await ReadFully(fs, rootDirPath);
-			var content = new ByteArrayContent(fileContent);
-			res = await client.PutAsync(url, content);
+			var bytes = await ReadFully(fs);
+			
+			// log progress
+			CurrentUploadBytes += (ulong)bytes.Length;
+			progressBar.SetContext($"{CurrentUploadBytes.ToByteSizeString()}/{TotalUploadBytes.ToByteSizeString()} | Uploading: {file.FullName} ({bytes.ToByteSizeString()})");
+			progressBar.Report(CurrentUploadBytes / (double)TotalUploadBytes);
+			
+			// add fileName as header
+			var fileLocalName = file.FullName
+				.Replace(rootDirPath, string.Empty)
+				.Replace('\\', '/')
+				.Trim('/');
+			client.DefaultRequestHeaders.Remove("fileName");
+			client.DefaultRequestHeaders.Add("fileName", fileLocalName);
+			
+			var content = new ByteArrayContent(bytes);
+			var res = await client.PutAsync(url, content);
 
 			// Check response status if needed
 			if (!res.IsSuccessStatusCode)
@@ -96,18 +122,13 @@ public static class Web
 		}
 
 		foreach (var subDir in directoryInfo.GetDirectories())
-			await UploadDirectoryAsync(client, url, subDir, rootDirPath);
-
-		return res;
+			await UploadDirectoryAsync(client, url, subDir, rootDirPath, progressBar);
 	}
 
-	private static async Task<byte[]> ReadFully(FileStream fileStream, string rootDirPath)
+	private static async Task<byte[]> ReadFully(Stream stream)
 	{
 		using var ms = new MemoryStream();
-		await using var writer = new BinaryWriter(ms);
-		var fileLocalName = fileStream.Name.Replace(rootDirPath, string.Empty).Trim('\\');
-		writer.Write(fileLocalName);
-		await fileStream.CopyToAsync(ms);
+		await stream.CopyToAsync(ms);
 		return ms.ToArray();
 	}
 
