@@ -66,27 +66,28 @@ public static class Web
 		return await GetSuccess(res);
 	}
 
-	public static async Task<Response> StreamToServerAsync(string? url, string buildPath, ulong pipelineId, string buildIdGuid)
+	public static async Task<Response> StreamToServerAsync(string? url, string dirPath, ulong pipelineId, string buildIdGuid)
 	{
 		using var client = new HttpClient();
-		client.DefaultRequestHeaders.Add(nameof(buildPath), buildPath);
+		var rootDir = new DirectoryInfo(dirPath);
+		
+		// client.DefaultRequestHeaders.Add(nameof(dirPath), dirPath);
 		client.DefaultRequestHeaders.Add(nameof(pipelineId), pipelineId.ToString());
 		client.DefaultRequestHeaders.Add(nameof(buildIdGuid), buildIdGuid);
 
-		var res = await UploadDirectoryAsync(client, url, buildPath);
+		var res = await UploadDirectoryAsync(client, url, rootDir, rootDir.FullName);
 		return await GetSuccess(res);
 	}
 
-	private static async Task<HttpResponseMessage> UploadDirectoryAsync(HttpClient client, string? url, string directoryPath)
+	private static async Task<HttpResponseMessage> UploadDirectoryAsync(HttpClient client, string? url, DirectoryInfo directoryInfo, string rootDirPath)
 	{
-		var directoryInfo = new DirectoryInfo(directoryPath);
-
 		HttpResponseMessage? res = null;
 		
 		foreach (var file in directoryInfo.GetFiles())
 		{
 			await using var fs = file.OpenRead();
-			var content = new ByteArrayContent(await ReadFully(fs));
+			var fileContent = await ReadFully(fs, rootDirPath);
+			var content = new ByteArrayContent(fileContent);
 			res = await client.PutAsync(url, content);
 
 			// Check response status if needed
@@ -95,15 +96,18 @@ public static class Web
 		}
 
 		foreach (var subDir in directoryInfo.GetDirectories())
-			await UploadDirectoryAsync(client, url, subDir.FullName);
+			await UploadDirectoryAsync(client, url, subDir, rootDirPath);
 
 		return res;
 	}
 
-	private static async Task<byte[]> ReadFully(Stream input)
+	private static async Task<byte[]> ReadFully(FileStream fileStream, string rootDirPath)
 	{
 		using var ms = new MemoryStream();
-		await input.CopyToAsync(ms);
+		await using var writer = new BinaryWriter(ms);
+		var fileLocalName = fileStream.Name.Replace(rootDirPath, string.Empty).Trim('\\');
+		writer.Write(fileLocalName);
+		await fileStream.CopyToAsync(ms);
 		return ms.ToArray();
 	}
 

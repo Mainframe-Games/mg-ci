@@ -122,17 +122,8 @@ public class ListenServer
 
 		try
 		{
-			var fileName = request.Headers["buildPath"] ?? string.Empty;
-			var filePath = Path.Combine("uploads", fileName);
-			var uploadDir = new DirectoryInfo(filePath);
-			
-			// clear old one and create new
-			if (uploadDir.Exists)
-				uploadDir.Delete(true);
-            uploadDir.Create();
-            
-			Logger.Log($"Loading content to: {uploadDir.FullName}");
-            await DownloadDirectoryContents(context.Response.OutputStream, uploadDir);
+			// var fileName = request.Headers["buildPath"] ?? string.Empty;
+            await DownloadDirectoryContents(request);
 			return new ServerResponse(HttpStatusCode.OK, "File uploaded successfully.");
 		}
 		catch (Exception e)
@@ -148,20 +139,19 @@ public class ListenServer
 		// return ProcessPacket(packet);
 	}
 
-	private static async Task DownloadDirectoryContents(Stream outputStream, DirectoryInfo directoryInfo)
+	private static async Task DownloadDirectoryContents(HttpListenerRequest request)
 	{
-		foreach (var file in directoryInfo.GetFiles())
-		{
-			await using var fs = file.OpenRead();
-			var buffer = new byte[1024];
-			int bytesRead;
+		var stream = request.InputStream;
+		var reader = new BinaryReader(stream, request.ContentEncoding);
+		var fileName = reader.ReadString();
 
-			while ((bytesRead = await fs.ReadAsync(buffer)) > 0)
-				await outputStream.WriteAsync(buffer.AsMemory(0, bytesRead));
-		}
-
-		foreach (var subDir in directoryInfo.GetDirectories())
-			await DownloadDirectoryContents(outputStream, subDir);
+		var path = Path.Combine("uploads", fileName);
+		Logger.Log($"Creating file: {path}");
+		var fileInfo = new FileInfo(path);
+		fileInfo.Directory?.Create();
+		
+		await using var fs = File.Create(fileInfo.FullName);
+		await fs.CopyToAsync(stream);
 	}
 
     private async Task<ServerResponse> HandlePost(HttpListenerRequest request)
