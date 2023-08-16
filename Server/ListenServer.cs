@@ -122,8 +122,13 @@ public class ListenServer
 
 		try
 		{
-			// var fileName = request.Headers["buildPath"] ?? string.Empty;
-            await DownloadDirectoryContents(request);
+			var fileName = request.Headers["fileName"] ?? string.Empty;
+			Logger.Log($"HeaderFileName: {fileName}");
+			var path = Path.Combine("uploads", fileName);
+			var fileInfo = new FileInfo(path);
+			fileInfo.Directory?.Create();
+			await using var fs = fileInfo.Create();
+			await request.InputStream.CopyToAsync(fs);
 			return new ServerResponse(HttpStatusCode.OK, "File uploaded successfully.");
 		}
 		catch (Exception e)
@@ -131,27 +136,6 @@ public class ListenServer
 			Logger.Log(e);
 			return new ServerResponse(HttpStatusCode.InternalServerError, e.Message);
 		}
-		
-		// using var reader = new BinaryReader(request.InputStream, request.ContentEncoding);
-		// var packet = new RemoteBuildResponse();
-		// packet.Read(reader);
-		// await Task.CompletedTask;
-		// return ProcessPacket(packet);
-	}
-
-	private static async Task DownloadDirectoryContents(HttpListenerRequest request)
-	{
-		var stream = request.InputStream;
-		var reader = new BinaryReader(stream, request.ContentEncoding);
-		var fileName = reader.ReadString();
-
-		var path = Path.Combine("uploads", fileName);
-		Logger.Log($"Creating file: {path}");
-		var fileInfo = new FileInfo(path);
-		fileInfo.Directory?.Create();
-		
-		await using var fs = File.Create(fileInfo.FullName);
-		await fs.CopyToAsync(stream);
 	}
 
     private async Task<ServerResponse> HandlePost(HttpListenerRequest request)
