@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using Builder;
 using Deployment;
-using Deployment.Configs;
 using Deployment.RemoteBuild;
 using Deployment.Server;
 using SharedLib;
@@ -19,7 +18,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	public ServerResponse Process()
 	{
 		ProcessAsync().FireAndForget();
-		return ServerResponse.Default;
+		return ServerResponse.Ok;
 	}
 
 	private async Task ProcessAsync()
@@ -47,20 +46,8 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		var projWriter = new ProjectSettings(workspace.ProjectSettingsPath);
 		projWriter.ReplaceVersions(Packet.BuildVersion);
 
-		// if (Packet.ParallelBuild != null)
-		// {
-		// 	await ClonesManager.CloneProject(workspace.Directory, Packet.ParallelBuild.Links, Packet.ParallelBuild.Copies, Packet.Builds.Values);
-		// 	
-		// 	Packet.Builds
-		// 		.Select(x => Task.Run(() => StartBuilder(Packet.PipelineId, x.Key, x.Value, workspace, true)))
-		// 		.ToList()
-		// 		.WaitForAll();
-		// }
-		// else
-		{
-			foreach (var build in Packet.Builds)
-				await StartBuilder(Packet.PipelineId, build.Key, build.Value, workspace, false);
-		}
+		foreach (var build in Packet.Builds)
+			await StartBuilder(Packet.PipelineId, build.Key, build.Value, workspace);
 		
 		// clean up after build
 		workspace.Clear();
@@ -71,81 +58,54 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	/// Fire and forget method for starting a build
 	/// </summary>
 	/// <exception cref="WebException"></exception>
-	private async Task StartBuilder(ulong pipelineId, string buildIdGuid, string buildTarget, Workspace workspace, bool clone)
+	private async Task StartBuilder(ulong pipelineId, string buildIdGuid, string buildTarget, Workspace workspace)
 	{
 		var asset = workspace.GetBuildTarget(buildTarget);
 		var originalBuildPath = asset.BuildPath;
 			
 		try
 		{
-			var targetPath = clone
-				? ClonesManager.GetTargetPath(workspace.Directory, asset)
-				: workspace.Directory;
-			
-			// build 
+			// build
 			var builder = new LocalUnityBuild(workspace);
-			// asset.BuildPath = Path.Combine(workspace.Directory, originalBuildPath); // Todo, consolidate this. Its in BuildPipeline.cs as well
 			builder.Build(asset);
-
-			RemoteBuildResponse response;
 
 			if (builder.Errors is null)
 			{
 				// send web request back to sender with zip folder of build
-				var zipBytes = await FilePacker.PackRawAsync(asset.BuildPath);
-
-				response = new RemoteBuildResponse
+				var res = new RemoteBuildResponse
 				{
 					PipelineId = pipelineId,
 					BuildIdGuid = buildIdGuid,
-					BuildPath = originalBuildPath,
-					Data = zipBytes
+					BuildPath = originalBuildPath
 				};
+				await Web.StreamToServerAsync(SendBackUrl, res.BuildPath, pipelineId, buildIdGuid);
 			}
 			else
 			{
 				// send web request to sender about the build failing
-				response = BuildErrorResponse(pipelineId, buildIdGuid, originalBuildPath, builder.Errors);
+				await SendErrorToMasterServerAsync(pipelineId, buildIdGuid, originalBuildPath, builder.Errors);
 			}
 
-			await RespondBackToMasterServer(response);
 		}
 		catch (Exception e)
 		{
 			Logger.Log(e);
-			var res = BuildErrorResponse(pipelineId, buildIdGuid, originalBuildPath, e.Message);
-			await RespondBackToMasterServer(res);
+			await SendErrorToMasterServerAsync(pipelineId, buildIdGuid, originalBuildPath, e.Message);
 		}
 	}
 
-	private static RemoteBuildResponse BuildErrorResponse(ulong pipelineId, string? buildId, string? originalBuildPath, string? message)
+	private async Task SendErrorToMasterServerAsync(ulong pipelineId, string? buildId, string? originalBuildPath, string? message)
 	{
-		return new RemoteBuildResponse
+		var response = new RemoteBuildResponse
 		{
 			PipelineId = pipelineId,
 			BuildIdGuid = buildId,
 			BuildPath = originalBuildPath,
 			Error = message ?? "build failed for reasons unknown"
 		};
-	}
-
-	private async Task RespondBackToMasterServer(RemoteBuildResponse response)
-	{
+		
 		Logger.Log($"Sending build '{response.BuildIdGuid}' back to: {SendBackUrl}");
-
-		if (string.IsNullOrEmpty(response.Error))
-		{
-			// success
-			await using var ms = new DynamicMemoryMappedStream(int.MaxValue);
-			await using var steam = new BinaryWriter(ms);
-			response.Write(steam);
-			await Web.SendBytesAsync(SendBackUrl, ms.ToArray());
-		}
-		else
-		{
-			// failed
-			var body = new RemoteBuildPacket { BuildResponse = response };
-			await Web.SendAsync(HttpMethod.Post, SendBackUrl, body: body);
-		}
+		var body = new RemoteBuildPacket { BuildResponse = response };
+		await Web.SendAsync(HttpMethod.Post, SendBackUrl, body: body);
 	}
 }

@@ -66,6 +66,47 @@ public static class Web
 		return await GetSuccess(res);
 	}
 
+	public static async Task<Response> StreamToServerAsync(string? url, string buildPath, ulong pipelineId, string buildIdGuid)
+	{
+		using var client = new HttpClient();
+		client.DefaultRequestHeaders.Add(nameof(buildPath), buildPath);
+		client.DefaultRequestHeaders.Add(nameof(pipelineId), pipelineId.ToString());
+		client.DefaultRequestHeaders.Add(nameof(buildIdGuid), buildIdGuid);
+
+		var res = await UploadDirectoryAsync(client, url, buildPath);
+		return await GetSuccess(res);
+	}
+
+	private static async Task<HttpResponseMessage> UploadDirectoryAsync(HttpClient client, string? url, string directoryPath)
+	{
+		var directoryInfo = new DirectoryInfo(directoryPath);
+
+		HttpResponseMessage? res = null;
+		
+		foreach (var file in directoryInfo.GetFiles())
+		{
+			await using var fs = file.OpenRead();
+			var content = new ByteArrayContent(await ReadFully(fs));
+			res = await client.PutAsync(url, content);
+
+			// Check response status if needed
+			if (!res.IsSuccessStatusCode)
+				throw new WebException($"Failed with code: {res.StatusCode}. Reason: {res.ReasonPhrase}");
+		}
+
+		foreach (var subDir in directoryInfo.GetDirectories())
+			await UploadDirectoryAsync(client, url, subDir.FullName);
+
+		return res;
+	}
+
+	private static async Task<byte[]> ReadFully(Stream input)
+	{
+		using var ms = new MemoryStream();
+		await input.CopyToAsync(ms);
+		return ms.ToArray();
+	}
+
 	private static async Task<Response> GetSuccess(HttpResponseMessage res)
 	{
 		var content = await res.Content.ReadAsStringAsync();

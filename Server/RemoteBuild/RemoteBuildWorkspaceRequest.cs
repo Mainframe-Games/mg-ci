@@ -37,23 +37,20 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 		App.RunBuildPipe(pipeline).FireAndForget();
 		workspace.GetCurrent(out var changeSetId, out var guid);
 
-		return new ServerResponse
+		var data = new BuildPipelineResponse
 		{
-			StatusCode = HttpStatusCode.OK,
-			Data = new BuildPipelineResponse
-			{
-				ServerVersion = App.Version,
-				PipelineId = pipeline.Id,
-				Workspace = workspace.Name,
-				Targets = string.Join(", ", workspace.GetBuildTargets().Select(x => x.Name)),
-				Args = Args,
-				UnityVersion = workspace.UnityVersion,
-				ChangesetId = changeSetId,
-				ChangesetGuid = guid,
-				Branch = branch,
-				ChangesetCount = pipeline.ChangeLog.Length,
-			}
+			ServerVersion = App.Version,
+			PipelineId = pipeline.Id,
+			Workspace = workspace.Name,
+			Targets = string.Join(", ", workspace.GetBuildTargets().Select(x => x.Name)),
+			Args = Args,
+			UnityVersion = workspace.UnityVersion,
+			ChangesetId = changeSetId,
+			ChangesetGuid = guid,
+			Branch = branch,
+			ChangesetCount = pipeline.ChangeLog.Length,
 		};
+		return new ServerResponse(HttpStatusCode.OK, data);
 	}
 }
 

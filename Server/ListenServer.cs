@@ -3,6 +3,7 @@ using System.Text;
 using Deployment.Server;
 using Server.RemoteBuild;
 using SharedLib;
+using System;
 
 namespace Server;
 
@@ -58,10 +59,12 @@ public class ListenServer
 	/// <summary>
 	/// Reads from file each time so we can add/remove tokens without restarting server
 	/// </summary>
-	/// <param name="authToken"></param>
+	/// <param name="request"></param>
 	/// <returns></returns>
-	private bool IsAuthorised(string authToken)
+	private bool IsAuthorised(HttpListenerRequest request)
 	{
+		var authToken = request.Headers[HttpRequestHeader.Authorization.ToString()] ?? string.Empty;
+		
 		// always return true if no auths have been given
 		var authTokens = GetAuth?.Invoke();
 		
@@ -88,18 +91,11 @@ public class ListenServer
 		{
 			"GET" => await HandleGet(request),
 			"POST" => await HandlePost(request),
-			"PUT" => await HandlePut(request),
-			"OPTIONS" => await HandleOptions(request),
+			"PUT" => await HandlePut(context),
 			_ => new ServerResponse(HttpStatusCode.MethodNotAllowed, $"HttpMethod not supported: {request.HttpMethod}")
 		};
 
 		Respond(context, response.StatusCode, response.Data);
-	}
-
-	private async Task<ServerResponse> HandleOptions(HttpListenerRequest request)
-	{
-		// TODO: handle CORS
-		return new ServerResponse(HttpStatusCode.OK, "ok");
 	}
 
 	private async Task<ServerResponse> HandleGet(HttpListenerRequest request)
@@ -113,32 +109,65 @@ public class ListenServer
 			case "/workspaces": return new Workspaces().Process();
 			case "/info": return new ServerInfo(this).Process();
 			case "/commits": return new Commits(request.QueryString).Process();
-			default: return ServerResponse.Default;
+			default: return ServerResponse.Ok;
 		}
 	}
 	
-	private static async Task<ServerResponse> HandlePut(HttpListenerRequest request)
+	private async Task<ServerResponse> HandlePut(HttpListenerContext context)
 	{
-		if (!request.HasEntityBody)
-			return new ServerResponse(HttpStatusCode.NoContent, "No body was given in request");
+		var request = context.Request;
+		
+		// if (!IsAuthorised(request)) return ServerResponse.UnAuthorised;
+		if (!request.HasEntityBody) return ServerResponse.NoContent;
 
-		using var reader = new BinaryReader(request.InputStream, request.ContentEncoding);
-		var packet = new RemoteBuildResponse();
-		packet.Read(reader);
-		await Task.CompletedTask;
-		return ProcessPacket(packet);
+		try
+		{
+			var fileName = request.Headers["buildPath"] ?? string.Empty;
+			var filePath = Path.Combine("uploads", fileName);
+			var uploadDir = new DirectoryInfo(filePath);
+			
+			// clear old one and create new
+			if (uploadDir.Exists)
+				uploadDir.Delete(true);
+            uploadDir.Create();
+            
+			Logger.Log($"Loading content to: {uploadDir.FullName}");
+            await DownloadDirectoryContents(context.Response.OutputStream, uploadDir);
+			return new ServerResponse(HttpStatusCode.OK, "File uploaded successfully.");
+		}
+		catch (Exception e)
+		{
+			Logger.Log(e);
+			return new ServerResponse(HttpStatusCode.InternalServerError, e.Message);
+		}
+		
+		// using var reader = new BinaryReader(request.InputStream, request.ContentEncoding);
+		// var packet = new RemoteBuildResponse();
+		// packet.Read(reader);
+		// await Task.CompletedTask;
+		// return ProcessPacket(packet);
 	}
 
-	private async Task<ServerResponse> HandlePost(HttpListenerRequest request)
+	private static async Task DownloadDirectoryContents(Stream outputStream, DirectoryInfo directoryInfo)
 	{
-		// check authorisation
-		var authToken = request.Headers[HttpRequestHeader.Authorization.ToString()] ?? string.Empty;
-		
-		if (!IsAuthorised(authToken))
-			return new ServerResponse(HttpStatusCode.Unauthorized, "You are not authorized to perform this action");
+		foreach (var file in directoryInfo.GetFiles())
+		{
+			await using var fs = file.OpenRead();
+			var buffer = new byte[1024];
+			int bytesRead;
 
-		if (!request.HasEntityBody)
-			return new ServerResponse(HttpStatusCode.NoContent, "No body was given in request");
+			while ((bytesRead = await fs.ReadAsync(buffer)) > 0)
+				await outputStream.WriteAsync(buffer.AsMemory(0, bytesRead));
+		}
+
+		foreach (var subDir in directoryInfo.GetDirectories())
+			await DownloadDirectoryContents(outputStream, subDir);
+	}
+
+    private async Task<ServerResponse> HandlePost(HttpListenerRequest request)
+	{
+		if (!IsAuthorised(request)) return ServerResponse.UnAuthorised;
+		if (!request.HasEntityBody) return ServerResponse.NoContent;
 		
 		using var reader = new StreamReader(request.InputStream, request.ContentEncoding);
 		var jsonStr = await reader.ReadToEndAsync();
