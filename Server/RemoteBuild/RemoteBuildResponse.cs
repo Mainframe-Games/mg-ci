@@ -1,4 +1,5 @@
 ﻿using Deployment;
+using Deployment.Configs;
 using Deployment.Server;
 
 namespace Server.RemoteBuild;
@@ -8,6 +9,7 @@ public class RemoteBuildResponse : IRemoteControllable
 	public ulong PipelineId { get; set; }
 	public string? BuildIdGuid { get; set; }
 	public string? Error { get; set; }
+	public BuildResult? BuildResult { get; set; }
 
 	public ServerResponse Process()
 	{
@@ -16,8 +18,12 @@ public class RemoteBuildResponse : IRemoteControllable
 
 		if (!App.Pipelines.TryGetValue(PipelineId, out var buildPipeline))
 			throw new NullReferenceException($"{nameof(BuildPipeline)} is not active. Id: {PipelineId}");
-
-		buildPipeline.OffloadBuildCompleted(BuildIdGuid);
+		if (BuildIdGuid == null)
+			throw new NullReferenceException($"{nameof(BuildIdGuid)} can not be null");
+		if (BuildResult == null)
+			throw new NullReferenceException($"{nameof(BuildResult)} can not be null");
+		
+		buildPipeline.OffloadBuildCompleted(BuildIdGuid, BuildResult);
 		return ServerResponse.Ok;
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Deployment;
+using Deployment.Configs;
 using Deployment.RemoteBuild;
 using Deployment.Server;
 using SharedLib;
@@ -64,28 +65,29 @@ public class RemoteBuildTargetRequest : IRemoteControllable
         try
 		{
 			var builder = new LocalUnityBuild(workspace);
-			builder.Build(asset);
+			var result = builder.Build(asset);
 
 			if (string.IsNullOrEmpty(builder.Errors))
 				await Web.StreamToServerAsync(SendBackUrl, asset.BuildPath, pipelineId, buildIdGuid);
 
-			await SendToMasterServerAsync(pipelineId, buildIdGuid, builder.Errors);
+			await SendToMasterServerAsync(pipelineId, buildIdGuid, builder.Errors, result);
 
 		}
 		catch (Exception e)
 		{
 			Logger.Log(e);
-			await SendToMasterServerAsync(pipelineId, buildIdGuid, e.Message);
+			await SendToMasterServerAsync(pipelineId, buildIdGuid, e.Message, null);
 		}
 	}
 
-	private async Task SendToMasterServerAsync(ulong pipelineId, string? buildGuid, string? error)
+	private async Task SendToMasterServerAsync(ulong pipelineId, string? buildGuid, string? error, BuildResult? buildResult)
 	{
 		var response = new RemoteBuildResponse
 		{
 			PipelineId = pipelineId,
 			BuildIdGuid = buildGuid,
-			Error = error
+			Error = error,
+			BuildResult = buildResult
 		};
 		
 		Logger.Log($"Sending build '{response.BuildIdGuid}' back to: {SendBackUrl}");

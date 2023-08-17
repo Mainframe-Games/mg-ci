@@ -323,12 +323,14 @@ public class BuildPipeline
 		}
 	}
 	
-	public void OffloadBuildCompleted(string buildGuid)
+	public void OffloadBuildCompleted(string buildGuid, BuildResult buildResult)
 	{
 		if (!_buildIds.Contains(buildGuid))
 			throw new Exception($"{nameof(buildGuid)} not expected: {buildGuid}");
 		
-		Logger.Log($"Offload Completed: {buildGuid}");
+		Logger.Log($"Offload Completed: {buildGuid}. {buildResult}");
+		
+        _buildResults.Add(buildResult);
 		_buildIds.Remove(buildGuid);
 	}
 
@@ -348,7 +350,7 @@ public class BuildPipeline
 				cachedCount = _buildIds.Count;
 			}
 			
-			await Task.Delay(3000);
+			await Task.Delay(5000);
 		}
 	}
 
