@@ -24,13 +24,13 @@ public static class Logger
 
 	public static void LogTimeStamp(string message, DateTime startTime)
 	{
-		Log($"{message} {DateTime.Now - startTime:hh\\:mm\\:ss}");
+		Log($"{message} {(DateTime.Now - startTime).ToHourMinSecString()}");
 	}
 	
 	public static void LogTimeStamp(string message, Stopwatch stopwatch)
 	{
 		var timeSpan = TimeSpan.FromMilliseconds(stopwatch.ElapsedMilliseconds);
-		Log($"{message} {timeSpan:hh\\:mm\\:ss}");
+		Log($"{message} {timeSpan.ToHourMinSecString()}");
 	}
 
 	/// <summary>

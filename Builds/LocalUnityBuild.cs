@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using Deployment.Configs;
 using SharedLib;
 
@@ -42,24 +43,26 @@ public class LocalUnityBuild
 	/// </summary>
 	/// <param name="asset"></param>
 	/// <returns>Directory of build</returns>
-	public void Build(BuildSettingsAsset asset)
+	public BuildResult Build(BuildSettingsAsset asset)
 	{
 		var buildPath = asset.BuildPath;
 		var logPath = $"{buildPath}.log";
 		var errorPath = $"{buildPath}_errors.log";
 		var buildReport = $"{buildPath}_build_report.log";
+		var sw = Stopwatch.StartNew();
 		
 		// delete error logs file
 		if (File.Exists(errorPath))
 			File.Delete(errorPath);
 		
-		var buildStartTime = DateTime.Now;
 		var exePath = GetDefaultUnityPath(asset.GetBuildTargetFlag(), asset.TargetGroup);
 
 		Logger.Log($"Started Build: {asset.Name}");
 		
 		var cliparams = BuildCliParams(asset, _projectPath, DEFAULT_EXECUTE_METHOD, logPath);
 		var (exitCode, output) = Cmd.Run(exePath, cliparams);
+		
+		sw.Stop();
 
 		if (exitCode != 0)
 		{
@@ -77,8 +80,15 @@ public class LocalUnityBuild
 			throw new Exception($"Build Failed with code '{exitCode}'\n{verboseLog}");
 		}
 		
-		Logger.LogTimeStamp($"Build Success! {asset.Name}, Build Time: ", buildStartTime);
+		Logger.LogTimeStamp($"Build Success! {asset.Name}, Build Time: ", sw);
 		WriteBuildReport(logPath, buildReport);
+
+		return new BuildResult
+		{
+			BuildName = asset.Name,
+			BuildSize = new DirectoryInfo(asset.BuildPath).GetByteSize(),
+			BuildTime = TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds)
+		};
 	}
 
 	/// <summary>

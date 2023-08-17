@@ -8,23 +8,6 @@ using SharedLib.Webhooks;
 
 namespace Deployment;
 
-public class OffloadServerPacket
-{
-	public string? WorkspaceName { get; set; }
-	public BuildVersions? BuildVersion { get; set; }
-	public int ChangesetId { get; set; }
-	public string? Branch { get; set; }
-	public bool CleanBuild { get; set; }
-	public ParallelBuildConfig? ParallelBuild { get; set; }
-	public ulong PipelineId { get; set; }
-	
-	/// <summary>
-	/// BuildId (GUID), Asset Name <see cref="BuildSettingsAsset"/>
-	/// </summary>
-	public Dictionary<string, string> Builds { get; set; }
-
-}
-
 public class BuildPipeline
 {
 	/// <summary>
@@ -65,6 +48,8 @@ public class BuildPipeline
 	/// build ids we are waiting for offload server
 	/// </summary>
 	private readonly List<string> _buildIds = new();
+
+	private readonly List<BuildResult> _buildResults = new();
 
 	public BuildPipeline(ulong id, Workspace workspace, Args args, string? offloadUrl, bool offloadParallel, List<BuildTargetFlag>? offloadTargets)
 	{
@@ -151,8 +136,7 @@ public class BuildPipeline
 		
 		Logger.Log("Build process started...");
 		var buildStartTime = DateTime.Now;
-		
-		var parallelTasks = new List<Task>(); // for parallel builds
+        
 		var localBuilds = new List<BuildSettingsAsset>(); // for sequential builds
 
 		OffloadServerPacket? offloadBuilds = null;
@@ -184,41 +168,22 @@ public class BuildPipeline
 			// local build
 			else
 			{
-				// TODO: come back to this if we need parallel builds again.
-				// if (Config.ParallelBuild != null)
-				// {
-				// 	build.BuildPath = Path.Combine(Workspace.Directory, build.BuildPath);
-				// 	var targetPath = ClonesManager.GetTargetPath(Workspace.Directory, build);
-				// 	var unity = new LocalUnityBuild(Workspace);
-				// 	var task = Task.Run(() => unity.Build(targetPath, build));
-				// 	parallelTasks.Add(task);
-				// }
-				// else
-				{
-					localBuilds.Add(build);
-				}
+				localBuilds.Add(build);
 			}
 		}
 
 		// send offload builds first
 		if (offloadBuilds != null)
-			OffloadBuildNeeded?.Invoke(offloadBuilds);
+			OffloadBuildNeeded.Invoke(offloadBuilds);
 
-		// then wait for local builds
-		if (parallelTasks.Count > 0)
+		// local sequential builds
+		// this needs to be after off loads event is invoked otherwise
+		// we'll just be idling doing nothing while offload builds could be running
+		foreach (var localBuild in localBuilds)
 		{
-			parallelTasks.WaitForAll();
-		}
-		else
-		{
-			// local sequential builds
-			// this needs to be after off loads event is invoked otherwise
-			// we'll just be idling doing nothing while offload builds could be running
-			foreach (var localBuild in localBuilds)
-			{
-				var unity = new LocalUnityBuild(Workspace);
-				unity.Build(localBuild);
-			}
+			var unity = new LocalUnityBuild(Workspace);
+			var buildResult = unity.Build(localBuild);
+			_buildResults.Add(buildResult);
 		}
 		
 		// wait for offload builds to complete
@@ -263,9 +228,7 @@ public class BuildPipeline
 			return;
 
 		// optional message from clanforge
-		var clanforgeMessage = Config.Deploy?.Clanforge != null
-			? GetExtraHookLogs?.Invoke(this)
-			: null;
+		var extraLogMessage = GetExtraHookLogs.Invoke(this);
 
 		foreach (var hook in Config.Hooks)
 		{
@@ -273,28 +236,31 @@ public class BuildPipeline
 				continue;
 			
 			var hookMessage = new StringBuilder();
+			hookMessage.AppendLine($"Total Time: {TimeSinceStart}");
+			hookMessage.AppendLine(extraLogMessage);
+			hookMessage.AppendLine($"cs: {_currentChangeSetId}");
+			hookMessage.AppendLine($"guid: {_currentGuid}");
 
+			foreach (var buildResult in _buildResults)
+				hookMessage.AppendLine(buildResult.ToString());
+            
 			if (hook.IsDiscord())
 			{
 				var discord = new ChangeLogBuilderDiscord();
 				discord.BuildLog(ChangeLog);
-				
-				hookMessage.AppendLine($"Total Time: {TimeSinceStart}");
-				hookMessage.AppendLine(clanforgeMessage);
-				hookMessage.AppendLine($"cs: {_currentChangeSetId}");
-				hookMessage.AppendLine($"guid: {_currentGuid}");
 				hookMessage.AppendLine(discord.ToString());
-				Discord.PostMessage(hook.Url, hookMessage.ToString(), hook.Title, BuildVersionTitle, Discord.Colour.GREEN);
+				
+				Discord.PostMessage(
+					hook.Url, 
+					hookMessage.ToString(),
+					hook.Title,
+					BuildVersionTitle,
+					Discord.Colour.GREEN);
 			}
 			else if (hook.IsSlack())
 			{
-				hookMessage.AppendLine($"*{hook.Title}*");
-				hookMessage.AppendLine(BuildVersionTitle);
-				hookMessage.AppendLine($"Total Time: {TimeSinceStart}");
-				hookMessage.AppendLine(clanforgeMessage);
-				hookMessage.AppendLine($"cs: {_currentChangeSetId}");
-				hookMessage.AppendLine($"guid: {_currentGuid}");
-				Slack.PostMessage(hook.Url, hookMessage.ToString());
+				var slackMessage = $"*{hook.Title}*\n{BuildVersionTitle}\n{hookMessage}";
+				Slack.PostMessage(hook.Url, slackMessage);
 			}
 		}
 		

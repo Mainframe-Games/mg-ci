@@ -244,8 +244,16 @@ public static class App
 
 	private static string? BuildPipelineOnGetExtraHookLog(BuildPipeline pipeline)
 	{
-		pipeline.Args.TryGetArg("-clanforge", out var profile, Config.Clanforge.DefaultProfile);
-		return Config.Clanforge?.BuildHookMessage(profile, "Updated");
+		try
+		{
+			pipeline.Args.TryGetArg("-clanforge", out var profile, Config.Clanforge?.DefaultProfile);
+			return Config.Clanforge?.BuildHookMessage(profile, "Updated");
+		}
+		catch (Exception e)
+		{
+			Logger.Log(e);
+			return null;
+		}
 	}
 	
 	#endregion
