@@ -3,9 +3,9 @@ using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-namespace BuildSystem
+namespace BuildSystem.PostBuild
 {
-	public class PostBuildProcess : IPostprocessBuildWithReport
+	public class FileDirectoryStripper : IPostprocessBuildWithReport
 	{
 		public int callbackOrder { get; }
 
@@ -31,7 +31,7 @@ namespace BuildSystem
 			if (!Directory.Exists(path))
 				return;
 			
-			Debug.Log($"[{nameof(PostBuildProcess)}] Deleting directory: {path}");
+			Debug.Log($"[{nameof(FileDirectoryStripper)}] Deleting directory: {path}");
 			Directory.Delete(path, true);
 		}
 	}

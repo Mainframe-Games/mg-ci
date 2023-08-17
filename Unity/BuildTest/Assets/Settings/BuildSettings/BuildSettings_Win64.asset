@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec7346e9123721d40a677bd94c80c32e, type: 3}
   m_Name: BuildSettings_Win64
   m_EditorClassIdentifier: 
+  Name: Win64
   Extension: .exe
   ProductName: BuildTest
   Target: 19
@@ -27,3 +28,7 @@ MonoBehaviour:
   KeystorePath: 
   KeystoreAlias: 
   KeystorePassword: 
+  PListElementBools: []
+  PListElementStrings: []
+  PListElementInts: []
+  PListElementFloats: []

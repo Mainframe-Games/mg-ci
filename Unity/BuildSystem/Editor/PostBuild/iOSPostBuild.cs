@@ -1,23 +1,26 @@
 using BuildSystem.Utils;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 
-namespace BuildSystem.PostProcessors
+namespace BuildSystem.PostBuild
 {
-	public static class iOSPostBuildProcessor
+	public class iOSPostBuild : IPostprocessBuildWithReport
 	{
-		public static void Process(BuildSettings settings, BuildReport report)
+		public int callbackOrder { get; }
+
+		public void OnPostprocessBuild(BuildReport report)
 		{
 			if (report.summary.platform is not BuildTarget.iOS and not BuildTarget.tvOS)
 				return;
-			
+
 			var outputPath = report.summary.outputPath;
-			BS_Logger.Log($"{report.summary.platform} PostProcess. Path: {outputPath}");
+			BS_Logger.Log($"[{nameof(iOSPostBuild)}] {report.summary.platform} PostProcess. Path: {outputPath}");
 
 			// var pbx = new PBXHelper(outputPath);
-			UpdateInfoPlist(settings, outputPath);
+			UpdateInfoPlist(BuildScript.CurrentBuildSettings, outputPath);
 		}
-
+		
 		private static void UpdateInfoPlist(BuildSettings settings, string outputPath)
 		{
 			var plist = new PListHelper(outputPath);

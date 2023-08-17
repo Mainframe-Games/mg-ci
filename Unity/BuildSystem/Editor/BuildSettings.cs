@@ -156,10 +156,5 @@ namespace BuildSystem
 		{
 			EditorUtility.SetDirty(this);
 		}
-
-		public void PostBuildProcess(BuildReport report)
-		{
-			iOSPostBuildProcessor.Process(this, report);
-		}
 	}
 }

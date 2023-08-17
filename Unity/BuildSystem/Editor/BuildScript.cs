@@ -21,8 +21,7 @@ namespace BuildSystem
 		/// </summary>
 		public static void BuildPlayer()
 		{
-			var settingsArg = GetArgValue("-settings");
-			var settings = GetBuildConfig(settingsArg);
+			var settings = GetBuildConfig();
 			BuildPlayer(settings);
 		}
 		
@@ -30,6 +29,8 @@ namespace BuildSystem
 		{
 			if (!settings.IsValid())
 				throw new Exception($"BuildSettings '{settings.name}' not valid");
+			
+			CurrentBuildSettings = settings;
 			
 			var buildPathRoot = GetArgValue("-buildPath");
 			var options = settings.GetBuildOptions(buildPathRoot);
@@ -46,7 +47,6 @@ namespace BuildSystem
 			Application.logMessageReceived += OnLogReceived;
 			PrintBuildOptions(options);
 			var report = BuildPipeline.BuildPlayer(options);
-			settings.PostBuildProcess(report);
 			Application.logMessageReceived -= OnLogReceived;
 
 			PrintReportSummary(report.summary);
@@ -102,7 +102,6 @@ namespace BuildSystem
 		private static void PrintReportSummary(BuildSummary summary)
 		{
 			BS_Logger.Log(
-				$"{Eol}" +
 				$"###########################{Eol}" +
 				$"#      Build results      #{Eol}" +
 				$"###########################{Eol}" +
@@ -226,9 +225,12 @@ namespace BuildSystem
 			if (!string.IsNullOrEmpty(stacktrace))
 				_builder.AppendLine(stacktrace);
 		}
+		
+		public static BuildSettings CurrentBuildSettings { get; private set; }
 
-		private static BuildSettings GetBuildConfig(string buildSettingsName)
+		public static BuildSettings GetBuildConfig()
 		{
+			var buildSettingsName = GetArgValue("-settings");
 			var guids = AssetDatabase.FindAssets($"t:{nameof(BuildSettings)}");
 			
 			for (int i = 0; i < guids.Length; i++)

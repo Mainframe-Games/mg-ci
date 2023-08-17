@@ -9,9 +9,10 @@ namespace DefaultNamespace
 		{
 			Debug.Log(nameof(Script));
 
-// #if UNITY_EDITOR
+			// comment out #if for a build failure
+#if UNITY_EDITOR
 			EditorApplication.Beep();
-// #endif
+#endif
 		}
 	}
 }
