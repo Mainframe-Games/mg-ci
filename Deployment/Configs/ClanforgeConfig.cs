@@ -24,7 +24,7 @@ public class ClanforgeConfig : ICloneable
 	public string BuildHookMessage(string? profileId, string status)
 	{
 		var profile = GetProfile(profileId);
-		return $"Game Image {status}: {profile.Name} ({profile.Id})";
+		return $"**Clanforge Image {status}**: {profile.Name} ({profile.Id})";
 	}
 
 	public uint GetImageId(string? profileId)

@@ -32,7 +32,7 @@ public class BuildPipeline
 	public Args Args { get; }
 	public BuildConfig Config { get; }
 	private DateTime StartTime { get; set; }
-	private string TimeSinceStart => $"{DateTime.Now - StartTime:hh\\:mm\\:ss}";
+	private string TimeSinceStart => $"{(DateTime.Now - StartTime).ToHourMinSecString()}";
 	public string BuildVersionTitle => $"{BUILD_VERSION} {_buildVersion?.BundleVersion}";
 
 	/// <summary>
@@ -236,16 +236,22 @@ public class BuildPipeline
 				continue;
 			
 			var hookMessage = new StringBuilder();
-			hookMessage.AppendLine($"Total Time: {TimeSinceStart}");
-			hookMessage.AppendLine(extraLogMessage);
-			hookMessage.AppendLine($"cs: {_currentChangeSetId}");
-			hookMessage.AppendLine($"guid: {_currentGuid}");
+			hookMessage.AppendLine($"**cs:** {_currentChangeSetId}");
+			hookMessage.AppendLine($"**guid:** {_currentGuid}");
+			hookMessage.AppendLine("");
 
+			hookMessage.AppendLine("**Targets:**");
 			foreach (var buildResult in _buildResults)
-				hookMessage.AppendLine(buildResult.ToString());
-            
+				hookMessage.AppendLine($"- {buildResult}");
+			hookMessage.AppendLine($"**Total Time:** {TimeSinceStart}");
+
+			hookMessage.Append("");
+			hookMessage.AppendLine(extraLogMessage);
+			
 			if (hook.IsDiscord())
 			{
+				hookMessage.AppendLine("**Change Log:**");
+				
 				var discord = new ChangeLogBuilderDiscord();
 				discord.BuildLog(ChangeLog);
 				hookMessage.AppendLine(discord.ToString());

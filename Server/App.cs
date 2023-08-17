@@ -246,14 +246,18 @@ public static class App
 	{
 		try
 		{
-			pipeline.Args.TryGetArg("-clanforge", out var profile, Config.Clanforge?.DefaultProfile);
-			return Config.Clanforge?.BuildHookMessage(profile, "Updated");
+			if (Config?.Clanforge != null)
+			{
+				pipeline.Args.TryGetArg("-clanforge", out var profile, Config.Clanforge.DefaultProfile);
+				return Config.Clanforge.BuildHookMessage(profile, "Updated");
+			}
 		}
 		catch (Exception e)
 		{
 			Logger.Log(e);
-			return null;
 		}
+		
+		return null;
 	}
 	
 	#endregion
