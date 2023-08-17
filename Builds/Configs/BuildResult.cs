@@ -10,6 +10,6 @@ public class BuildResult
 
 	public override string ToString()
 	{
-		return $"{BuildName} {BuildTime} ({BuildSize.ToByteSizeString()})";
+		return $"{BuildName} {BuildTime.ToHourMinSecString()} ({BuildSize.ToByteSizeString()})";
 	}
 }
