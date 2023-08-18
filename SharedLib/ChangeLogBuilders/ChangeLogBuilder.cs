@@ -12,7 +12,9 @@ public abstract class ChangelogBuilder
 
 	private static bool IgnoreCommit(string line)
 	{
-		return line.Contains("Build Version:") || line.StartsWith("_");
+		return string.IsNullOrEmpty(line)
+		       || line.Contains("Build Version:")
+		       || line.StartsWith("_");
 	}
 
 	private static bool IsKeyword(string firstWord)

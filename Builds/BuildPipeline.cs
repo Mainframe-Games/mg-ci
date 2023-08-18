@@ -240,13 +240,16 @@ public class BuildPipeline
 			hookMessage.AppendLine($"**guid:** {_currentGuid}");
 			hookMessage.AppendLine("");
 
-			hookMessage.AppendLine("**Targets:**");
+			hookMessage.AppendLine($"**Targets:** Total Time {TimeSinceStart}");
 			foreach (var buildResult in _buildResults)
 				hookMessage.AppendLine($"- {buildResult}");
-			hookMessage.AppendLine($"**Total Time:** {TimeSinceStart}");
+            hookMessage.AppendLine("");
 
-			hookMessage.Append("");
-			hookMessage.AppendLine(extraLogMessage);
+            if (!string.IsNullOrEmpty(extraLogMessage))
+            {
+				hookMessage.AppendLine(extraLogMessage);
+				hookMessage.AppendLine("");
+            }
 			
 			if (hook.IsDiscord())
 			{
