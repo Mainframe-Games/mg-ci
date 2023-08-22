@@ -37,10 +37,11 @@ public abstract class ChangelogBuilder
 	/// </summary>
 	/// <param name="commits"></param>
 	/// <returns></returns>
-	public bool BuildLog(IEnumerable<string> commits)
+	public void BuildLog(IEnumerable<string> commits)
 	{
-		_stringBuilder.AppendLine(List.Start);
-		var count = 0;
+		if (!string.IsNullOrEmpty(List.Start))
+			_stringBuilder.AppendLine(List.Start);
+
 		foreach (var line in commits)
 		{
 			if (IgnoreCommit(line))
@@ -66,12 +67,12 @@ public abstract class ChangelogBuilder
 					_stringBuilder.Append($" {words[i]}");
 			}
 
-			_stringBuilder.AppendLine(ListItem.End);
-			count++;
+			if (!string.IsNullOrEmpty(ListItem.End))
+				_stringBuilder.AppendLine(ListItem.End);
 		}
 
-		_stringBuilder.AppendLine(List.End);
-		return count > 0;
+		if (!string.IsNullOrEmpty(List.End))
+			_stringBuilder.AppendLine(List.End);
 	}
 
 	public override string ToString()
