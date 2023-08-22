@@ -48,7 +48,7 @@ public class Workspace
 		return workspaces;
 	}
 
-	public static Workspace AskWorkspace()
+	public static Workspace? AskWorkspace()
 	{
 		var (exitCode, output) = Cmd.Run("cm", "workspace", logOutput: false);
 
@@ -57,7 +57,10 @@ public class Workspace
 
 		var workspaces = GetAvailableWorkspaces();
 		var workspaceNames = workspaces.Select(x => x.Name).ToList();
-		var index = Cmd.Choose("Choose workspace", workspaceNames);
+		
+		if (!Cmd.Choose("Choose workspace", workspaceNames, out var index))
+			return null;
+		
 		var workspace = workspaces[index];
 		Logger.Log($"Chosen workspace: {workspace}");
 		return workspace;

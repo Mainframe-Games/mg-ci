@@ -59,7 +59,7 @@ public static class Cmd
 		}
 	}
 	
-	public static int Choose(string remark, List<string?> options)
+	public static bool Choose(string remark, List<string?> options, out int index)
 	{
 		// choose
 		var str = new StringBuilder();
@@ -70,8 +70,8 @@ public static class Cmd
 		Logger.Log(str.ToString());
 		Console.Write($"{remark} [0..{options.Count - 1}] ");
 		var stdIn = Console.ReadLine();
-		var index = int.TryParse(stdIn, out int outIndex) ? outIndex : 0;
-		return index;
+		index = int.TryParse(stdIn, out int outIndex) ? outIndex : -1;
+		return index != -1;
 	}
 
 	public static bool Ask(string question, bool defaultAnswer)

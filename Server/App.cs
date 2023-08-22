@@ -30,6 +30,11 @@ public static class App
 		if (IsLocal)
 		{
 			var workspace = Workspace.AskWorkspace();
+			if (workspace == null)
+			{
+				Logger.Log("No Workspace chosen");
+				return;
+			}
 			var pipeline = CreateBuildPipeline(workspace, args);
 			if (pipeline.ChangeLog.Length == 0)
 			{
