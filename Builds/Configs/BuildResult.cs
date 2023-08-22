@@ -7,6 +7,7 @@ public class BuildResult
 	public string? BuildName { get; set; }
 	public TimeSpan BuildTime { get; set; }
 	public ulong BuildSize { get; set; }
+	public string? Errors { get; set; }
 
 	public override string ToString()
 	{

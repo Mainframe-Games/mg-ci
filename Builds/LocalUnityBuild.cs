@@ -13,8 +13,6 @@ public class LocalUnityBuild
 	private readonly string _projectPath;
 	private readonly string _unityVersion;
 
-	public string? Errors { get; private set; }
-
 	public LocalUnityBuild(Workspace workspace)
 	{
 		_workspace = workspace;
@@ -64,6 +62,8 @@ public class LocalUnityBuild
 		
 		sw.Stop();
 
+		string? errors = null;
+
 		if (exitCode != 0)
 		{
 			var verboseLog = $"Verbose log file: {Path.Combine(Environment.CurrentDirectory, logPath)}";
@@ -73,8 +73,8 @@ public class LocalUnityBuild
 			
 			if (File.Exists(errorPath))
 			{
-				Errors = File.ReadAllText(errorPath);
-				throw new Exception($"Build Failed with code '{exitCode}'\n{Errors}\n{verboseLog}");
+				errors = File.ReadAllText(errorPath);
+				throw new Exception($"Build Failed with code '{exitCode}'\n{errors}\n{verboseLog}");
 			}
 
 			throw new Exception($"Build Failed with code '{exitCode}'\n{verboseLog}");
@@ -87,7 +87,8 @@ public class LocalUnityBuild
 		{
 			BuildName = asset.Name,
 			BuildSize = new DirectoryInfo(asset.BuildPath).GetByteSize(),
-			BuildTime = TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds)
+			BuildTime = TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds),
+			Errors = errors,
 		};
 	}
 

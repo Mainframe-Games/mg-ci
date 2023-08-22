@@ -67,11 +67,10 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 			var builder = new LocalUnityBuild(workspace);
 			var result = builder.Build(asset);
 
-			if (string.IsNullOrEmpty(builder.Errors))
+			if (string.IsNullOrEmpty(result.Errors))
 				await Web.StreamToServerAsync(SendBackUrl, asset.BuildPath, pipelineId, buildIdGuid);
 
-			await SendToMasterServerAsync(pipelineId, buildIdGuid, builder.Errors, result);
-
+			await SendToMasterServerAsync(pipelineId, buildIdGuid, result.Errors, result);
 		}
 		catch (Exception e)
 		{
