@@ -21,12 +21,10 @@ public class PreBuild
 		if (config.Versions == null)
 			throw new NullReferenceException("Config.Versions con not be null");
 
-		if (config.Versions.BundleVersion != null)
-		{
-			var verArr = _workspace.GetVersionArray();
-			verArr[config.BumpIndex]++;
-			BuildVersion.BundleVersion = string.Join(".", verArr);
-		}
+		var verArr = _workspace.GetVersionArray();
+		verArr[config.BumpIndex]++;
+		BuildVersion.BundleVersion = string.Join(".", verArr);
+		Logger.Log($"New BundleVersion: {BuildVersion.BundleVersion}");
 		
 		if (config.Versions.AndroidVersionCode != null)
 		{

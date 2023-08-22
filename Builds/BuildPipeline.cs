@@ -126,14 +126,6 @@ public class BuildPipeline
 		if (Args.IsFlag("-nobuild"))
 			return;
 		
-		// TODO: come back to this if we need parallel builds again.
-		// I can't image we'd need to, it turned out to be slower and complicated things more
-		// if (Config.ParallelBuild != null)
-		// 	await ClonesManager.CloneProject(Workspace.Directory,
-		// 		Config.ParallelBuild.Links,
-		// 		Config.ParallelBuild.Copies,
-		// 		Config.Builds.Where(x => !IsOffload(x)));
-		
 		Logger.Log("Build process started...");
 		var buildStartTime = DateTime.Now;
         

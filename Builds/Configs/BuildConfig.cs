@@ -69,7 +69,6 @@ public class HooksConfig
 
 public class VersionsConfig
 {
-	public bool? BundleVersion { get; set; }
 	public bool? AndroidVersionCode { get; set; }
 	public string[]? BuildNumbers { get; set; }
 }
