@@ -47,11 +47,18 @@ public class DiscordWrapper
 
 	private async void OnEventTriggered(Reminder reminder)
 	{
-		var channel = (SocketTextChannel)_client.GetChannel(reminder.ChannelId);
-		await channel.SendMessageAsync(embed: Extensions.CreateEmbed(
-			title: reminder.Name,
-			description: reminder.Message,
-			includeTimeStamp: true));
+		try
+		{
+			var channel = (SocketTextChannel)_client.GetChannel(reminder.ChannelId);
+			await channel.SendMessageAsync(embed: Extensions.CreateEmbed(
+				title: reminder.Name,
+				description: reminder.Message,
+				includeTimeStamp: true));
+		}
+		catch (Exception e)
+		{
+			Logger.Log(e);
+		}
 	}
 
 	private async Task SelectMenuExecutedAsync(SocketMessageComponent interaction)

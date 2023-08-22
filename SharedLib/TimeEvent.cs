@@ -52,5 +52,8 @@ public class TimeEvent
 		// Trigger your event here
 		Console.WriteLine($"Event invoked at {_hour}:{_minute}");
 		OnEventTriggered.Invoke();
+        
+		// reset timer interval for next day
+		_timer.Interval = TimeSpan.FromDays(1).TotalMilliseconds;
 	}
 }
