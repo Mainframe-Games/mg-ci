@@ -134,7 +134,7 @@ public class ListenServer
 			var path = Path.Combine(buildPipeline.Workspace.Directory, buildPath, fileName);
 			var fileInfo = new FileInfo(path);
 			fileInfo.Directory?.Create();
-			Logger.Log($"Writing File: {fileInfo.FullName}");
+			// Logger.Log($"Writing File: {fileInfo.FullName}");
 			
 			// write to file
 			await using var fs = fileInfo.Create();
