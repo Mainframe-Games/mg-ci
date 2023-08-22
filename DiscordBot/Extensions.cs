@@ -54,7 +54,7 @@ public static class Extensions
 		});
 	}
 
-	private static Embed CreateEmbed(IUser? user = null, string? title = null, string? description = null,
+	public static Embed CreateEmbed(IUser? user = null, string? title = null, string? description = null,
 		Color? color = null, bool? includeTimeStamp = null)
 	{
 		var embed = new EmbedBuilder();

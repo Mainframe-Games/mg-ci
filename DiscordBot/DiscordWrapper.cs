@@ -3,6 +3,7 @@ using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 using DiscordBot.Commands;
+using DiscordBot.Configs;
 using SharedLib;
 using DiscordConfig = DiscordBot.Configs.DiscordConfig;
 
@@ -32,6 +33,25 @@ public class DiscordWrapper
 		Config = config;
 
 		RefreshCommand.OnRefreshed += RefreshCommands;
+		
+		// time events
+		if (config.Reminders != null)
+		{
+			foreach (var reminder in config.Reminders)
+			{
+				var timer = new TimeEvent(reminder.Hour, reminder.Minute);
+				timer.OnEventTriggered += () => OnEventTriggered(reminder);
+			}
+		}
+	}
+
+	private async void OnEventTriggered(Reminder reminder)
+	{
+		var channel = (SocketTextChannel)_client.GetChannel(reminder.ChannelId);
+		await channel.SendMessageAsync(embed: Extensions.CreateEmbed(
+			title: reminder.Name,
+			description: reminder.Message,
+			includeTimeStamp: true));
 	}
 
 	private async Task SelectMenuExecutedAsync(SocketMessageComponent interaction)

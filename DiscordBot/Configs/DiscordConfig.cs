@@ -17,6 +17,7 @@ public class DiscordConfig
 	public ulong GuildId { get; set; }
 	public List<string>? AuthorisedRoles { get; set; }
 	public string? CommandName { get; set; } = "start-build";
+	public List<Reminder>? Reminders { get; set; }
 
 	[JsonIgnore] public List<string> Workspaces { get; private set; } = new();
 
@@ -46,4 +47,13 @@ public class DiscordConfig
 			Logger.Log($"Connection to '{BuildServerUrl}' count not be made");
 		}
 	}
+}
+
+public class Reminder
+{
+	public string? Name { get; set; }
+	public int Hour { get; set; }
+	public int Minute { get; set; }
+	public ulong ChannelId { get; set; }
+	public string? Message { get; set; }
 }
