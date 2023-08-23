@@ -15,14 +15,19 @@ namespace DiscordBot;
 /// </summary>
 public class DiscordWrapper
 {
+	public static DiscordWrapper Instance { get; private set; }
 	public static string Version => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty;
 	public static DiscordConfig Config { get; private set; }
 	
 	private readonly DiscordSocketClient _client;
 	private Command[] Commands { get; set; }
 
+	private readonly Dictionary<string, TimeEvent> _reminders = new();
+
 	public DiscordWrapper(DiscordConfig config)
 	{
+		Instance = this;
+		
 		var socketConfig = new DiscordSocketConfig { UseInteractionSnowflakeDate = false };
 		_client = new DiscordSocketClient(socketConfig);
 		_client.Log += OnLog;
@@ -32,18 +37,9 @@ public class DiscordWrapper
 		_client.SelectMenuExecuted += SelectMenuExecutedAsync;
 		Config = config;
 
+		RefreshReminders();
+		
 		RefreshCommand.OnRefreshed += RefreshCommands;
-		
-		// Reminders
-		if (config.Reminders == null) 
-			return;
-		
-		foreach (var reminder in config.Reminders)
-		{
-			Logger.Log($"Registering Reminder: {reminder}");
-			var timer = new TimeEvent(reminder.Hour, reminder.Minute);
-			timer.OnEventTriggered += () => OnEventTriggered(reminder);
-		}
 	}
 
 	private async void OnEventTriggered(Reminder reminder)
@@ -51,15 +47,8 @@ public class DiscordWrapper
 		try
 		{
 			// Get the role by name
-			var guild = _client.GetGuild(Config.GuildId);
 			var channel = (SocketTextChannel)_client.GetChannel(reminder.ChannelId);
-			
-			await channel.SendMessageAsync(
-				$"{guild.EveryoneRole.Mention} {reminder.Name}",
-				embed: Extensions.CreateEmbed(
-					title: reminder.Name,
-					description: reminder.Message,
-					includeTimeStamp: true));
+			await channel.SendMessageAsync(reminder.Message);
 		}
 		catch (Exception e)
 		{
@@ -127,14 +116,17 @@ public class DiscordWrapper
 			.Select(t => (Command)Activator.CreateInstance(t))
 			.ToArray();
 		
+		foreach (var cmd in Commands)
+			await RefreshCommandAsync(cmd);
+	}
+
+	private async Task RefreshCommandAsync(Command command)
+	{
 		try
 		{
+			Logger.Log($"Creating command: {command.CommandName}...");
 			var guild = _client.GetGuild(Config.GuildId);
-			foreach (var cmd in Commands)
-			{
-				Logger.Log($"Creating command: {cmd.CommandName}...");
-				await guild.CreateApplicationCommandAsync(cmd.Build());
-			}
+			await guild.CreateApplicationCommandAsync(command.Build());
 		}
 		catch (HttpException exception)
 		{
@@ -192,9 +184,79 @@ public class DiscordWrapper
 		return false;
 	}
 
+	private void RefreshReminders()
+	{
+		if (Config.Reminders == null) 
+			return;
+
+		foreach (var reminder in _reminders)
+			reminder.Value.Stop();
+		
+		_reminders.Clear();
+		
+		foreach (var reminder in Config.Reminders)
+		{
+			Logger.Log($"Registering Reminder: {reminder}");
+			
+			var timer = new TimeEvent(reminder.Hour, reminder.Minute);
+			timer.OnEventTriggered += () => OnEventTriggered(reminder);
+			
+			_reminders.Add(reminder.Name, timer);
+		}
+	}
+
 	private static async Task OnLog(LogMessage log)
 	{
 		Logger.Log(log.ToString());
 		await Task.CompletedTask;
+	}
+
+	public async Task AddReminderAsync(Reminder newReminder)
+	{
+		Config.Reminders?.Add(newReminder);
+		await Config.SaveAsync();
+		
+		RefreshReminders();
+
+		if (TryGetCommand<ReminderRemoveCommand>(out var removeCommand))
+			await RefreshCommandAsync(removeCommand);
+	}
+	
+	public async Task RemoveReminderAsync(string? reminderName)
+	{
+		if (!_reminders.TryGetValue(reminderName, out var timeEvent))
+			return;
+		
+		timeEvent.Stop();
+
+		for (int i = 0; i < Config.Reminders.Count; i++)
+		{
+			if (Config.Reminders[i].Name != reminderName)
+				continue;
+			
+			Config.Reminders.RemoveAt(i);
+			await Config.SaveAsync();
+			break;
+		}
+
+		RefreshReminders();
+
+		if (TryGetCommand<ReminderRemoveCommand>(out var removeCommand))
+			await RefreshCommandAsync(removeCommand);
+	}
+
+	public bool TryGetCommand<T>(out T command) where T : Command
+	{
+		foreach (var cmd in Commands)
+		{
+			if (cmd is not T castedCmd) 
+				continue;
+			
+			command = castedCmd;
+			return true;
+		}
+
+		command = null;
+		return false;
 	}
 }

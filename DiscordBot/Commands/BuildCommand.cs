@@ -14,7 +14,7 @@ public class BuildCommand : Command
 	{
 		return CreateCommand()
 			.AddOptions(CommandUtils.WorkspaceOptions())
-			.AddOptions(BuildArgumentsOptions())
+			.AddOptions(BuildOptionString("args", "Arguments send to build server", false))
 			.Build();
 	}
 
@@ -80,13 +80,4 @@ public class BuildCommand : Command
 	// 		await slashCommand.RespondError(e.GetType().Name, e.Message);
 	// 	}
 	// }
-
-	private static SlashCommandOptionBuilder BuildArgumentsOptions()
-	{
-		var opt = new SlashCommandOptionBuilder()
-			.WithName("args")
-			.WithDescription("Arguments send to build server")
-			.WithType(ApplicationCommandOptionType.String);
-		return opt;
-	}
 }

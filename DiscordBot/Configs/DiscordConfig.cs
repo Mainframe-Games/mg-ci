@@ -21,6 +21,12 @@ public class DiscordConfig
 
 	[JsonIgnore] public List<string> Workspaces { get; private set; } = new();
 
+	public async Task SaveAsync()
+	{
+		var config = Json.Serialise(this);
+		await File.WriteAllTextAsync(ConfigPath, config);
+	}
+	
 	public static async Task<DiscordConfig?> LoadAsync()
 	{
 		var configStr = await File.ReadAllTextAsync(ConfigPath);
@@ -51,7 +57,7 @@ public class DiscordConfig
 
 public class Reminder
 {
-	public string? Name { get; set; }
+	public string Name { get; set; }
 	public int Hour { get; set; }
 	public int Minute { get; set; }
 	public ulong ChannelId { get; set; }

@@ -56,4 +56,9 @@ public class TimeEvent
 		// reset timer interval for next day
 		_timer.Interval = TimeSpan.FromDays(1).TotalMilliseconds;
 	}
+
+	public void Stop()
+	{
+		_timer.Stop();
+	}
 }

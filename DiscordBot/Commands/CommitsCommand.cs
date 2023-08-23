@@ -13,8 +13,8 @@ public class CommitsCommand : Command
 	{
 		return CreateCommand()
 			.AddOption(CommandUtils.WorkspaceOptions())
-			.AddOption(BuildArgumentsOptions("csfrom", "Changeset to start from"))
-			.AddOption(BuildArgumentsOptions("csto", "Changeset to go to"))
+			.AddOption(BuildOptionNumber("csfrom", "Changeset to start from", true))
+			.AddOption(BuildOptionNumber("csto", "Changeset to go to", true))
 			.Build();
 	}
 	
@@ -28,15 +28,5 @@ public class CommitsCommand : Command
 		var res = await Web.SendAsync(HttpMethod.Get, url);
 		await command.RespondSuccessDelayed(command.User, $"Commits from {csfrom} to {csto}", res.Content);
 		return new CommandResponse($"Commits from {csfrom} to {csto}", res.Content);
-	}
-	
-	private static SlashCommandOptionBuilder BuildArgumentsOptions(string name, string desc)
-	{
-		var opt = new SlashCommandOptionBuilder()
-			.WithName(name)
-			.WithRequired(true)
-			.WithDescription(desc)
-			.WithType(ApplicationCommandOptionType.Integer);
-		return opt;
 	}
 }

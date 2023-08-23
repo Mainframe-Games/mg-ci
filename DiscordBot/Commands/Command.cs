@@ -37,18 +37,53 @@ public abstract class Command
 		return null;
 	}
 	
-	protected static int GetOptionValueInt(SocketSlashCommand command, string optionName)
+	protected static long GetOptionValueNumber(SocketSlashCommand command, string optionName, long defaultNum = -1)
 	{
 		foreach (var option in command.Data.Options)
 		{
 			if (option.Name == optionName)
-				return (int)(long)option.Value;
+				return (long)option.Value;
 		}
-		return -1;
+		return defaultNum;
 	}
 	
 	protected static async Task NotImplemented(SocketSlashCommand command)
 	{
 		await command.RespondError("Not Implemented", "Command not implemented yet");
+	}
+	
+	protected static SlashCommandOptionBuilder BuildOptionString(string name, string desc, bool required)
+	{
+		var opt = new SlashCommandOptionBuilder()
+			.WithName(name)
+			.WithRequired(required)
+			.WithDescription(desc)
+			.WithType(ApplicationCommandOptionType.String);
+		return opt;
+	}
+	
+	public static SlashCommandOptionBuilder BuildOptionStringWithChoices(
+		string name, string desc, bool required, IEnumerable<string> choices)
+	{
+		var opt = new SlashCommandOptionBuilder()
+			.WithName(name)
+			.WithDescription(desc)
+			.WithRequired(required)
+			.WithType(ApplicationCommandOptionType.String);
+		
+		foreach (var choice in choices)
+			opt.AddChoice(choice, choice);
+
+		return opt;
+	}
+
+	protected static SlashCommandOptionBuilder BuildOptionNumber(string name, string desc, bool required)
+	{
+		var opt = new SlashCommandOptionBuilder()
+			.WithName(name)
+			.WithRequired(required)
+			.WithDescription(desc)
+			.WithType(ApplicationCommandOptionType.Integer);
+		return opt;
 	}
 }
