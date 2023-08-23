@@ -34,14 +34,15 @@ public class DiscordWrapper
 
 		RefreshCommand.OnRefreshed += RefreshCommands;
 		
-		// time events
-		if (config.Reminders != null)
+		// Reminders
+		if (config.Reminders == null) 
+			return;
+		
+		foreach (var reminder in config.Reminders)
 		{
-			foreach (var reminder in config.Reminders)
-			{
-				var timer = new TimeEvent(reminder.Hour, reminder.Minute);
-				timer.OnEventTriggered += () => OnEventTriggered(reminder);
-			}
+			Logger.Log($"Registering Reminder: {reminder}");
+			var timer = new TimeEvent(reminder.Hour, reminder.Minute);
+			timer.OnEventTriggered += () => OnEventTriggered(reminder);
 		}
 	}
 
@@ -49,11 +50,16 @@ public class DiscordWrapper
 	{
 		try
 		{
+			// Get the role by name
+			var guild = _client.GetGuild(Config.GuildId);
 			var channel = (SocketTextChannel)_client.GetChannel(reminder.ChannelId);
-			await channel.SendMessageAsync(embed: Extensions.CreateEmbed(
-				title: reminder.Name,
-				description: reminder.Message,
-				includeTimeStamp: true));
+			
+			await channel.SendMessageAsync(
+				$"{guild.EveryoneRole.Mention} {reminder.Name}",
+				embed: Extensions.CreateEmbed(
+					title: reminder.Name,
+					description: reminder.Message,
+					includeTimeStamp: true));
 		}
 		catch (Exception e)
 		{

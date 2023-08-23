@@ -56,4 +56,9 @@ public class Reminder
 	public int Minute { get; set; }
 	public ulong ChannelId { get; set; }
 	public string? Message { get; set; }
+
+	public override string ToString()
+	{
+		return $"{Name} @ {Hour}:{Minute} to channel '{ChannelId}'";
+	}
 }
