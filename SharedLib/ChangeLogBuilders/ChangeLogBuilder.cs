@@ -67,12 +67,10 @@ public abstract class ChangelogBuilder
 					_stringBuilder.Append($" {words[i]}");
 			}
 
-			if (!string.IsNullOrEmpty(ListItem.End))
-				_stringBuilder.AppendLine(ListItem.End);
+			_stringBuilder.AppendLine(ListItem.End);
 		}
 
-		if (!string.IsNullOrEmpty(List.End))
-			_stringBuilder.AppendLine(List.End);
+		_stringBuilder.AppendLine(List.End);
 	}
 
 	public override string ToString()
