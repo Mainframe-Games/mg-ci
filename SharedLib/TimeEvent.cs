@@ -19,22 +19,25 @@ public class TimeEvent
 		_minute = minute;
 		_weekdaysOnly = weekDaysOnly;
 
-		// Calculate the initial delay to reach 11 AM on the current day
-		var now = DateTime.Now;
-		var targetTime = new DateTime(now.Year, now.Month, now.Day, hour, minute, 0);
-		
-		if (now > targetTime)
-			targetTime = targetTime.AddDays(1);
-
-		var initialDelay = (targetTime - now).TotalMilliseconds;
-
-		// Create a timer with a one-day interval
+		var initialDelay = GetDelayMs();
 		_timer = new Timer(initialDelay);
 		_timer.AutoReset = true;
 		_timer.Elapsed += TimerElapsed;
 		_timer.Start();
 
 		Logger.Log($"Event scheduled to run event at {hour}:{minute} every {(weekDaysOnly ? "weekday" : "day")}");
+	}
+
+	private double GetDelayMs()
+	{
+		var now = DateTime.Now;
+		var targetTime = new DateTime(now.Year, now.Month, now.Day, _hour, _minute, 0);
+		
+		if (now > targetTime)
+			targetTime = targetTime.AddDays(1);
+
+		var delay = (targetTime - now).TotalMilliseconds;
+		return delay;
 	}
 
 	private void TimerElapsed(object sender, ElapsedEventArgs e)
@@ -54,7 +57,7 @@ public class TimeEvent
 		OnEventTriggered.Invoke();
         
 		// reset timer interval for next day
-		_timer.Interval = TimeSpan.FromDays(1).TotalMilliseconds;
+		_timer.Interval = GetDelayMs();
 	}
 
 	public void Stop()
