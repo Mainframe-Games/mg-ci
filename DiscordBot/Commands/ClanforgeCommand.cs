@@ -14,28 +14,21 @@ public class ClanforgeCommand : Command
 	{
 		var profile = new SlashCommandOptionBuilder()
 			.WithName("profile")
-			.WithDescription("Which profile to use")
+			.WithDescription("Which profile to use. proda, prodb, deva, devb")
 			.WithType(ApplicationCommandOptionType.String)
-			.WithRequired(true)
-			.AddChoice("Production A", "proda")
-			.AddChoice("Production B", "prodb")
-			.AddChoice("Development A", "deva")
-			.AddChoice("Development B", "devb");
+			.WithRequired(true);
 
 		var beta = new SlashCommandOptionBuilder()
 			.WithName("beta")
-			.WithDescription("Which beta branch to use")
+			.WithDescription("Which beta branch to use from Steam")
 			.WithType(ApplicationCommandOptionType.String)
-			.WithRequired(true)
-			.AddChoice("Default", "default")
-			.AddChoice("Development", "development")
-			.AddChoice("Beta", "beta");
+			.WithRequired(true);
 
 		var desc = new SlashCommandOptionBuilder()
 			.WithName("description")
-			.WithRequired(true)
 			.WithDescription("Version of the build to help differentiate each upload")
-			.WithType(ApplicationCommandOptionType.String);
+			.WithType(ApplicationCommandOptionType.String)
+			.WithRequired(true);
 		
 		return CreateCommand()
 			.AddOption(profile)
