@@ -1,9 +1,7 @@
 using System.IO;
 using System.Linq;
-using BuildSystem.PostProcessors;
 using BuildSystem.PostProcessors.PList;
 using UnityEditor;
-using UnityEditor.Build.Reporting;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -86,19 +84,8 @@ namespace BuildSystem
 		private void AutoSetExtension()
 		{
 			if (string.IsNullOrEmpty(Name))
-				Name = name.Replace(nameof(BuildSettings), "").Trim('_');
+				Name = name.Replace(nameof(BuildSettings), string.Empty).Trim('_');
 			
-			// TODO: support more targets just cant be bothered right now. Its all I need
-			Extension = Target switch
-			{
-				BuildTarget.StandaloneWindows or BuildTarget.StandaloneWindows64 => ".exe",
-				BuildTarget.StandaloneOSX => ".app",
-				BuildTarget.StandaloneLinux64 => ".x86_64",
-				BuildTarget.Android => ".aab",
-				BuildTarget.iOS => "",
-				_ => Extension
-			};
-
 			if (string.IsNullOrEmpty(ProductName))
 				ProductName = Application.productName;
 
