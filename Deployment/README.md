@@ -1,59 +1,98 @@
+## ⚠️ This project is under active development. Use with care. ⚠️
+
 # Unity Deployment
 
 Builds Unity projects and deploys various platforms.
 
-### Supports
+## Supports
 
-Version Control Support
-- [x] Plastic SCM
-- [ ] Git
+### Version Control Support
+- Plastic SCM
 
-Supported build targets:
-- [x] Windows
-- [x] Mac
-- [x] Linux
-- [x] iOS
-- [x] Android
-- [ ] Nintendo Switch
-- [ ] Xbox
-- [ ] Playstation
+#### Supported build targets
+- Standalone (Windows/Mac/Linux)
+- Dedicated Server (Windows/Mac/Linux)
+- iOS
+- Android
 
-Supported deploy targets:
+### Supported deploy targets
 
-Client Deployments
-- [x] Steam
-- [x] Apple Store
-- [x] Android Store
-- [ ] Nintendo Switch Store
-- [ ] Xbox Store
-- [ ] Playstation Store
+#### Client Deployments
+- Steam
+- Apple Store
+- Android Store
 
-Server Deployments:
-- [x] Unity Game Server Hosting (Multiplay)
-  - [x] Amazing S3 Bucket
-  - [ ] Container Image
-  - [ ] Unity CCD
-- [x] Clanforge
+#### Server Deployments:
+- Clanforge
+- Unity Game Server Hosting (Multiplay)
+  - Amazing S3 Bucket
 
 # Server Config
 
 ```json
 {
-  "runServer": true,
-  "ip": "192.168.xx.xxx",
-  "offloadServerUrl": "http://192.168.xx.xxx:8080",
-  "steam": {
-    "path": "/full-path-to/steamcmd.sh",
-    "username": "",
-    "password": ""
-  },
-  "clanforge": {
-    "accessKey": "",
-    "secretKey": "",
-    "asid": 0,
-    "machineId": 0,
-    "url": "",
-    "imageId": 0
-  }
+    "ip": "192.168.x.xxx",
+    "offloadServerUrl": "http://192.168.x.xxx:8080",
+    "offload": {
+        "targets": [
+            "Win64"
+        ]
+    },
+    "hooks": [
+        {
+            "url": "",
+            "title": ""
+        }
+    ],
+    "ugs": {
+        "keyId": "",
+        "secretKey": "",
+        "projects": [
+            {
+                "name": "",
+                "projectId": ""
+            }
+        ],
+        "remoteConfig": {
+            "configId": "",
+            "valueKey": ""
+        }
+    },
+    "appleStore": {
+        "appleId": "",
+        "appSpecificPassword": ""
+    },
+    "steam": {
+        "path": "/Users/.../steamcmd.sh",
+        "username": "",
+        "password": "",
+        "defaultSetLive": ""
+    },
+    "clanforge": {
+        "accessKey": "",
+        "secretKey": "",
+        "asid": 0,
+        "machineId": 0,
+        "url": "steam://<user>:<password>@install/<app-id>?beta=<branch>&betapassword=<password>&guardcode=<code>",
+        "defaultProfile": "deva",
+        "profiles": {
+            "proda": {
+                "name": "Production A",
+                "id": 0
+            },
+            "prodb": {
+                "name": "Production B",
+                "id": 0
+            },
+            "deva": {
+                "name": "Development A",
+                "id": 0
+            },
+            "devb": {
+                "name": "Development B",
+                "id": 0
+            }
+        }
+    }
 }
 ```
