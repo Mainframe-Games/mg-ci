@@ -1,4 +1,6 @@
+using System.Security;
 using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 
 namespace DiscordBot;
@@ -7,22 +9,18 @@ public static class Extensions
 {
 	private const int MAX_MESSAGE_SIZE = 4096;
 	
-	public static async Task RespondSuccessDelayed(this SocketSlashCommand command, IUser user, string title, string description)
+	public static async Task<RestInteractionMessage?> RespondSuccessDelayed(this SocketSlashCommand command, IUser user, string title, string description)
 	{
 		if (description.Length > MAX_MESSAGE_SIZE)
+			return await RespondSuccessFileDelayed(command, user, title, description);
+
+		return await command.ModifyOriginalResponseAsync(properties =>
 		{
-			await RespondSuccessFileDelayed(command, user, title, description);
-		}
-		else
-		{
-			await command.ModifyOriginalResponseAsync(properties =>
-			{
-				properties.Embed = CreateEmbed(user, title, description, Color.Green);
-			});
-		}
+			properties.Embed = CreateEmbed(user, title, description, Color.Green);
+		});
 	}
 	
-	private static async Task RespondSuccessFileDelayed(this SocketSlashCommand command, IUser user, string title, string description)
+	private static async Task<RestInteractionMessage?> RespondSuccessFileDelayed(this SocketInteraction command, IUser user, string title, string description)
 	{
 		var filePath = Path.Combine(Environment.CurrentDirectory, "large_message.txt");
 		await File.WriteAllTextAsync(filePath, description);
@@ -31,7 +29,7 @@ public static class Extensions
 		if (!fileInfo.Exists)
 			throw new FileNotFoundException($"File not found at: {filePath}");
 
-		await command.ModifyOriginalResponseAsync(properties =>
+		return await command.ModifyOriginalResponseAsync(properties =>
 		{
 			properties.Embed = CreateEmbed(user, title, null, Color.Green);
 			properties.Attachments = new Optional<IEnumerable<FileAttachment>>(new List<FileAttachment>
@@ -50,7 +48,7 @@ public static class Extensions
 	{
 		await command.ModifyOriginalResponseAsync(properties =>
 		{
-			properties.Embed = CreateEmbed(command.User, title, description, Color.Green);
+			properties.Embed = CreateEmbed(command.User, title, description, Color.Red);
 		});
 	}
 
@@ -67,9 +65,24 @@ public static class Extensions
 			embed.WithDescription(description);
 		if (color != null)
 			embed.WithColor((Color)color);
-		if (includeTimeStamp != null && (bool)includeTimeStamp)
+		if (includeTimeStamp is true)
 			embed.WithCurrentTimestamp();
 
+		return embed.Build();
+	}
+	
+	public static Embed UpdateEmbed(this IEmbed originalEmbed, string? title = null, string? description = null, Color? color = null, bool? includeTimeStamp = null)
+	{
+		var embed = new EmbedBuilder();
+
+		embed.WithAuthor(originalEmbed.Author.Value.Name, originalEmbed.Author.Value.IconUrl);
+		embed.WithTitle(title ?? originalEmbed.Title);
+		embed.WithDescription(description ?? originalEmbed.Description);
+		embed.WithColor(color ?? originalEmbed.Color ?? Color.Default);
+		
+		if (includeTimeStamp is true)
+			embed.WithCurrentTimestamp();
+		
 		return embed.Build();
 	}
 }

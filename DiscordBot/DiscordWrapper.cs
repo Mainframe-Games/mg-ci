@@ -23,6 +23,7 @@ public class DiscordWrapper
 	private Command[] Commands { get; set; }
 
 	private readonly Dictionary<string, TimeEvent> _reminders = new();
+	private readonly Dictionary<ulong, MessageUpdater> _messagesMap = new();
 
 	public DiscordWrapper(DiscordConfig config)
 	{
@@ -36,8 +37,6 @@ public class DiscordWrapper
 		_client.InteractionCreated += HandleInteractionAsync;
 		_client.SelectMenuExecuted += SelectMenuExecutedAsync;
 		Config = config;
-
-		RefreshReminders();
 		
 		RefreshCommand.OnRefreshed += RefreshCommands;
 	}
@@ -83,6 +82,7 @@ public class DiscordWrapper
 
 	private async Task ClientReady()
 	{
+		RefreshReminders();
 		await RefreshCommands();
 	}
 
@@ -164,10 +164,16 @@ public class DiscordWrapper
 			await command.RespondErrorDelayed(res.Title, fullResponse);
 			return;
 		}
-		
-		await command.RespondSuccessDelayed(command.User, res.Title, fullResponse);
-	}
 
+		// success
+		var restInteractionMessage = await command.RespondSuccessDelayed(command.User, res.Title, fullResponse);
+		
+		var channelId = command.ChannelId ?? 0;
+		var messageId = restInteractionMessage?.Id ?? 0;
+		_messagesMap[messageId] = new MessageUpdater(_client, channelId, messageId);
+		// await TestLiveUpdatePanel(messageId);
+	}
+	
 	private static bool IsAuthorised(SocketGuildUser guildUser)
 	{
 		var roles = guildUser.Roles.Select(x => x.Name);
@@ -245,7 +251,7 @@ public class DiscordWrapper
 			await RefreshCommandAsync(removeCommand);
 	}
 
-	public bool TryGetCommand<T>(out T command) where T : Command
+	private bool TryGetCommand<T>(out T command) where T : Command
 	{
 		foreach (var cmd in Commands)
 		{
@@ -258,5 +264,19 @@ public class DiscordWrapper
 
 		command = null;
 		return false;
+	}
+
+	private async Task TestLiveUpdatePanel(ulong messageId)
+	{
+		var ogMessage = _messagesMap[messageId];
+		
+		while (ogMessage.IsPending)
+		{
+			await Task.Delay(3000);
+			ogMessage.FakeIncomingUpdate();
+			await ogMessage.UpdateMessageAsync();
+		}
+
+		_messagesMap.Remove(messageId);
 	}
 }

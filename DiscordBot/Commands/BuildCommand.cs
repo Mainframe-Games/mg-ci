@@ -34,8 +34,8 @@ public class BuildCommand : Command
 					["args"] = args,
 				}
 			};
+			
 			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl, body: body);
-			await command.RespondSuccessDelayed(command.User, "Build Started", res.Content);
 			return new CommandResponse("Build Started", res.Content);
 		}
 		catch (Exception e)
@@ -44,40 +44,4 @@ public class BuildCommand : Command
 			return new CommandResponse("Build Server request failed", e.Message, true);
 		}
 	}
-
-	// TODO: implement choosing targets. Currently there is no way to choose multiple options in Discord... I think web interface is only way forward with this approach
-	// public override async Task ModifyOptions(SocketSlashCommand slashCommand)
-	// {
-	// 	// Get the user's choice
-	// 	var selectedChoice = slashCommand.Data.Options.First().Value.ToString();
-	// 	var workspace = DiscordWrapper.Config.Workspaces.First(x => x.Name == selectedChoice);
-	//
-	// 	var menuBuilder = new SelectMenuBuilder()
-	// 		.WithPlaceholder("Select targets to build")
-	// 		.WithCustomId("targets")
-	// 		.WithMinValues(1)
-	// 		.WithMaxValues(1)
-	// 		.AddOption("All", "all", "All the build targets", isDefault: true);
-	//
-	// 	foreach (var target in workspace.Targets)
-	// 		menuBuilder.AddOption(target, target, $"Build for `{target}`");
-	//
-	// 	var component = new ComponentBuilder()
-	// 		.WithSelectMenu(menuBuilder)
-	// 		.Build();
-	//
-	// 	try
-	// 	{
-	// 		// Modify the original response to update the options
-	// 		await slashCommand.ModifyOriginalResponseAsync(properties =>
-	// 		{
-	// 			properties.Content = "Select build targets to build";
-	// 			properties.Components = new Optional<MessageComponent>(component);
-	// 		});
-	// 	}
-	// 	catch (Exception e)
-	// 	{
-	// 		await slashCommand.RespondError(e.GetType().Name, e.Message);
-	// 	}
-	// }
 }
