@@ -51,6 +51,7 @@ public class MessageUpdater
 		{
 			embed.UpdateEmbed(),
 			embed.UpdateEmbed(
+				includeAuthor: false,
 				title: "Live Updates",
 				description: description,
 				color: colour,

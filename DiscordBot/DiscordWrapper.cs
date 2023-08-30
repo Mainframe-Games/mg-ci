@@ -272,9 +272,9 @@ public class DiscordWrapper
 		
 		while (ogMessage.IsPending)
 		{
+			await ogMessage.UpdateMessageAsync();
 			await Task.Delay(3000);
 			ogMessage.FakeIncomingUpdate();
-			await ogMessage.UpdateMessageAsync();
 		}
 
 		_messagesMap.Remove(messageId);

@@ -71,11 +71,13 @@ public static class Extensions
 		return embed.Build();
 	}
 	
-	public static Embed UpdateEmbed(this IEmbed originalEmbed, string? title = null, string? description = null, Color? color = null, bool? includeTimeStamp = null)
+	public static Embed UpdateEmbed(this IEmbed originalEmbed, bool includeAuthor = false, string? title = null, string? description = null, Color? color = null, bool? includeTimeStamp = null)
 	{
 		var embed = new EmbedBuilder();
 
-		embed.WithAuthor(originalEmbed.Author.Value.Name, originalEmbed.Author.Value.IconUrl);
+		if (includeAuthor && originalEmbed.Author is not null)
+			embed.WithAuthor(originalEmbed.Author.Value.Name, originalEmbed.Author.Value.IconUrl);
+		
 		embed.WithTitle(title ?? originalEmbed.Title);
 		embed.WithDescription(description ?? originalEmbed.Description);
 		embed.WithColor(color ?? originalEmbed.Color ?? Color.Default);
