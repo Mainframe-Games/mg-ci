@@ -3,7 +3,7 @@ using SharedLib;
 
 namespace Server.Configs;
 
-internal class ServerConfig
+public class ServerConfig
 {
 	public static ServerConfig Instance { get; private set; } = Load();
 	private static string ConfigPath => Args.Environment.TryGetArg("-config", out var configPath)

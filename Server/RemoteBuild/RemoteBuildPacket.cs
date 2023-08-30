@@ -1,5 +1,5 @@
-﻿using Deployment.Server;
-using SharedLib;
+﻿using SharedLib;
+using SharedLib.Server;
 
 namespace Server.RemoteBuild;
 

@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
 using Deployment;
-using Deployment.Configs;
 using Deployment.Deployments;
 using Deployment.Server.Unity;
 using Server.Configs;
 using Server.RemoteBuild;
 using SharedLib;
+using SharedLib.Server;
 
 namespace Server;
 
@@ -47,17 +47,8 @@ public static class App
 		{
 			args.TryGetArg("-ip", out var ip, Config.IP);
 			args.TryGetArg("-port", out var port, Config.Port.ToString());
-			Server = new ListenServer(ip, ushort.Parse(port));
-			
-			if (Config.AuthTokens is { Count: > 0 })
-			{
-				Server.GetAuth = () =>
-				{
-					Config.Refresh();
-					return Config.AuthTokens;
-				};
-			}
-			// server should wait for ever
+			Server = new ListenServer(ip, ushort.Parse(port), new ServerCallbacks(Config));
+			CheckIfServerStillListening();
 			await Server.RunAsync();
 			Logger.Log("Server stopped");
 		}
@@ -66,8 +57,17 @@ public static class App
 	public static void DumpLogs()
 	{
 		Logger.WriteToFile(RootDirectory, true);
-		Server?.CheckIfServerStillListening();
+		CheckIfServerStillListening();
 		Environment.CurrentDirectory = RootDirectory; // reset cur dir back to root of exe
+	}
+	
+	private static void CheckIfServerStillListening()
+	{
+		if (Server?.IsListening is not true)
+			throw new Exception("Server died");
+
+		Logger.Log($"[Server] Listening on '{Server.Address}'");
+		Logger.Log($"[Server] Version: {Version}");
 	}
 
 	#region Build Pipeline

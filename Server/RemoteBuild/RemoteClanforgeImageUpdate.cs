@@ -1,9 +1,9 @@
 using System.Net;
 using Deployment.Configs;
 using Deployment.Deployments;
-using Deployment.Server;
 using Server.Configs;
 using SharedLib;
+using SharedLib.Server;
 using SharedLib.Webhooks;
 
 namespace Server.RemoteBuild;

@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using Deployment.RemoteBuild;
-using Deployment.Server;
 using SharedLib;
+using SharedLib.Server;
 
 namespace Server.RemoteBuild;
 

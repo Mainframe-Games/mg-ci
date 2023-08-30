@@ -2,8 +2,8 @@
 using Deployment;
 using Deployment.Configs;
 using Deployment.RemoteBuild;
-using Deployment.Server;
 using SharedLib;
+using SharedLib.Server;
 
 namespace Server.RemoteBuild;
 
@@ -25,15 +25,15 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	{
 		// this needs to be here to kick start the thread, otherwise it will stall app
 		await Task.Delay(1);
-		
+
 		var mapping = new WorkspaceMapping();
 		var workspaceName = mapping.GetRemapping(Packet.WorkspaceName);
 		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
 		Environment.CurrentDirectory = workspace.Directory;
-		
+
 		if (Packet.CleanBuild)
 			workspace.CleanBuild();
-		
+
 		workspace.Clear();
 		workspace.Update();
 		workspace.SwitchBranch(Packet.Branch);
@@ -41,14 +41,14 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 
 		if (workspace.Directory == null || !Directory.Exists(workspace.Directory))
 			throw new DirectoryNotFoundException($"Directory doesn't exist: {workspace.Directory}");
-		
+
 		// set build version in project settings
 		var projWriter = new ProjectSettings(workspace.ProjectSettingsPath);
 		projWriter.ReplaceVersions(Packet.BuildVersion);
 
 		foreach (var build in Packet.Builds)
 			await StartBuilder(Packet.PipelineId, build.Key, build.Value, workspace);
-		
+
 		// clean up after build
 		workspace.Clear();
 		App.DumpLogs();
@@ -60,9 +60,9 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 	/// <exception cref="WebException"></exception>
 	private async Task StartBuilder(ulong pipelineId, string buildIdGuid, string buildTarget, Workspace workspace)
 	{
-        var asset = workspace.GetBuildTarget(buildTarget);
-		
-        try
+		var asset = workspace.GetBuildTarget(buildTarget);
+
+		try
 		{
 			var builder = new LocalUnityBuild(workspace);
 			var result = builder.Build(asset);
@@ -79,7 +79,8 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		}
 	}
 
-	private async Task SendToMasterServerAsync(ulong pipelineId, string? buildGuid, string? error, BuildResult? buildResult)
+	private async Task SendToMasterServerAsync(ulong pipelineId, string? buildGuid, string? error,
+		BuildResult? buildResult)
 	{
 		var response = new RemoteBuildResponse
 		{
@@ -88,7 +89,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 			Error = error,
 			BuildResult = buildResult
 		};
-		
+
 		Logger.Log($"Sending build '{response.BuildIdGuid}' back to: {SendBackUrl}");
 		var body = new RemoteBuildPacket { BuildResponse = response };
 		await Web.SendAsync(HttpMethod.Post, SendBackUrl, body: body);

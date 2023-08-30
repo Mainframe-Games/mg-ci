@@ -1,6 +1,6 @@
 ﻿using Deployment;
 using Deployment.Configs;
-using Deployment.Server;
+using SharedLib.Server;
 
 namespace Server.RemoteBuild;
 
@@ -22,7 +22,7 @@ public class RemoteBuildResponse : IRemoteControllable
 			throw new NullReferenceException($"{nameof(BuildIdGuid)} can not be null");
 		if (BuildResult == null)
 			throw new NullReferenceException($"{nameof(BuildResult)} can not be null");
-		
+
 		buildPipeline.OffloadBuildCompleted(BuildIdGuid, BuildResult);
 		return ServerResponse.Ok;
 	}

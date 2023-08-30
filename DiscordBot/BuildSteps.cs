@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Discord;
 
 namespace DiscordBot;
 
@@ -25,24 +26,29 @@ public class BuildSteps
 	public BuildSteps(string name, params BuildSteps[] subTasks)
 	{
 		Name = name;
-		SubTasks = subTasks?.ToList() ?? new List<BuildSteps>();
+		SubTasks = subTasks.ToList();
 	}
 
 	public override string ToString()
 	{
-		var str = new StringBuilder();
-		str.AppendLine($"{Emotes[State]} {Name}");
-
-		foreach (var step in SubTasks)
-			str.AppendLine($"- {step}");
-
-		return str.ToString();
+		return $"{Emotes[State]} **{Name}** *{State}*";
+	}
+	
+	public EmbedFieldBuilder[] GetSubTaskEmbedFields()
+	{
+		return SubTasks.Select(step => new EmbedFieldBuilder
+		{
+			Name = Name,
+			Value = $"{Emotes[step.State]} {step.State}"
+		}).ToArray();
 	}
 
-	public static string BuildString(List<BuildSteps> steps)
+	public static string BuildEmbedFields(List<BuildSteps> steps)
 	{
 		var str = new StringBuilder();
 
+		str.AppendLine("**Pipeline Steps**");
+		
 		foreach (var step in steps)
 			str.AppendLine(step.ToString());
 

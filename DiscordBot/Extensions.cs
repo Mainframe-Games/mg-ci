@@ -58,7 +58,7 @@ public static class Extensions
 		var embed = new EmbedBuilder();
 
 		if (user != null)
-			embed.WithAuthor(user.ToString(), user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl());
+			embed.WithAuthor(user.Username, user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl());
 		if (title != null)
 			embed.WithTitle(title);
 		if (description != null)
@@ -71,7 +71,9 @@ public static class Extensions
 		return embed.Build();
 	}
 	
-	public static Embed UpdateEmbed(this IEmbed originalEmbed, bool includeAuthor = false, string? title = null, string? description = null, Color? color = null, bool? includeTimeStamp = null)
+	public static Embed UpdateEmbed(this IEmbed originalEmbed, bool includeAuthor = false, string? title = null, 
+		string? description = null, Color? color = null, bool? includeTimeStamp = null, 
+		params EmbedFieldBuilder[] fields)
 	{
 		var embed = new EmbedBuilder();
 
@@ -81,9 +83,15 @@ public static class Extensions
 		embed.WithTitle(title ?? originalEmbed.Title);
 		embed.WithDescription(description ?? originalEmbed.Description);
 		embed.WithColor(color ?? originalEmbed.Color ?? Color.Default);
-		
+
+		foreach (var field in fields)
+			embed.AddField(field);
+
 		if (includeTimeStamp is true)
+		{
+			embed.WithFooter("Last Updated");
 			embed.WithCurrentTimestamp();
+		}
 		
 		return embed.Build();
 	}

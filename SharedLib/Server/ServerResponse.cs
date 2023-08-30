@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace Deployment.Server;
+namespace SharedLib.Server;
 
 public class ServerResponse
 {

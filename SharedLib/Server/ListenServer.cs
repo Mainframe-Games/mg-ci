@@ -1,0 +1,89 @@
+﻿using System.Net;
+using System.Text;
+
+namespace SharedLib.Server;
+
+public class ListenServer
+{
+	private readonly string _ip;
+	private readonly ushort _port;
+	private readonly HttpListener _listener;
+	private readonly IServerCallbacks _callbacks;
+
+	public string Url => $"http://{Address}/";
+	public string Address => $"{_ip}:{_port}";
+
+	public DateTime ServerStartTime { get; }
+	public bool IsListening => _listener.IsListening;
+
+	public ListenServer(string ip, ushort port, IServerCallbacks callbacks)
+	{
+		_ip = ip;
+		_port = port;
+		_callbacks = callbacks;
+		_callbacks.Server = this;
+
+		_listener = new HttpListener();
+		_listener.Prefixes.Add(Url);
+		_listener.Start();
+
+		ServerStartTime = DateTime.Now;
+	}
+
+	public async Task RunAsync()
+	{
+		Receive();
+		await Task.Delay(-1);
+	}
+
+	public void Stop()
+	{
+		_listener.Stop();
+	}
+
+	private void Receive()
+	{
+		_listener.BeginGetContext(ListenerCallback, _listener);
+	}
+
+	private async void ListenerCallback(IAsyncResult result)
+	{
+		var context = _listener.EndGetContext(result);
+		
+		var response = context.Request.HttpMethod switch
+		{
+			"GET" => await _callbacks.Get(context),
+			"POST" => await _callbacks.Post(context),
+			"PUT" => await _callbacks.Put(context),
+			_ => new ServerResponse(HttpStatusCode.MethodNotAllowed, $"HttpMethod not supported: {context.Request.HttpMethod}")
+		};
+
+		Respond(context, response.StatusCode, response.Data);
+	}
+
+	private void Respond(HttpListenerContext context, HttpStatusCode responseCode, object? data)
+	{
+		try
+		{
+			var response = context.Response;
+			response.StatusCode = (int)responseCode;
+			response.ContentType = "application/json";
+			
+			if (data != null)
+			{
+				var resJson = Json.Serialise(data);
+				var bytes = Encoding.UTF8.GetBytes(resJson);
+				response.OutputStream.Write(bytes);
+			}
+			
+			response.OutputStream.Close();
+
+			// start listening again
+			Receive();
+		}
+		catch (Exception e)
+		{
+			Logger.Log(e);
+		}
+	}
+}

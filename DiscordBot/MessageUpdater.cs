@@ -7,35 +7,31 @@ public class MessageUpdater
 {
 	private readonly SocketTextChannel _channel;
 	private readonly ulong _messageId;
-
-	private readonly List<BuildSteps> _buildTasks = new()
-	{
-		new BuildSteps("Pre Build"),
-
-		new BuildSteps("Build Targets",
-			new BuildSteps("Win64"),
-			new BuildSteps("MacOS"),
-			new BuildSteps("Linux64"),
-			new BuildSteps("iOS")),
-
-		new BuildSteps("PostBuild"),
-		new BuildSteps("Deploy"),
-	};
+	private readonly List<BuildSteps> _buildTasks;
 
 	public bool IsPending => _buildTasks.Any(x => x.State is BuildTaskState.Pending);
 	public bool IsFailed => _buildTasks.Any(x => x.State is BuildTaskState.Failed);
 	public bool IsSuccessful => _buildTasks.All(x => x.State is BuildTaskState.Succeed);
 
-	public MessageUpdater(BaseSocketClient client, ulong channelId, ulong messageId)
+	public MessageUpdater(BaseSocketClient client, ulong channelId, ulong messageId, params string[] targets)
 	{
 		_channel = (SocketTextChannel)client.GetChannel(channelId);
 		_messageId = messageId;
+
+		var targs = targets.Select(x => new BuildSteps(x)).ToArray();
+		_buildTasks = new List<BuildSteps>
+		{
+			new("Pre Build"),
+			new("Build Targets", targs),
+			new("Deploy"),
+			new("Post Build"),
+		};
 	}
 
 	public async Task UpdateMessageAsync()
 	{
 		var message = await _channel.GetMessageAsync(_messageId);
-		var description = BuildSteps.BuildString(_buildTasks);
+		var description = BuildSteps.BuildEmbedFields(_buildTasks);
 
 		Color colour;
 
@@ -55,7 +51,8 @@ public class MessageUpdater
 				title: "Live Updates",
 				description: description,
 				color: colour,
-				includeTimeStamp: true),
+				includeTimeStamp: true,
+				fields: _buildTasks[1].GetSubTaskEmbedFields()),
 		};
 
 		await _channel.ModifyMessageAsync(_messageId,
