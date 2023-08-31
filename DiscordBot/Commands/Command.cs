@@ -102,8 +102,8 @@ public abstract class Command
 
 		foreach (var workspace in workspaces)
 		{
-			Logger.Log($"Workspace: {workspace.Name}");
-			opt.AddChoice(workspace.Name, workspace.Name);
+			Logger.Log($"Workspace: {workspace}");
+			opt.AddChoice(workspace, workspace);
 		}
 
 		WorkspaceOptions = opt;
