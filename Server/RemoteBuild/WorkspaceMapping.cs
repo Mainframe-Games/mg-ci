@@ -8,19 +8,15 @@ public class WorkspaceMapping
 		? mappingPath
 		: "workspacemapping.json";
 
-	private Dictionary<string, string> Mapping { get; }
+	private Dictionary<string, string> Mapping { get; } = new();
 
 	public WorkspaceMapping()
 	{
-		if (File.Exists(ConfigPath))
-		{
-			var json = File.ReadAllText(ConfigPath);
-			Mapping = Json.Deserialise<Dictionary<string, string>>(json) ?? new();
-		}
-		else
-		{
-			Mapping = new();
-		}
+		if (!File.Exists(ConfigPath)) 
+			return;
+		
+		var json = File.ReadAllText(ConfigPath);
+		Mapping = Json.Deserialise<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
 	}
 
 	public string GetRemapping(string? workspaceName)

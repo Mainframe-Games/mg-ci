@@ -17,18 +17,24 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 
 	public ServerResponse Process()
 	{
-		ProcessAsync().FireAndForget();
+		if (Packet is null)
+			return new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(Packet)} can not be null");
+		
+		var workspaceName = new WorkspaceMapping().GetRemapping(Packet.WorkspaceName);
+		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
+		
+		if (workspace is null)
+			return new ServerResponse(HttpStatusCode.BadRequest, $"Workspace not found: {Packet.WorkspaceName}");
+		
+		ProcessAsync(workspace).FireAndForget();
 		return ServerResponse.Ok;
 	}
 
-	private async Task ProcessAsync()
+	private async Task ProcessAsync(Workspace workspace)
 	{
 		// this needs to be here to kick start the thread, otherwise it will stall app
 		await Task.Delay(1);
 
-		var mapping = new WorkspaceMapping();
-		var workspaceName = mapping.GetRemapping(Packet.WorkspaceName);
-		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
 		Environment.CurrentDirectory = workspace.Directory;
 
 		if (Packet.CleanBuild)
@@ -39,7 +45,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 		workspace.SwitchBranch(Packet.Branch);
 		workspace.Update(Packet.ChangesetId);
 
-		if (workspace.Directory == null || !Directory.Exists(workspace.Directory))
+		if (!Directory.Exists(workspace.Directory))
 			throw new DirectoryNotFoundException($"Directory doesn't exist: {workspace.Directory}");
 
 		// set build version in project settings
