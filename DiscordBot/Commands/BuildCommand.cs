@@ -2,6 +2,7 @@
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using SharedLib;
+using SharedLib.BuildToDiscord;
 
 namespace DiscordBot.Commands;
 
@@ -38,7 +39,8 @@ public class BuildCommand : Command
 			};
 			
 			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl, body: body);
-			return new CommandResponse("Build Started", res.Content);
+			var obj = Json.Deserialise<BuildPipelineResponse>(res.Content);
+			return new CommandResponse("Build Started", obj.ToString());
 		}
 		catch (Exception e)
 		{

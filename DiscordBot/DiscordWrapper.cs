@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text;
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
@@ -166,16 +167,20 @@ public class DiscordWrapper
 		
 		await command.DeferAsync();
 		var res = await cmd.ExecuteAsync(command);
-		var fullResponse = $"{commandFull}\n{res.Content}";
+		
+		var fullResponse = new StringBuilder();
+		fullResponse.AppendLine(commandFull);
+		fullResponse.AppendLine(string.Empty);
+		fullResponse.AppendLine(res.Content);
 
 		if (res.IsError)
 		{
-			await command.RespondErrorDelayed(res.Title, fullResponse);
+			await command.RespondErrorDelayed(res.Title, fullResponse.ToString());
 			return;
 		}
 
 		// success
-		var restInteractionMessage = await command.RespondSuccessDelayed(command.User, res.Title, fullResponse);
+		var restInteractionMessage = await command.RespondSuccessDelayed(command.User, res.Title, fullResponse.ToString());
 
 		// only need to track message updaters for build commands
 		if (cmd is BuildCommand)
