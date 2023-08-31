@@ -32,6 +32,8 @@ public class BuildCommand : Command
 				{
 					["workspaceName"] = workspaceName,
 					["args"] = args,
+					["messageId"] = command.Id,
+					["discordAddress"] = DiscordWrapper.Config.ListenServer?.Address
 				}
 			};
 			

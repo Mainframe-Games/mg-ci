@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using System.Reflection;
 using System.Text;
-using Deployment;
 using Deployment.RemoteBuild;
 using SharedLib;
 using SharedLib.BuildToDiscord;
@@ -38,6 +37,7 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 
 		var pipeline = App.CreateBuildPipeline(workspace, args);
 		pipeline.Report.OnReportUpdated += OnReportUpdated;
+		OnReportUpdated(pipeline.Report);
 
 		if (pipeline.ChangeLog.Length == 0)
 			return new ServerResponse(HttpStatusCode.NotAcceptable, "No changes to build");

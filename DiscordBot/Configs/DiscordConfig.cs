@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using SharedLib;
 
 namespace DiscordBot.Configs;
@@ -57,6 +58,7 @@ public class ListenServerConfig
 {
 	public string? Ip { get; set; }
 	public ushort Port { get; set; }
+	[JsonIgnore] public string? Address => $"http://{Ip}:{Port}";
 }
 
 public class Reminder
