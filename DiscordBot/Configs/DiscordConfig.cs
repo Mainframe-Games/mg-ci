@@ -41,8 +41,8 @@ public class DiscordConfig
 		try
 		{
 			var res = await Web.SendAsync(HttpMethod.Get, $"{BuildServerUrl}/workspaces");
-			var workspaces = Json.Deserialise<List<Workspace>>(res.Content) ?? new List<Workspace>();
-			return workspaces.Select(x => x.Name).ToList();
+			var workspaces = Json.Deserialise<List<string>>(res.Content) ?? new List<string>();
+			return workspaces;
 		}
 		catch (HttpRequestException)
 		{
