@@ -20,7 +20,7 @@ public class ProductionCommand : Command
 			.WithType(ApplicationCommandOptionType.String);
 		
 		return CreateCommand()
-			.AddOptions(CommandUtils.WorkspaceOptions())
+			.AddOptions(WorkspaceOptions)
 			.AddOption(password)
 			.Build();
 	}

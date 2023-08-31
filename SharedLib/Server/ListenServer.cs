@@ -49,14 +49,22 @@ public class ListenServer
 	private async void ListenerCallback(IAsyncResult result)
 	{
 		var context = _listener.EndGetContext(result);
+		ServerResponse response;
 		
-		var response = context.Request.HttpMethod switch
+		try
 		{
-			"GET" => await _callbacks.Get(context),
-			"POST" => await _callbacks.Post(context),
-			"PUT" => await _callbacks.Put(context),
-			_ => new ServerResponse(HttpStatusCode.MethodNotAllowed, $"HttpMethod not supported: {context.Request.HttpMethod}")
-		};
+			response = context.Request.HttpMethod switch
+			{
+				"GET" => await _callbacks.Get(context),
+				"POST" => await _callbacks.Post(context),
+				"PUT" => await _callbacks.Put(context),
+				_ => new ServerResponse(HttpStatusCode.MethodNotAllowed, $"HttpMethod not supported: {context.Request.HttpMethod}")
+			};
+		}
+		catch (Exception e)
+		{
+			response = new ServerResponse(HttpStatusCode.InternalServerError, $"{e.GetType().Name}: {e.Message}");
+		}
 
 		Respond(context, response.StatusCode, response.Data);
 	}

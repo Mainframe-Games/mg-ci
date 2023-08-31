@@ -5,6 +5,7 @@ using Discord.WebSocket;
 using DiscordBot.Commands;
 using DiscordBot.Configs;
 using SharedLib;
+using SharedLib.Server;
 using DiscordConfig = DiscordBot.Configs.DiscordConfig;
 
 namespace DiscordBot;
@@ -17,17 +18,21 @@ public class DiscordWrapper
 {
 	public static DiscordWrapper Instance { get; private set; }
 	public static string Version => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty;
-	public static DiscordConfig Config { get; private set; }
+	
 	
 	private readonly DiscordSocketClient _client;
-	private Command[] Commands { get; set; }
-
 	private readonly Dictionary<string, TimeEvent> _reminders = new();
+	private readonly ListenServer _listenServer;
 	private readonly Dictionary<ulong, MessageUpdater> _messagesMap = new();
+
+	private Command[] Commands { get; set; }
+	public static DiscordConfig Config { get; private set; }
 
 	public DiscordWrapper(DiscordConfig config)
 	{
 		Instance = this;
+		
+		RefreshCommand.OnRefreshed += RefreshCommands;
 		
 		var socketConfig = new DiscordSocketConfig { UseInteractionSnowflakeDate = false };
 		_client = new DiscordSocketClient(socketConfig);
@@ -38,7 +43,9 @@ public class DiscordWrapper
 		_client.SelectMenuExecuted += SelectMenuExecutedAsync;
 		Config = config;
 		
-		RefreshCommand.OnRefreshed += RefreshCommands;
+		// listen server
+		if (Config.ListenServer is not null)
+			_listenServer = new ListenServer(Config.ListenServer.Ip, Config.ListenServer.Port, new ServerCallbacks());
 	}
 
 	private async void OnEventTriggered(Reminder reminder)
@@ -77,7 +84,7 @@ public class DiscordWrapper
 	{
 		await _client.LoginAsync(TokenType.Bot, Config.Token);
 		await _client.StartAsync();
-		await Task.Delay(-1);
+		await _listenServer.RunAsync();
 	}
 
 	private async Task ClientReady()
@@ -115,6 +122,8 @@ public class DiscordWrapper
 			.Where(t => t.IsSubclassOf(typeof(Command)) && !t.IsAbstract)
 			.Select(t => (Command)Activator.CreateInstance(t))
 			.ToArray();
+
+		await Command.IntialiseWorksapcesAsync();
 		
 		foreach (var cmd in Commands)
 			await RefreshCommandAsync(cmd);
@@ -167,11 +176,14 @@ public class DiscordWrapper
 
 		// success
 		var restInteractionMessage = await command.RespondSuccessDelayed(command.User, res.Title, fullResponse);
-		
-		var channelId = command.ChannelId ?? 0;
-		var messageId = restInteractionMessage?.Id ?? 0;
-		_messagesMap[messageId] = new MessageUpdater(_client, channelId, messageId);
-		// await TestLiveUpdatePanel(messageId);
+
+		// only need to track message updaters for build commands
+		if (cmd is BuildCommand)
+		{
+			var channelId = command.ChannelId ?? 0;
+			var messageId = restInteractionMessage?.Id ?? 0;
+			_messagesMap[messageId] = new MessageUpdater(_client, channelId, messageId);
+		}
 	}
 	
 	private static bool IsAuthorised(SocketGuildUser guildUser)
@@ -266,17 +278,6 @@ public class DiscordWrapper
 		return false;
 	}
 
-	private async Task TestLiveUpdatePanel(ulong messageId)
-	{
-		var ogMessage = _messagesMap[messageId];
-		
-		while (ogMessage.IsPending)
-		{
-			await ogMessage.UpdateMessageAsync();
-			await Task.Delay(3000);
-			ogMessage.FakeIncomingUpdate();
-		}
-
-		_messagesMap.Remove(messageId);
-	}
+	public bool TryGetMessage(ulong messageId, out MessageUpdater messageUpdater)
+		=> _messagesMap.TryGetValue(messageId, out messageUpdater);
 }

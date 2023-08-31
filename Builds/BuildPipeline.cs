@@ -3,6 +3,7 @@ using System.Text;
 using Builds;
 using Deployment.Configs;
 using SharedLib;
+using SharedLib.BuildToDiscord;
 using SharedLib.ChangeLogBuilders;
 using SharedLib.Webhooks;
 
@@ -48,8 +49,9 @@ public class BuildPipeline
 	/// build ids we are waiting for offload server
 	/// </summary>
 	private readonly List<string> _buildIds = new();
-
 	private readonly List<BuildResult> _buildResults = new();
+
+	public readonly PipelineReport Report;
 
 	public BuildPipeline(ulong id, Workspace workspace, Args args, string? offloadUrl, bool offloadParallel, List<BuildTargetFlag>? offloadTargets)
 	{
@@ -77,6 +79,9 @@ public class BuildPipeline
 
 		Config = BuildConfig.GetConfig(Workspace.Directory);
 		ChangeLog = Workspace.GetChangeLog(_currentChangeSetId, prevChangeSetId);
+		
+		var buildTargetNames = Workspace.GetBuildTargets().Select(x => x.Name).ToArray();
+		Report = new PipelineReport(Workspace.Name, Workspace.Meta?.Url, Workspace.Meta?.ThumbnailUrl, buildTargetNames);
 	}
 
 	#region Build Steps
@@ -86,11 +91,29 @@ public class BuildPipeline
 		try
 		{
 			StartTime = DateTime.Now;
+
+			// Prebuild
 			await PingOffloadServer();
 			await Prebuild();
+			Report.Update(PipelineStage.PreBuild, BuildTaskStatus.Succeed);
+
+			// Build Targets
 			await Build();
-			if (!await DeployAsync()) return false;
-			await PostBuild();
+			Report.Update(PipelineStage.Build, BuildTaskStatus.Succeed);
+
+			// deploy
+			if (!await DeployAsync())
+			{
+				Report.Update(PipelineStage.Deploy, BuildTaskStatus.Failed);
+				return false;
+			}
+
+			Report.Update(PipelineStage.Deploy, BuildTaskStatus.Succeed);
+
+			// post build
+			PostBuild();
+			Report.Update(PipelineStage.PostBuild, BuildTaskStatus.Succeed);
+
 			Logger.LogTimeStamp("Pipeline Completed", StartTime);
 			return true;
 		}
@@ -99,7 +122,7 @@ public class BuildPipeline
 			Logger.Log(e);
 			SendErrorHook(e);
 		}
-		
+
 		return false;
 	}
 
@@ -176,6 +199,7 @@ public class BuildPipeline
 			var unity = new LocalUnityBuild(Workspace);
 			var buildResult = unity.Build(localBuild);
 			_buildResults.Add(buildResult);
+			Report.UpdateBuildTarget(localBuild.Name, buildResult.IsErrors ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed);
 		}
 		
 		// wait for offload builds to complete
@@ -206,7 +230,7 @@ public class BuildPipeline
 		return await DeployEvent.Invoke(this);
 	}
 
-	private async Task PostBuild()
+	private void PostBuild()
 	{
 		if (Args.IsFlag("-nopostbuild"))
 			return;
@@ -221,36 +245,37 @@ public class BuildPipeline
 
 		// optional message from clanforge
 		var extraLogMessage = GetExtraHookLogs.Invoke(this);
+		
+		// build changeLog
+		var hookMessage = new StringBuilder();
+		hookMessage.AppendLine($"**cs:** {_currentChangeSetId}");
+		hookMessage.AppendLine($"**guid:** {_currentGuid}");
+		hookMessage.AppendLine("");
 
+		hookMessage.AppendLine($"**Targets:** Total Time {TimeSinceStart}");
+		foreach (var buildResult in _buildResults)
+			hookMessage.AppendLine($"- {buildResult}");
+		hookMessage.AppendLine("");
+
+		if (!string.IsNullOrEmpty(extraLogMessage))
+		{
+			hookMessage.AppendLine(extraLogMessage);
+			hookMessage.AppendLine("");
+		}
+		
+		hookMessage.AppendLine("**Change Log:**");
+		var discord = new ChangeLogBuilderDiscord();
+		discord.BuildLog(ChangeLog);
+		hookMessage.AppendLine(discord.ToString());
+		
+		// send hooks
 		foreach (var hook in Config.Hooks)
 		{
 			if (hook.IsErrorChannel is true)
 				continue;
 			
-			var hookMessage = new StringBuilder();
-			hookMessage.AppendLine($"**cs:** {_currentChangeSetId}");
-			hookMessage.AppendLine($"**guid:** {_currentGuid}");
-			hookMessage.AppendLine("");
-
-			hookMessage.AppendLine($"**Targets:** Total Time {TimeSinceStart}");
-			foreach (var buildResult in _buildResults)
-				hookMessage.AppendLine($"- {buildResult}");
-            hookMessage.AppendLine("");
-
-            if (!string.IsNullOrEmpty(extraLogMessage))
-            {
-				hookMessage.AppendLine(extraLogMessage);
-				hookMessage.AppendLine("");
-            }
-			
 			if (hook.IsDiscord())
 			{
-				hookMessage.AppendLine("**Change Log:**");
-				
-				var discord = new ChangeLogBuilderDiscord();
-				discord.BuildLog(ChangeLog);
-				hookMessage.AppendLine(discord.ToString());
-				
 				Discord.PostMessage(
 					hook.Url, 
 					hookMessage.ToString(),
@@ -265,9 +290,8 @@ public class BuildPipeline
 			}
 		}
 		
+		Report.Complete(BuildVersionTitle, hookMessage.ToString());
 		Workspace.Clear();
-
-		await Task.CompletedTask;
 	}
 	
 	#endregion
@@ -333,6 +357,7 @@ public class BuildPipeline
 		
         _buildResults.Add(buildResult);
 		_buildIds.Remove(buildGuid);
+		Report.UpdateBuildTarget(buildResult.BuildName, buildResult.IsErrors ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed);
 	}
 
 	/// <summary>
@@ -356,5 +381,4 @@ public class BuildPipeline
 	}
 
 	#endregion
-
 }

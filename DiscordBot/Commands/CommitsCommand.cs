@@ -12,7 +12,7 @@ public class CommitsCommand : Command
 	public override SlashCommandProperties Build()
 	{
 		return CreateCommand()
-			.AddOption(CommandUtils.WorkspaceOptions())
+			.AddOption(WorkspaceOptions)
 			.AddOption(BuildOptionNumber("csfrom", "Changeset to start from", true))
 			.AddOption(BuildOptionNumber("csto", "Changeset to go to", true))
 			.Build();

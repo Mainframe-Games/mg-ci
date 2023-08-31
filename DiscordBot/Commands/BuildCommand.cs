@@ -13,7 +13,7 @@ public class BuildCommand : Command
 	public override SlashCommandProperties Build()
 	{
 		return CreateCommand()
-			.AddOptions(CommandUtils.WorkspaceOptions())
+			.AddOptions(WorkspaceOptions)
 			.AddOptions(BuildOptionString("args", "Arguments send to build server", false))
 			.Build();
 	}

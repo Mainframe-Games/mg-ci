@@ -1,4 +1,3 @@
-using Newtonsoft.Json;
 using SharedLib;
 
 namespace DiscordBot.Configs;
@@ -17,9 +16,8 @@ public class DiscordConfig
 	public ulong GuildId { get; set; }
 	public List<string>? AuthorisedRoles { get; set; }
 	public string? CommandName { get; set; } = "start-build";
+	public ListenServerConfig? ListenServer { get; set; }
 	public List<Reminder>? Reminders { get; set; }
-
-	[JsonIgnore] public List<string> Workspaces { get; private set; } = new();
 
 	public async Task SaveAsync()
 	{
@@ -35,24 +33,29 @@ public class DiscordConfig
 		return config;
 	}
 
-	public async Task SetWorkspaceNamesAsync()
+	public async Task<List<Workspace>> SetWorkspaceNamesAsync()
 	{
 		if (string.IsNullOrEmpty(BuildServerUrl) || Args.Environment.IsFlag("-local"))
-		{
-			Workspaces = Workspace.GetAvailableWorkspaces().Select(x => x.Name).ToList();
-			return;
-		}
+			return Workspace.GetAvailableWorkspaces().ToList();
 
 		try
 		{
 			var res = await Web.SendAsync(HttpMethod.Get, $"{BuildServerUrl}/workspaces");
-			Workspaces = Json.Deserialise<List<string>>(res.Content) ?? new List<string>();
+			return Json.Deserialise<List<Workspace>>(res.Content) ?? new List<Workspace>();
 		}
 		catch (HttpRequestException)
 		{
 			Logger.Log($"Connection to '{BuildServerUrl}' count not be made");
 		}
+
+		return new List<Workspace>();
 	}
+}
+
+public class ListenServerConfig
+{
+	public string? Ip { get; set; }
+	public ushort Port { get; set; }
 }
 
 public class Reminder

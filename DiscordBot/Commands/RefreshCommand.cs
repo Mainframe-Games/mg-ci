@@ -10,8 +10,8 @@ public class RefreshCommand : Command
 
 	public override async Task<CommandResponse> ExecuteAsync(SocketSlashCommand command)
 	{
-		await DiscordWrapper.Config.SetWorkspaceNamesAsync();
+		var workspaces = await DiscordWrapper.Config.SetWorkspaceNamesAsync();
 		await OnRefreshed.Invoke();
-		return new CommandResponse("Workspaces Updated", string.Join("\n", DiscordWrapper.Config.Workspaces));
+		return new CommandResponse("Workspaces Updated", string.Join("\n", workspaces));
 	}
 }

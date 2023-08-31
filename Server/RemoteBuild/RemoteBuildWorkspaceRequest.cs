@@ -1,6 +1,10 @@
 ﻿using System.Net;
+using System.Reflection;
+using System.Text;
+using Deployment;
 using Deployment.RemoteBuild;
 using SharedLib;
+using SharedLib.BuildToDiscord;
 using SharedLib.Server;
 
 namespace Server.RemoteBuild;
@@ -9,6 +13,9 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 {
 	public string? WorkspaceName { get; set; }
 	public string? Args { get; set; }
+	
+	public string? DiscordAddress { get; set; }
+	public ulong MessageId { get; set; }
 	
 	public ServerResponse Process()
 	{
@@ -30,6 +37,7 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 		workspace.SwitchBranch(branch);
 
 		var pipeline = App.CreateBuildPipeline(workspace, args);
+		pipeline.Report.OnReportUpdated += OnReportUpdated;
 
 		if (pipeline.ChangeLog.Length == 0)
 			return new ServerResponse(HttpStatusCode.NotAcceptable, "No changes to build");
@@ -50,7 +58,21 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 			Branch = branch,
 			ChangesetCount = pipeline.ChangeLog.Length,
 		};
-		return new ServerResponse(HttpStatusCode.OK, data);
+		return new ServerResponse(HttpStatusCode.OK, data.ToString());
+	}
+
+	private async void OnReportUpdated(PipelineReport report)
+	{
+		if (string.IsNullOrEmpty(DiscordAddress))
+			return;
+
+		var pipelineUpdate = new PipelineUpdateMessage
+		{
+			MessageId = MessageId,
+			Report = report,
+		};
+
+		await Web.SendAsync(HttpMethod.Post, DiscordAddress, body: pipelineUpdate);
 	}
 }
 
@@ -66,4 +88,23 @@ public class BuildPipelineResponse
 	public string? ChangesetGuid { get; set; }
 	public string? UnityVersion { get; set; }
 	public int? ChangesetCount { get; set; }
+
+	public override string ToString()
+	{
+		var str = new StringBuilder();
+
+		var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
+
+		foreach (var propertyInfo in properties)
+		{
+			var value = propertyInfo.GetValue(this);
+			
+			if (value is null)
+				continue;
+			
+			str.AppendLine($"**{propertyInfo.Name}**: {value}");
+		}
+		
+		return str.ToString();
+	}
 }

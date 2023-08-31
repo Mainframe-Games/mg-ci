@@ -9,8 +9,8 @@ public class Workspace
 	public string Directory { get; }
 	public string? UnityVersion { get; private set; }
 	public string? Branch { get; set; } = "main";
+	public WorkspaceMeta? Meta { get; }
 	public ProjectSettings ProjectSettings { get; private set; }
-
 	[JsonIgnore] public string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", "ProjectSettings.asset");
 
 	private Workspace(string name, string directory)
@@ -19,11 +19,23 @@ public class Workspace
 		Directory = directory;
 		ProjectSettings = new ProjectSettings(ProjectSettingsPath);
 		UnityVersion = GetUnityVersion(directory);
+		Meta = GetMetaData();
 	}
 	
 	public override string ToString()
 	{
 		return $"{Name} @ {Directory} | UnityVersion: {UnityVersion}";
+	}
+
+	private WorkspaceMeta? GetMetaData()
+	{
+		var metaPath = Path.Combine(Directory, "BuildScripts", "WorkspaceMeta.json");
+		
+		if (!File.Exists(metaPath))
+			return null;
+
+		var fileContents = File.ReadAllText(metaPath);
+		return Json.Deserialise<WorkspaceMeta>(fileContents);
 	}
 	
 	public static List<Workspace> GetAvailableWorkspaces()

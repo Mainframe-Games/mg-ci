@@ -36,6 +36,7 @@ public class TimeEvent
 		if (now > targetTime)
 			targetTime = targetTime.AddDays(1);
 
+		Logger.Log($"Next timer event set for {targetTime:g}");
 		var delay = (targetTime - now).TotalMilliseconds;
 		return delay;
 	}

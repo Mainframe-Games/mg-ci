@@ -2,7 +2,6 @@
 using Deployment;
 using Server.Configs;
 using Server.RemoteBuild;
-using SharedLib;
 using SharedLib.Server;
 
 namespace Server;
@@ -53,56 +52,32 @@ public class ServerCallbacks : IServerCallbacks
 	{
 		if (!IsAuthorised(context.Request)) return ServerResponse.UnAuthorised;
 		if (!context.Request.HasEntityBody) return ServerResponse.NoContent;
-
-		using var reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding);
-		var jsonStr = await reader.ReadToEndAsync();
-
-		var packet = Json.Deserialise<RemoteBuildPacket>(jsonStr);
-		if (packet == null)
-			throw new NullReferenceException($"{nameof(RemoteBuildPacket)} is null from json: {jsonStr}");
-
-		try
-		{
-			return packet.Process();
-		}
-		catch (Exception e)
-		{
-			Logger.Log(e);
-			return new ServerResponse(HttpStatusCode.InternalServerError, e.Message);
-		}
+		
+		var packet = await context.GetPostContentAsync<RemoteBuildPacket>();
+		return packet.Process();
 	}
 
 	public async Task<ServerResponse> Put(HttpListenerContext context)
 	{
-		var request = context.Request;
-
 		// if (!IsAuthorised(request)) return ServerResponse.UnAuthorised;
-		if (!request.HasEntityBody) return ServerResponse.NoContent;
+		if (!context.Request.HasEntityBody) return ServerResponse.NoContent;
 
-		try
-		{
-			// get pipeline
-			var pipelineId = ulong.Parse(request.Headers["pipelineId"] ?? "0");
-			if (!App.Pipelines.TryGetValue(pipelineId, out var buildPipeline))
-				return new ServerResponse(HttpStatusCode.NotFound, $"{nameof(BuildPipeline)} not found with ID: {pipelineId}");
+		// get pipeline
+		var pipelineId = ulong.Parse(context.Request.Headers["pipelineId"] ?? "0");
+		if (!App.Pipelines.TryGetValue(pipelineId, out var buildPipeline))
+			return new ServerResponse(HttpStatusCode.NotFound, $"{nameof(BuildPipeline)} not found with ID: {pipelineId}");
 
-			// create file
-			var fileName = request.Headers["fileName"] ?? string.Empty;
-			var buildPath = request.Headers["buildPath"] ?? string.Empty;
-			var path = Path.Combine(buildPipeline.Workspace.Directory, buildPath, fileName);
-			var fileInfo = new FileInfo(path);
-			fileInfo.Directory?.Create();
-			// Logger.Log($"Writing File: {fileInfo.FullName}");
+		// create file
+		var fileName = context.Request.Headers["fileName"] ?? string.Empty;
+		var buildPath = context.Request.Headers["buildPath"] ?? string.Empty;
+		var path = Path.Combine(buildPipeline.Workspace.Directory, buildPath, fileName);
+		var fileInfo = new FileInfo(path);
+		fileInfo.Directory?.Create();
+		// Logger.Log($"Writing File: {fileInfo.FullName}");
 
-			// write to file
-			await using var fs = fileInfo.Create();
-			await request.InputStream.CopyToAsync(fs);
-			return new ServerResponse(HttpStatusCode.OK, "File uploaded successfully.");
-		}
-		catch (Exception e)
-		{
-			Logger.Log(e);
-			return new ServerResponse(HttpStatusCode.InternalServerError, e.Message);
-		}
+		// write to file
+		await using var fs = fileInfo.Create();
+		await context.Request.InputStream.CopyToAsync(fs);
+		return new ServerResponse(HttpStatusCode.OK, "File uploaded successfully.");
 	}
 }

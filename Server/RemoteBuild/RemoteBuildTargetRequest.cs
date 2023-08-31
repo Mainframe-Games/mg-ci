@@ -67,7 +67,7 @@ public class RemoteBuildTargetRequest : IRemoteControllable
 			var builder = new LocalUnityBuild(workspace);
 			var result = builder.Build(asset);
 
-			if (string.IsNullOrEmpty(result.Errors))
+			if (!result.IsErrors)
 				await Web.StreamToServerAsync(SendBackUrl, asset.BuildPath, pipelineId, buildIdGuid);
 
 			await SendToMasterServerAsync(pipelineId, buildIdGuid, result.Errors, result);

@@ -1,4 +1,3 @@
-using System.Security;
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;

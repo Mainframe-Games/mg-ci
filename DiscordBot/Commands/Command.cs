@@ -1,10 +1,13 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using SharedLib;
 
 namespace DiscordBot.Commands;
 
 public abstract class Command
 {
+	protected static SlashCommandOptionBuilder WorkspaceOptions { get; private set; }
+	
 	public abstract string? CommandName { get; }
 	public abstract string? Description { get; }
 
@@ -85,5 +88,24 @@ public abstract class Command
 			.WithDescription(desc)
 			.WithType(ApplicationCommandOptionType.Integer);
 		return opt;
+	}
+	
+	public static async Task IntialiseWorksapcesAsync()
+	{
+		var opt = new SlashCommandOptionBuilder()
+			.WithName("workspace")
+			.WithDescription("List of available workspaces")
+			.WithRequired(true)
+			.WithType(ApplicationCommandOptionType.String);
+
+		var workspaces = await DiscordWrapper.Config.SetWorkspaceNamesAsync();
+
+		foreach (var workspace in workspaces)
+		{
+			Logger.Log($"Workspace: {workspace.Name}");
+			opt.AddChoice(workspace.Name, workspace.Name);
+		}
+
+		WorkspaceOptions = opt;
 	}
 }

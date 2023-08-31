@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using SharedLib.BuildToDiscord;
 
 namespace DiscordBot;
 
@@ -7,85 +8,64 @@ public class MessageUpdater
 {
 	private readonly SocketTextChannel _channel;
 	private readonly ulong _messageId;
-	private readonly List<BuildSteps> _buildTasks;
 
-	public bool IsPending => _buildTasks.Any(x => x.State is BuildTaskState.Pending);
-	public bool IsFailed => _buildTasks.Any(x => x.State is BuildTaskState.Failed);
-	public bool IsSuccessful => _buildTasks.All(x => x.State is BuildTaskState.Succeed);
-
-	public MessageUpdater(BaseSocketClient client, ulong channelId, ulong messageId, params string[] targets)
+	public MessageUpdater(BaseSocketClient client, ulong channelId, ulong messageId)
 	{
 		_channel = (SocketTextChannel)client.GetChannel(channelId);
 		_messageId = messageId;
-
-		var targs = targets.Select(x => new BuildSteps(x)).ToArray();
-		_buildTasks = new List<BuildSteps>
-		{
-			new("Pre Build"),
-			new("Build Targets", targs),
-			new("Deploy"),
-			new("Post Build"),
-		};
 	}
 
-	public async Task UpdateMessageAsync()
+	public async Task UpdateMessageAsync(PipelineReport report)
 	{
 		var message = await _channel.GetMessageAsync(_messageId);
-		var description = BuildSteps.BuildEmbedFields(_buildTasks);
-
-		Color colour;
-
-		if (IsFailed)
-			colour = Color.Red;
-		else if (IsSuccessful)
-			colour = Color.Green;
-		else
-			colour = Color.Blue;
-
-		var embed = message.Embeds.ElementAt(0);
-		var embeds = new[]
+		var originalEmbed = message.Embeds.ElementAt(0);
+		var embeds = new List<Embed>
 		{
-			embed.UpdateEmbed(),
-			embed.UpdateEmbed(
-				includeAuthor: false,
-				title: "Live Updates",
-				description: description,
-				color: colour,
-				includeTimeStamp: true,
-				fields: _buildTasks[1].GetSubTaskEmbedFields()),
+			originalEmbed.UpdateEmbed(),
+			BuildEmbedFromReport(report),
 		};
 
+		if (report.IsSuccessful)
+			embeds.Add(BuildChangeLog(report));
+
 		await _channel.ModifyMessageAsync(_messageId,
-			properties => { properties.Embeds = new Optional<Embed[]>(embeds); });
+			properties => { properties.Embeds = new Optional<Embed[]>(embeds.ToArray()); });
 	}
 
-	public void FakeIncomingUpdate()
+	private static Embed BuildEmbedFromReport(PipelineReport report)
 	{
-		foreach (var task in _buildTasks)
+		var embed = new EmbedBuilder();
+
+		embed.WithTitle(report.WorkspaceName);
+		embed.WithUrl(report.TitleUrl);
+		embed.WithThumbnailUrl(report.ThumbnailUrl);
+		
+		if (report.IsFailed)
+			embed.WithColor(Color.Red);
+		else if (report.IsSuccessful)
+			embed.WithColor(Color.Green);
+		else
+			embed.WithColor(Color.Blue);
+		
+		embed.WithDescription(report.BuildDescription());
+
+		foreach (var buildTarget in report.BuildTargetFields())
 		{
-			var nextTask = GetNextPendingStep(task);
-
-			if (nextTask == null)
-				continue;
-
-			nextTask.State = BuildTaskState.Succeed;
-			break;
+			var field = new EmbedFieldBuilder { Name = buildTarget.Key, Value = buildTarget.Value, IsInline = true };
+			embed.AddField(field);
 		}
+
+		embed.WithFooter("Last Updated");
+		embed.WithCurrentTimestamp();
+		
+		return embed.Build();
 	}
 
-	private static BuildSteps? GetNextPendingStep(BuildSteps task)
+	private static Embed BuildChangeLog(PipelineReport report)
 	{
-		if (task.State is BuildTaskState.Pending)
-			return task;
-
-		foreach (var subTask in task.SubTasks)
-		{
-			var ne = GetNextPendingStep(subTask);
-
-			if (ne != null)
-				return ne;
-		}
-
-		return null;
+		var embed = new EmbedBuilder();
+		embed.WithTitle(report.ChangeLogTitle);
+		embed.WithDescription(report.ChangeLogMessage);
+		return embed.Build();
 	}
 }
