@@ -20,7 +20,6 @@ public class DiscordWrapper
 	public static DiscordWrapper Instance { get; private set; }
 	public static string Version => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty;
 	
-	
 	private readonly DiscordSocketClient _client;
 	private readonly Dictionary<string, TimeEvent> _reminders = new();
 	private readonly ListenServer _listenServer;
@@ -85,7 +84,7 @@ public class DiscordWrapper
 	{
 		await _client.LoginAsync(TokenType.Bot, Config.Token);
 		await _client.StartAsync();
-		await _listenServer.RunAsync();
+		await Task.Delay(-1);
 	}
 
 	private async Task ClientReady()

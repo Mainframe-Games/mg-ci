@@ -10,7 +10,6 @@ public class ListenServer
 	private readonly HttpListener _listener;
 	private readonly IServerCallbacks _callbacks;
 
-	public string Url => $"http://{Address}/";
 	public string Address => $"{_ip}:{_port}";
 
 	public DateTime ServerStartTime { get; }
@@ -24,16 +23,12 @@ public class ListenServer
 		_callbacks.Server = this;
 
 		_listener = new HttpListener();
-		_listener.Prefixes.Add(Url);
+		_listener.Prefixes.Add($"http://{Address}/");
 		_listener.Start();
 
 		ServerStartTime = DateTime.Now;
-	}
-
-	public async Task RunAsync()
-	{
+		
 		Receive();
-		await Task.Delay(-1);
 	}
 
 	public void Stop()
@@ -43,6 +38,7 @@ public class ListenServer
 
 	private void Receive()
 	{
+		Logger.Log($"Listening on: {Address}");
 		_listener.BeginGetContext(ListenerCallback, _listener);
 	}
 
@@ -53,6 +49,7 @@ public class ListenServer
 		
 		try
 		{
+			Logger.Log($"Incoming request: {context.Request.HttpMethod} {context.Request.Url}");
 			response = context.Request.HttpMethod switch
 			{
 				"GET" => await _callbacks.Get(context),
