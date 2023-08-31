@@ -26,11 +26,14 @@ public class DiscordConfig
 		await File.WriteAllTextAsync(ConfigPath, config);
 	}
 	
-	public static async Task<DiscordConfig?> LoadAsync()
+	public static DiscordConfig Load()
 	{
-		var configStr = await File.ReadAllTextAsync(ConfigPath);
+		var configStr = File.ReadAllText(ConfigPath);
 		var config = Json.Deserialise<DiscordConfig>(configStr);
-		await config.SetWorkspaceNamesAsync();
+		
+		if (config == null)
+			throw new NullReferenceException("Config is null");
+		
 		return config;
 	}
 

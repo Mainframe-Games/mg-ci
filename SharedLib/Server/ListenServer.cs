@@ -10,7 +10,7 @@ public class ListenServer
 	private readonly HttpListener _listener;
 	private readonly IServerCallbacks _callbacks;
 
-	public string Address => $"{_ip}:{_port}";
+	public string Prefixes => string.Join("\n", _listener.Prefixes);
 
 	public DateTime ServerStartTime { get; }
 	public bool IsListening => _listener.IsListening;
@@ -23,7 +23,7 @@ public class ListenServer
 		_callbacks.Server = this;
 
 		_listener = new HttpListener();
-		_listener.Prefixes.Add($"http://{Address}/");
+		_listener.Prefixes.Add($"http://{_ip}:{_port}/");
 		_listener.Start();
 
 		ServerStartTime = DateTime.Now;
@@ -38,7 +38,7 @@ public class ListenServer
 
 	private void Receive()
 	{
-		Logger.Log($"Listening on: {Address}");
+		Logger.Log($"{nameof(ListenServer)} Address: {Prefixes}");
 		_listener.BeginGetContext(ListenerCallback, _listener);
 	}
 

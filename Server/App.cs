@@ -66,7 +66,7 @@ public static class App
 		if (Server?.IsListening is not true)
 			throw new Exception("Server died");
 
-		Logger.Log($"[Server] Listening on '{Server.Address}'");
+		Logger.Log($"[Server] Listening on '{Server.Prefixes}'");
 		Logger.Log($"[Server] Version: {Version}");
 	}
 

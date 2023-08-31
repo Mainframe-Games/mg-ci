@@ -14,5 +14,6 @@ catch (Exception e)
 	Logger.Log(e);
 }
 
+App.DumpLogs();
 Console.WriteLine("---- End of program ----");
 Console.Read();
