@@ -33,22 +33,23 @@ public class DiscordConfig
 		return config;
 	}
 
-	public async Task<List<Workspace>> SetWorkspaceNamesAsync()
+	public async Task<List<string>> SetWorkspaceNamesAsync()
 	{
 		if (string.IsNullOrEmpty(BuildServerUrl) || Args.Environment.IsFlag("-local"))
-			return Workspace.GetAvailableWorkspaces().ToList();
+			return Workspace.GetAvailableWorkspaces().Select(x => x.Name).ToList();
 
 		try
 		{
 			var res = await Web.SendAsync(HttpMethod.Get, $"{BuildServerUrl}/workspaces");
-			return Json.Deserialise<List<Workspace>>(res.Content) ?? new List<Workspace>();
+			var workspaces = Json.Deserialise<List<Workspace>>(res.Content) ?? new List<Workspace>();
+			return workspaces.Select(x => x.Name).ToList();
 		}
 		catch (HttpRequestException)
 		{
 			Logger.Log($"Connection to '{BuildServerUrl}' count not be made");
 		}
 
-		return new List<Workspace>();
+		return new List<string>();
 	}
 }
 
