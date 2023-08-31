@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Newtonsoft.Json;
 
 namespace SharedLib.BuildToDiscord;
 
@@ -21,9 +22,9 @@ public class PipelineReport
 	public string? ChangeLogMessage { get; set; }
 	
 
-	public bool IsPending => GetAllStatuses().Any(x => x is BuildTaskStatus.Pending);
-	public bool IsFailed => GetAllStatuses().Any(x => x is BuildTaskStatus.Failed);
-	public bool IsSuccessful => GetAllStatuses().All(x => x is BuildTaskStatus.Succeed);
+	[JsonIgnore] public bool IsPending => GetAllStatuses().Any(x => x is BuildTaskStatus.Pending);
+	[JsonIgnore] public bool IsFailed => GetAllStatuses().Any(x => x is BuildTaskStatus.Failed);
+	[JsonIgnore] public bool IsSuccessful => GetAllStatuses().All(x => x is BuildTaskStatus.Succeed);
 
 	public PipelineReport() {}
 	

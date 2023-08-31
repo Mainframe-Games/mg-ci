@@ -7,9 +7,10 @@ public class ServerCallbacks : IServerCallbacks
 {
 	public ListenServer Server { get; set; }
 	
-	public Task<ServerResponse> Get(HttpListenerContext context)
+	public async Task<ServerResponse> Get(HttpListenerContext context)
 	{
-		throw new NotImplementedException();
+		await Task.CompletedTask;
+		return ServerResponse.Ok;
 	}
 
 	public async Task<ServerResponse> Post(HttpListenerContext context)
