@@ -12,9 +12,9 @@ public class WorkspaceMapping
 
 	public WorkspaceMapping()
 	{
-		if (!File.Exists(ConfigPath)) 
+		if (!File.Exists(ConfigPath))
 			return;
-		
+
 		var json = File.ReadAllText(ConfigPath);
 		Mapping = Json.Deserialise<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
 	}
@@ -23,7 +23,11 @@ public class WorkspaceMapping
 	{
 		if (workspaceName == null)
 			throw new NullReferenceException($"{nameof(workspaceName)} param is null");
-		
-		return Mapping.TryGetValue(workspaceName, out var remappingName) ? remappingName : workspaceName;
+
+		if (!Mapping.TryGetValue(workspaceName, out var remappingName))
+			return workspaceName;
+
+		Logger.Log($"Remapping Workspace name: {workspaceName} -> {remappingName}");
+		return remappingName;
 	}
 }

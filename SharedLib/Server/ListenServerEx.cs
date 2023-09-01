@@ -12,6 +12,8 @@ public static class ListenServerEx
 		
 		if (packet is null)
 			throw new NullReferenceException($"{typeof(T).Name} is null from json: {jsonStr}");
+		
+		Logger.Log($"Content: {packet}");
 
 		return packet;
 	}

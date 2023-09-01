@@ -20,11 +20,10 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 		var args = new Args(argsArray);
 		args.TryGetArg("-branch", out var branch, "main");
 
-		var mapping = new WorkspaceMapping();
-		var workspaceName = mapping.GetRemapping(WorkspaceName);
+		var workspaceName =  new WorkspaceMapping().GetRemapping(WorkspaceName);
 		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
 		
-		if (workspace == null)
+		if (workspace is null)
 			return new ServerResponse(HttpStatusCode.BadRequest, $"Given namespace is not valid: {WorkspaceName}");
 		
 		Logger.Log($"Chosen workspace: {workspace}");
