@@ -6,6 +6,7 @@ using Discord.WebSocket;
 using DiscordBot.Commands;
 using DiscordBot.Configs;
 using SharedLib;
+using SharedLib.BuildToDiscord;
 using SharedLib.Server;
 using DiscordConfig = DiscordBot.Configs.DiscordConfig;
 
@@ -174,7 +175,19 @@ public class DiscordWrapper
 		var fullResponse = new StringBuilder();
 		fullResponse.AppendLine(commandFull);
 		fullResponse.AppendLine(string.Empty);
-		fullResponse.AppendLine(res.Content);
+
+		PipelineReport? pipelineReport = null;
+		
+		if (cmd is BuildCommand)
+		{
+			var buildCmdResponse = Json.Deserialise<BuildPipelineResponse>(res.Content);
+			fullResponse.AppendLine(buildCmdResponse?.ToString() ?? res.Content);
+			pipelineReport = buildCmdResponse?.Report?.Report;
+		}
+		else
+		{
+			fullResponse.AppendLine(res.Content);
+		}
 
 		if (res.IsError)
 		{
@@ -191,6 +204,9 @@ public class DiscordWrapper
 			var channelId = command.ChannelId ?? 0;
 			var messageId = restInteractionMessage?.Id ?? 0;
 			MessagesMap[command.Id] = new MessageUpdater(_client, channelId, messageId);
+			
+			if (pipelineReport is not null)
+				await MessagesMap[command.Id].UpdateMessageAsync(pipelineReport);
 		}
 	}
 	

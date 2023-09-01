@@ -35,7 +35,7 @@ public class PipelineReport
 		ThumbnailUrl = thumbnailUrl;
 		
 		foreach (var buildTargetName in buildTargetNames)
-			BuildTargets[buildTargetName] = BuildTaskStatus.Pending;
+			BuildTargets.Add(buildTargetName, default);
 	}
 
 	private IEnumerable<BuildTaskStatus> GetAllStatuses()

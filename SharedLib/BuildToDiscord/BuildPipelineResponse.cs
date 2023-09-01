@@ -15,6 +15,11 @@ public class BuildPipelineResponse
 	public string? ChangesetGuid { get; set; }
 	public string? UnityVersion { get; set; }
 	public int? ChangesetCount { get; set; }
+	
+	/// <summary>
+	/// Used for initial request response
+	/// </summary>
+	public PipelineUpdateMessage? Report { get; set; }
 
 	public override string ToString()
 	{
@@ -24,6 +29,10 @@ public class BuildPipelineResponse
 
 		foreach (var propertyInfo in properties)
 		{
+			// skip report, it will be used in next embed
+			if (propertyInfo.Name == nameof(Report))
+				continue;
+			
 			var value = propertyInfo.GetValue(this);
 			
 			if (value is null)

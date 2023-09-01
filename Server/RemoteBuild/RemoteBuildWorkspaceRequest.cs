@@ -33,7 +33,6 @@ public class RemoteBuildWorkspaceRequest : IProcessable
 
 		var pipeline = App.CreateBuildPipeline(workspace, args);
 		pipeline.Report.OnReportUpdated += OnReportUpdated;
-		OnReportUpdated(pipeline.Report);
 
 		if (pipeline.ChangeLog.Length == 0)
 			return new ServerResponse(HttpStatusCode.NotAcceptable, "No changes to build");
@@ -53,6 +52,11 @@ public class RemoteBuildWorkspaceRequest : IProcessable
 			ChangesetGuid = guid,
 			Branch = branch,
 			ChangesetCount = pipeline.ChangeLog.Length,
+			Report = new PipelineUpdateMessage
+			{
+				CommandId = CommandId,
+				Report = pipeline.Report,
+			}
 		};
 		return new ServerResponse(HttpStatusCode.OK, data);
 	}
