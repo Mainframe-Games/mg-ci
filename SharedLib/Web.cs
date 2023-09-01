@@ -21,16 +21,14 @@ public static class Web
 	{
 		if (url == null)
 			throw new NullReferenceException("Url can not be null");
-
+		
 		using var client = new HttpClient();
+		var uri = new Uri(url);
 		var msg = new HttpRequestMessage
 		{
 			Method = method,
-			RequestUri = new Uri(url),
-			Headers =
-			{
-				{ HttpRequestHeader.Accept.ToString(), "application/json" },
-			}
+			RequestUri = uri,
+			Headers = { { HttpRequestHeader.Accept.ToString(), "application/json" }, }
 		};
 
 		if (!string.IsNullOrEmpty(authToken))
@@ -40,7 +38,7 @@ public static class Web
 			msg.Headers.Add(header.key.ToString(), header.value);
 
 		var jsonBody = string.Empty;
-		
+	
 		if (body != null)
 		{
 			jsonBody = Json.Serialise(body);
@@ -50,14 +48,30 @@ public static class Web
 		var jsonBodyLog = jsonBody.Length > 1000 ? $"{jsonBody[..1000]}...[truncated]" : jsonBody;
 		Logger.Log($"HTTP {method.ToString().ToUpper()} {url}\n{jsonBodyLog}");
 		
-		using var res = await client.SendAsync(msg);
-		
-		if (!res.IsSuccessStatusCode)
-			throw new WebException($"Failed with code: {res.StatusCode}. Reason: {res.ReasonPhrase}");
-
 		try
 		{
-			return await GetSuccess(res);
+			using var res = await client.SendAsync(msg);
+			var content = await res.Content.ReadAsStringAsync();
+
+			if (res.IsSuccessStatusCode)
+			{
+				return new Response
+				{
+					StatusCode = res.StatusCode,
+					Content = content
+				};
+			}
+
+			var errorContent = new StringBuilder();
+			errorContent.AppendLine($"Reason: {res.ReasonPhrase}");
+			errorContent.AppendLine($"Content: {content}");
+			Logger.Log($"Response Failed ({res.StatusCode}): {errorContent}");
+			
+			return new Response
+			{
+				StatusCode = res.StatusCode,
+				Content = errorContent.ToString()
+			};
 		}
 		catch (Exception e)
 		{
@@ -70,14 +84,20 @@ public static class Web
 		}
 	}
 
-	public static async Task<Response> SendBytesAsync(string? url, byte[] data)
-	{
-		using var client = new HttpClient();
-		using var byteContent = new ByteArrayContent(data);
-		Logger.Log($"Sending Data: {data.ToByteSizeString()}");
-		using var res = await client.PutAsync(url, byteContent);
-		return await GetSuccess(res);
-	}
+	// public static async Task<Response> SendBytesAsync(string? url, byte[] data)
+	// {
+	// 	using var client = new HttpClient();
+	// 	using var byteContent = new ByteArrayContent(data);
+	// 	Logger.Log($"Sending Data: {data.ToByteSizeString()}");
+	// 	using var res = await client.PutAsync(url, byteContent);
+	// 	var content = await res.Content.ReadAsStringAsync();
+	// 	Logger.Log($"Web Response ({res.StatusCode}): {content}");
+	// 	return new Response
+	// 	{
+	// 		StatusCode = res.StatusCode,
+	// 		Content = content
+	// 	};
+	// }
 
 	public static async Task StreamToServerAsync(string? url, string buildPath, ulong pipelineId, string buildIdGuid)
 	{
@@ -144,18 +164,5 @@ public static class Web
 		using var ms = new MemoryStream();
 		await stream.CopyToAsync(ms);
 		return ms.ToArray();
-	}
-
-	private static async Task<Response> GetSuccess(HttpResponseMessage res)
-	{
-		var content = await res.Content.ReadAsStringAsync();
-
-		Logger.Log($"Web Response ({res.StatusCode}): {content}");
-
-		return new Response
-		{
-			StatusCode = res.StatusCode,
-			Content = content
-		};
 	}
 }
