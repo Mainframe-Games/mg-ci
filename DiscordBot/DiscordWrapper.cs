@@ -23,7 +23,7 @@ public class DiscordWrapper
 	private readonly DiscordSocketClient _client;
 	private readonly Dictionary<string, TimeEvent> _reminders = new();
 	private readonly ListenServer _listenServer;
-	private readonly Dictionary<ulong, MessageUpdater> _messagesMap = new();
+	public readonly Dictionary<ulong, MessageUpdater> MessagesMap = new();
 
 	private Command[] Commands { get; set; }
 	public static DiscordConfig Config { get; private set; }
@@ -186,7 +186,7 @@ public class DiscordWrapper
 		{
 			var channelId = command.ChannelId ?? 0;
 			var messageId = restInteractionMessage?.Id ?? 0;
-			_messagesMap[messageId] = new MessageUpdater(_client, channelId, messageId);
+			MessagesMap[messageId] = new MessageUpdater(_client, channelId, messageId);
 		}
 	}
 	
@@ -281,7 +281,4 @@ public class DiscordWrapper
 		command = null;
 		return false;
 	}
-
-	public bool TryGetMessage(ulong messageId, out MessageUpdater messageUpdater)
-		=> _messagesMap.TryGetValue(messageId, out messageUpdater);
 }

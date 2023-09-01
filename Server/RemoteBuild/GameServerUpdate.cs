@@ -3,7 +3,7 @@ using SharedLib.Server;
 
 namespace Server.RemoteBuild;
 
-public class GameServerUpdate : IRemoteControllable
+public class GameServerUpdate : IProcessable
 {
 	public MultiplayServerUpdate? Usg { get; set; }
 	public RemoteClanforgeImageUpdate? Clanforge { get; set; }

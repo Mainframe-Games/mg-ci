@@ -5,20 +5,20 @@ using SharedLib.Server;
 
 namespace DiscordBot;
 
-public class DiscordServerRequests
+public class DiscordServerRequests : IProcessable
 {
 	public PipelineUpdateMessage? PipelineUpdate { get; set; }
-	
+
 	public ServerResponse Process()
 	{
 		if (PipelineUpdate is not null) return ProcessPipelineMessage(PipelineUpdate);
-		throw new Exception($"Unable to process request. {Json.Serialise(this)}");
+		return new ServerResponse(HttpStatusCode.BadRequest, $"Unable to process request. {Json.Serialise(this)}");
 	}
 	
 	private static ServerResponse ProcessPipelineMessage(PipelineUpdateMessage pipelineUpdateMessage)
 	{
-		if (!DiscordWrapper.Instance.TryGetMessage(pipelineUpdateMessage.MessageId, out var message))
-			return new ServerResponse(HttpStatusCode.NotFound, $"Count not find message with id: {pipelineUpdateMessage.MessageId}");
+		if (!DiscordWrapper.Instance.MessagesMap.TryGetValue(pipelineUpdateMessage.MessageId, out var message))
+			return new ServerResponse(HttpStatusCode.NotFound, $"Count not find message with id: {pipelineUpdateMessage.MessageId}. Available: {string.Join(", ", DiscordWrapper.Instance.MessagesMap.Keys)}");
 
 		if (pipelineUpdateMessage.Report is null)
 			return new ServerResponse(HttpStatusCode.BadRequest, "Report can not be null");

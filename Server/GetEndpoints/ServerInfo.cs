@@ -5,7 +5,7 @@ using SharedLib.Server;
 
 namespace Server;
 
-public class ServerInfo : IRemoteControllable
+public class ServerInfo : IProcessable
 {
 	public string? Version { get; set; }
 	public string? StartTime { get; set; }

@@ -10,7 +10,7 @@ namespace Server.RemoteBuild;
 /// <summary>
 /// Class send across network to do remote builds
 /// </summary>
-public class RemoteBuildTargetRequest : IRemoteControllable
+public class RemoteBuildTargetRequest : IProcessable
 {
 	public string? SendBackUrl { get; set; }
 	public OffloadServerPacket? Packet { get; set; }

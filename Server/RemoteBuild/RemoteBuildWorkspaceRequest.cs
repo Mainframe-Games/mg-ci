@@ -7,7 +7,7 @@ using SharedLib.Server;
 
 namespace Server.RemoteBuild;
 
-public class RemoteBuildWorkspaceRequest : IRemoteControllable
+public class RemoteBuildWorkspaceRequest : IProcessable
 {
 	public string? WorkspaceName { get; set; }
 	public string? Args { get; set; }
@@ -64,15 +64,14 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 		if (string.IsNullOrEmpty(DiscordAddress))
 			return;
 
-		var pipelineUpdate = new PipelineUpdateMessage
+		var packet = new DiscordServerPacket
 		{
-			MessageId = MessageId,
-			Report = report,
+			PipelineUpdate = new PipelineUpdateMessage
+			{
+				MessageId = MessageId,
+				Report = report,
+			}
 		};
-		var body = new JObject
-		{
-			["pipelineUpdate"] = JToken.FromObject(pipelineUpdate)
-		};
-		await Web.SendAsync(HttpMethod.Post, DiscordAddress, body: body);
+		await Web.SendAsync(HttpMethod.Post, DiscordAddress, body: packet);
 	}
 }

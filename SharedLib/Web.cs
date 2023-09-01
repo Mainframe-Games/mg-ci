@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Net;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace SharedLib;
 
@@ -62,9 +63,11 @@ public static class Web
 				};
 			}
 
-			var errorContent = new StringBuilder();
-			errorContent.AppendLine($"Reason: {res.ReasonPhrase}");
-			errorContent.AppendLine($"Content: {content}");
+			var errorContent = new JObject
+			{
+				["reason"] = res.ReasonPhrase,
+				["content"] = content
+			};
 			Logger.Log($"Response Failed ({res.StatusCode}): {errorContent}");
 			
 			return new Response

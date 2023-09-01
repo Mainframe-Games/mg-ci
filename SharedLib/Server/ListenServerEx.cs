@@ -4,7 +4,7 @@ namespace SharedLib.Server;
 
 public static class ListenServerEx
 {
-	public static async Task<T> GetPostContentAsync<T>(this HttpListenerContext context)
+	public static async Task<IProcessable> GetPostContentAsync<T>(this HttpListenerContext context) where T : IProcessable
 	{
 		using var reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding);
 		var jsonStr = await reader.ReadToEndAsync();

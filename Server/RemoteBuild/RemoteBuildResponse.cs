@@ -4,7 +4,7 @@ using SharedLib.Server;
 
 namespace Server.RemoteBuild;
 
-public class RemoteBuildResponse : IRemoteControllable
+public class RemoteBuildResponse : IProcessable
 {
 	public ulong PipelineId { get; set; }
 	public string? BuildIdGuid { get; set; }

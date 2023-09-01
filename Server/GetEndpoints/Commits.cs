@@ -10,7 +10,7 @@ namespace Server;
 /// Used for making massive patch notes from specific changeset.
 /// Good for Steam announcements
 /// </summary>
-public class Commits : IRemoteControllable
+public class Commits : IProcessable
 {
 	private readonly NameValueCollection _query;
 

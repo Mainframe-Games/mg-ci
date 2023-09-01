@@ -8,7 +8,7 @@ using SharedLib.Webhooks;
 
 namespace Server.RemoteBuild;
 
-public class RemoteClanforgeImageUpdate : IRemoteControllable
+public class RemoteClanforgeImageUpdate : IProcessable
 {
 	public string? Profile { get; set; }
 	public string? Beta { get; set; }

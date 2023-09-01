@@ -6,7 +6,7 @@ using SharedLib.Server;
 
 namespace Server.RemoteBuild;
 
-public class ProductionRequest : IRemoteControllable
+public class ProductionRequest : IProcessable
 {
 	public string? WorkspaceName { get; set; }
 	public string? Profile { get; set; }

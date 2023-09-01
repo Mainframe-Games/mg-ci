@@ -5,7 +5,7 @@ using SharedLib.Server;
 
 namespace Server;
 
-public class Workspaces : IRemoteControllable
+public class Workspaces : IProcessable
 {
 	public ServerResponse Process()
 	{

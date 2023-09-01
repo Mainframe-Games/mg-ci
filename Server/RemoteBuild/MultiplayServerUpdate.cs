@@ -4,7 +4,7 @@ using SharedLib.Server;
 
 namespace Server.RemoteBuild;
 
-public class MultiplayServerUpdate : IRemoteControllable
+public class MultiplayServerUpdate : IProcessable
 {
 	public ServerResponse Process()
 	{

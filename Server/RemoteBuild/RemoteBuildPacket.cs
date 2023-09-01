@@ -6,7 +6,7 @@ namespace Server.RemoteBuild;
 /// <summary>
 /// Packet to be used for sending across web requests
 /// </summary>
-public class RemoteBuildPacket : IRemoteControllable
+public class RemoteBuildPacket : IProcessable
 {
 	/// <summary>
 	/// Builds the entire workspace from buildconfig.json (used for master build server)
