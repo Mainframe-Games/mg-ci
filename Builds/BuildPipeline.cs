@@ -177,7 +177,6 @@ public class BuildPipeline
 					PipelineId = Id,
 					CleanBuild = Args.IsFlag("-cleanbuild"),
 					Branch = Workspace.Branch,
-					ParallelBuild = _offloadParallel ? Config.ParallelBuild : null,
 					Builds = new Dictionary<string, string>()
 				};
 				

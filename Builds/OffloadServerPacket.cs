@@ -10,7 +10,6 @@ public class OffloadServerPacket
 	public int ChangesetId { get; set; }
 	public string? Branch { get; set; }
 	public bool CleanBuild { get; set; }
-	public ParallelBuildConfig? ParallelBuild { get; set; }
 	public ulong PipelineId { get; set; }
 	
 	/// <summary>

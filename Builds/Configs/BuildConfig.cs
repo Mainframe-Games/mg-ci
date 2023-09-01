@@ -9,7 +9,6 @@ public sealed class BuildConfig
 {
 	public MonoBehaviour MonoBehaviour { get; set; }
 	public PreBuildConfig? PreBuild => MonoBehaviour.PreBuild;
-	public ParallelBuildConfig? ParallelBuild => MonoBehaviour.ParallelBuild;
 	public DeployContainerConfig? Deploy => MonoBehaviour.Deploy;
 	public HooksConfig[]? Hooks => MonoBehaviour.Hooks;
 
@@ -24,7 +23,6 @@ public sealed class BuildConfig
 public class MonoBehaviour
 {
 	public PreBuildConfig? PreBuild { get; set; }
-	public ParallelBuildConfig? ParallelBuild { get; set; }
 	public DeployContainerConfig? Deploy { get; set; }
 	public HooksConfig[]? Hooks { get; set; }
 }
@@ -33,19 +31,6 @@ public class PreBuildConfig
 {
 	public int BumpIndex { get; set; }
 	public VersionsConfig Versions { get; set; }
-}
-
-public class ParallelBuildConfig
-{
-	/// <summary>
-	/// Additional directories to symlink
-	/// </summary>
-	public string[]? Links { get; set; }
-
-	/// <summary>
-	/// Additional directories to copy
-	/// </summary>
-	public string[]? Copies { get; set; }
 }
 
 public class DeployContainerConfig
