@@ -17,7 +17,7 @@ public class ServerCallbacks : IServerCallbacks
 	{
 		if (!context.Request.HasEntityBody) return ServerResponse.NoContent;
 		
-		var packet = await context.GetPostContentAsync<ServerRequests>();
+		var packet = await context.GetPostContentAsync<DiscordServerRequests>();
 		return packet.Process();
 	}
 

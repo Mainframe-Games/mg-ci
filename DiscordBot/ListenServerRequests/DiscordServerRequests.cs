@@ -5,7 +5,7 @@ using SharedLib.Server;
 
 namespace DiscordBot;
 
-public class ServerRequests
+public class DiscordServerRequests
 {
 	public PipelineUpdateMessage? PipelineUpdate { get; set; }
 	

@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Deployment.RemoteBuild;
+using Newtonsoft.Json.Linq;
 using SharedLib;
 using SharedLib.BuildToDiscord;
 using SharedLib.Server;
@@ -68,7 +69,10 @@ public class RemoteBuildWorkspaceRequest : IRemoteControllable
 			MessageId = MessageId,
 			Report = report,
 		};
-
-		await Web.SendAsync(HttpMethod.Post, DiscordAddress, body: pipelineUpdate);
+		var body = new JObject
+		{
+			["pipelineUpdate"] = JToken.FromObject(pipelineUpdate)
+		};
+		await Web.SendAsync(HttpMethod.Post, DiscordAddress, body: body);
 	}
 }

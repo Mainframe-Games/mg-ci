@@ -54,8 +54,20 @@ public static class Web
 		
 		if (!res.IsSuccessStatusCode)
 			throw new WebException($"Failed with code: {res.StatusCode}. Reason: {res.ReasonPhrase}");
-		
-		return await GetSuccess(res);
+
+		try
+		{
+			return await GetSuccess(res);
+		}
+		catch (Exception e)
+		{
+			Logger.Log(e);
+			return new Response
+			{
+				StatusCode = HttpStatusCode.InternalServerError,
+				Content = $"{e.GetType().Namespace}: {e.Message}"
+			};
+		}
 	}
 
 	public static async Task<Response> SendBytesAsync(string? url, byte[] data)

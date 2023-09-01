@@ -38,7 +38,7 @@ public class ListenServer
 
 	private void Receive()
 	{
-		Logger.Log($"{nameof(ListenServer)} Address: {Prefixes}");
+		// Logger.Log($"{nameof(ListenServer)} Address: {Prefixes}");
 		_listener.BeginGetContext(ListenerCallback, _listener);
 	}
 
@@ -49,7 +49,7 @@ public class ListenServer
 		
 		try
 		{
-			Logger.Log($"Incoming request: {context.Request.HttpMethod} {context.Request.Url}");
+			// Logger.Log($"Incoming request: {context.Request.HttpMethod} {context.Request.Url}");
 			response = context.Request.HttpMethod switch
 			{
 				"GET" => await _callbacks.Get(context),
