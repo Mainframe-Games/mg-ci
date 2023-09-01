@@ -84,7 +84,6 @@ public class ListenServer
 			}
 
 			response.OutputStream.Close();
-			Receive();
 		}
 		catch (Exception e)
 		{
@@ -93,7 +92,6 @@ public class ListenServer
 		}
 		finally
 		{
-			response.OutputStream.Close();
 			Receive();
 		}
 	}
