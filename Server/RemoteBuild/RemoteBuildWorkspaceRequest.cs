@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using Deployment.RemoteBuild;
-using Newtonsoft.Json.Linq;
 using SharedLib;
 using SharedLib.BuildToDiscord;
 using SharedLib.Server;
@@ -11,9 +10,8 @@ public class RemoteBuildWorkspaceRequest : IProcessable
 {
 	public string? WorkspaceName { get; set; }
 	public string? Args { get; set; }
-	
 	public string? DiscordAddress { get; set; }
-	public ulong MessageId { get; set; }
+	public ulong CommandId { get; set; }
 	
 	public ServerResponse Process()
 	{
@@ -68,7 +66,7 @@ public class RemoteBuildWorkspaceRequest : IProcessable
 		{
 			PipelineUpdate = new PipelineUpdateMessage
 			{
-				MessageId = MessageId,
+				CommandId = CommandId,
 				Report = report,
 			}
 		};

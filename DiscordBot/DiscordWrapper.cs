@@ -23,6 +23,10 @@ public class DiscordWrapper
 	private readonly DiscordSocketClient _client;
 	private readonly Dictionary<string, TimeEvent> _reminders = new();
 	private readonly ListenServer _listenServer;
+	
+	/// <summary>
+	/// Key is command ID. Message ID is in <see cref="MessageUpdater"/>
+	/// </summary>
 	public readonly Dictionary<ulong, MessageUpdater> MessagesMap = new();
 
 	private Command[] Commands { get; set; }
@@ -186,7 +190,7 @@ public class DiscordWrapper
 		{
 			var channelId = command.ChannelId ?? 0;
 			var messageId = restInteractionMessage?.Id ?? 0;
-			MessagesMap[messageId] = new MessageUpdater(_client, channelId, messageId);
+			MessagesMap[command.Id] = new MessageUpdater(_client, channelId, messageId);
 		}
 	}
 	

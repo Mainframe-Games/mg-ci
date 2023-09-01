@@ -25,7 +25,7 @@ public class BuildCommand : Command
 		{
 			var workspaceName = GetOptionValueString(command, "workspace");
 			var args = GetOptionValueString(command, "args");
-
+			
 			// request to build server
 			var body = new JObject
 			{
@@ -33,14 +33,14 @@ public class BuildCommand : Command
 				{
 					["workspaceName"] = workspaceName,
 					["args"] = args,
-					["messageId"] = command.Id,
+					["commandId"] = command.Id,
 					["discordAddress"] = DiscordWrapper.Config.ListenServer?.Address
 				}
 			};
-			
+
 			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl, body: body);
 			var obj = Json.Deserialise<BuildPipelineResponse>(res.Content);
-			return new CommandResponse("Build Started", obj.ToString());
+			return new CommandResponse("Build Started", obj?.ToString() ?? string.Empty);
 		}
 		catch (Exception e)
 		{

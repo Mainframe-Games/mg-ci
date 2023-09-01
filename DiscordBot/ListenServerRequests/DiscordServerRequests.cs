@@ -17,8 +17,8 @@ public class DiscordServerRequests : IProcessable
 	
 	private static ServerResponse ProcessPipelineMessage(PipelineUpdateMessage pipelineUpdateMessage)
 	{
-		if (!DiscordWrapper.Instance.MessagesMap.TryGetValue(pipelineUpdateMessage.MessageId, out var message))
-			return new ServerResponse(HttpStatusCode.NotFound, $"Count not find message with id: {pipelineUpdateMessage.MessageId}. Available: {string.Join(", ", DiscordWrapper.Instance.MessagesMap.Keys)}");
+		if (!DiscordWrapper.Instance.MessagesMap.TryGetValue(pipelineUpdateMessage.CommandId, out var message))
+			return new ServerResponse(HttpStatusCode.NotFound, $"Count not find message with id: {pipelineUpdateMessage.CommandId}. Available: {string.Join(", ", DiscordWrapper.Instance.MessagesMap.Keys)}");
 
 		if (pipelineUpdateMessage.Report is null)
 			return new ServerResponse(HttpStatusCode.BadRequest, "Report can not be null");

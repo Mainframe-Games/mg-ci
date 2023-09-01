@@ -2,6 +2,6 @@
 
 public class PipelineUpdateMessage
 {
-	public ulong MessageId { get; set; }
+	public ulong CommandId { get; set; }
 	public PipelineReport? Report { get; set; }
 }
