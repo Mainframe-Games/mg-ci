@@ -29,6 +29,7 @@ public class DiscordWrapper
 	/// Key is command ID. Message ID is in <see cref="MessageUpdater"/>
 	/// </summary>
 	public readonly Dictionary<ulong, MessageUpdater> MessagesMap = new();
+	private Dictionary<ulong, PipelineReport> _prematureReports = new();
 
 	private Command[] Commands { get; set; }
 	public static DiscordConfig Config { get; private set; }
@@ -184,17 +185,20 @@ public class DiscordWrapper
 		}
 
 		// success
-		// only need to track message updaters for build commands
-		if (cmd is BuildCommand)
+		if (cmd is not BuildCommand)
 		{
-			var restInteractionMessage = await command.RespondSuccessDelayed(command.User, res.Title, fullResponse.ToString());
-			var channelId = command.ChannelId ?? 0;
-			var messageId = restInteractionMessage?.Id ?? 0;
-			MessagesMap.Add(command.Id, new MessageUpdater(_client, channelId, messageId));
-			await MessagesMap[command.Id].UpdateMessageAsync(new PipelineReport());
-		}
-		else
 			await command.RespondSuccessDelayed(command.User, res.Title, fullResponse.ToString());
+			return;
+		}
+		
+		// only need to track message updaters for build commands
+		var restInteractionMessage = await command.RespondSuccessDelayed(command.User, res.Title, fullResponse.ToString());
+		var channelId = command.ChannelId ?? 0;
+		var messageId = restInteractionMessage?.Id ?? 0;
+		MessagesMap.Add(command.Id, new MessageUpdater(_client, channelId, messageId));
+		var firstReport = _prematureReports.TryGetValue(command.Id, out var report) ? report : new PipelineReport();
+		_prematureReports.Remove(command.Id);
+		await MessagesMap[command.Id].UpdateMessageAsync(firstReport);
 	}
 	
 	private static bool IsAuthorised(SocketGuildUser guildUser)
@@ -287,5 +291,18 @@ public class DiscordWrapper
 
 		command = null;
 		return false;
+	}
+
+	public void ProcessUpdateMessage(PipelineUpdateMessage pipelineUpdateMessage)
+	{
+		if (MessagesMap.TryGetValue(pipelineUpdateMessage.CommandId, out var message))
+		{
+			message.UpdateMessageAsync(pipelineUpdateMessage.Report).FireAndForget();
+		}
+		else
+		{
+			Logger.Log("Report premature. Adding to waiting list");
+			_prematureReports[pipelineUpdateMessage.CommandId] = pipelineUpdateMessage.Report;
+		}
 	}
 }

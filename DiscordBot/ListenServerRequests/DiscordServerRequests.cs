@@ -17,13 +17,14 @@ public class DiscordServerRequests : IProcessable
 	
 	private static ServerResponse ProcessPipelineMessage(PipelineUpdateMessage pipelineUpdateMessage)
 	{
-		if (!DiscordWrapper.Instance.MessagesMap.TryGetValue(pipelineUpdateMessage.CommandId, out var message))
-			return new ServerResponse(HttpStatusCode.NotFound, $"Count not find message with id: {pipelineUpdateMessage.CommandId}. Available: {string.Join(", ", DiscordWrapper.Instance.MessagesMap.Keys)}");
-
-		if (pipelineUpdateMessage.Report is null)
-			return new ServerResponse(HttpStatusCode.BadRequest, "Report can not be null");
-		
-		message.UpdateMessageAsync(pipelineUpdateMessage.Report).FireAndForget();
-		return ServerResponse.Ok;
+		try
+		{
+			DiscordWrapper.Instance.ProcessUpdateMessage(pipelineUpdateMessage);
+			return ServerResponse.Ok;
+		}
+		catch (Exception e)
+		{
+			return new ServerResponse(HttpStatusCode.InternalServerError, e.Message);
+		}
 	}
 }
