@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Text;
 using Builds;
 using Deployment.Configs;
@@ -93,15 +94,18 @@ public class BuildPipeline
 			StartTime = DateTime.Now;
 
 			// Prebuild
-			await PingOffloadServer();
+			Report.Update(PipelineStage.PreBuild, BuildTaskStatus.Pending);
+			if (!await PingOffloadServer()) return false;
 			await Prebuild();
 			Report.Update(PipelineStage.PreBuild, BuildTaskStatus.Succeed);
 
 			// Build Targets
+			Report.Update(PipelineStage.Build, BuildTaskStatus.Pending);
 			await Build();
 			Report.Update(PipelineStage.Build, BuildTaskStatus.Succeed);
 
 			// deploy
+			Report.Update(PipelineStage.Deploy, BuildTaskStatus.Pending);
 			if (!await DeployAsync())
 			{
 				Report.Update(PipelineStage.Deploy, BuildTaskStatus.Failed);
@@ -111,6 +115,7 @@ public class BuildPipeline
 			Report.Update(PipelineStage.Deploy, BuildTaskStatus.Succeed);
 
 			// post build
+			Report.Update(PipelineStage.PostBuild, BuildTaskStatus.Pending);
 			PostBuild();
 			Report.Update(PipelineStage.PostBuild, BuildTaskStatus.Succeed);
 
@@ -173,12 +178,13 @@ public class BuildPipeline
 					CleanBuild = Args.IsFlag("-cleanbuild"),
 					Branch = Workspace.Branch,
 					ParallelBuild = _offloadParallel ? Config.ParallelBuild : null,
-					Builds = new()
+					Builds = new Dictionary<string, string>()
 				};
 				
 				var buildId = Guid.NewGuid().ToString();
 				offloadBuilds.Builds[buildId] = build.Name;
 				_buildIds.Add(buildId);
+				Report.UpdateBuildTarget(build.Name, BuildTaskStatus.Pending);
 			}
 			// local build
 			else
@@ -197,6 +203,7 @@ public class BuildPipeline
 		foreach (var localBuild in localBuilds)
 		{
 			var unity = new LocalUnityBuild(Workspace);
+			Report.UpdateBuildTarget(localBuild.Name, BuildTaskStatus.Pending);
 			var buildResult = unity.Build(localBuild);
 			_buildResults.Add(buildResult);
 			Report.UpdateBuildTarget(localBuild.Name, buildResult.IsErrors ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed);
@@ -302,20 +309,20 @@ public class BuildPipeline
 	/// Pings Offload server to check if its awake
 	/// </summary>
 	/// <exception cref="WebException"></exception>
-	private async Task PingOffloadServer()
+	private async Task<bool> PingOffloadServer()
 	{
 		// ignore if no offload server is needed
 		if (string.IsNullOrEmpty(_offloadUrl))
-			return;
-
-		try
-		{
-			await Web.SendAsync(HttpMethod.Get, _offloadUrl);
-		}
-		catch (Exception e)
-		{
-			throw new WebException($"Error with offload server. {e.Message}");
-		}
+			return true;
+		
+		var res = await Web.SendAsync(HttpMethod.Get, _offloadUrl);
+		
+		if (res.StatusCode is HttpStatusCode.OK)
+			return true;
+		
+		Logger.Log($"Offload server failure: {res.ToString()}");
+		Report.Update(PipelineStage.PreBuild, BuildTaskStatus.Failed);
+		return false;
 	}
 
 	public void SendErrorHook(Exception e)

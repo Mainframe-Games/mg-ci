@@ -100,7 +100,7 @@ public static class App
 	/// <summary>
 	/// Called from main build server. Sends web request to offload server and gets a buildId in return
 	/// </summary>
-	private static void SendRemoteBuildRequest(OffloadServerPacket offloadPacket)
+	private static async void SendRemoteBuildRequest(OffloadServerPacket offloadPacket)
 	{
 		var remoteBuild = new RemoteBuildTargetRequest
 		{
@@ -109,11 +109,8 @@ public static class App
 		};
 		
 		var body = new RemoteBuildPacket { BuildTargetRequest = remoteBuild };
-		Web.SendAsync(HttpMethod.Post, Config.OffloadServerUrl, body: body)
-			.FireAndForget(e =>
-			{
-				Logger.Log($"Error at {nameof(SendRemoteBuildRequest)}: {e}");
-			});
+		var res = await Web.SendAsync(HttpMethod.Post, Config.OffloadServerUrl, body: body);
+		Logger.Log($"{nameof(SendRemoteBuildRequest)}: {res}");
 	}
 
 	private static async Task<bool> BuildPipelineOnDeployEvent(BuildPipeline pipeline)

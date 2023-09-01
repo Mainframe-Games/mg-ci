@@ -8,7 +8,8 @@ public static class Emotes
 	{
 		return status switch
 		{
-			BuildTaskStatus.Pending => "⌛",
+			BuildTaskStatus.Queued => "😴",
+			BuildTaskStatus.Pending => "⏳",
 			BuildTaskStatus.Succeed => "✅",
 			BuildTaskStatus.Failed => "❌",
 			_ => throw new ArgumentOutOfRangeException(nameof(status), status, null)

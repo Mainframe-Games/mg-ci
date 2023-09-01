@@ -11,6 +11,11 @@ public static class Web
 	{
 		public HttpStatusCode StatusCode;
 		public string Content;
+
+		public override string ToString()
+		{
+			return $"({StatusCode}) {Content}";
+		}
 	}
 
 	public static async Task<Response> SendAsync(

@@ -10,6 +10,7 @@ public enum PipelineStage
 
 public enum BuildTaskStatus
 {
+	Queued,
 	Pending,
 	Succeed,
 	Failed
