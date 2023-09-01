@@ -68,27 +68,33 @@ public class ListenServer
 
 	private void Respond(HttpListenerContext context, HttpStatusCode responseCode, object? data)
 	{
+		var response = context.Response;
+		string? resJson = null;
+		
 		try
 		{
-			var response = context.Response;
 			response.StatusCode = (int)responseCode;
 			response.ContentType = "application/json";
-			
+
 			if (data != null)
 			{
-				var resJson = Json.Serialise(data);
+				resJson = Json.Serialise(data);
 				var bytes = Encoding.UTF8.GetBytes(resJson);
 				response.OutputStream.Write(bytes);
 			}
-			
-			response.OutputStream.Close();
 
-			// start listening again
+			response.OutputStream.Close();
 			Receive();
 		}
 		catch (Exception e)
 		{
 			Logger.Log(e);
+			Logger.Log($"resJson: {resJson ?? "{null}"}");
+		}
+		finally
+		{
+			response.OutputStream.Close();
+			Receive();
 		}
 	}
 }
