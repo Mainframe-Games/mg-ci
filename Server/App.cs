@@ -3,7 +3,7 @@ using Deployment;
 using Deployment.Deployments;
 using Deployment.Server.Unity;
 using Server.Configs;
-using Server.RemoteBuild;
+using Server.RemoteDeploy;
 using SharedLib;
 using SharedLib.Server;
 
@@ -14,7 +14,7 @@ public static class App
 	public static string Version => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty;
 	private static string? RootDirectory { get; set; }
 	private static ListenServer? Server { get; set; }
-	private static ServerConfig? Config { get; set; }
+	public static ServerConfig? Config { get; private set; }
 	private static bool IsLocal { get; set; }
 
 	private static ulong NextPipelineId { get; set; }
@@ -74,10 +74,28 @@ public static class App
 
 	public static BuildPipeline CreateBuildPipeline(Workspace workspace, Args args)
 	{
-		var parallel = Config?.Offload?.Parallel ?? false;
-		var offloadTargets = Config?.Offload?.Targets ?? null;
-		var offloadUrl = Config?.OffloadServerUrl;
-		var pipeline = new BuildPipeline(NextPipelineId++, workspace, args, offloadUrl, parallel, offloadTargets);
+		var pipelineId = NextPipelineId++;
+		Offloader? offloader = null;
+		
+		if (Config?.Offload is not null)
+		{
+			offloader = new Offloader
+			{
+				Url = Config.Offload.Url,
+				Targets = Config.Offload.Targets,
+				SendBackUrl = $"http://{Config.IP}:{Config.Port}",
+				WorkspaceName = workspace.Name,
+				WorkspaceBranch = workspace.Branch,
+				PipelineId = pipelineId,
+			};
+		}
+		
+		var pipeline = new BuildPipeline(pipelineId, workspace, args, offloader);
+		
+		// TODO: this should maybe be set in the BuildPipeline ctor but BuildConfig is not in Builds namespace
+		if (offloader is not null)
+			offloader.BuildConfig = pipeline.Config;
+		
 		return pipeline;
 	}
 	
@@ -85,7 +103,6 @@ public static class App
 	{
 		Pipelines.Add(pipeline.Id, pipeline);
 		
-		pipeline.OffloadBuildNeeded += SendRemoteBuildRequest;
 		pipeline.GetExtraHookLogs += BuildPipelineOnGetExtraHookLog;
 		pipeline.DeployEvent += BuildPipelineOnDeployEvent;
 		
@@ -95,22 +112,6 @@ public static class App
 			DumpLogs();
 		
 		Pipelines.Remove(pipeline.Id);
-	}
-	
-	/// <summary>
-	/// Called from main build server. Sends web request to offload server and gets a buildId in return
-	/// </summary>
-	private static async void SendRemoteBuildRequest(OffloadServerPacket offloadPacket)
-	{
-		var remoteBuild = new RemoteBuildTargetRequest
-		{
-			SendBackUrl = $"http://{Config.IP}:{Config.Port}",
-			Packet = offloadPacket,
-		};
-		
-		var body = new RemoteBuildPacket { BuildTargetRequest = remoteBuild };
-		var res = await Web.SendAsync(HttpMethod.Post, Config.OffloadServerUrl, body: body);
-		Logger.Log($"{nameof(SendRemoteBuildRequest)}: {res}");
 	}
 
 	private static async Task<bool> BuildPipelineOnDeployEvent(BuildPipeline pipeline)
@@ -182,21 +183,14 @@ public static class App
 	{
 		if (pipeline.Config.Deploy?.AppleStore is not true)
 			return;
+
+		var apple = new RemoteAppleDeploy
+		{
+			WorkspaceName = pipeline.Workspace.Name,
+			Config = Config.AppleStore,
+		};
 		
-		var buildSettingsAsset = pipeline.Workspace.GetBuildTarget(BuildTargetFlag.iOS.ToString());
-		var productName = buildSettingsAsset.GetValue<string>("ProductName");
-		var buildPath = buildSettingsAsset.GetValue<string>("BuildPath");
-		var workingDir = Path.Combine(buildPath, productName);
-		var exportOptionPlist = $"{pipeline.Workspace.Directory}/BuildScripts/ios/exportOptions.plist";
-
-		if (!File.Exists(exportOptionPlist))
-			throw new FileNotFoundException(exportOptionPlist);
-
-		XcodeDeploy.Deploy(
-			workingDir,
-			Config.AppleStore.AppleId,
-			Config.AppleStore.AppSpecificPassword,
-			exportOptionPlist);
+		apple.Process();
 	}
 
 	private static async Task DeployGoogle(BuildPipeline pipeline, string buildVersionTitle)

@@ -1,7 +1,4 @@
-using Deployment.Configs;
-using SharedLib;
-
-namespace Deployment;
+namespace SharedLib.Build;
 
 public class OffloadServerPacket
 {
@@ -11,9 +8,15 @@ public class OffloadServerPacket
 	public string? Branch { get; set; }
 	public bool CleanBuild { get; set; }
 	public ulong PipelineId { get; set; }
-	
+
 	/// <summary>
 	/// BuildId (GUID), Asset Name <see cref="BuildSettingsAsset"/>
 	/// </summary>
-	public Dictionary<string, string> Builds { get; set; }
+	public Dictionary<string, OffloadBuildConfig> Builds { get; set; } = new();
+}
+
+public class OffloadBuildConfig
+{
+	public string? Name { get; set; }
+	public object? Deploy { get; set; }
 }

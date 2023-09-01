@@ -3,6 +3,7 @@ using Deployment;
 using Deployment.Configs;
 using Deployment.RemoteBuild;
 using SharedLib;
+using SharedLib.Build;
 using SharedLib.Server;
 
 namespace Server.RemoteBuild;
@@ -53,7 +54,7 @@ public class RemoteBuildTargetRequest : IProcessable
 		projWriter.ReplaceVersions(Packet.BuildVersion);
 
 		foreach (var build in Packet.Builds)
-			await StartBuilder(Packet.PipelineId, build.Key, build.Value, workspace);
+			await StartBuilder(Packet.PipelineId, build.Key, build.Value.Name, workspace);
 
 		// clean up after build
 		workspace.Clear();

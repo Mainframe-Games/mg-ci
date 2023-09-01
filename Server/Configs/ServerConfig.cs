@@ -13,7 +13,6 @@ public class ServerConfig
 	public string IP { get; set; } = "127.0.0.1";
 	public ushort Port { get; set; } = 8080;
 	public List<string>? AuthTokens { get; set; }
-	public string? OffloadServerUrl { get; set; }
 	public OffloadConfig? Offload { get; set; }
 	public HooksConfig[]? Hooks { get; set; }
 	public UnityServicesConfig? Ugs { get; set; }
@@ -47,6 +46,6 @@ public class ServerConfig
 
 public class OffloadConfig
 {
-	public bool Parallel { get; set; }
+	public string? Url { get; set; }
 	public List<BuildTargetFlag>? Targets { get; set; }
 }

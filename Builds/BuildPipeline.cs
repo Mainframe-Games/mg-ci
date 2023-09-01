@@ -1,9 +1,9 @@
-﻿using System.Diagnostics;
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using Builds;
 using Deployment.Configs;
 using SharedLib;
+using SharedLib.Build;
 using SharedLib.BuildToDiscord;
 using SharedLib.ChangeLogBuilders;
 using SharedLib.Webhooks;
@@ -17,18 +17,14 @@ public class BuildPipeline
 	/// </summary>
 	private const string BUILD_VERSION = "Build Version:";
 	
-	public delegate void OffloadBuildReqPacket(OffloadServerPacket packet);
 	public delegate string? ExtraHookLogs(BuildPipeline pipeline);
 	public delegate Task<bool> DeployDelegate(BuildPipeline pipeline);
 	
-	public event OffloadBuildReqPacket OffloadBuildNeeded;
 	public event ExtraHookLogs GetExtraHookLogs;
 	public event DeployDelegate DeployEvent;
 	
 	public readonly ulong Id;
-	private readonly string? _offloadUrl;
-	private readonly bool _offloadParallel;
-	private readonly List<BuildTargetFlag> _offloadTargets;
+	private readonly IOffloadable? _offloadable;
 
 	public Workspace Workspace { get; }
 	public Args Args { get; }
@@ -49,21 +45,18 @@ public class BuildPipeline
 	/// <summary>
 	/// build ids we are waiting for offload server
 	/// </summary>
-	private readonly List<string> _buildIds = new();
 	private readonly List<BuildResult> _buildResults = new();
 
 	public readonly PipelineReport Report;
 
-	public BuildPipeline(ulong id, Workspace workspace, Args args, string? offloadUrl, bool offloadParallel, List<BuildTargetFlag>? offloadTargets)
+	public BuildPipeline(ulong id, Workspace workspace, Args args, IOffloadable? offloadable)
 	{
 		Id = id;
 		Workspace = workspace;
 		Args = args;
 
-		_offloadUrl = offloadUrl;
-		_offloadParallel = offloadParallel;
-		_offloadTargets = offloadTargets ?? new List<BuildTargetFlag>();
-		
+		_offloadable = offloadable;
+
 		Environment.CurrentDirectory = workspace.Directory;
 		
 		// clear and update workspace 
@@ -159,31 +152,14 @@ public class BuildPipeline
         
 		var localBuilds = new List<BuildSettingsAsset>(); // for sequential builds
 
-		OffloadServerPacket? offloadBuilds = null;
-		
 		var builds = Workspace.GetBuildTargets().ToArray();
 		Logger.Log($"Building targets... {string.Join(", ", builds.Select(x => x.Name))}");
 		
 		foreach (var build in builds)
 		{
-			// offload build
-			if (IsOffload(build.GetBuildTargetFlag()))
+			if (_offloadable?.IsOffload(build, _buildVersion, _currentChangeSetId, Args.IsFlag("-cleanbuild")) is true)
 			{
-				offloadBuilds ??= new OffloadServerPacket
-				{
-					WorkspaceName = Workspace.Name,
-					ChangesetId = _currentChangeSetId,
-					BuildVersion = _buildVersion,
-					PipelineId = Id,
-					CleanBuild = Args.IsFlag("-cleanbuild"),
-					Branch = Workspace.Branch,
-					Builds = new Dictionary<string, string>()
-				};
-				
-				var buildId = Guid.NewGuid().ToString();
-				offloadBuilds.Builds[buildId] = build.Name;
-				_buildIds.Add(buildId);
-				Report.UpdateBuildTarget(build.Name, BuildTaskStatus.Pending);
+				Report.UpdateBuildTarget(build.Name, default);
 			}
 			// local build
 			else
@@ -193,8 +169,8 @@ public class BuildPipeline
 		}
 
 		// send offload builds first
-		if (offloadBuilds != null)
-			OffloadBuildNeeded.Invoke(offloadBuilds);
+		if (_offloadable is not null)
+			await _offloadable.SendAsync();
 
 		// local sequential builds
 		// this needs to be after off loads event is invoked otherwise
@@ -209,20 +185,10 @@ public class BuildPipeline
 		}
 		
 		// wait for offload builds to complete
-		await WaitBuildIds();
+		if (_offloadable is not null)
+			await _offloadable.WaitBuildIdsAsync();
+		
 		Logger.LogTimeStamp("Build time", buildStartTime);
-	}
-
-	/// <summary>
-	/// Returns if offload is needed for IL2CPP
-	/// <para></para>
-	/// NOTE: Linux IL2CPP target can be built from Mac and Windows 
-	/// </summary>
-	/// <param name="target"></param>
-	/// <returns></returns>
-	private bool IsOffload(BuildTargetFlag target)
-	{
-		return !string.IsNullOrEmpty(_offloadUrl) && _offloadTargets.Contains(target);
 	}
 
 	private async Task<bool> DeployAsync()
@@ -311,10 +277,10 @@ public class BuildPipeline
 	private async Task<bool> PingOffloadServer()
 	{
 		// ignore if no offload server is needed
-		if (string.IsNullOrEmpty(_offloadUrl))
+		if (_offloadable is null)
 			return true;
 		
-		var res = await Web.SendAsync(HttpMethod.Get, _offloadUrl);
+		var res = await Web.SendAsync(HttpMethod.Get, _offloadable.Url);
 		
 		if (res.StatusCode is HttpStatusCode.OK)
 			return true;
@@ -356,34 +322,17 @@ public class BuildPipeline
 	
 	public void OffloadBuildCompleted(string buildGuid, BuildResult buildResult)
 	{
-		if (!_buildIds.Contains(buildGuid))
+		if (_offloadable is null)
+			return;
+		
+		if (!_offloadable.PendingIds.Contains(buildGuid))
 			throw new Exception($"{nameof(buildGuid)} not expected: {buildGuid}");
 		
 		Logger.Log($"Offload Completed: {buildGuid}. {buildResult}");
 		
         _buildResults.Add(buildResult);
-		_buildIds.Remove(buildGuid);
+        _offloadable.PendingIds.Remove(buildGuid);
 		Report.UpdateBuildTarget(buildResult.BuildName, buildResult.IsErrors ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed);
-	}
-
-	/// <summary>
-	/// Returns once buildIds count is 0
-	/// </summary>
-	private async Task WaitBuildIds()
-	{
-		var cachedCount = -1;
-		
-		while (_buildIds.Count > 0)
-		{
-			// to limit the amount of log spamming just log when count changes
-			if (_buildIds.Count != cachedCount)
-			{
-				Logger.Log($"Remaining buildIds: ({_buildIds.Count}) {string.Join(", ", _buildIds)}");
-				cachedCount = _buildIds.Count;
-			}
-			
-			await Task.Delay(5000);
-		}
 	}
 
 	#endregion
