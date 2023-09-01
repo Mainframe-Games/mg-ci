@@ -175,19 +175,7 @@ public class DiscordWrapper
 		var fullResponse = new StringBuilder();
 		fullResponse.AppendLine(commandFull);
 		fullResponse.AppendLine(string.Empty);
-
-		PipelineReport? pipelineReport = null;
-		
-		if (cmd is BuildCommand)
-		{
-			var buildCmdResponse = Json.Deserialise<BuildPipelineResponse>(res.Content);
-			fullResponse.AppendLine(buildCmdResponse?.ToString() ?? res.Content);
-			pipelineReport = buildCmdResponse?.Report?.Report;
-		}
-		else
-		{
-			fullResponse.AppendLine(res.Content);
-		}
+		fullResponse.AppendLine(res.Content);
 
 		if (res.IsError)
 		{
@@ -196,18 +184,17 @@ public class DiscordWrapper
 		}
 
 		// success
-		var restInteractionMessage = await command.RespondSuccessDelayed(command.User, res.Title, fullResponse.ToString());
-
 		// only need to track message updaters for build commands
 		if (cmd is BuildCommand)
 		{
+			var restInteractionMessage = await command.RespondSuccessDelayed(command.User, res.Title, fullResponse.ToString());
 			var channelId = command.ChannelId ?? 0;
 			var messageId = restInteractionMessage?.Id ?? 0;
-			MessagesMap[command.Id] = new MessageUpdater(_client, channelId, messageId);
-			
-			if (pipelineReport is not null)
-				await MessagesMap[command.Id].UpdateMessageAsync(pipelineReport);
+			MessagesMap.Add(command.Id, new MessageUpdater(_client, channelId, messageId));
+			await MessagesMap[command.Id].UpdateMessageAsync(new PipelineReport());
 		}
+		else
+			await command.RespondSuccessDelayed(command.User, res.Title, fullResponse.ToString());
 	}
 	
 	private static bool IsAuthorised(SocketGuildUser guildUser)

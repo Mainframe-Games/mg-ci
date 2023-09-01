@@ -52,11 +52,6 @@ public class RemoteBuildWorkspaceRequest : IProcessable
 			ChangesetGuid = guid,
 			Branch = branch,
 			ChangesetCount = pipeline.ChangeLog.Length,
-			Report = new PipelineUpdateMessage
-			{
-				CommandId = CommandId,
-				Report = pipeline.Report,
-			}
 		};
 		return new ServerResponse(HttpStatusCode.OK, data);
 	}

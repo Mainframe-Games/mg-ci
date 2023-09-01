@@ -21,7 +21,7 @@ public class MessageUpdater
 		var originalEmbed = message.Embeds.ElementAt(0);
 		var embeds = new List<Embed>
 		{
-			originalEmbed.UpdateEmbed(),
+			originalEmbed.UpdateEmbed(includeAuthor: true),
 			BuildEmbedFromReport(report),
 		};
 
