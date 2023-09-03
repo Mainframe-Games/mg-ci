@@ -87,7 +87,7 @@ public class Offloader : IOffloadable
 	{
 		var buildConfig	= new OffloadBuildConfig
 		{
-			Name = build.Name,
+			AssetName = build.Name,
 		};
 
 		switch (flag)

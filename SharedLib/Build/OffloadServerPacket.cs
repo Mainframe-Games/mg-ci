@@ -1,5 +1,8 @@
 namespace SharedLib.Build;
 
+/// <summary>
+/// Shared between 
+/// </summary>
 public class OffloadServerPacket
 {
 	public string? WorkspaceName { get; set; }
@@ -17,6 +20,6 @@ public class OffloadServerPacket
 
 public class OffloadBuildConfig
 {
-	public string? Name { get; set; }
+	public string? AssetName { get; set; }
 	public object? Deploy { get; set; }
 }

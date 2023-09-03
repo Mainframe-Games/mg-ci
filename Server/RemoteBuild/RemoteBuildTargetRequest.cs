@@ -57,22 +57,41 @@ public class RemoteBuildTargetRequest : IProcessable
 
 		foreach (var build in Packet.Builds)
 		{
-			await StartBuilderAsync(Packet.PipelineId, build.Key, build.Value.Name, workspace, build.Value.Deploy);
+			var asset = workspace.GetBuildTarget(build.Value.AssetName);
+			var deployProcess = GetDeployProcess(build.Value, asset);
+			await StartBuilderAsync(Packet.PipelineId, build.Key, asset, workspace, deployProcess);
 		}
 
 		// clean up after build
 		workspace.Clear();
 		App.DumpLogs();
 	}
+	
+	/// <summary>
+	/// Returns IProcessable for remote deploy if there is one
+	/// </summary>
+	/// <param name="build"></param>
+	/// <param name="asset"></param>
+	/// <returns></returns>
+	private static IProcessable? GetDeployProcess(OffloadBuildConfig build, BuildSettingsAsset asset)
+	{
+		if (build.Deploy is null)
+			return null;
+		
+		var deployStr = Json.Serialise(build.Deploy);
+		
+		if (asset.Target is BuildTarget.iOS)
+			return Json.Deserialise<RemoteAppleDeploy>(deployStr);
+
+		return null;
+	}
 
 	/// <summary>
 	/// Fire and forget method for starting a build
 	/// </summary>
 	/// <exception cref="WebException"></exception>
-	private async Task StartBuilderAsync(ulong pipelineId, string buildIdGuid, string buildTarget, Workspace workspace, object? deploy)
+	private async Task StartBuilderAsync(ulong pipelineId, string buildIdGuid, BuildSettingsAsset asset, Workspace workspace, IProcessable? deployProcess = null)
 	{
-		var asset = workspace.GetBuildTarget(buildTarget);
-
 		try
 		{
 			var builder = new LocalUnityBuild(workspace);
@@ -86,10 +105,10 @@ public class RemoteBuildTargetRequest : IProcessable
 			}
 			
 			// if no deploy then master server does deploy, need to upload this build
-			if (deploy is null)
+			if (deployProcess is null)
 				await Web.StreamToServerAsync(SendBackUrl, asset.BuildPath, pipelineId, buildIdGuid);
 			else
-				await StartDeployAsync(asset, workspace, deploy);
+				deployProcess.Process();
 			
 			// tell master server build is completed
 			await SendToMasterServerAsync(pipelineId, buildIdGuid, asset.Name, result, result.IsErrors ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed);
@@ -104,21 +123,6 @@ public class RemoteBuildTargetRequest : IProcessable
 			};
 			await SendToMasterServerAsync(pipelineId, buildIdGuid, asset.Name, result, BuildTaskStatus.Failed);
 		}
-	}
-
-	private static async Task StartDeployAsync(BuildSettingsAsset asset, Workspace workspace, object deploy)
-	{
-		if (asset.Target is BuildTarget.iOS)
-		{
-			var apple = new RemoteAppleDeploy
-			{
-				WorkspaceName = workspace.Name,
-				Config = XcodeConfig.FromObject(deploy),
-			};
-			apple.Process();
-		}
-
-		await Task.CompletedTask;
 	}
 
 	private async Task SendToMasterServerAsync(ulong pipelineId, string? buildGuid, string buildName, BuildResult? buildResult, BuildTaskStatus status)
