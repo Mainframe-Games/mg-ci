@@ -320,19 +320,37 @@ public class BuildPipeline
 		}
 	}
 	
-	public void OffloadBuildCompleted(string buildGuid, BuildResult buildResult)
+	public void SetOffloadBuildStatus(string buildGuid, string buildName, BuildTaskStatus buildTaskStatus, BuildResult buildResult)
 	{
 		if (_offloadable is null)
 			return;
 		
 		if (!_offloadable.PendingIds.Contains(buildGuid))
 			throw new Exception($"{nameof(buildGuid)} not expected: {buildGuid}");
-		
-		Logger.Log($"Offload Completed: {buildGuid}. {buildResult}");
-		
-        _buildResults.Add(buildResult);
-        _offloadable.PendingIds.Remove(buildGuid);
-		Report.UpdateBuildTarget(buildResult.BuildName, buildResult.IsErrors ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed);
+
+		Logger.Log($"Offload Status: {buildName}, status: {buildTaskStatus}, result: {buildResult}");
+		Report.UpdateBuildTarget(buildName, buildTaskStatus);
+
+		switch (buildTaskStatus)
+		{
+			case BuildTaskStatus.Queued:
+			case BuildTaskStatus.Pending:
+				break;
+			
+			case BuildTaskStatus.Succeed:
+				_buildResults.Add(buildResult);
+				_offloadable.PendingIds.Remove(buildGuid);
+				break;
+			
+			case BuildTaskStatus.Failed:
+				_buildResults.Add(buildResult);
+				_offloadable.PendingIds.Remove(buildGuid);
+				Logger.Log($"{buildName} Errors: {buildResult?.Errors}");
+				break;
+			
+			default:
+				throw new ArgumentOutOfRangeException(nameof(buildTaskStatus), buildTaskStatus, null);
+		}
 	}
 
 	#endregion

@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Deployment;
+using Deployment.Configs;
 using Deployment.Deployments;
 using Deployment.Server.Unity;
 using Server.Configs;
@@ -87,6 +88,7 @@ public static class App
 				WorkspaceName = workspace.Name,
 				WorkspaceBranch = workspace.Branch,
 				PipelineId = pipelineId,
+				XcodeConfig = Config.AppleStore
 			};
 		}
 		

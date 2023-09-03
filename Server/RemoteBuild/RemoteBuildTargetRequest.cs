@@ -2,8 +2,10 @@
 using Deployment;
 using Deployment.Configs;
 using Deployment.RemoteBuild;
+using Server.RemoteDeploy;
 using SharedLib;
 using SharedLib.Build;
+using SharedLib.BuildToDiscord;
 using SharedLib.Server;
 
 namespace Server.RemoteBuild;
@@ -54,7 +56,9 @@ public class RemoteBuildTargetRequest : IProcessable
 		projWriter.ReplaceVersions(Packet.BuildVersion);
 
 		foreach (var build in Packet.Builds)
-			await StartBuilder(Packet.PipelineId, build.Key, build.Value.Name, workspace);
+		{
+			await StartBuilderAsync(Packet.PipelineId, build.Key, build.Value.Name, workspace, build.Value.Deploy);
+		}
 
 		// clean up after build
 		workspace.Clear();
@@ -65,36 +69,68 @@ public class RemoteBuildTargetRequest : IProcessable
 	/// Fire and forget method for starting a build
 	/// </summary>
 	/// <exception cref="WebException"></exception>
-	private async Task StartBuilder(ulong pipelineId, string buildIdGuid, string buildTarget, Workspace workspace)
+	private async Task StartBuilderAsync(ulong pipelineId, string buildIdGuid, string buildTarget, Workspace workspace, object? deploy)
 	{
 		var asset = workspace.GetBuildTarget(buildTarget);
 
 		try
 		{
 			var builder = new LocalUnityBuild(workspace);
+			await SendToMasterServerAsync(pipelineId, buildIdGuid, asset.Name, null, BuildTaskStatus.Pending);
 			var result = builder.Build(asset);
 
-			if (!result.IsErrors)
+			if (result.IsErrors)
+			{
+				await SendToMasterServerAsync(pipelineId, buildIdGuid, asset.Name, result, BuildTaskStatus.Failed);
+				return;
+			}
+			
+			// if no deploy then master server does deploy, need to upload this build
+			if (deploy is null)
 				await Web.StreamToServerAsync(SendBackUrl, asset.BuildPath, pipelineId, buildIdGuid);
-
-			await SendToMasterServerAsync(pipelineId, buildIdGuid, result.Errors, result);
+			else
+				await StartDeployAsync(asset, workspace, deploy);
+			
+			// tell master server build is completed
+			await SendToMasterServerAsync(pipelineId, buildIdGuid, asset.Name, result, result.IsErrors ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed);
 		}
 		catch (Exception e)
 		{
 			Logger.Log(e);
-			await SendToMasterServerAsync(pipelineId, buildIdGuid, e.Message, null);
+			var result = new BuildResult
+			{
+				BuildName = asset.Name,
+				Errors = $"{e.GetType().Name}: {e.Message}"
+			};
+			await SendToMasterServerAsync(pipelineId, buildIdGuid, asset.Name, result, BuildTaskStatus.Failed);
 		}
 	}
 
-	private async Task SendToMasterServerAsync(ulong pipelineId, string? buildGuid, string? error,
-		BuildResult? buildResult)
+	private static async Task StartDeployAsync(BuildSettingsAsset asset, Workspace workspace, object deploy)
+	{
+		if (asset.Target is BuildTarget.iOS)
+		{
+			var apple = new RemoteAppleDeploy
+			{
+				WorkspaceName = workspace.Name,
+				Config = deploy as XcodeConfig,
+			};
+			
+			apple.Process();
+		}
+
+		await Task.CompletedTask;
+	}
+
+	private async Task SendToMasterServerAsync(ulong pipelineId, string? buildGuid, string buildName, BuildResult? buildResult, BuildTaskStatus status)
 	{
 		var response = new RemoteBuildResponse
 		{
 			PipelineId = pipelineId,
 			BuildIdGuid = buildGuid,
-			Error = error,
-			BuildResult = buildResult
+			BuildName = buildName,
+			BuildResult = buildResult,
+			Status = status
 		};
 
 		Logger.Log($"Sending build '{response.BuildIdGuid}' back to: {SendBackUrl}");

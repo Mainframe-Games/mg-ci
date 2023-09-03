@@ -19,7 +19,12 @@ public class Offloader : IOffloadable
 	public string? WorkspaceName { get; set; }
 	public string? WorkspaceBranch { get; set; }
 	public ulong PipelineId { get; set; }
+	
+	// offload builds
 	public BuildConfig? BuildConfig { get; set; }
+	
+	// offload deploys
+	public XcodeConfig? XcodeConfig { get; set; }
 
 	public bool IsOffload(BuildSettingsAsset build, BuildVersions? buildVersion, int changesetId, bool isClean)
 	{
@@ -39,8 +44,7 @@ public class Offloader : IOffloadable
 			Builds = new Dictionary<string, OffloadBuildConfig>()
 		};
 
-		var buildId = CreateRemoteBuildTargetConfig(Packet, build, flag);
-		PendingIds.Add(buildId);
+		CreateRemoteBuildTargetConfig(Packet, build, flag);
 		return true;
 	}
 	
@@ -79,28 +83,48 @@ public class Offloader : IOffloadable
 		Logger.Log($"{nameof(Offloader)}: {res}");
 	}
 	
-	private string CreateRemoteBuildTargetConfig(OffloadServerPacket packet, BuildSettingsAsset build, BuildTargetFlag flag)
+	private void CreateRemoteBuildTargetConfig(OffloadServerPacket packet, BuildSettingsAsset build, BuildTargetFlag flag)
 	{
-		var buildId = Guid.NewGuid().ToString();
-
-		var buildConfig	= new OffloadBuildConfig { Name = build.Name, };
-		
-		if (flag is BuildTargetFlag.iOS && BuildConfig?.Deploy?.AppleStore is not true)
+		var buildConfig	= new OffloadBuildConfig
 		{
-			buildConfig.Deploy = new RemoteAppleDeploy
-			{
-				WorkspaceName = WorkspaceName,
-				Config = new XcodeConfig
+			Name = build.Name,
+		};
+
+		switch (flag)
+		{
+			case BuildTargetFlag.None:
+				break;
+			case BuildTargetFlag.Standalone:
+				break;
+			case BuildTargetFlag.Win:
+				break;
+			case BuildTargetFlag.Win64:
+				break;
+			case BuildTargetFlag.OSXUniversal:
+				break;
+			case BuildTargetFlag.Linux64:
+				break;
+			case BuildTargetFlag.iOS when BuildConfig?.Deploy?.AppleStore is true:
+				buildConfig.Deploy = new RemoteAppleDeploy
 				{
-					// TODO: work out a way to get id/pw here without too much mess
-					AppleId = "",
-					AppSpecificPassword = ""
-				}
-			};
+					WorkspaceName = WorkspaceName,
+					Config = XcodeConfig
+				};
+				break;
+			case BuildTargetFlag.Android:
+				break;
+			case BuildTargetFlag.WebGL:
+				break;
+			case BuildTargetFlag.WindowsStoreApps:
+				break;
+			case BuildTargetFlag.tvOS:
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(flag), flag, null);
 		}
 
+		var buildId = Guid.NewGuid().ToString();
 		packet.Builds[buildId] = buildConfig;
-		
-		return buildId;
+		PendingIds.Add(buildId);
 	}
 }
