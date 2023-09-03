@@ -22,6 +22,11 @@ public class RemoteAppleDeploy : IProcessable
 		if (!File.Exists(exportOptionPlist))
 			throw new FileNotFoundException(exportOptionPlist);
 
+		if (Config?.AppleId is null)
+			throw new NullReferenceException($"{nameof(Config.AppleId)} can not be null");
+		if (Config?.AppSpecificPassword is null)
+			throw new NullReferenceException($"{nameof(Config.AppSpecificPassword)} can not be null");
+		
 		XcodeDeploy.Deploy(
 			workingDir,
 			Config.AppleId,
