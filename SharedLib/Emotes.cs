@@ -8,7 +8,7 @@ public static class Emotes
 	{
 		return status switch
 		{
-			BuildTaskStatus.Queued => "😴",
+			BuildTaskStatus.Queued => "💤",
 			BuildTaskStatus.Pending => "⏳",
 			BuildTaskStatus.Succeed => "✅",
 			BuildTaskStatus.Failed => "❌",
