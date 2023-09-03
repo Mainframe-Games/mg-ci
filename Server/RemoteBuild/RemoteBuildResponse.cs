@@ -1,4 +1,5 @@
-﻿using Deployment;
+﻿using System.Net;
+using Deployment;
 using Deployment.Configs;
 using SharedLib.BuildToDiscord;
 using SharedLib.Server;
@@ -16,11 +17,16 @@ public class RemoteBuildResponse : IProcessable
 	public ServerResponse Process()
 	{
 		if (!App.Pipelines.TryGetValue(PipelineId, out var buildPipeline))
-			throw new NullReferenceException($"{nameof(BuildPipeline)} is not active. Id: {PipelineId}");
+			return new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(BuildPipeline)} is not active. Id: {PipelineId}");
 
-		if (BuildName == null) throw new NullReferenceException($"{nameof(BuildName)} can not be null");
-		if (BuildIdGuid == null) throw new NullReferenceException($"{nameof(BuildIdGuid)} can not be null");
-		if (BuildResult == null) throw new NullReferenceException($"{nameof(BuildResult)} can not be null");
+		if (BuildName == null)
+			return new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(BuildName)} can not be null");
+		
+		if (BuildIdGuid == null)
+			return new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(BuildIdGuid)} can not be null");
+		
+		if (BuildResult == null && Status is BuildTaskStatus.Succeed or BuildTaskStatus.Failed) 
+			return new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(BuildResult)} can not be null");
 
 		buildPipeline.SetOffloadBuildStatus(BuildIdGuid, BuildName, Status ?? default, BuildResult);
 		return ServerResponse.Ok;

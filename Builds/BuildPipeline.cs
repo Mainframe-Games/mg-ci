@@ -320,7 +320,16 @@ public class BuildPipeline
 		}
 	}
 	
-	public void SetOffloadBuildStatus(string buildGuid, string buildName, BuildTaskStatus buildTaskStatus, BuildResult buildResult)
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="buildGuid"></param>
+	/// <param name="buildName"></param>
+	/// <param name="buildTaskStatus"></param>
+	/// <param name="buildResult">Can be null for pending status requests</param>
+	/// <exception cref="Exception"></exception>
+	/// <exception cref="ArgumentOutOfRangeException"></exception>
+	public void SetOffloadBuildStatus(string buildGuid, string buildName, BuildTaskStatus buildTaskStatus, BuildResult? buildResult = null)
 	{
 		if (_offloadable is null)
 			return;
