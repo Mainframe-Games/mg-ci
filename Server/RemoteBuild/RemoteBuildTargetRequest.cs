@@ -113,9 +113,8 @@ public class RemoteBuildTargetRequest : IProcessable
 			var apple = new RemoteAppleDeploy
 			{
 				WorkspaceName = workspace.Name,
-				Config = deploy as XcodeConfig,
+				Config = XcodeConfig.FromObject(deploy),
 			};
-			
 			apple.Process();
 		}
 
