@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Deployment;
 using Deployment.Configs;
+using SharedLib;
 using SharedLib.BuildToDiscord;
 using SharedLib.Server;
 
@@ -17,18 +18,25 @@ public class RemoteBuildResponse : IProcessable
 	public ServerResponse Process()
 	{
 		if (!App.Pipelines.TryGetValue(PipelineId, out var buildPipeline))
-			return new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(BuildPipeline)} is not active. Id: {PipelineId}");
+			return LogAndReturn(new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(BuildPipeline)} is not active. Id: {PipelineId}"));
 
-		if (BuildName == null)
-			return new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(BuildName)} can not be null");
-		
-		if (BuildIdGuid == null)
-			return new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(BuildIdGuid)} can not be null");
-		
-		if (BuildResult == null && Status is BuildTaskStatus.Succeed or BuildTaskStatus.Failed) 
-			return new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(BuildResult)} can not be null");
+		// if build name or buildGUID is null then errors could of happened before builds could even start
+		if (BuildName == null || BuildIdGuid == null)
+		{
+			buildPipeline.SendErrorHook(new Exception(BuildResult?.Errors ?? "Unknown error. Something went wrong with offload server"));
+			return ServerResponse.Ok;
+		}
+
+		if (BuildResult == null && Status is BuildTaskStatus.Succeed or BuildTaskStatus.Failed)
+			return LogAndReturn(new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(BuildResult)} can not be null"));
 
 		buildPipeline.SetOffloadBuildStatus(BuildIdGuid, BuildName, Status ?? default, BuildResult);
 		return ServerResponse.Ok;
+	}
+
+	private static ServerResponse LogAndReturn(ServerResponse res)
+	{
+		Logger.Log(res);
+		return res;
 	}
 }
