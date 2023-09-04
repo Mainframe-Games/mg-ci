@@ -208,6 +208,12 @@ public class BuildPipeline
 			return;
 
 		Logger.Log("PostBuild process started...");
+
+		if (Report.IsFailed)
+		{
+			Report.Complete(BuildVersionTitle, "Pipeline Failed");
+			return;
+		}
 		
 		// committing new version must be done after collecting changeLogs as the prev changesetid will be updated
 		Workspace.CommitNewVersionNumber($"{BuildVersionTitle} | cs: {_currentChangeSetId} | guid: {_currentGuid}");
@@ -220,8 +226,8 @@ public class BuildPipeline
 		
 		// build changeLog
 		var hookMessage = new StringBuilder();
-		hookMessage.AppendLine($"**cs:** {_currentChangeSetId}");
-		hookMessage.AppendLine($"**guid:** {_currentGuid}");
+		hookMessage.AppendLine($"**ChangeSetId:** {_currentChangeSetId}");
+		hookMessage.AppendLine($"**ChangeSetGUID:** {_currentGuid}");
 		hookMessage.AppendLine("");
 
 		hookMessage.AppendLine($"**Targets:** Total Time {TimeSinceStart}");

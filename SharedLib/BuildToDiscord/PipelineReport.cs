@@ -83,7 +83,7 @@ public class PipelineReport
 	
 	public void Complete(string title, string message)
 	{
-		PostBuild = BuildTaskStatus.Succeed;
+		PostBuild = IsFailed ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed;
 		ChangeLogTitle = title;
 		ChangeLogMessage = message;
 		
