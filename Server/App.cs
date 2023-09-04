@@ -182,7 +182,7 @@ public static class App
 
 	private static void DeployApple(BuildPipeline pipeline)
 	{
-		if (pipeline.Config.Deploy?.AppleStore is not true)
+		if (pipeline.Config.Deploy?.AppleStore is not true || !OperatingSystem.IsMacOS())
 			return;
 
 		var apple = new RemoteAppleDeploy
