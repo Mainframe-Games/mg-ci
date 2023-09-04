@@ -25,7 +25,7 @@ public class MessageUpdater
 			BuildEmbedFromReport(report),
 		};
 
-		if (report.IsSuccessful)
+		if (report.IsSuccessful || report.IsFailed)
 			embeds.Add(BuildChangeLog(report));
 
 		await _channel.ModifyMessageAsync(_messageId,
