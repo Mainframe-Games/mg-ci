@@ -81,9 +81,9 @@ public class PipelineReport
 		OnReportUpdated?.Invoke(this);
 	}
 	
-	public void Complete(string title, string message)
+	public void Complete(BuildTaskStatus status, string title, string message)
 	{
-		PostBuild = IsFailed ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed;
+		PostBuild = status;
 		ChangeLogTitle = title;
 		ChangeLogMessage = message;
 		

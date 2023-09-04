@@ -211,7 +211,7 @@ public class BuildPipeline
 
 		if (Report.IsFailed)
 		{
-			Report.Complete(BuildVersionTitle, "Pipeline Failed");
+			Report.Complete(BuildTaskStatus.Failed, "Pipeline Failed", "Nothing else to add");
 			return;
 		}
 		
@@ -268,7 +268,7 @@ public class BuildPipeline
 			}
 		}
 		
-		Report.Complete(BuildVersionTitle, hookMessage.ToString());
+		Report.Complete(BuildTaskStatus.Succeed, BuildVersionTitle, hookMessage.ToString());
 		Workspace.Clear();
 	}
 	
@@ -298,11 +298,13 @@ public class BuildPipeline
 
 	public void SendErrorHook(Exception e)
 	{
+		var errorMessage = $"{e.GetType()}: {e.Message}";
+		Report.Complete(BuildTaskStatus.Failed, "Pipeline Failed", errorMessage);
+		
 		if (Config.Hooks == null)
 			return;
 		
 		var hookMessage = new StringBuilder();
-		var errorMessage = $"{e.GetType()}: {e.Message}";
 		
 		foreach (var hook in Config.Hooks)
 		{
