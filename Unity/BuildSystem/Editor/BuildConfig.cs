@@ -23,17 +23,15 @@ namespace BuildSystem
 		public Deploy Deploy;
 		public WebHook[] Hooks;
 
+		public override string ToString()
+		{
+			return JsonUtility.ToJson(this, true);
+		}
+
 		[ContextMenu("Set Dirty")]
 		private void OnValidate()
 		{
 			EditorUtility.SetDirty(this);
-		}
-
-		[ContextMenu("Build Json")]
-		private void BuildJson()
-		{
-			var json = JsonUtility.ToJson(this, true);
-			Debug.Log($"{Environment.CurrentDirectory} {json}");
 		}
 		
 		public static BuildConfig GetOrCreateSettings()
