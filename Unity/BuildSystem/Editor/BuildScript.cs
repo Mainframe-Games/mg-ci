@@ -228,20 +228,11 @@ namespace BuildSystem
 		
 		public static BuildSettings CurrentBuildSettings { get; private set; }
 
-		public static BuildSettings GetBuildConfig()
+		private static BuildSettings GetBuildConfig()
 		{
 			var buildSettingsName = GetArgValue("-settings");
-			var guids = AssetDatabase.FindAssets($"t:{nameof(BuildSettings)}");
-			
-			for (int i = 0; i < guids.Length; i++)
-			{
-				var path = AssetDatabase.GUIDToAssetPath(guids[i]);
-				var config = AssetDatabase.LoadAssetAtPath<BuildSettings>(path);
-				if (config.name.Equals(buildSettingsName, StringComparison.OrdinalIgnoreCase))
-					return config;
-			}
-
-			throw new Exception($"Build settings not found '{buildSettingsName}'");
+			return AssetFinder.GetAsset<BuildSettings>(
+				config => config.name.Equals(buildSettingsName, StringComparison.OrdinalIgnoreCase));
 		}
 		
 		private static string GetArgValue(string arg)
