@@ -83,4 +83,17 @@ public static class Cmd
 			? defaultAnswer
 			: response.ToLower() == "y";
 	}
+	
+	public static int Ask(string question, int defaultAnswer)
+	{
+		Console.Write($"{question} [{defaultAnswer}]: ");
+		var response = Console.ReadLine();
+
+		if (string.IsNullOrEmpty(response))
+			return defaultAnswer;
+
+		return int.TryParse(response, out var integer) 
+			? integer
+			: defaultAnswer;
+	}
 }

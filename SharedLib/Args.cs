@@ -3,12 +3,11 @@
 public class Args
 {
 	public static readonly Args Environment = new(System.Environment.GetCommandLineArgs());
-	
-	private readonly List<string> _args = new();
 	private readonly Dictionary<string, List<string>> _cmds = new();
 
 	public Args(string[]? args)
 	{
+		var _args = new List<string>();
 		_args.AddRange(args ?? Array.Empty<string>());
 		var cmd = string.Empty;
 
@@ -29,6 +28,20 @@ public class Args
 			// args
 			_cmds[cmd].Add(arg);
 		}
+	}
+	
+	public void Add(string flag, string? arg = null)
+	{
+		if (!flag.StartsWith('-'))
+			throw new Exception("Flags must start with -");
+		
+		// add flag
+		if (!_cmds.ContainsKey(flag))
+			_cmds[flag] = new List<string>();
+		
+		// add arg
+		if (!string.IsNullOrEmpty(arg))
+			_cmds[flag].Add(arg);
 	}
 
 	/// <summary>
@@ -78,19 +91,12 @@ public class Args
 		=> TryGetArgs(cmd, out var args) && args.Contains(arg);
 
 	/// <summary>
-	/// Returns if the commands is a boolean flag, i.e no args
+	/// Returns if flag exists, can have args or no args, it just checks for flag
 	/// </summary>
 	/// <param name="cmd"></param>
-	/// <param name="zeroArgs"></param>
 	/// <returns></returns>
-	public bool IsFlag(string cmd, bool zeroArgs = true)
+	public bool IsFlag(string cmd)
 	{
-		if (!TryGetArgs(cmd, out var args))
-			return false;
-
-		if (zeroArgs)
-			return args.Count == 0;
-
-		return true;
+		return TryGetArgs(cmd, out _);
 	}
 }

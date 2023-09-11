@@ -67,7 +67,7 @@ public class Workspace
 		return workspaces;
 	}
 
-	public static Workspace? AskWorkspace()
+	public static bool TryAskWorkspace(out Workspace workspace)
 	{
 		var (exitCode, output) = Cmd.Run("cm", "workspace", logOutput: false);
 
@@ -76,13 +76,16 @@ public class Workspace
 
 		var workspaces = GetAvailableWorkspaces();
 		var workspaceNames = workspaces.Select(x => x.Name).ToList();
-		
+
 		if (!Cmd.Choose("Choose workspace", workspaceNames, out var index))
-			return null;
+		{
+			workspace = null;
+			return false;
+		}
 		
-		var workspace = workspaces[index];
+		workspace = workspaces[index];
 		Logger.Log($"Chosen workspace: {workspace}");
-		return workspace;
+		return true;
 	}
 
 	public static Workspace? GetWorkspaceFromName(string? workspaceName)
@@ -131,17 +134,17 @@ public class Workspace
 		return ProjectSettings.GetValue<string?>("bundleVersion");;
 	}
 
-	// public int[] GetVersionArray()
-	// {
-	// 	var verStr = GetBundleVersion() ?? string.Empty;
-	// 	var ver = verStr.Split(".");
-	// 	var arr = new int[ver.Length];
-	//
-	// 	for (int i = 0; i < ver.Length; i++)
-	// 		arr[i] = int.Parse(ver[i].Trim());
-	//
-	// 	return arr;
-	// }
+	public int[] GetVersionArray()
+	{
+		var verStr = GetBundleVersion() ?? string.Empty;
+		var ver = verStr.Split(".");
+		var arr = new int[ver.Length];
+	
+		for (int i = 0; i < ver.Length; i++)
+			arr[i] = int.Parse(ver[i].Trim());
+	
+		return arr;
+	}
 
 	public bool IsIL2CPP(UnityBuildTargetGroup group)
 	{

@@ -45,7 +45,6 @@ public class BuildPipeline
 	public PipelineReport Report { get; }
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{(DateTime.Now - StartTime).ToHourMinSecString()}";
-	public string BuildVersionTitle => $"{Workspace.Meta?.ProjectName ?? Workspace.Name} | {BuildVersions?.FullVersion}";
 
 	public BuildPipeline(ulong id, Workspace workspace, Args args, IOffloadable? offloadable)
 	{
@@ -130,14 +129,14 @@ public class BuildPipeline
 		Logger.Log("PreBuild process started...");
 
 		// pre build runner
-		var preBuild = new PreBuild(Workspace);
+		var preBuild = new PreBuild(Workspace, Args);
 		preBuild.Run(Config.PreBuild);
 		BuildVersions = preBuild.BuildVersions;
 		
 		// write new versions to disk
 		Workspace.ProjectSettings.ReplaceVersions(preBuild.BuildVersions);
 		Workspace.SaveBuildVersion(preBuild.BuildVersions.FullVersion);
-		Workspace.CommitNewVersionNumber($"{BuildVersionTitle} | cs: {_currentChangeSetId} | guid: {_currentGuid}");
+		Workspace.CommitNewVersionNumber($"{BUILD_VERSION}: {preBuild.BuildVersions.FullVersion} | cs: {_currentChangeSetId} | guid: {_currentGuid}");
 		
 		await Task.CompletedTask;
 	}
@@ -242,6 +241,8 @@ public class BuildPipeline
 		var discord = new ChangeLogBuilderDiscord();
 		discord.BuildLog(ChangeLog);
 		hookMessage.AppendLine(discord.ToString());
+
+		var title = $"{Workspace.Meta?.ProjectName ?? Workspace.Name} | {BuildVersions?.FullVersion}";
 		
 		// send hooks
 		foreach (var hook in Config.Hooks)
@@ -255,7 +256,7 @@ public class BuildPipeline
 				{
 					Url = Workspace.Meta?.Url,
 					ThumbnailUrl = Workspace.Meta?.ThumbnailUrl,
-					Title = BuildVersionTitle,
+					Title = title,
 					Description = hookMessage.ToString(),
 					Username = hook.Title,
 					Colour = Discord.Colour.GREEN
@@ -264,12 +265,12 @@ public class BuildPipeline
 			}
 			else if (hook.IsSlack())
 			{
-				var slackMessage = $"*{hook.Title}*\n{BuildVersionTitle}\n{hookMessage}";
+				var slackMessage = $"*{hook.Title}*\n{title}\n{hookMessage}";
 				Slack.PostMessage(hook.Url, slackMessage);
 			}
 		}
 		
-		Report.Complete(BuildTaskStatus.Succeed, BuildVersionTitle, hookMessage.ToString());
+		Report.Complete(BuildTaskStatus.Succeed, title, hookMessage.ToString());
 		Workspace.Clear();
 	}
 	
@@ -305,6 +306,8 @@ public class BuildPipeline
 		if (Config.Hooks == null)
 			return;
 		
+		var title = $"{Workspace.Meta?.ProjectName ?? Workspace.Name} | {BuildVersions?.FullVersion}";
+		
 		var hookMessage = new StringBuilder();
 		
 		foreach (var hook in Config.Hooks)
@@ -318,7 +321,7 @@ public class BuildPipeline
 			{
 				hookMessage.AppendLine(hook.Title);
 				hookMessage.AppendLine(errorMessage);
-				Discord.PostMessage(hook.Url, hookMessage.ToString(), hook.Title, BuildVersionTitle, Discord.Colour.RED);
+				Discord.PostMessage(hook.Url, hookMessage.ToString(), hook.Title, title, Discord.Colour.RED);
 			}
 			else if (hook.IsSlack())
 			{

@@ -31,11 +31,17 @@ public static class App
 		{
 			Logger.Log($"App Version: {Version}");
 
-			var workspace = Workspace.AskWorkspace();
-			if (workspace == null)
+			if (!Workspace.TryAskWorkspace(out var workspace))
 			{
 				Logger.Log("No Workspace chosen");
 				return;
+			}
+
+			// add bundle version bump flag
+			if (Cmd.Ask("Bump minor version?", false))
+			{
+				var index = Cmd.Ask("Version Index?", 1);
+				args.Add("-bundleversion", index.ToString());
 			}
 			
 			var pipeline = CreateBuildPipeline(workspace, args);
