@@ -34,6 +34,9 @@ public static class Discord
 		YELLOW = 16776960,
 	}
 
+	/// <summary>
+	/// Src: https://discohook.org/
+	/// </summary>
 	public struct Embed
 	{
 		public string? Url;
@@ -48,7 +51,7 @@ public static class Discord
 			return new JObject
 			{
 				["url"] = Url,
-				["thumbnailUrl"] = ThumbnailUrl,
+				["thumbnail"] = ThumbnailUrl,
 				["title"] = Title,
 				["color"] = ((int)(Colour ?? Discord.Colour.DEFAULT)).ToString(),
 				["description"] = Description,

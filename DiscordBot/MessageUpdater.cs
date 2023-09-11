@@ -32,6 +32,9 @@ public class MessageUpdater
 			properties => { properties.Embeds = new Optional<Embed[]>(embeds.ToArray()); });
 	}
 
+	/// <summary>
+	/// Src: https://discohook.org/
+	/// </summary>
 	private static Embed BuildEmbedFromReport(PipelineReport report)
 	{
 		var embed = new EmbedBuilder();
@@ -54,6 +57,9 @@ public class MessageUpdater
 		return embed.Build();
 	}
 
+	/// <summary>
+	/// Src: https://discohook.org/
+	/// </summary>
 	private static Embed BuildChangeLog(PipelineReport report)
 	{
 		var embed = new EmbedBuilder();
