@@ -17,7 +17,6 @@ public class Workspace
 	[JsonIgnore] public string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", PROJ_SETTINGS_ASSET);
 	[JsonIgnore] public string BuildVersionPath => Path.Combine(Directory, "Assets", "StreamingAssets", BUILD_VERSION_TXT);
 
-
 	private Workspace(string name, string directory)
 	{
 		Name = name;
@@ -35,11 +34,18 @@ public class Workspace
 	private WorkspaceMeta? GetMetaData()
 	{
 		var metaPath = Path.Combine(Directory, "BuildScripts", "WorkspaceMeta.json");
-		
-		if (!File.Exists(metaPath))
-			return null;
+		var metaPathNew = Path.Combine(Directory, "BuildSystem", "WorkspaceMeta.json");
 
-		var fileContents = File.ReadAllText(metaPath);
+		string? fileContents = null;
+
+		if (File.Exists(metaPathNew))
+			fileContents = File.ReadAllText(metaPathNew);
+		else if (File.Exists(metaPath))
+			fileContents = File.ReadAllText(metaPath);
+
+		if (string.IsNullOrEmpty(fileContents))
+			return null;
+		
 		return Json.Deserialise<WorkspaceMeta>(fileContents);
 	}
 	

@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using System.Text;
 using Newtonsoft.Json.Linq;
-using SharedLib;
 
 namespace SharedLib.Webhooks;
 
@@ -33,6 +32,56 @@ public static class Discord
 		NAVY = 3426654,
 		DARK_NAVY = 2899536,
 		YELLOW = 16776960,
+	}
+
+	public struct Embed
+	{
+		public string? Url;
+		public string? ThumbnailUrl;
+		public string? Username;
+		public string? Title;
+		public string? Description;
+		public Colour? Colour;
+
+		public JObject BuildJson()
+		{
+			return new JObject
+			{
+				["url"] = Url,
+				["thumbnailUrl"] = ThumbnailUrl,
+				["title"] = Title,
+				["color"] = ((int)(Colour ?? Discord.Colour.DEFAULT)).ToString(),
+				["description"] = Description,
+			};
+		}
+	}
+
+	public static void PostMessage(string channelUrl, Embed embed)
+	{
+		try
+		{
+			// send change long to discord
+			var req = (HttpWebRequest)WebRequest.Create(channelUrl);
+			req.ContentType = "application/json";
+			req.Method = "POST";
+
+			var json = new JObject
+			{
+				["username"] = embed.Username,
+				["embeds"] = new JArray(embed.BuildJson())
+			};
+
+			var data = Encoding.ASCII.GetBytes(json.ToString());
+			req.ContentLength = data.Length;
+			using var stream = req.GetRequestStream();
+			stream.Write(data, 0, data.Length);
+			using var res = req.GetResponse();
+			// discord doesn't respond with any text so just fire and forget
+		}
+		catch (Exception e)
+		{
+			Logger.Log(e);
+		}
 	}
 	
 	public static void PostMessage(string channelUrl, string message, string username, string title, Colour colour = Colour.DEFAULT)

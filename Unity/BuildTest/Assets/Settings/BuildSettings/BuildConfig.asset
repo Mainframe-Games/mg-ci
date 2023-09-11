@@ -15,12 +15,9 @@ MonoBehaviour:
   Url: 
   ThumbnailUrl: 
   PreBuild:
-    BumpIndex: 0
-    Versions:
-      BundleVersion: 0
-      AndroidVersionCode: 0
-      BuildNumbers:
-      - 
+    BuildNumberStandalone: 0
+    BuildNumberIphone: 0
+    AndroidVersionCode: 0
   Build:
     BuildTargets:
     - {fileID: 11400000, guid: e7b340db82d01464ca7d669daa9f7ada, type: 2}

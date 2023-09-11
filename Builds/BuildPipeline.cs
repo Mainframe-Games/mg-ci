@@ -253,12 +253,16 @@ public class BuildPipeline
 			
 			if (hook.IsDiscord())
 			{
-				Discord.PostMessage(
-					hook.Url, 
-					hookMessage.ToString(),
-					hook.Title,
-					BuildVersionTitle,
-					Discord.Colour.GREEN);
+				var embed = new Discord.Embed
+				{
+					Url = Workspace.Meta?.Url,
+					ThumbnailUrl = Workspace.Meta?.ThumbnailUrl,
+					Title = hook.Title,
+					Description = hookMessage.ToString(),
+					Username = BuildVersionTitle,
+					Colour = Discord.Colour.GREEN
+				};
+				Discord.PostMessage(hook.Url, embed);
 			}
 			else if (hook.IsSlack())
 			{
