@@ -1,14 +1,27 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using UnityEngine;
 
 namespace BuildSystem
 {
 	public readonly struct AppVersion : IEquatable<AppVersion>, IComparable<AppVersion>, IComparable
 	{
-		private static string FilePath => Path.Combine(Application.streamingAssetsPath, "build_version.txt");
-
+		public static string FILE_NAME => "app_version.txt";
+		
+		private static AppVersion? _Instance;
+		public static AppVersion Instance
+		{
+			get
+			{
+				if (_Instance is not null)
+					return (AppVersion)_Instance;
+				
+				var versionText = File.ReadAllText(FILE_NAME);
+				_Instance = new AppVersion(versionText);
+				return (AppVersion)_Instance;
+			}
+		}
+		
 		/// <summary>
 		/// Only want to compare Maj, Min, Patch
 		/// </summary>
@@ -20,14 +33,9 @@ namespace BuildSystem
 		public uint? Build { get; }
 
 		/// <summary>
-		/// Returns `{prefix}{major}.{minor}.{patch}.{build}`
-		/// </summary>
-		public string DisplayString { get; }
-
-		/// <summary>
 		/// Returns raw `{major}.{minor}.{patch}.{build}`
 		/// </summary>
-		public string RawString { get; }
+		public string DisplayString { get; }
 
 		private uint this[int i]
 		{
@@ -44,18 +52,17 @@ namespace BuildSystem
 			}
 		}
 
-		public AppVersion(uint? major, uint? minor = null, uint? patch = null, uint? build = null, string displayPrefix = null)
+		public AppVersion(uint? major, uint? minor = null, uint? patch = null, uint? build = null)
 		{
 			Major = major;
 			Minor = minor;
 			Patch = patch;
 			Build = build;
 
-			RawString = GetVersionString(Major, Minor, Patch, Build);
-			DisplayString = $"{displayPrefix}{RawString}";
+			DisplayString = GetVersionString(Major, Minor, Patch, Build);
 		}
 
-		public AppVersion(string versionString, string displayPrefix = null)
+		public AppVersion(string versionString)
 		{
 			var split = versionString?.Split('.') ?? Array.Empty<string>();
 
@@ -87,22 +94,7 @@ namespace BuildSystem
 				}
 			}
 
-			RawString = GetVersionString(Major, Minor, Patch, Build);
-			DisplayString = $"{displayPrefix}{RawString}";
-		}
-
-		/// <summary>
-		/// Returns version struct from file at root of project <see cref="FILE_NAME"/>
-		/// </summary>
-		/// <param name="displayString"></param>
-		/// <returns></returns>
-		public static AppVersion GetFromFile(string displayString)
-		{
-			if (!File.Exists(FilePath))
-				return new AppVersion(Application.version, displayString);
-
-			var ver = File.ReadAllText(FilePath);
-			return new AppVersion(ver, displayString);
+			DisplayString = GetVersionString(Major, Minor, Patch, Build);
 		}
 
 		private static string GetVersionString(params uint?[] vers)
@@ -118,7 +110,7 @@ namespace BuildSystem
 
 		public override string ToString()
 		{
-			return RawString;
+			return DisplayString;
 		}
 
 		#region Interface Implementations

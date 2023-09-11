@@ -15,7 +15,8 @@ public class PreBuild
 
 	public void Run(PreBuildConfig? config)
 	{
-		if (config == null) throw new NullReferenceException("Config con not be null");
+		if (config == null)
+            throw new NullReferenceException("Config con not be null");
 
 		BuildVersions.BundleVersion = _workspace.GetBundleVersion();
 

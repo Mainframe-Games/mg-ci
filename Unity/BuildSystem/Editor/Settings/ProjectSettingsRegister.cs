@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using BuildSystem;
+using BuildSystem.Utils;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -15,6 +16,7 @@ using Object = UnityEngine.Object;
 public class ProjectSettingsRegister : SettingsProvider
 {
 	private const string LABEL = "Build System";
+	private static BuildConfig ConfigInstance => ScriptableObjectCreator.GetOrCreateAsset<BuildConfig>("Assets/Settings/BuildSettings/BuildConfig.asset");
 
 	private ProjectSettingsRegister(string path, SettingsScope scope = SettingsScope.User) : base(path, scope)
 	{
@@ -36,7 +38,7 @@ public class ProjectSettingsRegister : SettingsProvider
 		rootElement.Add(title);
 
 		var objField = new ObjectField("Config") { objectType = typeof(BuildConfig) };
-		objField.value = BuildConfig.GetOrCreateSettings();
+		objField.value = ConfigInstance;
 		objField.RegisterValueChangedCallback(evt =>
 		{
 			Debug.Log($"New Config: {evt.newValue}", evt.newValue);
@@ -57,10 +59,10 @@ public class ProjectSettingsRegister : SettingsProvider
 		var saveButton = new Button(SaveJson) { text = "Save JSON" };
 		rootElement.Add(saveButton);
 	}
-
+	
 	private static void SaveJson()
 	{
-		var settings = BuildConfig.GetOrCreateSettings();
+		var settings = ConfigInstance;
 		var json = settings.ToString();
 		var fileInfo = new FileInfo($"Deploy/{settings.name}.json");
 		fileInfo.Directory?.Create();

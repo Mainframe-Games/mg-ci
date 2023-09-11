@@ -33,19 +33,6 @@ namespace BuildSystem
 		{
 			EditorUtility.SetDirty(this);
 		}
-		
-		public static BuildConfig GetOrCreateSettings()
-		{
-			var settings = AssetFinder.GetAsset<BuildConfig>();
-
-			if (settings)
-				return settings;
-			
-			settings = CreateInstance<BuildConfig>();
-			AssetDatabase.CreateAsset(settings, "Assets/Settings/BuildSettings/BuildConfig.asset");
-			AssetDatabase.SaveAssets();
-			return settings;
-		}
 
 		/// <summary>
 		/// Returns all public fields as searchable keywords

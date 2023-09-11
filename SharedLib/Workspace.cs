@@ -6,7 +6,7 @@ namespace SharedLib;
 public class Workspace
 {
 	private const string PROJ_SETTINGS_ASSET = "ProjectSettings.asset";
-	private const string BUILD_VERSION_TXT = "build_version.txt";
+	private const string APP_VERSION_TXT = "app_version.asset";
 	
 	public string Name { get; }
 	public string Directory { get; }
@@ -14,8 +14,9 @@ public class Workspace
 	public string? Branch { get; set; } = "main";
 	public WorkspaceMeta? Meta { get; }
 	public ProjectSettings ProjectSettings { get; private set; }
+	
 	[JsonIgnore] public string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", PROJ_SETTINGS_ASSET);
-	[JsonIgnore] public string BuildVersionPath => Path.Combine(Directory, "Assets", "StreamingAssets", BUILD_VERSION_TXT);
+	[JsonIgnore] public string BuildVersionPath => Path.Combine(Directory, "Assets", "StreamingAssets", APP_VERSION_TXT);
 
 	private Workspace(string name, string directory)
 	{
@@ -330,7 +331,7 @@ public class Workspace
 		var filesToCommit = files
 			.Where(x => x.Contains(".vdf") 
 			            || x.Contains(PROJ_SETTINGS_ASSET)
-			            || x.Contains(BUILD_VERSION_TXT))
+			            || x.Contains(APP_VERSION_TXT))
 			.ToList();
 		
 		// commit changes
