@@ -51,7 +51,7 @@ public static class Discord
 			return new JObject
 			{
 				["url"] = Url,
-				["thumbnail"] = ThumbnailUrl,
+				["thumbnail"] = new JObject { ["url"] = ThumbnailUrl },
 				["title"] = Title,
 				["color"] = ((int)(Colour ?? Discord.Colour.DEFAULT)).ToString(),
 				["description"] = Description,

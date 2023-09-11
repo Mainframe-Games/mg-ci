@@ -1,19 +1,15 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using Server;
+﻿using Server;
 using SharedLib;
 
 try
 {
 	Console.Title = $"Build Server - {App.Version}";
-	var argsObj = new Args(args);
-	await App.RunAsync(argsObj);
+	await App.RunAsync(new Args(args));
 }
 catch (Exception e)
 {
 	Logger.Log(e);
 }
 
-App.DumpLogs();
 Console.WriteLine("---- End of program ----");
 Console.Read();
