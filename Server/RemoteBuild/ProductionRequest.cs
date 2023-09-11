@@ -21,7 +21,7 @@ public class ProductionRequest : IProcessable
 			return new ServerResponse(HttpStatusCode.BadRequest, $"Given namespace is not valid: {WorkspaceName}");
 		
 		workspace.Update();
-		var buildVersion = workspace.GetAppVersion();
+		var buildVersion = workspace.GetBundleVersion();
 
 		if (buildVersion != Password)
 			return new ServerResponse(HttpStatusCode.BadRequest, "Incorrect Password");

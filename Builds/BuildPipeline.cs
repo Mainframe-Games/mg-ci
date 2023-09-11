@@ -31,14 +31,14 @@ public class BuildPipeline
 	public BuildConfig Config { get; }
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{(DateTime.Now - StartTime).ToHourMinSecString()}";
-	public string BuildVersionTitle => $"{BUILD_VERSION} {_buildVersion?.BundleVersion}";
+	public string BuildVersionTitle => $"{BUILD_VERSION} {_buildVersion?.FullVersion}";
 
 	/// <summary>
 	/// The change set id that was current when build started
 	/// </summary>
 	private readonly int _currentChangeSetId;
 	private readonly string _currentGuid;
-	private BuildVersions _buildVersion;
+	private BuildVersions? _buildVersion;
 
 	public string[] ChangeLog { get; }
 	
@@ -134,11 +134,13 @@ public class BuildPipeline
 		// pre build runner
 		var preBuild = new PreBuild(Workspace);
 		preBuild.Run(Config.PreBuild);
+		_buildVersion = preBuild.BuildVersions;
 		
 		// write new versions to disk
-		Workspace.ProjectSettings.ReplaceVersions(preBuild.BuildVersion);
+		Workspace.ProjectSettings.ReplaceVersions(preBuild.BuildVersions);
+		Workspace.SaveBuildVersion(preBuild.BuildVersions.FullVersion);
+		Workspace.CommitNewVersionNumber($"{BuildVersionTitle} | cs: {_currentChangeSetId} | guid: {_currentGuid}");
 		
-		_buildVersion = preBuild.BuildVersion;
 		await Task.CompletedTask;
 	}
 
@@ -214,9 +216,6 @@ public class BuildPipeline
 			Report.Complete(BuildTaskStatus.Failed, "Pipeline Failed", "Nothing else to add");
 			return;
 		}
-		
-		// committing new version must be done after collecting changeLogs as the prev changesetid will be updated
-		Workspace.CommitNewVersionNumber($"{BuildVersionTitle} | cs: {_currentChangeSetId} | guid: {_currentGuid}");
 		
 		if (Config.Hooks == null || Args.IsFlag("-nohooks"))
 			return;

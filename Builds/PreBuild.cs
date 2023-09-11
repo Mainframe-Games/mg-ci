@@ -6,33 +6,31 @@ namespace Builds;
 public class PreBuild
 {
 	private readonly Workspace _workspace;
-	public BuildVersions BuildVersion { get; }
+	public BuildVersions BuildVersions { get; } = new();
 
 	public PreBuild(Workspace workspace)
 	{
 		_workspace = workspace;
-		BuildVersion = new();
 	}
 
 	public void Run(PreBuildConfig? config)
 	{
-		if (config == null)
-			throw new NullReferenceException("Config con not be null");
-		if (config.Versions == null)
-			throw new NullReferenceException("Config.Versions con not be null");
+		if (config == null) throw new NullReferenceException("Config con not be null");
 
-		var verArr = _workspace.GetVersionArray();
-		verArr[config.BumpIndex]++;
-		BuildVersion.BundleVersion = string.Join(".", verArr);
-		Logger.Log($"New BundleVersion: {BuildVersion.BundleVersion}");
-		
-		if (config.Versions.AndroidVersionCode != null)
-		{
-			var code = _workspace.GetAndroidBuildCode();
-			BuildVersion.AndroidVersionCode = (code + 1).ToString();
-		}
+		BuildVersions.BundleVersion = _workspace.GetBundleVersion();
 
-		if (config.Versions.BuildNumbers != null)
-			BuildVersion.BuildNumbers = config.Versions.BuildNumbers;
+		// standalone
+		if (config.BuildNumberStandalone is true)
+			BuildVersions.Standalone = (_workspace.GetStandaloneBuildNumber() + 1).ToString();
+
+		// android
+		if (config.AndroidVersionCode is true)
+			BuildVersions.AndroidVersionCode = (_workspace.GetAndroidBuildCode() + 1).ToString();
+
+		// iOS
+		if (config.BuildNumberIphone is true)
+			BuildVersions.IPhone = (_workspace.GetIphoneBuildNumber() + 1).ToString();
+
+		Logger.Log($"New BundleVersion: {BuildVersions}");
 	}
 }

@@ -1,12 +1,5 @@
 namespace SharedLib;
 
-public class BuildVersions
-{
-	public string? BundleVersion { get; set; }
-	public string? AndroidVersionCode { get; set; }
-	public string[]? BuildNumbers { get; set; }
-}
-
 public class ProjectSettings : Yaml
 {
 	public ProjectSettings(string? path) : base(path)
@@ -23,10 +16,15 @@ public class ProjectSettings : Yaml
 
 		WriteBundleVersion(buildVersions.BundleVersion);
 
-		if (buildVersions.BuildNumbers != null)
-			foreach (var buildNumber in buildVersions.BuildNumbers)
-				WritePlatformBuildNumber(buildNumber, buildVersions.BundleVersion);
-
+		// standalone
+		if (!string.IsNullOrEmpty(buildVersions.Standalone))
+			WritePlatformBuildNumber("Standalone", buildVersions.Standalone);
+		
+		// ios
+		if (!string.IsNullOrEmpty(buildVersions.IPhone))
+			WritePlatformBuildNumber("iPhone", buildVersions.IPhone);
+	
+		// android
 		if (!string.IsNullOrEmpty(buildVersions.AndroidVersionCode))
 			WriteAndroidBundleVersionCode(buildVersions.AndroidVersionCode);
 

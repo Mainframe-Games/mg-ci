@@ -63,16 +63,9 @@ namespace BuildSystem
 	[Serializable]
 	public struct PreBuild
 	{
-		public int BumpIndex;
-		public Versions Versions;
-	}
-	
-	[Serializable]
-	public struct Versions
-	{
-		public bool BundleVersion;
+		public bool BuildNumberStandalone;
+		public bool BuildNumberIphone;
 		public bool AndroidVersionCode;
-		public string[] BuildNumbers;
 	}
 	
 	[Serializable]

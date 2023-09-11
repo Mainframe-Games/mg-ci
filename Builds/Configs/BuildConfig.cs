@@ -29,8 +29,9 @@ public class MonoBehaviour
 
 public class PreBuildConfig
 {
-	public int BumpIndex { get; set; }
-	public VersionsConfig Versions { get; set; }
+	public bool? BuildNumberStandalone { get; set; }
+	public bool? BuildNumberIphone { get; set; }
+	public bool? AndroidVersionCode { get; set; }
 }
 
 public class DeployContainerConfig
@@ -50,10 +51,4 @@ public class HooksConfig
 
 	public bool IsDiscord() => Url?.StartsWith("https://discord.com/") ?? false;
 	public bool IsSlack() => Url?.StartsWith("https://hooks.slack.com/") ?? false;
-}
-
-public class VersionsConfig
-{
-	public bool? AndroidVersionCode { get; set; }
-	public string[]? BuildNumbers { get; set; }
 }

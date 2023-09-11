@@ -5,13 +5,18 @@ namespace SharedLib;
 
 public class Workspace
 {
+	private const string PROJ_SETTINGS_ASSET = "ProjectSettings.asset";
+	private const string BUILD_VERSION_TXT = "build_version.txt";
+	
 	public string Name { get; }
 	public string Directory { get; }
 	public string? UnityVersion { get; private set; }
 	public string? Branch { get; set; } = "main";
 	public WorkspaceMeta? Meta { get; }
 	public ProjectSettings ProjectSettings { get; private set; }
-	[JsonIgnore] public string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", "ProjectSettings.asset");
+	[JsonIgnore] public string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", PROJ_SETTINGS_ASSET);
+	[JsonIgnore] public string BuildVersionPath => Path.Combine(Directory, BUILD_VERSION_TXT);
+
 
 	private Workspace(string name, string directory)
 	{
@@ -102,20 +107,35 @@ public class Workspace
 		return string.Empty;
 	}
 	
+	public int GetStandaloneBuildNumber()
+	{
+		var v = ProjectSettings.GetValue<string>("buildNumber.Standalone");
+		return int.TryParse(v, out var num) ? num : 0;
+	}
+	
 	public int GetAndroidBuildCode()
 	{
 		return ProjectSettings.GetValue<int>("AndroidBundleVersionCode");
 	}
 	
-	public string? GetAppVersion()
+	public int GetIphoneBuildNumber()
 	{
-		var verStr = ProjectSettings.GetValue<string?>("bundleVersion");
+		var v = ProjectSettings.GetValue<string>("buildNumber.iPhone");
+		return int.TryParse(v, out var num) ? num : 0;
+	}
+	
+	public string? GetBundleVersion()
+	{
+		if (!File.Exists(BuildVersionPath))
+			return null;
+		
+		var verStr = File.ReadAllText(BuildVersionPath); //ProjectSettings.GetValue<string?>("bundleVersion");
 		return verStr;
 	}
 
 	public int[] GetVersionArray()
 	{
-		var verStr = GetAppVersion() ?? string.Empty;
+		var verStr = GetBundleVersion() ?? string.Empty;
 		var ver = verStr.Split(".");
 		var arr = new int[ver.Length];
 
@@ -307,8 +327,8 @@ public class Workspace
 		var files = status.Split(Environment.NewLine);
 		var filesToCommit = files
 			.Where(x => x.Contains(".vdf") 
-			            || x.Contains("ProjectSettings.asset")
-			            || x.Contains("previous-changesetId.txt"))
+			            || x.Contains(PROJ_SETTINGS_ASSET)
+			            || x.Contains(BUILD_VERSION_TXT))
 			.ToList();
 		
 		// commit changes
@@ -334,5 +354,10 @@ public class Workspace
 		if (res.exitCode != 0)
 			throw new Exception(res.output);
 		Branch = branchPath;
+	}
+
+	public void SaveBuildVersion(string fullVersion)
+	{
+		File.WriteAllText(BuildVersionPath, fullVersion);
 	}
 }
