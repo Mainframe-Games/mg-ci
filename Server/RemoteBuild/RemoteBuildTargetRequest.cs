@@ -56,6 +56,7 @@ public class RemoteBuildTargetRequest : IProcessable
 			// set build version in project settings
 			var projWriter = new ProjectSettings(workspace.ProjectSettingsPath);
 			projWriter.ReplaceVersions(Packet.BuildVersion);
+			workspace.SaveBuildVersion(Packet.BuildVersion.FullVersion);
 
 			foreach (var build in Packet.Builds)
 			{
