@@ -31,7 +31,7 @@ public class BuildPipeline
 	public BuildConfig Config { get; }
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{(DateTime.Now - StartTime).ToHourMinSecString()}";
-	public string BuildVersionTitle => $"{BUILD_VERSION} {_buildVersion?.FullVersion}";
+	public string BuildVersionTitle => $"{Workspace.Meta?.ProjectName ?? Workspace.Name} | {_buildVersion?.FullVersion}";
 
 	/// <summary>
 	/// The change set id that was current when build started
@@ -257,9 +257,9 @@ public class BuildPipeline
 				{
 					Url = Workspace.Meta?.Url,
 					ThumbnailUrl = Workspace.Meta?.ThumbnailUrl,
-					Title = hook.Title,
+					Title = BuildVersionTitle,
 					Description = hookMessage.ToString(),
-					Username = BuildVersionTitle,
+					Username = hook.Title,
 					Colour = Discord.Colour.GREEN
 				};
 				Discord.PostMessage(hook.Url, embed);
