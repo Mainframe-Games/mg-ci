@@ -6,7 +6,7 @@ namespace SharedLib;
 public class Workspace
 {
 	private const string PROJ_SETTINGS_ASSET = "ProjectSettings.asset";
-	private const string APP_VERSION_TXT = "app_version.asset";
+	private const string APP_VERSION_TXT = "app_version.txt";
 	
 	public string Name { get; }
 	public string Directory { get; }
