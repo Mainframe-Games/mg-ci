@@ -126,24 +126,20 @@ public class Workspace
 	
 	public string? GetBundleVersion()
 	{
-		if (!File.Exists(BuildVersionPath))
-			return null;
-		
-		var verStr = File.ReadAllText(BuildVersionPath); //ProjectSettings.GetValue<string?>("bundleVersion");
-		return verStr;
+		return ProjectSettings.GetValue<string?>("bundleVersion");;
 	}
 
-	public int[] GetVersionArray()
-	{
-		var verStr = GetBundleVersion() ?? string.Empty;
-		var ver = verStr.Split(".");
-		var arr = new int[ver.Length];
-
-		for (int i = 0; i < ver.Length; i++)
-			arr[i] = int.Parse(ver[i].Trim());
-
-		return arr;
-	}
+	// public int[] GetVersionArray()
+	// {
+	// 	var verStr = GetBundleVersion() ?? string.Empty;
+	// 	var ver = verStr.Split(".");
+	// 	var arr = new int[ver.Length];
+	//
+	// 	for (int i = 0; i < ver.Length; i++)
+	// 		arr[i] = int.Parse(ver[i].Trim());
+	//
+	// 	return arr;
+	// }
 
 	public bool IsIL2CPP(UnityBuildTargetGroup group)
 	{
