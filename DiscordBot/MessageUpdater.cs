@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using SharedLib;
 using SharedLib.BuildToDiscord;
 
 namespace DiscordBot;
@@ -8,11 +9,13 @@ public class MessageUpdater
 {
 	private readonly SocketTextChannel _channel;
 	private readonly ulong _messageId;
+	private readonly WorkspaceMeta? _workspaceMeta;
 
-	public MessageUpdater(BaseSocketClient client, ulong channelId, ulong messageId)
+	public MessageUpdater(BaseSocketClient client, ulong channelId, ulong messageId, WorkspaceMeta? workspaceMeta)
 	{
 		_channel = (SocketTextChannel)client.GetChannel(channelId);
 		_messageId = messageId;
+		_workspaceMeta = workspaceMeta;
 	}
 
 	public async Task UpdateMessageAsync(PipelineReport report)
@@ -35,13 +38,11 @@ public class MessageUpdater
 	/// <summary>
 	/// Src: https://discohook.org/
 	/// </summary>
-	private static Embed BuildEmbedFromReport(PipelineReport report)
+	private Embed BuildEmbedFromReport(PipelineReport report)
 	{
 		var embed = new EmbedBuilder();
 
-		embed.WithTitle(report.WorkspaceName);
-		embed.WithUrl(report.TitleUrl);
-		embed.WithThumbnailUrl(report.ThumbnailUrl);
+		embed.WithTitle(_workspaceMeta?.ProjectName);
 		embed.WithColor(GetColor(report));
 		embed.WithDescription(report.BuildDescription());
 
@@ -60,12 +61,14 @@ public class MessageUpdater
 	/// <summary>
 	/// Src: https://discohook.org/
 	/// </summary>
-	private static Embed BuildChangeLog(PipelineReport report)
+	private Embed BuildChangeLog(PipelineReport report)
 	{
 		var embed = new EmbedBuilder();
-		embed.WithTitle(report.ChangeLogTitle);
-		embed.WithDescription(report.ChangeLogMessage);
+		embed.WithTitle(report.CompleteTitle);
+		embed.WithDescription(report.CompleteMessage);
 		embed.WithColor(GetColor(report));
+		embed.WithUrl(_workspaceMeta?.Url);
+		embed.WithThumbnailUrl(_workspaceMeta?.ThumbnailUrl);
 		return embed.Build();
 	}
 

@@ -185,17 +185,24 @@ public class DiscordWrapper
 		}
 
 		// success
-		if (cmd is not BuildCommand)
+		if (cmd is not BuildCommand buildCommand)
 		{
 			await command.RespondSuccessDelayed(command.User, res.Title, fullResponse.ToString());
 			return;
 		}
 		
 		// only need to track message updaters for build commands
-		var restInteractionMessage = await command.RespondSuccessDelayed(command.User, res.Title, fullResponse.ToString());
+		var embeddedMessage = Extensions.CreateEmbed(
+			user: command.User,
+			title: $"{res.Title}: {buildCommand.WorkspaceMeta?.ProjectName}",
+			description: fullResponse.ToString(),
+			color: Color.Green,
+			thumbnailUrl: buildCommand.WorkspaceMeta?.ThumbnailUrl);
+		
+		var restInteractionMessage = await command.RespondSuccessDelayed(command.User, embeddedMessage);
 		var channelId = command.ChannelId ?? 0;
 		var messageId = restInteractionMessage?.Id ?? 0;
-		MessagesMap.Add(command.Id, new MessageUpdater(_client, channelId, messageId));
+		MessagesMap.Add(command.Id, new MessageUpdater(_client, channelId, messageId, buildCommand.WorkspaceMeta));
 		var firstReport = _prematureReports.TryGetValue(command.Id, out var report) ? report : new PipelineReport();
 		_prematureReports.Remove(command.Id);
 		await MessagesMap[command.Id].UpdateMessageAsync(firstReport);

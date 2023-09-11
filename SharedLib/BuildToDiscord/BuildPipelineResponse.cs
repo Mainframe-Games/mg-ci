@@ -8,6 +8,7 @@ public class BuildPipelineResponse
 	public string? ServerVersion { get; set; }
 	public ulong? PipelineId { get; set; }
 	public string? Workspace { get; set; }
+	public WorkspaceMeta? WorkspaceMeta { get; set; }
 	public string? Targets { get; set; }
 	public string? Args { get; set; }
 	public string? Branch { get; set; }
@@ -24,6 +25,10 @@ public class BuildPipelineResponse
 
 		foreach (var propertyInfo in properties)
 		{
+			// skip meta data
+			if (propertyInfo.Name is nameof(WorkspaceMeta))
+				continue;
+			
 			var value = propertyInfo.GetValue(this);
 			
 			if (value is null)

@@ -72,7 +72,7 @@ public class BuildPipeline
 		ChangeLog = Workspace.GetChangeLog(_currentChangeSetId, prevChangeSetId);
 		
 		var buildTargetNames = Workspace.GetBuildTargets().Select(x => x.Name).ToArray();
-		Report = new PipelineReport(Workspace.Name, Workspace.Meta?.Url, Workspace.Meta?.ThumbnailUrl, buildTargetNames);
+		Report = new PipelineReport(buildTargetNames);
 	}
 
 	#region Build Steps

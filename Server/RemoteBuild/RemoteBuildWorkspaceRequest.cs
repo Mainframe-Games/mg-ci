@@ -45,6 +45,7 @@ public class RemoteBuildWorkspaceRequest : IProcessable
 			ServerVersion = App.Version,
 			PipelineId = pipeline.Id,
 			Workspace = workspace.Name,
+			WorkspaceMeta = workspace.Meta,
 			Targets = string.Join(", ", workspace.GetBuildTargets().Select(x => x.Name)),
 			Args = Args,
 			UnityVersion = workspace.UnityVersion,

@@ -10,6 +10,7 @@ public class BuildCommand : Command
 {
 	public override string? CommandName => DiscordWrapper.Config.CommandName ?? "start-build";
 	public override string? Description => "Starts a build from discord";
+	public WorkspaceMeta? WorkspaceMeta { get; private set; }
 
 	public override SlashCommandProperties Build()
 	{
@@ -40,6 +41,7 @@ public class BuildCommand : Command
 
 			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl, body: body);
 			var obj = Json.Deserialise<BuildPipelineResponse>(res.Content);
+			WorkspaceMeta = obj?.WorkspaceMeta;
 			return new CommandResponse("Build Started", obj?.ToString() ?? string.Empty);
 		}
 		catch (Exception e)

@@ -19,6 +19,17 @@ public static class Extensions
 		});
 	}
 	
+	public static async Task<RestInteractionMessage?> RespondSuccessDelayed(this SocketSlashCommand command, IUser user, Embed embed)
+	{
+		if (embed.Description.Length > MAX_MESSAGE_SIZE)
+			return await RespondSuccessFileDelayed(command, user, embed.Title, embed.Description);
+
+		return await command.ModifyOriginalResponseAsync(properties =>
+		{
+			properties.Embed = embed;
+		});
+	}
+	
 	private static async Task<RestInteractionMessage?> RespondSuccessFileDelayed(this SocketInteraction command, IUser user, string title, string description)
 	{
 		var filePath = Path.Combine(Environment.CurrentDirectory, "large_message.txt");
@@ -51,22 +62,30 @@ public static class Extensions
 		});
 	}
 
-	public static Embed CreateEmbed(IUser? user = null, string? title = null, string? description = null,
-		Color? color = null, bool? includeTimeStamp = null)
+	public static Embed CreateEmbed(IUser? user = null,
+		string? title = null,
+		string? description = null,
+		Color? color = null,
+		bool? includeTimeStamp = null,
+		string? url = null,
+		string? thumbnailUrl = null)
 	{
 		var embed = new EmbedBuilder();
 
-		if (user != null)
+		if (user is not null)
 			embed.WithAuthor(user.Username, user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl());
-		if (title != null)
+		if (title is not null)
 			embed.WithTitle(title);
-		if (description != null)
+		if (description is not null)
 			embed.WithDescription(description);
-		if (color != null)
+		if (color is not null)
 			embed.WithColor((Color)color);
 		if (includeTimeStamp is true)
 			embed.WithCurrentTimestamp();
-
+		if (url is not null)
+			embed.WithUrl(url);
+		if (thumbnailUrl is not null)
+			embed.WithThumbnailUrl(thumbnailUrl);
 		return embed.Build();
 	}
 	

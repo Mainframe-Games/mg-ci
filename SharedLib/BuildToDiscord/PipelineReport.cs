@@ -7,20 +7,17 @@ public class PipelineReport
 {
 	public event Action<PipelineReport> OnReportUpdated;
 	
-	public string? WorkspaceName { get; set; }
 	public BuildTaskStatus PreBuild { get; set; }
 	public BuildTaskStatus Build { get; set; }
 	public BuildTaskStatus Deploy { get; set; }
 	public BuildTaskStatus PostBuild { get; set; }
 	public Dictionary<string, BuildTaskStatus> BuildTargets { get; set; } = new();
 	
-	// meta
-	public string? TitleUrl { get; set; }
-	public string? ThumbnailUrl { get; set; }
-	
-	public string? ChangeLogTitle { get; set; }
-	public string? ChangeLogMessage { get; set; }
-	
+	public string? CompleteTitle { get; set; }
+	/// <summary>
+	/// Generally the change log, but can be error messages as well
+	/// </summary>
+	public string? CompleteMessage { get; set; }
 
 	[JsonIgnore] public bool IsPending => GetAllStatuses().Any(x => x is BuildTaskStatus.Pending);
 	[JsonIgnore] public bool IsFailed => GetAllStatuses().Any(x => x is BuildTaskStatus.Failed);
@@ -28,12 +25,8 @@ public class PipelineReport
 
 	public PipelineReport() {}
 	
-	public PipelineReport(string? workspaceName, string? titleUrl, string? thumbnailUrl, IEnumerable<string> buildTargetNames)
+	public PipelineReport(IEnumerable<string> buildTargetNames)
 	{
-		WorkspaceName = workspaceName;
-		TitleUrl = titleUrl;
-		ThumbnailUrl = thumbnailUrl;
-		
 		foreach (var buildTargetName in buildTargetNames)
 			BuildTargets.Add(buildTargetName, default);
 	}
@@ -84,8 +77,8 @@ public class PipelineReport
 	public void Complete(BuildTaskStatus status, string title, string message)
 	{
 		PostBuild = status;
-		ChangeLogTitle = title;
-		ChangeLogMessage = message;
+		CompleteTitle = title;
+		CompleteMessage = message;
 		
 		OnReportUpdated?.Invoke(this);
 	}

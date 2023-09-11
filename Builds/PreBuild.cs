@@ -18,7 +18,7 @@ public class PreBuild
 	public void Run(PreBuildConfig? config)
 	{
 		if (config == null)
-            throw new NullReferenceException("Config con not be null");
+			throw new NullReferenceException("Config con not be null");
 
 		// bundle version
 		if (_args.TryGetArg("-bundleversion", out var i) && int.TryParse(i, out var index))
@@ -26,11 +26,11 @@ public class PreBuild
 			/*
 			 * For bundle version changes we need to reset all build numbers back to 0 as its a new bundle
 			 */
-			
+
 			var versionArray = _workspace.GetVersionArray();
 			versionArray[index]++;
 			BuildVersions.BundleVersion = string.Join(".", versionArray);
-			
+
 			// standalone
 			if (config.BuildNumberStandalone is true)
 				BuildVersions.Standalone = "0";
@@ -46,7 +46,7 @@ public class PreBuild
 		else
 		{
 			BuildVersions.BundleVersion = _workspace.GetBundleVersion();
-			
+
 			// standalone
 			if (config.BuildNumberStandalone is true)
 				BuildVersions.Standalone = (_workspace.GetStandaloneBuildNumber() + 1).ToString();

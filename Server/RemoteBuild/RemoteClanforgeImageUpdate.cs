@@ -48,9 +48,20 @@ public class RemoteClanforgeImageUpdate : IProcessable
 		foreach (var hook in Hooks)
 		{
 			if (hook.IsDiscord())
-				Discord.PostMessage(hook.Url, message, hook.Title, header, isError ? Discord.Colour.RED : Discord.Colour.GREEN);
+			{
+				var embed = new Discord.Embed
+				{
+					Title = header,
+					Colour = isError ? Discord.Colour.RED : Discord.Colour.GREEN,
+					Description = message,
+					Username = hook.Title,
+				};
+				Discord.PostMessage(hook.Url, embed);
+			}
 			else if (hook.IsSlack())
+			{
 				Slack.PostMessage(hook.Url, $"{hook.Title} | {header}\n{message}");
+			}
 		}
 	}
 }
