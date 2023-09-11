@@ -1,12 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using UnityEngine;
 
 namespace BuildSystem
 {
 	public readonly struct AppVersion : IEquatable<AppVersion>, IComparable<AppVersion>, IComparable
 	{
-		private const string FILE_NAME = "build_version.txt";
+		private static string FilePath => Path.Combine(Application.streamingAssetsPath, "build_version.txt");
 
 		/// <summary>
 		/// Only want to compare Maj, Min, Patch
@@ -97,10 +98,10 @@ namespace BuildSystem
 		/// <returns></returns>
 		public static AppVersion GetFromFile(string displayString)
 		{
-			if (!File.Exists(FILE_NAME))
-				return default;
+			if (!File.Exists(FilePath))
+				return new AppVersion(Application.version, displayString);
 
-			var ver = File.ReadAllText(FILE_NAME);
+			var ver = File.ReadAllText(FilePath);
 			return new AppVersion(ver, displayString);
 		}
 

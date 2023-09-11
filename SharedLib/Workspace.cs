@@ -15,7 +15,7 @@ public class Workspace
 	public WorkspaceMeta? Meta { get; }
 	public ProjectSettings ProjectSettings { get; private set; }
 	[JsonIgnore] public string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", PROJ_SETTINGS_ASSET);
-	[JsonIgnore] public string BuildVersionPath => Path.Combine(Directory, BUILD_VERSION_TXT);
+	[JsonIgnore] public string BuildVersionPath => Path.Combine(Directory, "Assets", "StreamingAssets", BUILD_VERSION_TXT);
 
 
 	private Workspace(string name, string directory)
