@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using UnityEngine;
 
 namespace BuildSystem
 {
@@ -15,8 +16,9 @@ namespace BuildSystem
 			{
 				if (_Instance is not null)
 					return (AppVersion)_Instance;
-				
-				var versionText = File.ReadAllText(FILE_NAME);
+
+				var path = Path.Combine(Application.streamingAssetsPath, FILE_NAME);
+				var versionText = File.ReadAllText(path);
 				_Instance = new AppVersion(versionText);
 				return (AppVersion)_Instance;
 			}
