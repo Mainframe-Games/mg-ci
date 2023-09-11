@@ -26,28 +26,26 @@ public class BuildPipeline
 	public readonly ulong Id;
 	private readonly IOffloadable? _offloadable;
 
-	public Workspace Workspace { get; }
-	public Args Args { get; }
-	public BuildConfig Config { get; }
-	private DateTime StartTime { get; set; }
-	private string TimeSinceStart => $"{(DateTime.Now - StartTime).ToHourMinSecString()}";
-	public string BuildVersionTitle => $"{Workspace.Meta?.ProjectName ?? Workspace.Name} | {_buildVersion?.FullVersion}";
-
 	/// <summary>
 	/// The change set id that was current when build started
 	/// </summary>
 	private readonly int _currentChangeSetId;
 	private readonly string _currentGuid;
-	private BuildVersions? _buildVersion;
-
-	public string[] ChangeLog { get; }
 	
 	/// <summary>
 	/// build ids we are waiting for offload server
 	/// </summary>
 	private readonly List<BuildResult> _buildResults = new();
-
-	public readonly PipelineReport Report;
+	
+	public Workspace Workspace { get; }
+	public Args Args { get; }
+	public BuildConfig Config { get; }
+	public BuildVersions? BuildVersions { get; private set; }
+	public string[] ChangeLog { get; }
+	public PipelineReport Report { get; }
+	private DateTime StartTime { get; set; }
+	private string TimeSinceStart => $"{(DateTime.Now - StartTime).ToHourMinSecString()}";
+	public string BuildVersionTitle => $"{Workspace.Meta?.ProjectName ?? Workspace.Name} | {BuildVersions?.FullVersion}";
 
 	public BuildPipeline(ulong id, Workspace workspace, Args args, IOffloadable? offloadable)
 	{
@@ -134,7 +132,7 @@ public class BuildPipeline
 		// pre build runner
 		var preBuild = new PreBuild(Workspace);
 		preBuild.Run(Config.PreBuild);
-		_buildVersion = preBuild.BuildVersions;
+		BuildVersions = preBuild.BuildVersions;
 		
 		// write new versions to disk
 		Workspace.ProjectSettings.ReplaceVersions(preBuild.BuildVersions);
@@ -159,7 +157,7 @@ public class BuildPipeline
 		
 		foreach (var build in builds)
 		{
-			if (_offloadable?.IsOffload(build, _buildVersion, _currentChangeSetId, Args.IsFlag("-cleanbuild")) is true)
+			if (_offloadable?.IsOffload(build, BuildVersions, _currentChangeSetId, Args.IsFlag("-cleanbuild")) is true)
 			{
 				Report.UpdateBuildTarget(build.Name, default);
 			}

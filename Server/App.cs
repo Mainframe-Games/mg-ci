@@ -29,18 +29,16 @@ public static class App
 		// for locally running the build process without a listen server
 		if (IsLocal)
 		{
+			Logger.Log($"App Version: {Version}");
+
 			var workspace = Workspace.AskWorkspace();
 			if (workspace == null)
 			{
 				Logger.Log("No Workspace chosen");
 				return;
 			}
+			
 			var pipeline = CreateBuildPipeline(workspace, args);
-			if (pipeline.ChangeLog.Length == 0)
-			{
-				Logger.Log("No changes to build");
-				return;
-			}
 			await RunBuildPipe(pipeline);
 		}
 		else
@@ -63,11 +61,14 @@ public static class App
 	
 	private static void CheckIfServerStillListening()
 	{
-		if (Server?.IsListening is not true)
+		if (Server is null)
+			return;
+		
+		if (Server.IsListening is not true)
 			throw new Exception("Server died");
 
-		Logger.Log($"[Server] Listening on '{Server.Prefixes}'");
-		Logger.Log($"[Server] Version: {Version}");
+		Logger.Log($"Server Listening on '{Server.Prefixes}'");
+		Logger.Log($"App Version: {Version}");
 	}
 
 	#region Build Pipeline
@@ -119,16 +120,16 @@ public static class App
 	{
 		try
 		{
-			var buildVersionTitle = pipeline.BuildVersionTitle;
-
-			// client deploys
-			DeployApple(pipeline); // apple first as apple takes longer to process on appstore connect
-			await DeployGoogle(pipeline, buildVersionTitle);
-			DeploySteam(pipeline, buildVersionTitle);
+			var fullVersion = pipeline.BuildVersions?.FullVersion ?? string.Empty;
 
 			// server deploys
-			await DeployClanforge(pipeline, buildVersionTitle);
 			await DeployToS3Bucket(pipeline);
+			await DeployClanforge(pipeline, fullVersion);
+			
+			// client deploys
+			DeployApple(pipeline); // apple first as apple takes longer to process on appstore connect
+			await DeployGoogle(pipeline, fullVersion);
+			DeploySteam(pipeline, fullVersion);
 
 			return true;
 		}
