@@ -113,4 +113,78 @@ public static class Extensions
 		
 		return embed.Build();
 	}
+
+	public static Embed BuildEmbed(this SharedLib.Webhooks.Discord.Embed template)
+	{
+		var embed = new EmbedBuilder();
+
+		if (template.AuthorName is not null && template.AuthorIconUrl is not null)
+			embed.WithAuthor(template.AuthorName, template.AuthorIconUrl);
+		else if (template.AuthorName is not null)
+			embed.WithAuthor(template.AuthorName);
+		
+		if (template.Title is not null)
+			embed.WithTitle(template.Title);
+		if (template.Description is not null)
+			embed.WithDescription(template.Description);
+		if (template.Colour is not null)
+			embed.WithColor(GetColorFromColour(template.Colour));
+		if (template.Url is not null)
+			embed.WithUrl(template.Url);
+		if (template.ThumbnailUrl is not null)
+			embed.WithUrl(template.ThumbnailUrl);
+		
+		if (template.Fields is not null)
+		{
+			foreach (var field in template.Fields)
+			{
+				embed.AddField(new EmbedFieldBuilder
+				{
+					Name = field.Name,
+					Value = field.Value,
+					IsInline = true
+				});
+			}
+		}
+
+		if (template.IncludeTimeStamp is true)
+		{
+			embed.WithFooter("Last Updated");
+			embed.WithCurrentTimestamp();
+		}
+		
+		return embed.Build();
+	}
+
+	private static Color GetColorFromColour(SharedLib.Webhooks.Discord.Colour? templateColour)
+	{
+		return templateColour switch
+		{
+			SharedLib.Webhooks.Discord.Colour.DEFAULT => Color.Default,
+			SharedLib.Webhooks.Discord.Colour.AQUA => Color.Blue,
+			SharedLib.Webhooks.Discord.Colour.DARK_AQUA => Color.DarkBlue,
+			SharedLib.Webhooks.Discord.Colour.GREEN => Color.Green,
+			SharedLib.Webhooks.Discord.Colour.DARK_GREEN => Color.DarkGreen,
+			SharedLib.Webhooks.Discord.Colour.BLUE => Color.Blue,
+			SharedLib.Webhooks.Discord.Colour.DARK_BLUE => Color.DarkBlue,
+			SharedLib.Webhooks.Discord.Colour.PURPLE => Color.Purple,
+			SharedLib.Webhooks.Discord.Colour.DARK_PURPLE => Color.DarkPurple,
+			SharedLib.Webhooks.Discord.Colour.LUMINOUS_VIVID_PINK => Color.Magenta,
+			SharedLib.Webhooks.Discord.Colour.DARK_VIVID_PINK => Color.DarkMagenta,
+			SharedLib.Webhooks.Discord.Colour.GOLD => Color.Gold,
+			SharedLib.Webhooks.Discord.Colour.DARK_GOLD => Color.Gold,
+			SharedLib.Webhooks.Discord.Colour.ORANGE => Color.Orange,
+			SharedLib.Webhooks.Discord.Colour.DARK_ORANGE => Color.DarkOrange,
+			SharedLib.Webhooks.Discord.Colour.RED => Color.Red,
+			SharedLib.Webhooks.Discord.Colour.DARK_RED => Color.DarkRed,
+			SharedLib.Webhooks.Discord.Colour.GREY => Color.LightGrey,
+			SharedLib.Webhooks.Discord.Colour.DARK_GREY => Color.DarkGrey,
+			SharedLib.Webhooks.Discord.Colour.DARKER_GREY => Color.DarkerGrey,
+			SharedLib.Webhooks.Discord.Colour.LIGHT_GREY => Color.LightGrey,
+			SharedLib.Webhooks.Discord.Colour.NAVY => Color.Blue,
+			SharedLib.Webhooks.Discord.Colour.DARK_NAVY => Color.DarkBlue,
+			SharedLib.Webhooks.Discord.Colour.YELLOW => Color.Gold,
+			_ => Color.Default
+		};
+	}
 }

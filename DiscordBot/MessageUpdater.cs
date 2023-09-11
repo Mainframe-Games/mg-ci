@@ -64,11 +64,16 @@ public class MessageUpdater
 	private Embed BuildChangeLog(PipelineReport report)
 	{
 		var embed = new EmbedBuilder();
+		
 		embed.WithTitle(report.CompleteTitle);
 		embed.WithDescription(report.CompleteMessage);
 		embed.WithColor(GetColor(report));
-		embed.WithUrl(_workspaceMeta?.Url);
-		embed.WithThumbnailUrl(_workspaceMeta?.ThumbnailUrl);
+		
+		if (_workspaceMeta?.Url is not null)
+			embed.WithUrl(_workspaceMeta.Url);
+		if (_workspaceMeta?.ThumbnailUrl is not null)
+			embed.WithThumbnailUrl(_workspaceMeta.ThumbnailUrl);
+		
 		return embed.Build();
 	}
 

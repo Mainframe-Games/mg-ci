@@ -10,6 +10,7 @@ public class BuildCommand : Command
 {
 	public override string? CommandName => DiscordWrapper.Config.CommandName ?? "start-build";
 	public override string? Description => "Starts a build from discord";
+	public Embed Embed { get; private set; }
 	public WorkspaceMeta? WorkspaceMeta { get; private set; }
 
 	public override SlashCommandProperties Build()
@@ -42,7 +43,19 @@ public class BuildCommand : Command
 			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl, body: body);
 			var obj = Json.Deserialise<BuildPipelineResponse>(res.Content);
 			WorkspaceMeta = obj?.WorkspaceMeta;
-			return new CommandResponse("Build Started", obj?.ToString() ?? string.Empty);
+			
+			var template = new SharedLib.Webhooks.Discord.Embed
+			{
+				AuthorName = command.User.Username,
+				AuthorIconUrl = command.User.GetAvatarUrl(),
+				ThumbnailUrl = obj?.WorkspaceMeta?.ThumbnailUrl,
+				Title = $"Build Started {obj?.WorkspaceMeta?.ProjectName}",
+				Description = obj?.ToString() ?? string.Empty,
+				Colour = SharedLib.Webhooks.Discord.Colour.GREEN,
+				
+			};
+			Embed = template.BuildEmbed();
+			return new CommandResponse("Build Started", template.Description);
 		}
 		catch (Exception e)
 		{

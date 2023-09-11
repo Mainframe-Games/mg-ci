@@ -39,12 +39,16 @@ public static class Discord
 	/// </summary>
 	public struct Embed
 	{
+		public string? AuthorName;
+		public string? AuthorIconUrl;
 		public string? Url;
 		public string? ThumbnailUrl;
 		public string? Username;
 		public string? Title;
 		public string? Description;
 		public Colour? Colour;
+		public List<Field>? Fields;
+		public bool? IncludeTimeStamp;
 
 		public JObject BuildJson()
 		{
@@ -57,6 +61,12 @@ public static class Discord
 				["description"] = Description,
 			};
 		}
+	}
+
+	public struct Field
+	{
+		public string? Name;
+		public object? Value;
 	}
 
 	public static void PostMessage(string channelUrl, Embed embed)

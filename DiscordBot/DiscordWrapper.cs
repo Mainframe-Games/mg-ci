@@ -192,14 +192,7 @@ public class DiscordWrapper
 		}
 		
 		// only need to track message updaters for build commands
-		var embeddedMessage = Extensions.CreateEmbed(
-			user: command.User,
-			title: $"{res.Title}: {buildCommand.WorkspaceMeta?.ProjectName}",
-			description: fullResponse.ToString(),
-			color: Color.Green,
-			thumbnailUrl: buildCommand.WorkspaceMeta?.ThumbnailUrl);
-		
-		var restInteractionMessage = await command.RespondSuccessDelayed(command.User, embeddedMessage);
+		var restInteractionMessage = await command.RespondSuccessDelayed(command.User, buildCommand.Embed);
 		var channelId = command.ChannelId ?? 0;
 		var messageId = restInteractionMessage?.Id ?? 0;
 		MessagesMap.Add(command.Id, new MessageUpdater(_client, channelId, messageId, buildCommand.WorkspaceMeta));
