@@ -10,8 +10,8 @@ public class WorkspaceMeta : ICloneable
 		return new WorkspaceMeta
 		{
 			Url = Url,
-			ThumbnailUrl = Url,
-			ProjectName = Url,
+			ThumbnailUrl = ThumbnailUrl,
+			ProjectName = ProjectName,
 		};
 	}
 }
