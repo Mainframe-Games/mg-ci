@@ -19,13 +19,14 @@ public static class Extensions
 		});
 	}
 	
-	public static async Task<RestInteractionMessage?> RespondSuccessDelayed(this SocketSlashCommand command, IUser user, Embed embed)
+	public static async Task<RestInteractionMessage?> RespondSuccessDelayed(this SocketSlashCommand command, IUser user, Embed embed, string? message = null)
 	{
 		if (embed.Description.Length > MAX_MESSAGE_SIZE)
 			return await RespondSuccessFileDelayed(command, user, embed.Title, embed.Description);
 
 		return await command.ModifyOriginalResponseAsync(properties =>
 		{
+			properties.Content = new Optional<string>(message ?? "");
 			properties.Embed = embed;
 		});
 	}

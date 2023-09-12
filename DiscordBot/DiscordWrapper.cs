@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text;
 using Discord;
 using Discord.Net;
+using Discord.Rest;
 using Discord.WebSocket;
 using DiscordBot.Commands;
 using DiscordBot.Configs;
@@ -192,15 +193,22 @@ public class DiscordWrapper
 		}
 		
 		// only need to track message updaters for build commands
-		var restInteractionMessage = await command.RespondSuccessDelayed(command.User, buildCommand.Embed);
+		var restInteractionMessage = await command.RespondSuccessDelayed(command.User, buildCommand.Embed, commandFull);
+		await CreateMessageUpdater(command, restInteractionMessage, buildCommand);
+	}
+
+	private async Task CreateMessageUpdater(IDiscordInteraction command, RestInteractionMessage? restInteractionMessage, BuildCommand buildCommand)
+	{
 		var channelId = command.ChannelId ?? 0;
 		var messageId = restInteractionMessage?.Id ?? 0;
-		MessagesMap.Add(command.Id, new MessageUpdater(_client, channelId, messageId, buildCommand.WorkspaceMeta));
+		var workspaceMeta = (WorkspaceMeta?)buildCommand.WorkspaceMeta?.Clone();
+		var messageUpdater = new MessageUpdater(_client, channelId, messageId, workspaceMeta);
+		MessagesMap.Add(command.Id, messageUpdater);
 		var firstReport = _prematureReports.TryGetValue(command.Id, out var report) ? report : new PipelineReport();
 		_prematureReports.Remove(command.Id);
 		await MessagesMap[command.Id].UpdateMessageAsync(firstReport);
 	}
-	
+
 	private static bool IsAuthorised(SocketGuildUser guildUser)
 	{
 		var roles = guildUser.Roles.Select(x => x.Name);
