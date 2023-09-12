@@ -46,6 +46,9 @@ public class BuildPipeline
 	private DateTime StartTime { get; set; }
 	private string TimeSinceStart => $"{(DateTime.Now - StartTime).ToHourMinSecString()}";
 
+	private readonly CancellationTokenSource _cancellation = new();
+	private CancellationToken _cancellationToken => _cancellation.Token;
+
 	public BuildPipeline(ulong id, Workspace workspace, Args args, IOffloadable? offloadable)
 	{
 		Id = id;
@@ -73,6 +76,12 @@ public class BuildPipeline
 		
 		var buildTargetNames = Workspace.GetBuildTargets().Select(x => x.Name).ToArray();
 		Report = new PipelineReport(buildTargetNames);
+	}
+
+	public void Cancel()
+	{
+		Logger.Log("Cancelling BuildPipeline is not yet supported");
+		_cancellation?.Cancel();
 	}
 
 	#region Build Steps
@@ -367,6 +376,8 @@ public class BuildPipeline
 				_buildResults.Add(buildResult);
 				_offloadable.PendingIds.Remove(buildGuid);
 				Logger.Log($"{buildName} Errors: {buildResult?.Errors}");
+				Report.Complete(BuildTaskStatus.Failed, $"Build Failed: {buildName}", buildResult?.Errors ?? "Reason unknown");
+				Cancel();
 				break;
 			
 			default:
