@@ -15,7 +15,7 @@ public class MessageUpdater
 	{
 		_channel = (SocketTextChannel)client.GetChannel(channelId);
 		_messageId = messageId;
-		_workspaceMeta = (WorkspaceMeta?)workspaceMeta?.Clone();
+		_workspaceMeta = workspaceMeta;
 	}
 
 	public async Task UpdateMessageAsync(PipelineReport report)
