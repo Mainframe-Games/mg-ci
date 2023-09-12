@@ -6,7 +6,7 @@ namespace DiscordBot;
 
 public static class Extensions
 {
-	private const int MAX_MESSAGE_SIZE = 4096;
+	public const int MAX_MESSAGE_SIZE = 4096;
 	
 	public static async Task<RestInteractionMessage?> RespondSuccessDelayed(this SocketSlashCommand command, IUser user, string title, string description)
 	{
@@ -31,23 +31,34 @@ public static class Extensions
 		});
 	}
 	
-	private static async Task<RestInteractionMessage?> RespondSuccessFileDelayed(this SocketInteraction command, IUser user, string title, string description)
+	public static async Task<RestInteractionMessage?> RespondSuccessFileDelayed(this SocketInteraction command, IUser user, string title, string description)
 	{
-		var filePath = Path.Combine(Environment.CurrentDirectory, "large_message.txt");
-		await File.WriteAllTextAsync(filePath, description);
-	
-		var fileInfo = new FileInfo(filePath);
-		if (!fileInfo.Exists)
-			throw new FileNotFoundException($"File not found at: {filePath}");
-
+		var attachments = BuildAttachments(description);
 		return await command.ModifyOriginalResponseAsync(properties =>
 		{
 			properties.Embed = CreateEmbed(user, title, null, Color.Green);
-			properties.Attachments = new Optional<IEnumerable<FileAttachment>>(new List<FileAttachment>
-			{
-				new(fileInfo.FullName, fileInfo.Name)
-			});
+			properties.Attachments = attachments;
 		});
+	}
+
+	public static Optional<IEnumerable<FileAttachment>> BuildAttachments(params string[] largeDescriptions)
+	{
+		var list = new List<FileAttachment>();
+		
+		for (var i = 0; i < largeDescriptions.Length; i++)
+		{
+			var description = largeDescriptions[i];
+			var filePath = Path.Combine(Environment.CurrentDirectory, $"large_message_{i}.txt");
+			File.WriteAllText(filePath, description);
+
+			var fileInfo = new FileInfo(filePath);
+			if (!fileInfo.Exists)
+				throw new FileNotFoundException($"File not found at: {filePath}");
+			
+			list.Add(new FileAttachment(fileInfo.FullName, fileInfo.Name));
+		}
+
+		return new Optional<IEnumerable<FileAttachment>>(list);
 	}
 	
 	public static async Task RespondError(this SocketSlashCommand command, string title, string description)

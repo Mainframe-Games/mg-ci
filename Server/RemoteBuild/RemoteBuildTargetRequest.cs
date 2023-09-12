@@ -35,6 +35,8 @@ public class RemoteBuildTargetRequest : IProcessable
 
 	private async Task ProcessAsync(Workspace workspace)
 	{
+		KeyValuePair<string, OffloadBuildConfig> currentBuildConfig = new();
+		
 		try
 		{
 			// this needs to be here to kick start the thread, otherwise it will stall app
@@ -60,6 +62,7 @@ public class RemoteBuildTargetRequest : IProcessable
 
 			foreach (var build in Packet.Builds)
 			{
+				currentBuildConfig = build;
 				var asset = workspace.GetBuildTarget(build.Value.AssetName);
 				var deployProcess = GetDeployProcess(build.Value, asset);
 				await StartBuilderAsync(Packet.PipelineId, build.Key, asset, workspace, deployProcess);
@@ -71,7 +74,11 @@ public class RemoteBuildTargetRequest : IProcessable
 		catch (Exception e)
 		{
 			Logger.Log(e);
-			await SendExceptionToMaster(e);
+			
+			if (string.IsNullOrEmpty(currentBuildConfig.Key) || currentBuildConfig.Value == null)
+				await SendExceptionToMaster(e);
+			else 
+				await SendExceptionToMaster(e, currentBuildConfig.Value.AssetName, currentBuildConfig.Key);
 		}
 		finally
 		{
@@ -104,32 +111,24 @@ public class RemoteBuildTargetRequest : IProcessable
 	/// <exception cref="WebException"></exception>
 	private async Task StartBuilderAsync(ulong pipelineId, string buildIdGuid, BuildSettingsAsset asset, Workspace workspace, IProcessable? deployProcess = null)
 	{
-		try
-		{
-			var builder = new LocalUnityBuild(workspace);
-			await SendToMasterServerAsync(buildIdGuid, asset.Name, null, BuildTaskStatus.Pending);
-			var result = builder.Build(asset);
+		var builder = new LocalUnityBuild(workspace);
+		await SendToMasterServerAsync(buildIdGuid, asset.Name, null, BuildTaskStatus.Pending);
+		var result = builder.Build(asset);
 
-			if (result.IsErrors)
-			{
-				await SendToMasterServerAsync(buildIdGuid, asset.Name, result, BuildTaskStatus.Failed);
-				return;
-			}
-			
-			// if no deploy then master server does deploy, need to upload this build
-			if (deployProcess is null)
-				await Web.StreamToServerAsync(SendBackUrl, asset.BuildPath, pipelineId, buildIdGuid);
-			else
-				deployProcess.Process();
-			
-			// tell master server build is completed
-			await SendToMasterServerAsync(buildIdGuid, asset.Name, result, result.IsErrors ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed);
-		}
-		catch (Exception e)
+		if (result.IsErrors)
 		{
-			Logger.Log(e);
-			await SendExceptionToMaster(e, asset.Name, buildIdGuid);
+			await SendToMasterServerAsync(buildIdGuid, asset.Name, result, BuildTaskStatus.Failed);
+			return;
 		}
+			
+		// if no deploy then master server does deploy, need to upload this build
+		if (deployProcess is null)
+			await Web.StreamToServerAsync(SendBackUrl, asset.BuildPath, pipelineId, buildIdGuid);
+		else
+			deployProcess.Process();
+			
+		// tell master server build is completed
+		await SendToMasterServerAsync(buildIdGuid, asset.Name, result, result.IsErrors ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed);
 	}
 
 	private async Task SendToMasterServerAsync(string? buildGuid, string buildName, BuildResult? buildResult, BuildTaskStatus status)

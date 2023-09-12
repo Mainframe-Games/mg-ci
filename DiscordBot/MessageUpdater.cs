@@ -32,7 +32,15 @@ public class MessageUpdater
 			embeds.Add(BuildChangeLog(report));
 
 		await _channel.ModifyMessageAsync(_messageId,
-			properties => { properties.Embeds = new Optional<Embed[]>(embeds.ToArray()); });
+			properties =>
+			{
+				// TODO: can also add build reports here in future
+				
+				if (IsReportTooLarge(report, out var attachments))
+					properties.Attachments = attachments;
+				
+				properties.Embeds = new Optional<Embed[]>(embeds.ToArray());
+			});
 	}
 
 	/// <summary>
@@ -58,6 +66,13 @@ public class MessageUpdater
 		return embed.Build();
 	}
 
+	private static bool IsReportTooLarge(PipelineReport report, out Optional<IEnumerable<FileAttachment>> attachments)
+	{
+		var isTooLarge = (report.CompleteMessage?.Length ?? 0) > Extensions.MAX_MESSAGE_SIZE;
+		attachments = isTooLarge ? Extensions.BuildAttachments(report.CompleteMessage) : null;
+		return isTooLarge;
+	}
+
 	/// <summary>
 	/// Src: https://discohook.org/
 	/// </summary>
@@ -66,7 +81,10 @@ public class MessageUpdater
 		var embed = new EmbedBuilder();
 		
 		embed.WithTitle(report.CompleteTitle);
-		embed.WithDescription(report.CompleteMessage);
+		
+		if (report.CompleteMessage?.Length < Extensions.MAX_MESSAGE_SIZE)
+			embed.WithDescription(report.CompleteMessage);
+		
 		embed.WithColor(GetColor(report));
 		
 		if (_workspaceMeta?.Url is not null)
