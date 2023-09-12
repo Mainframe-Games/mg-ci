@@ -133,7 +133,7 @@ public static class Extensions
 		if (template.Url is not null)
 			embed.WithUrl(template.Url);
 		if (template.ThumbnailUrl is not null)
-			embed.WithUrl(template.ThumbnailUrl);
+			embed.WithThumbnailUrl(template.ThumbnailUrl);
 		
 		if (template.Fields is not null)
 		{

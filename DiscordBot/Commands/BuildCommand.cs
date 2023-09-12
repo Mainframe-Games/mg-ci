@@ -49,13 +49,12 @@ public class BuildCommand : Command
 				AuthorName = command.User.Username,
 				AuthorIconUrl = command.User.GetAvatarUrl(),
 				ThumbnailUrl = obj?.WorkspaceMeta?.ThumbnailUrl,
-				Title = $"Build Started {obj?.WorkspaceMeta?.ProjectName}",
+				Title = "Build Started",
 				Description = obj?.ToString() ?? string.Empty,
-				Colour = SharedLib.Webhooks.Discord.Colour.GREEN,
-				
+				Colour = SharedLib.Webhooks.Discord.Colour.GREEN
 			};
 			Embed = template.BuildEmbed();
-			return new CommandResponse("Build Started", template.Description);
+			return new CommandResponse(template.Title, template.Description);
 		}
 		catch (Exception e)
 		{
