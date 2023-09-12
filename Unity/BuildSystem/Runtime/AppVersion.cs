@@ -9,18 +9,18 @@ namespace BuildSystem
 	{
 		public static string FILE_NAME => "app_version.txt";
 		
-		private static AppVersion? _Instance;
+		private static AppVersion _instance;
 		public static AppVersion Instance
 		{
 			get
 			{
-				if (_Instance is not null)
-					return (AppVersion)_Instance;
+				if (_instance.IsValid)
+					return _instance;
 
 				var path = Path.Combine(Application.streamingAssetsPath, FILE_NAME);
 				var versionText = File.ReadAllText(path);
-				_Instance = new AppVersion(versionText);
-				return (AppVersion)_Instance;
+				_instance = new AppVersion(versionText);
+				return _instance;
 			}
 		}
 		
@@ -38,6 +38,11 @@ namespace BuildSystem
 		/// Returns raw `{major}.{minor}.{patch}.{build}`
 		/// </summary>
 		public string DisplayString { get; }
+
+		/// <summary>
+		/// Returns if <see cref="Major"/> version is not null. There should always be at least one version. 
+		/// </summary>
+		public bool IsValid => Major is not null;
 
 		private uint this[int i]
 		{
