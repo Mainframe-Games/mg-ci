@@ -34,12 +34,11 @@ public class MessageUpdater
 		await _channel.ModifyMessageAsync(_messageId,
 			properties =>
 			{
-				// TODO: can also add build reports here in future
+				properties.Embeds = new Optional<Embed[]>(embeds.ToArray());
 				
+				// TODO: can also add build reports here in future
 				if (IsReportTooLarge(report, out var attachments))
 					properties.Attachments = attachments;
-				
-				properties.Embeds = new Optional<Embed[]>(embeds.ToArray());
 			});
 	}
 
