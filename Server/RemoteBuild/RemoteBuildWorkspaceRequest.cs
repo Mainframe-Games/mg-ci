@@ -15,8 +15,7 @@ public class RemoteBuildWorkspaceRequest : IProcessable
 	
 	public ServerResponse Process()
 	{
-		var argsArray = Args?.Split(' ');
-		var args = new Args(argsArray);
+		var args = new Args(Args);
 		args.TryGetArg("-branch", out var branch, "main");
 
 		var workspaceName =  new WorkspaceMapping().GetRemapping(WorkspaceName);

@@ -5,13 +5,24 @@ public class Args
 	public static readonly Args Environment = new(System.Environment.GetCommandLineArgs());
 	private readonly Dictionary<string, List<string>> _cmds = new();
 
-	public Args(string[]? args)
+	public Args(IEnumerable<string> args)
 	{
-		var _args = new List<string>();
-		_args.AddRange(args ?? Array.Empty<string>());
-		var cmd = string.Empty;
+		BuildArgsMap(args.ToArray());
+	}
 
-		foreach (var arg in _args)
+	public Args(string? argsStr)
+	{
+		if (argsStr == null)
+			return;
+		
+		var argsArray = ParseCommandLine(argsStr);
+		BuildArgsMap(argsArray);
+	}
+
+	private void BuildArgsMap(string[] argsArray)
+	{
+		var cmd = string.Empty;
+		foreach (var arg in argsArray)
 			AddCmd(arg, ref cmd);
 	}
 
@@ -98,5 +109,43 @@ public class Args
 	public bool IsFlag(string cmd)
 	{
 		return TryGetArgs(cmd, out _);
+	}
+	
+	private static string[] ParseCommandLine(string commandLine)
+	{
+		List<string> arguments = new List<string>();
+		string[] parts = commandLine.Split(' ');
+
+		bool inQuotes = false;
+		string currentArgument = "";
+
+		foreach (string part in parts)
+		{
+			if (inQuotes)
+			{
+				currentArgument += " " + part;
+
+				// Check if the part ends with a closing double quote
+				if (part.EndsWith("\""))
+				{
+					arguments.Add(currentArgument.Trim('"'));
+					inQuotes = false;
+				}
+			}
+			else
+			{
+				if (part.StartsWith("\""))
+				{
+					inQuotes = true;
+					currentArgument = part;
+				}
+				else
+				{
+					arguments.Add(part);
+				}
+			}
+		}
+
+		return arguments.ToArray();
 	}
 }
