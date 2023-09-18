@@ -127,16 +127,20 @@ public static class App
 		try
 		{
 			var fullVersion = pipeline.BuildVersions?.FullVersion ?? string.Empty;
-
-			// server deploys
-			await DeployToS3Bucket(pipeline);
-			await DeployClanforge(pipeline, fullVersion);
 			
 			// client deploys
 			DeployApple(pipeline); // apple first as apple takes longer to process on appstore connect
 			await DeployGoogle(pipeline, fullVersion);
 			DeploySteam(pipeline, fullVersion);
 
+			/*
+			 * Note: clanforge relies on steam URL, so steam MUST be updated first
+			 */
+			
+			// server deploys
+			await DeployToS3Bucket(pipeline);
+			await DeployClanforge(pipeline, fullVersion);
+			
 			return true;
 		}
 		catch (Exception e)
