@@ -11,9 +11,9 @@ public class Workspace
 	
 	public string Name { get; }
 	public string Directory { get; }
-	public string? UnityVersion { get; private set; }
+	public string? UnityVersion { get; private set; } // TODO could this be in WorkspaceMeta?
 	public string? Branch { get; set; } = "main";
-	public WorkspaceMeta Meta { get; }
+	public WorkspaceMeta Meta { get; private set; }
 	public ProjectSettings ProjectSettings { get; private set; }
 	
 	[JsonIgnore] public string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", PROJ_SETTINGS_ASSET);
@@ -24,8 +24,16 @@ public class Workspace
 	{
 		Name = name;
 		Directory = directory;
+		RefreshMetaData();
+	}
+
+	/// <summary>
+	/// Refreshes ProjectSettings, UnityVersion, and WorkspaceMeta 
+	/// </summary>
+	private void RefreshMetaData()
+	{
 		ProjectSettings = new ProjectSettings(ProjectSettingsPath);
-		UnityVersion = GetUnityVersion(directory);
+		UnityVersion = GetUnityVersion(Directory);
 		Meta = GetMetaData();
 	}
 	
@@ -203,8 +211,7 @@ public class Workspace
 	public void Clear()
 	{
 		Cmd.Run("cm", $"unco -a \"{Directory}\"");
-		ProjectSettings = new ProjectSettings(ProjectSettingsPath);
-		UnityVersion = GetUnityVersion(Directory);
+		RefreshMetaData();
 	}
 
 	/// <summary>
@@ -224,8 +231,8 @@ public class Workspace
 			if (exitCode != 0 || output.ToLower().Contains("does not exist"))
 				throw new Exception($"Plastic update error: {output}");
 		}
-		
-		UnityVersion = GetUnityVersion(Directory);
+
+		RefreshMetaData();
 	}
 
 	public void CleanBuild()
