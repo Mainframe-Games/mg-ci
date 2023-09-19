@@ -280,7 +280,7 @@ public class BuildPipeline
 		// store last successful changeset id
 		Workspace.Meta.LastSuccessfulBuild = _currentChangeSetId;
 		Workspace.SaveMeta();
-		Workspace.Commit($"SUCCESS. {BuildVersions?.FullVersion}");
+		Workspace.Commit($"_SUCCESS. {BuildVersions?.FullVersion}");
 		// Workspace.Clear();
 	}
 	
