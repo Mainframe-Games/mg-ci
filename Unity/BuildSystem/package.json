@@ -5,5 +5,10 @@
     "description": "Build system for Unity. Src: https://github.com/Mainframe-Games/UnityDeployment.git?path=Unity/BuildSystem",
     "dependencies": {
         "com.unity.nuget.newtonsoft-json": "2.0.0"
+    },
+    "author": {
+        "name": "Mainframe Games",
+        "email": "brogan@mainframe.games",
+        "url": "https://mainframe.games"
     }
 }
