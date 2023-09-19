@@ -31,9 +31,6 @@ namespace BuildSystem
 		public BuildOptions BuildOptions = BuildOptions.None;
 
 		[Header("Optional")]
-		[Tooltip("Enter SteamId for when you need different steam deployments. i.e Demo and official builds")]
-		public ulong SteamId;
-
 		[Tooltip("Deletes all the files at LocationPath before building")]
 		public bool DeleteFiles;
 
@@ -113,7 +110,7 @@ namespace BuildSystem
 		[ContextMenu("Validate")]
 		public bool IsValid()
 		{
-			return EnsureSteamId();
+			return true;
 		}
 
 		[ContextMenu("Build")]
@@ -122,22 +119,6 @@ namespace BuildSystem
 			BuildScript.BuildPlayer(this);
 		}
 		
-		private bool EnsureSteamId()
-		{
-			if (SteamId == 0)
-				return true;
-
-			const string steamAppId = "steam_appid.txt";
-			
-			if (!File.Exists(steamAppId))
-				return true;
-
-			var curSteamId = ulong.Parse(File.ReadAllText(steamAppId));
-			if (SteamId != curSteamId)
-				File.WriteAllText(steamAppId, SteamId.ToString());
-			return true;
-		}
-
 		[ContextMenu("Set Dirty")]
 		private void _SetDirty()
 		{
