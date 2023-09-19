@@ -62,12 +62,7 @@ public class ProjectSettingsRegister : SettingsProvider
 	
 	private static void SaveJson()
 	{
-		var settings = ConfigInstance;
-		var json = settings.ToString();
-		var fileInfo = new FileInfo($"Deploy/{settings.name}.json");
-		fileInfo.Directory?.Create();
-		Debug.Log($"Saving... {fileInfo.FullName} {json}");
-		// File.WriteAllText(fileInfo.FullName, json);
+		ConfigInstance.Save();
 	}
 
 	private static void GetElementsFromFields(object obj, SerializedObject serializedObject, VisualElement rootElement)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using BuildSystem.Utils;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,11 +12,11 @@ namespace BuildSystem
 	[CreateAssetMenu(fileName = "BuildConfig", menuName = "Build System/New Config", order = 0)]
 	public class BuildConfig : ScriptableObject
 	{
+		[JsonIgnore]
+		private string PATH => $"BuildSystem/{name}.json";
+		
 		[Header("Meta Data")]
-		[Tooltip("Used as a link to the store for the title of the Discord embedded message")]
-		public string Url;
-		[Tooltip("Used for thumbnail image for Discord embedded message")]
-		public string ThumbnailUrl;
+		public Meta Meta;
 		
 		[Header("Settings")]
         public PreBuild PreBuild;
@@ -25,7 +26,12 @@ namespace BuildSystem
 
 		public override string ToString()
 		{
-			return JsonUtility.ToJson(this, true);
+			return Json.Serialise(this);
+		}
+
+		private void OnEnable()
+		{
+			Meta = Meta.Load();
 		}
 
 		[ContextMenu("Set Dirty")]
@@ -44,6 +50,43 @@ namespace BuildSystem
 				.GetFields(BindingFlags.Public | BindingFlags.Instance)
 				.Select(x => x.Name)
 				.Distinct();
+		}
+
+		public void Save()
+		{
+			Meta.Save();
+			// SaveLoad.Save(PATH, this);
+		}
+	}
+	
+	[Serializable]
+	public struct Meta
+	{
+		private const string PATH = "BuildSystem/WorkspaceMeta.json";
+
+		public string ProjectName;
+		[Tooltip("Used as a link to the store for the title of the Discord embedded message")]
+		public string Url;
+		[Tooltip("Used for thumbnail image for Discord embedded message")]
+		public string ThumbnailUrl;
+		[Tooltip("Last successful build changeset id. Automatically saved by build server but you can manually set here too")]
+		public int LastSuccessfulBuild;
+		
+		public static Meta Load()
+		{
+			if (SaveLoad.TryLoad(PATH, out Meta meta))
+				return meta;
+			
+			// return default
+			return new Meta
+			{
+				ProjectName = Application.productName
+			};
+		}
+		
+		public void Save()
+		{
+			SaveLoad.Save(PATH, this);
 		}
 	}
 
