@@ -1,4 +1,5 @@
 using System.Net;
+using Deployment;
 using Deployment.Server.Unity;
 using Server.Configs;
 using SharedLib;
@@ -39,7 +40,7 @@ public class ProductionRequest : IProcessable
 		{
 			Profile = Profile,
 			Beta = Branch,
-			Desc = $"Build Version: {buildVersion}"
+			Desc = buildVersion
 		};
 
 		pro.Process();

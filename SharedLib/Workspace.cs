@@ -13,7 +13,7 @@ public class Workspace
 	public string Directory { get; }
 	public string? UnityVersion { get; private set; }
 	public string? Branch { get; set; } = "main";
-	public WorkspaceMeta? Meta { get; }
+	public WorkspaceMeta Meta { get; }
 	public ProjectSettings ProjectSettings { get; private set; }
 	
 	[JsonIgnore] public string ProjectSettingsPath => Path.Combine(Directory, "ProjectSettings", PROJ_SETTINGS_ASSET);
@@ -32,17 +32,6 @@ public class Workspace
 	public override string ToString()
 	{
 		return $"{Name} @ {Directory} | UnityVersion: {UnityVersion}";
-	}
-
-	private WorkspaceMeta? GetMetaData()
-	{
-		var path = MetaPath;
-
-		if (!File.Exists(path))
-			return null;
-			
-		var fileContents = File.ReadAllText(path);
-		return Json.Deserialise<WorkspaceMeta>(fileContents);
 	}
 	
 	public static List<Workspace> GetAvailableWorkspaces()
@@ -307,34 +296,39 @@ public class Workspace
 	/// <summary>
 	/// Gets all change logs between two changeSetIds
 	/// </summary>
-	public static string[] GetChangeLog(int curId, int prevId, bool print = true)
+	public string[] GetChangeLog(int curId, int prevId, bool print = true)
 	{
+		var dirBefore = Environment.CurrentDirectory;
+		Environment.CurrentDirectory = Directory;
+		
 		var raw = Cmd.Run("cm", $"log --from=cs:{prevId} cs:{curId} --csformat=\"{{comment}}\"").output;
 		var changeLog = raw.Split(Environment.NewLine).Reverse().ToArray();
 		
 		if (print)
 			Logger.Log($"___Change Logs___\n{string.Join("\n", changeLog)}");
 		
+		Environment.CurrentDirectory = dirBefore;
 		return changeLog;
 	}
-	
-	public void CommitNewVersionNumber(string commitMessage)
+
+	public void Commit(string commitMessage)
 	{
 		// update in case there are new changes in coming otherwise it will fail
 		// TODO: need to find a way to automatically resolve conflicts with cloud
 		Update();
-		
+
 		var status = Cmd.Run("cm", "status --short").output;
 		var files = status.Split(Environment.NewLine);
 		var filesToCommit = files
-			.Where(x => x.Contains(".vdf") 
+			.Where(x => x.Contains(".vdf")
 			            || x.Contains(PROJ_SETTINGS_ASSET)
-			            || x.Contains(APP_VERSION_TXT))
+			            || x.Contains(APP_VERSION_TXT)
+			            || x.Contains(WORKSPACE_META_JSON))
 			.ToList();
-		
+
 		// commit changes
 		var filesStr = $"\"{string.Join("\" \"", filesToCommit)}\"";
-		Logger.Log($"Commiting new build version \"{commitMessage}\"");
+		Logger.Log($"Commit: \"{commitMessage}\"");
 		Cmd.Run("cm", $"ci {filesStr} -c=\"{commitMessage}\"");
 	}
 
@@ -361,4 +355,25 @@ public class Workspace
 	{
 		File.WriteAllText(BuildVersionPath, fullVersion);
 	}
+
+	#region Meta
+
+	private WorkspaceMeta GetMetaData()
+	{
+		var path = MetaPath;
+
+		if (!File.Exists(path))
+			return new WorkspaceMeta();
+			
+		var fileContents = File.ReadAllText(path);
+		return Json.Deserialise<WorkspaceMeta>(fileContents) ?? new WorkspaceMeta();
+	}
+
+	public void SaveMeta()
+	{
+		var metaJson = Json.Serialise(Meta);
+		File.WriteAllText(MetaPath, metaJson);
+	}
+
+	#endregion
 }

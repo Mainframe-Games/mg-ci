@@ -12,11 +12,6 @@ namespace Deployment;
 
 public class BuildPipeline
 {
-	/// <summary>
-	/// Key to use to tag version bump commit and find previous build commit
-	/// </summary>
-	private const string BUILD_VERSION = "Build Version:";
-	
 	public delegate string? ExtraHookLogs(BuildPipeline pipeline);
 	public delegate Task<bool> DeployDelegate(BuildPipeline pipeline);
 	
@@ -63,16 +58,17 @@ public class BuildPipeline
 		if (Args.IsFlag("-cleanbuild"))
 			Workspace.CleanBuild();
 		
-		Workspace.Clear();
 		Args.TryGetArg("-changesetid", out var idStr, "-1");
+		
+		Workspace.Clear();
 		Workspace.Update(int.Parse(idStr));
 		Workspace.GetCurrent(out _currentChangeSetId, out _currentGuid);
 		
-		var prevChangeSetId = Workspace.GetPreviousChangeSetId(BUILD_VERSION);
-		Logger.Log($"[CHANGESET] cs:{prevChangeSetId} \u2192 cs:{_currentChangeSetId}, guid:{_currentGuid}");
+		// var prevChangeSetId = Workspace.GetPreviousChangeSetId(BUILD_VERSION);
+		// Logger.Log($"[CHANGESET] cs:{prevChangeSetId} \u2192 cs:{_currentChangeSetId}, guid:{_currentGuid}");
 
 		Config = BuildConfig.GetConfig(Workspace.Directory);
-		ChangeLog = Workspace.GetChangeLog(_currentChangeSetId, prevChangeSetId);
+		ChangeLog = Workspace.GetChangeLog(_currentChangeSetId, Workspace.Meta.LastSuccessfulBuild);
 		
 		var buildTargetNames = Workspace.GetBuildTargets().Select(x => x.Name).ToArray();
 		Report = new PipelineReport(buildTargetNames);
@@ -145,7 +141,7 @@ public class BuildPipeline
 		// write new versions to disk
 		Workspace.ProjectSettings.ReplaceVersions(preBuild.BuildVersions);
 		Workspace.SaveBuildVersion(preBuild.BuildVersions.FullVersion);
-		Workspace.CommitNewVersionNumber($"{BUILD_VERSION}: {preBuild.BuildVersions.FullVersion} | cs: {_currentChangeSetId} | guid: {_currentGuid}");
+		Workspace.Commit($"_Build Version: {preBuild.BuildVersions.FullVersion} | cs: {_currentChangeSetId} | guid: {_currentGuid}");
 		
 		await Task.CompletedTask;
 	}
@@ -280,7 +276,12 @@ public class BuildPipeline
 		}
 		
 		Report.Complete(BuildTaskStatus.Succeed, title, hookMessage.ToString());
-		Workspace.Clear();
+		
+		// store last successful changeset id
+		Workspace.Meta.LastSuccessfulBuild = _currentChangeSetId;
+		Workspace.SaveMeta();
+		Workspace.Commit($"SUCCESS. {BuildVersions?.FullVersion}");
+		// Workspace.Clear();
 	}
 	
 	#endregion

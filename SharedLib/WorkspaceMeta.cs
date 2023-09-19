@@ -5,6 +5,12 @@ public class WorkspaceMeta : ICloneable
 	public string? Url { get; set; }
 	public string? ThumbnailUrl { get; set; }
 	public string? ProjectName { get; set; }
+	
+	/// <summary>
+	/// Changeset ID from last successful build
+	/// </summary>
+	public int LastSuccessfulBuild { get; set; }
+	
 	public object Clone()
 	{
 		return new WorkspaceMeta
