@@ -227,7 +227,7 @@ public class BuildPipeline
 		
 		// build changeLog
 		var hookMessage = new StringBuilder();
-x		hookMessage.AppendLine($"**Targets:** Total Time {TimeSinceStart}");
+		hookMessage.AppendLine($"**Targets:** Total Time {TimeSinceStart}");
 		foreach (var buildResult in _buildResults)
 			hookMessage.AppendLine($"- {buildResult}");
 		hookMessage.AppendLine("");
