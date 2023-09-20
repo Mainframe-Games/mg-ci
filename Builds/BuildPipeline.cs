@@ -227,11 +227,7 @@ public class BuildPipeline
 		
 		// build changeLog
 		var hookMessage = new StringBuilder();
-		hookMessage.AppendLine($"**ChangeSetId:** {_currentChangeSetId}");
-		hookMessage.AppendLine($"**ChangeSetGUID:** {_currentGuid}");
-		hookMessage.AppendLine("");
-
-		hookMessage.AppendLine($"**Targets:** Total Time {TimeSinceStart}");
+x		hookMessage.AppendLine($"**Targets:** Total Time {TimeSinceStart}");
 		foreach (var buildResult in _buildResults)
 			hookMessage.AppendLine($"- {buildResult}");
 		hookMessage.AppendLine("");
@@ -280,7 +276,7 @@ public class BuildPipeline
 		// store last successful changeset id
 		Workspace.Meta.LastSuccessfulBuild = _currentChangeSetId;
 		Workspace.SaveMeta();
-		Workspace.Commit($"_SUCCESS. {BuildVersions?.FullVersion}");
+		Workspace.Commit($"_Build Successful. {BuildVersions?.FullVersion}");
 		// Workspace.Clear();
 	}
 	
