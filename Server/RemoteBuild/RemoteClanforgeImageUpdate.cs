@@ -22,19 +22,22 @@ public class RemoteClanforgeImageUpdate : IProcessable
 
 	private async Task ProcessInternalAsync()
 	{
-		if (ServerConfig.Instance.Clanforge?.Clone() is not ClanforgeConfig clanforgeConfig)
-			throw new Exception($"Issue with {nameof(ClanforgeConfig)}");
+		if (ServerConfig.Instance.Clanforge is null)
+			throw new NullReferenceException($"{nameof(ClanforgeConfig)} is null on server config");
+	
+		var clanforgeConfig = ServerConfig.Instance.Clanforge.Clone();
+		Logger.Log($"Clanforge config cloned: {clanforgeConfig}");
 		
 		try
 		{
 			var clanforge = new ClanForgeDeploy(clanforgeConfig, Profile, Desc, Beta);
 			await clanforge.Deploy();
-			SendHook(Desc, clanforgeConfig?.BuildHookMessage(Profile, "Updated"));
+			SendHook(Desc, clanforgeConfig.BuildHookMessage(Profile, "Updated"));
 			Logger.Log("ClanForgeDeploy complete");
 		}
 		catch (Exception e)
 		{
-			SendHook(clanforgeConfig?.BuildHookMessage(Profile, $"Failed ({e.GetType().Name})"), e.Message, true);
+			SendHook(clanforgeConfig.BuildHookMessage(Profile, $"Failed ({e.GetType().Name})"), e.Message, true);
 		}
 	}
 

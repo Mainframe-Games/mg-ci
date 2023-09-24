@@ -3,7 +3,7 @@ using SharedLib;
 
 namespace Deployment.Configs;
 
-public class ClanforgeConfig : ICloneable
+public class ClanforgeConfig : ICloneable<ClanforgeConfig>
 {
 	public string? AccessKey { get; set; }
 	public string? SecretKey { get; set; }
@@ -11,11 +11,11 @@ public class ClanforgeConfig : ICloneable
 	public uint MachineId { get; set; }
 	public string? Url { get; set; }
 	public string? DefaultProfile { get; set; }
-	public Dictionary<string, ClanforgeProfile> Profiles { get; set; }
+	public Dictionary<string, ClanforgeProfile>? Profiles { get; set; }
 
 	private ClanforgeProfile GetProfile(string? profile)
 	{
-		if (Profiles.TryGetValue(profile, out var p))
+		if (Profiles?.TryGetValue(profile, out var p) is true)
 			return p;
 
 		throw new KeyNotFoundException($"Profile not found: {profile}");
@@ -44,10 +44,15 @@ public class ClanforgeConfig : ICloneable
 		return uriBuilder.ToString();
 	}
 
-	public object Clone()
+	public ClanforgeConfig Clone()
 	{
-		var str = Json.Serialise(this);
+		var str = ToString();
 		return Json.Deserialise<ClanforgeConfig>(str) ?? new ClanforgeConfig();
+	}
+
+	public override string ToString()
+	{
+		return Json.Serialise(this);
 	}
 }
 
