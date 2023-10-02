@@ -11,6 +11,9 @@ namespace BuildSystem.PostBuild
 
 		public void OnPostprocessBuild(BuildReport report)
 		{
+			if (!BuildScript.CurrentBuildSettings.StripDontShipFolders)
+				return;
+			
 			var outputFile = new FileInfo(report.summary.outputPath);
 			var rootDir = outputFile.Directory;
 			foreach (var directory in rootDir.GetDirectories())

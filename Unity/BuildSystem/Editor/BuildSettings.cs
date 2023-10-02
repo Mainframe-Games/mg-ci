@@ -34,6 +34,9 @@ namespace BuildSystem
 		[Tooltip("Deletes all the files at LocationPath before building")]
 		public bool DeleteFiles;
 
+		[Tooltip("If true will strip IL2CPP folders like _BackUpThisFolder_ButDontShipItWithYourGame")]
+		public bool StripDontShipFolders;
+
 		[Header("Android")] 
 		public string KeystorePath;
 		public string KeystoreAlias;
@@ -44,7 +47,7 @@ namespace BuildSystem
 		public PListElementString[] PListElementStrings;
 		public PListElementInt[] PListElementInts;
 		public PListElementFloat[] PListElementFloats;
-        
+
 		public BuildPlayerOptions GetBuildOptions(string rootDirectoryPath = null)
 		{
 			// if no override given use default
