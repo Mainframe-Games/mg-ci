@@ -128,7 +128,18 @@ public class Workspace
 	
 	public string? GetBundleVersion()
 	{
-		return ProjectSettings.GetValue<string?>("bundleVersion");;
+		return ProjectSettings.GetValue<string?>("bundleVersion");
+	}
+
+	/// <summary>
+	/// Returns bundleVersion + buildVersion
+	/// </summary>
+	/// <returns></returns>
+	public string GetFullVersion()
+	{
+		var bundleVersion = GetBundleVersion();
+		var buildVersion = GetStandaloneBuildNumber();
+		return $"{bundleVersion}.{buildVersion}";
 	}
 
 	public int[] GetVersionArray()
