@@ -46,8 +46,16 @@ public class ClanforgeConfig : ICloneable<ClanforgeConfig>
 
 	public ClanforgeConfig Clone()
 	{
-		var str = ToString();
-		return Json.Deserialise<ClanforgeConfig>(str) ?? new ClanforgeConfig();
+		return new ClanforgeConfig
+		{
+			AccessKey = AccessKey,
+			SecretKey = SecretKey,
+			Asid = Asid,
+			MachineId = MachineId,
+			Url = Url,
+			DefaultProfile = DefaultProfile,
+			Profiles = Profiles,
+		};
 	}
 
 	public override string ToString()

@@ -23,7 +23,7 @@ public class RemoteClanforgeImageUpdate : IProcessable
 	private async Task ProcessInternalAsync()
 	{
 		if (ServerConfig.Instance.Clanforge is null)
-			throw new NullReferenceException($"{nameof(ClanforgeConfig)} is null on server config");
+			throw new NullReferenceException($"{nameof(ClanforgeConfig)} is null on server config. {ServerConfig.Instance}");
 	
 		var clanforgeConfig = ServerConfig.Instance.Clanforge.Clone();
 		Logger.Log($"Clanforge config cloned: {clanforgeConfig}");
