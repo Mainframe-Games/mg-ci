@@ -53,7 +53,7 @@ public class DiscordWrapper
 		
 		// listen server
 		if (Config.ListenServer is not null)
-			_listenServer = new ListenServer(Config.ListenServer.Ip, Config.ListenServer.Port);
+			_listenServer = new ListenServer(Config.ListenServer.Ip, Config.ListenServer.Port, Assembly.GetExecutingAssembly());
 	}
 
 	private async void OnEventTriggered(Reminder reminder)

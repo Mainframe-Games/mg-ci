@@ -19,13 +19,24 @@ public abstract class Endpoint : IProcessable<ListenServer, HttpListenerContext>
 	{
 		return $"{GetType().Name}: {Method.Method} {Path}";
 	}
+	
+	public static string?[] GetList(Assembly assembly)
+	{
+		var endPoint = assembly
+			.GetTypes()
+			.Where(t => t.IsSubclassOf(typeof(Endpoint)) && !t.IsAbstract)
+			.Select(t => (Endpoint?)Activator.CreateInstance(t))
+			.Select(x => x?.ToString())
+			.ToArray();
+		return endPoint;
+	}
 
-	public static Endpoint? GetEndPoint(HttpListenerContext context)
+	public static Endpoint? GetEndPoint(Assembly assembly, HttpListenerContext context)
 	{
 		var method = new HttpMethod(context.Request.HttpMethod);
 		var path = context.Request.Url?.LocalPath ?? string.Empty;
 		
-		var endPoint = Assembly.GetExecutingAssembly()
+		var endPoint = assembly
 			.GetTypes()
 			.Where(t => t.IsSubclassOf(typeof(Endpoint)) && !t.IsAbstract)
 			.Select(t => (Endpoint?)Activator.CreateInstance(t))

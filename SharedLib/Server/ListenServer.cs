@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Reflection;
 using System.Text;
 using Server;
 
@@ -9,16 +10,19 @@ public sealed class ListenServer
 	private readonly string _ip;
 	private readonly ushort _port;
 	private readonly HttpListener _listener;
+	private readonly Assembly _assembly;
 
 	public string Prefixes => string.Join("\n", _listener.Prefixes);
 
 	public DateTime ServerStartTime { get; }
 	public bool IsListening => _listener.IsListening;
 
-	public ListenServer(string ip, ushort port)
+	public ListenServer(string ip, ushort port, Assembly assembly)
 	{
 		_ip = ip;
 		_port = port;
+
+		_assembly = assembly;
 
 		_listener = new HttpListener();
 		_listener.Prefixes.Add($"http://{_ip}:{_port}/");
@@ -64,7 +68,7 @@ public sealed class ListenServer
 		
 		try
 		{
-			var endpoint = Endpoint.GetEndPoint(context);
+			var endpoint = Endpoint.GetEndPoint(_assembly, context);
 			if (endpoint is not null)
 				response = await endpoint.ProcessAsync(this, context);
 		}
