@@ -1,26 +1,24 @@
 ﻿using System.Net;
 using System.Text;
+using Server;
 
 namespace SharedLib.Server;
 
-public class ListenServer
+public sealed class ListenServer
 {
 	private readonly string _ip;
 	private readonly ushort _port;
 	private readonly HttpListener _listener;
-	private readonly IServerCallbacks _callbacks;
 
 	public string Prefixes => string.Join("\n", _listener.Prefixes);
 
 	public DateTime ServerStartTime { get; }
 	public bool IsListening => _listener.IsListening;
 
-	public ListenServer(string ip, ushort port, IServerCallbacks callbacks)
+	public ListenServer(string ip, ushort port)
 	{
 		_ip = ip;
 		_port = port;
-		_callbacks = callbacks;
-		_callbacks.Server = this;
 
 		_listener = new HttpListener();
 		_listener.Prefixes.Add($"http://{_ip}:{_port}/");
@@ -41,22 +39,34 @@ public class ListenServer
 		// Logger.Log($"{nameof(ListenServer)} Address: {Prefixes}");
 		_listener.BeginGetContext(ListenerCallback, _listener);
 	}
+	
+	// TODO: implement authorisation
+	/// <summary>
+	/// Reads from file each time so we can add/remove tokens without restarting server
+	/// </summary>
+	/// <returns></returns>
+	// private bool IsAuthorised(HttpListenerRequest request)
+	// {
+	// 	var authToken = request.Headers[HttpRequestHeader.Authorization.ToString()] ?? string.Empty;
+	// 	
+	// 	_config.Refresh();
+	//
+	// 	if (_config.AuthTokens == null || _config.AuthTokens.Count == 0)
+	// 		return true;
+	//
+	// 	return _config.AuthTokens.Contains(authToken);
+	// }
 
 	private async void ListenerCallback(IAsyncResult result)
 	{
 		var context = _listener.EndGetContext(result);
-		ServerResponse response;
+		var response = new ServerResponse(HttpStatusCode.NotFound, $"404 Not Found '{context.Request.HttpMethod}' {context.Request.Url}");
 		
 		try
 		{
-			// Logger.Log($"Incoming request: {context.Request.HttpMethod} {context.Request.Url}");
-			response = context.Request.HttpMethod switch
-			{
-				"GET" => await _callbacks.Get(context),
-				"POST" => await _callbacks.Post(context),
-				"PUT" => await _callbacks.Put(context),
-				_ => new ServerResponse(HttpStatusCode.MethodNotAllowed, $"HttpMethod not supported: {context.Request.HttpMethod}")
-			};
+			var endpoint = Endpoint.GetEndPoint(context);
+			if (endpoint is not null)
+				response = await endpoint.ProcessAsync(this, context);
 		}
 		catch (Exception e)
 		{

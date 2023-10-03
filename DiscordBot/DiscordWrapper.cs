@@ -8,6 +8,7 @@ using DiscordBot.Commands;
 using DiscordBot.Configs;
 using SharedLib;
 using SharedLib.BuildToDiscord;
+using SharedLib.BuildToDiscord.POST;
 using SharedLib.Server;
 using DiscordConfig = DiscordBot.Configs.DiscordConfig;
 
@@ -52,7 +53,7 @@ public class DiscordWrapper
 		
 		// listen server
 		if (Config.ListenServer is not null)
-			_listenServer = new ListenServer(Config.ListenServer.Ip, Config.ListenServer.Port, new ServerCallbacks());
+			_listenServer = new ListenServer(Config.ListenServer.Ip, Config.ListenServer.Port);
 	}
 
 	private async void OnEventTriggered(Reminder reminder)
@@ -301,16 +302,16 @@ public class DiscordWrapper
 		return false;
 	}
 
-	public void ProcessUpdateMessage(PipelineUpdateMessage pipelineUpdateMessage)
+	public void ProcessUpdateMessage(PipelineUpdate.Payload report)
 	{
-		if (MessagesMap.TryGetValue(pipelineUpdateMessage.CommandId, out var message))
+		if (MessagesMap.TryGetValue(report.CommandId, out var message))
 		{
-			message.UpdateMessageAsync(pipelineUpdateMessage.Report).FireAndForget();
+			message.UpdateMessageAsync(report.Report).FireAndForget();
 		}
 		else
 		{
 			Logger.Log("Report premature. Adding to waiting list");
-			_prematureReports[pipelineUpdateMessage.CommandId] = pipelineUpdateMessage.Report;
+			_prematureReports[report.CommandId] = report.Report;
 		}
 	}
 }

@@ -20,5 +20,6 @@ public class ServerResponse
 
 	public static readonly ServerResponse Ok = new(HttpStatusCode.OK, "Ok");
 	public static readonly ServerResponse UnAuthorised = new(HttpStatusCode.Unauthorized, "You are not authorized to perform this action");
+	public static readonly ServerResponse NotImplemented = new(HttpStatusCode.NotImplemented, "Action not implemented");
 	public static readonly ServerResponse NoContent = new(HttpStatusCode.NoContent, "No body was given in request");
 }

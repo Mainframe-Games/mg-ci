@@ -4,25 +4,36 @@ using SharedLib;
 using SharedLib.BuildToDiscord;
 using SharedLib.Server;
 
-namespace Server.RemoteBuild;
+namespace Server.Endpoints.POST;
 
-public class RemoteBuildWorkspaceRequest : IProcessable
+/// <summary>
+/// Builds the entire workspace from buildconfig.json (used for master build server)
+/// </summary>
+public class BuildWorkspace : EndpointPOST<BuildWorkspace.Payload>
 {
-	public string? WorkspaceName { get; set; }
-	public string? Args { get; set; }
-	public string? DiscordAddress { get; set; }
-	public ulong CommandId { get; set; }
-	
-	public ServerResponse Process()
+	public class Payload
 	{
-		var args = new Args(Args);
+		public string? WorkspaceName { get; set; }
+		public string? Args { get; set; }
+		public string? DiscordAddress { get; set; }
+		public ulong CommandId { get; set; }
+	}
+	
+	public override HttpMethod Method => HttpMethod.Post;
+	public override string Path => "/build";
+
+	public override async Task<ServerResponse> ProcessAsync(ListenServer context0, HttpListenerContext context1, Payload content)
+	{
+		await Task.CompletedTask;
+		
+		var args = new Args(content.Args);
 		args.TryGetArg("-branch", out var branch, "main");
 
-		var workspaceName =  new WorkspaceMapping().GetRemapping(WorkspaceName);
+		var workspaceName = new WorkspaceMapping().GetRemapping(content.WorkspaceName);
 		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
 		
 		if (workspace is null)
-			return new ServerResponse(HttpStatusCode.BadRequest, $"Given namespace is not valid: {WorkspaceName}");
+			return new ServerResponse(HttpStatusCode.BadRequest, $"Given namespace is not valid: {content.WorkspaceName}");
 		
 		Logger.Log($"Chosen workspace: {workspace}");
 		
@@ -46,7 +57,7 @@ public class RemoteBuildWorkspaceRequest : IProcessable
 			Workspace = workspace.Name,
 			WorkspaceMeta = workspace.Meta,
 			Targets = string.Join(", ", workspace.GetBuildTargets().Select(x => x.Name)),
-			Args = Args,
+			Args = content.Args,
 			UnityVersion = workspace.UnityVersion,
 			ChangesetId = changeSetId,
 			ChangesetGuid = guid,
@@ -55,20 +66,17 @@ public class RemoteBuildWorkspaceRequest : IProcessable
 		};
 		return new ServerResponse(HttpStatusCode.OK, data);
 	}
-
+	
 	private async void OnReportUpdated(PipelineReport report)
 	{
-		if (string.IsNullOrEmpty(DiscordAddress))
+		if (string.IsNullOrEmpty(Content.DiscordAddress))
 			return;
 
-		var packet = new DiscordServerPacket
+		var body = new Dictionary<string, object>
 		{
-			PipelineUpdate = new PipelineUpdateMessage
-			{
-				CommandId = CommandId,
-				Report = report,
-			}
+			["CommandId"] = Content.CommandId,
+			["Report"] = report,
 		};
-		await Web.SendAsync(HttpMethod.Post, DiscordAddress, body: packet);
+		await Web.SendAsync(HttpMethod.Post, $"{Content.DiscordAddress}/pipeline-update", body: body);
 	}
 }

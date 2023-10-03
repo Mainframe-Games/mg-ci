@@ -1,30 +1,41 @@
 using System.Net;
-using Deployment;
 using Deployment.Server.Unity;
 using Server.Configs;
+using Server.RemoteBuild;
 using SharedLib;
 using SharedLib.Server;
 
-namespace Server.RemoteBuild;
+namespace Server.Endpoints.POST;
 
-public class ProductionRequest : IProcessable
+/// <summary>
+/// Used to do any automation after switch `default` on Steam
+/// </summary>
+public class ProductionRequest : EndpointPOST<ProductionRequest.Payload>
 {
-	public string? WorkspaceName { get; set; }
-	public string? Profile { get; set; }
-	public string? Branch { get; set; }
-	public string? Password { get; set; }
-
-	public ServerResponse Process()
+	public class Payload
 	{
-		var workspace = Workspace.GetWorkspaceFromName(WorkspaceName);
+		public string? WorkspaceName { get; set; }
+		public string? Profile { get; set; }
+		public string? Branch { get; set; }
+		public string? Password { get; set; }
+	}
+	
+	public override HttpMethod Method => HttpMethod.Post;
+	public override string Path => "/production";
+	
+	public override async Task<ServerResponse> ProcessAsync(ListenServer server, HttpListenerContext httpContext, Payload content)
+	{
+		await Task.CompletedTask;
+		
+		var workspace = Workspace.GetWorkspaceFromName(content.WorkspaceName);
 		
 		if (workspace == null)
-			return new ServerResponse(HttpStatusCode.BadRequest, $"Given namespace is not valid: {WorkspaceName}");
+			return new ServerResponse(HttpStatusCode.BadRequest, $"Given namespace is not valid: {content.WorkspaceName}");
 		
 		workspace.Update();
 		var buildVersion = workspace.GetFullVersion();
 
-		if (buildVersion != Password)
+		if (buildVersion != content.Password)
 			return new ServerResponse(HttpStatusCode.BadRequest, "Incorrect Password");
 
 		Environment.CurrentDirectory = workspace.Directory;
@@ -38,8 +49,8 @@ public class ProductionRequest : IProcessable
 		// get highest build version
 		var pro = new RemoteClanforgeImageUpdate
 		{
-			Profile = Profile,
-			Beta = Branch,
+			Profile = Content.Profile,
+			Beta = Content.Branch,
 			Desc = buildVersion
 		};
 
@@ -56,7 +67,7 @@ public class ProductionRequest : IProcessable
 		var secretKey = unityServices.SecretKey;
 		var remoteConfig = unityServices.RemoteConfig;
 
-		var project = ServerConfig.Instance.Ugs.GetProjectFromName(WorkspaceName);
+		var project = ServerConfig.Instance.Ugs.GetProjectFromName(Content.WorkspaceName);
 		
 		var unityRemoteConfig = new UnityRemoteConfigRequest(accessKey, secretKey, remoteConfig.ConfigId);
 		unityRemoteConfig.UpdateConfig(project.ProjectId, remoteConfig.ValueKey, buildVersion).FireAndForget();

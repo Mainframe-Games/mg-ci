@@ -2,32 +2,42 @@
 using Deployment;
 using Deployment.Configs;
 using Deployment.RemoteBuild;
+using Server.RemoteBuild;
 using Server.RemoteDeploy;
 using SharedLib;
 using SharedLib.Build;
 using SharedLib.BuildToDiscord;
 using SharedLib.Server;
 
-namespace Server.RemoteBuild;
+namespace Server.Endpoints.POST;
 
 /// <summary>
+/// Builds a specific target on an offload server
 /// Class send across network to do remote builds
 /// </summary>
-public class RemoteBuildTargetRequest : IProcessable
+public class OffloadBuild : EndpointPOST<OffloadBuild.Payload>
 {
-	public string? SendBackUrl { get; set; }
-	public OffloadServerPacket? Packet { get; set; }
-
-	public ServerResponse Process()
+	public class Payload
 	{
-		if (Packet is null)
-			return new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(Packet)} can not be null");
+		public string? SendBackUrl { get; set; }
+		public OffloadServerPacket? Packet { get; set; }
+	}
+	
+	public override HttpMethod Method => HttpMethod.Post;
+	public override string Path => "/offload-build";
+	
+	public override async Task<ServerResponse> ProcessAsync(ListenServer server, HttpListenerContext context, Payload content)
+	{
+		await Task.CompletedTask;
 		
-		var workspaceName = new WorkspaceMapping().GetRemapping(Packet.WorkspaceName);
+		if (content.Packet is null)
+			return new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(content.Packet)} can not be null");
+		
+		var workspaceName = new WorkspaceMapping().GetRemapping(content.Packet.WorkspaceName);
 		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
 		
 		if (workspace is null)
-			return new ServerResponse(HttpStatusCode.BadRequest, $"Workspace not found: {Packet.WorkspaceName}");
+			return new ServerResponse(HttpStatusCode.BadRequest, $"Workspace not found: {content.Packet.WorkspaceName}");
 		
 		ProcessAsync(workspace).FireAndForget();
 		return ServerResponse.Ok;
@@ -44,28 +54,28 @@ public class RemoteBuildTargetRequest : IProcessable
 
 			Environment.CurrentDirectory = workspace.Directory;
 
-			if (Packet.CleanBuild)
+			if (Content.Packet.CleanBuild)
 				workspace.CleanBuild();
 
 			workspace.Clear();
 			workspace.Update();
-			workspace.SwitchBranch(Packet.Branch);
-			workspace.Update(Packet.ChangesetId);
+			workspace.SwitchBranch(Content.Packet.Branch);
+			workspace.Update(Content.Packet.ChangesetId);
 
 			if (!Directory.Exists(workspace.Directory))
 				throw new DirectoryNotFoundException($"Directory doesn't exist: {workspace.Directory}");
 
 			// set build version in project settings
 			var projWriter = new ProjectSettings(workspace.ProjectSettingsPath);
-			projWriter.ReplaceVersions(Packet.BuildVersion);
-			workspace.SaveBuildVersion(Packet.BuildVersion.FullVersion);
+			projWriter.ReplaceVersions(Content.Packet.BuildVersion);
+			workspace.SaveBuildVersion(Content.Packet.BuildVersion.FullVersion);
 
-			foreach (var build in Packet.Builds)
+			foreach (var build in Content.Packet.Builds)
 			{
 				currentBuildConfig = build;
 				var asset = workspace.GetBuildTarget(build.Value.AssetName);
 				var deployProcess = GetDeployProcess(build.Value, asset);
-				await StartBuilderAsync(Packet.PipelineId, build.Key, asset, workspace, deployProcess);
+				await StartBuilderAsync(Content.Packet.PipelineId, build.Key, asset, workspace, deployProcess);
 			}
 
 			// clean up after build
@@ -123,7 +133,7 @@ public class RemoteBuildTargetRequest : IProcessable
 			
 		// if no deploy then master server does deploy, need to upload this build
 		if (deployProcess is null)
-			await Web.StreamToServerAsync(SendBackUrl, asset.BuildPath, pipelineId, buildIdGuid);
+			await Web.StreamToServerAsync(Content.SendBackUrl, asset.BuildPath, pipelineId, buildIdGuid);
 		else
 			deployProcess.Process();
 			
@@ -133,9 +143,9 @@ public class RemoteBuildTargetRequest : IProcessable
 
 	private async Task SendToMasterServerAsync(string? buildGuid, string buildName, BuildResult? buildResult, BuildTaskStatus status)
 	{
-		var response = new RemoteBuildResponse
+		var response = new OffloadBuildResponse.Payload
 		{
-			PipelineId = Packet.PipelineId,
+			PipelineId = Content.Packet.PipelineId,
 			BuildIdGuid = buildGuid,
 			BuildName = buildName,
 			BuildResult = buildResult,
@@ -153,9 +163,9 @@ public class RemoteBuildTargetRequest : IProcessable
 			Errors = $"{e.GetType().Name}: {e.Message}"
 		};
 		
-		var response = new RemoteBuildResponse
+		var response = new OffloadBuildResponse.Payload
 		{
-			PipelineId = Packet.PipelineId,
+			PipelineId = Content.Packet.PipelineId,
 			BuildIdGuid = buildIdGuid,
 			BuildName = assetName,
 			BuildResult = result,
@@ -168,19 +178,19 @@ public class RemoteBuildTargetRequest : IProcessable
 	private async Task SendExceptionToMaster(Exception e)
 	{
 		var result = new BuildResult { Errors = $"{e.GetType().Name}: {e.Message}" };
-		var response = new RemoteBuildResponse
+		var response = new OffloadBuildResponse.Payload
 		{
-			PipelineId = Packet.PipelineId,
+			PipelineId = Content.Packet.PipelineId,
 			BuildResult = result,
 			Status = BuildTaskStatus.Failed
 		};
 		await SendToMasterAsync(response);
 	}
 	
-	private async Task SendToMasterAsync(RemoteBuildResponse response)
+	private async Task SendToMasterAsync(OffloadBuildResponse.Payload response)
 	{
-		Logger.Log($"Sending build '{response.BuildIdGuid}' back to: {SendBackUrl}");
-		var body = new RemoteBuildPacket { BuildResponse = response };
-		await Web.SendAsync(HttpMethod.Post, SendBackUrl, body: body);
+		Logger.Log($"Sending build '{response.BuildIdGuid}' back to: {Content.SendBackUrl}");
+		var req = new OffloadBuildResponse();
+		await Web.SendAsync(req.Method, Content.SendBackUrl + req.Path, body: response);
 	}
 }

@@ -51,7 +51,7 @@ public static class App
 		{
 			args.TryGetArg("-ip", out var ip, Config.IP);
 			args.TryGetArg("-port", out var port, Config.Port.ToString());
-			Server = new ListenServer(ip, ushort.Parse(port), new ServerCallbacks(Config));
+			Server = new ListenServer(ip, ushort.Parse(port));
 			CheckIfServerStillListening();
 			await Task.Delay(-1);
 			Logger.Log("Server stopped");
