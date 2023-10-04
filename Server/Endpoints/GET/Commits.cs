@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.Specialized;
+using System.Net;
 using SharedLib;
 using SharedLib.Server;
 
@@ -13,32 +14,68 @@ public class Commits : Endpoint
 	public override HttpMethod Method => HttpMethod.Get;
 	public override string Path => "/commits";
 
+	private const string WORKSPACE = "workspace";
+	private const string CS_FROM = "csfrom";
+	private const string CS_TO = "csto";
+
+	private static readonly string[] paramNames = {
+		WORKSPACE,
+		CS_FROM,
+		CS_TO
+	};
+
 	public override async Task<ServerResponse> ProcessAsync(ListenServer server, HttpListenerContext httpContext)
 	{
 		try
 		{
 			await Task.CompletedTask;
 			var query = httpContext.Request.QueryString;
-			var workspaceName = query["workspace"];
-			var from = query["csfrom"];
-			var to = query["csto"];
-			var commits = LogToFileSteam(workspaceName, from, to);
-			return new ServerResponse(HttpStatusCode.OK, commits);
+
+			if (!IsValid(query, out var error))
+				return error;
+			
+			var workspaceName = query[WORKSPACE];
+			var from = query[CS_FROM];
+			var to = query[CS_TO];
+
+			return LogToFileSteam(workspaceName, from, to);
 		}
 		catch (Exception e)
 		{
 			return new ServerResponse(HttpStatusCode.InternalServerError, e.Message);
 		}
 	}
-	
-	private static string[] LogToFileSteam(string workspaceName, string csFrom, string csTo)
-	{
-		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
 
-		if (workspace == null)
-			throw new Exception($"Workspace not found with name '{workspaceName}'");
-		
-		var changeLog = workspace.GetChangeLogInst(int.Parse(csTo), int.Parse(csFrom), false);
-		return changeLog;
+	private static bool IsValid(NameValueCollection query, out ServerResponse serverResponse)
+	{
+		foreach (var paramName in paramNames)
+		{
+			if (!string.IsNullOrEmpty(query[paramName]))
+				continue;
+			
+			serverResponse = new ServerResponse(HttpStatusCode.BadRequest, $"Query must contain param '{paramName}'");
+			return false;
+		}
+
+		serverResponse = ServerResponse.Ok;
+		return true;
+	}
+	
+	private static ServerResponse LogToFileSteam(string workspaceName, string csFrom, string csTo)
+	{
+		try
+		{
+			var workspace = Workspace.GetWorkspaceFromName(workspaceName);
+			
+			if (workspace == null)
+				throw new Exception($"Workspace not found with name '{workspaceName}'");
+			
+			var commits = workspace.GetChangeLogInst(int.Parse(csTo), int.Parse(csFrom), false);
+			return new ServerResponse(HttpStatusCode.OK, commits); 
+		}
+		catch (Exception e)
+		{
+			return new ServerResponse(HttpStatusCode.BadRequest, e.Message);
+		}
 	}
 }

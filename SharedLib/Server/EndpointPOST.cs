@@ -3,7 +3,7 @@ using Server;
 
 namespace SharedLib.Server;
 
-public abstract class EndpointPOST<T> : Endpoint, IProcessable<ListenServer, HttpListenerContext, T>
+public abstract class EndpointPOST<T> : Endpoint, IProcessable<ListenServer, HttpListenerContext, T> where T : class, new()
 {
 	protected T Content { get; private set; }
 	
@@ -11,6 +11,10 @@ public abstract class EndpointPOST<T> : Endpoint, IProcessable<ListenServer, Htt
 	{
 		if (!httpContext.Request.HasEntityBody) return ServerResponse.NoContent;
 		Content = await httpContext.GetPostContentAsync<T>();
+
+		if (Content is null)
+			return new ServerResponse(HttpStatusCode.BadRequest, $"Expected JSON Schema {Json.Serialise(new T())}");
+		
 		return await ProcessAsync(server, httpContext, Content);
 	}
 	
