@@ -10,8 +10,9 @@ public class RemoteAppleDeploy : IProcessable
 	public string? WorkspaceName { get; set; }
 	public XcodeConfig? Config { get; set; }
 	
-	public ServerResponse Process()
+	public async Task<ServerResponse> ProcessAsync()
 	{
+		await Task.CompletedTask;
 		var workspace = Workspace.GetWorkspaceFromName(WorkspaceName);
 		var buildSettingsAsset = workspace.GetBuildTarget(BuildTargetFlag.iOS.ToString());
 		var productName = buildSettingsAsset.GetValue<string>("ProductName");

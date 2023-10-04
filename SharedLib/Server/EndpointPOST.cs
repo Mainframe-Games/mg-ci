@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Newtonsoft.Json.Linq;
 using Server;
 
 namespace SharedLib.Server;
@@ -9,11 +10,17 @@ public abstract class EndpointPOST<T> : Endpoint, IProcessable<ListenServer, Htt
 	
 	public override async Task<ServerResponse> ProcessAsync(ListenServer server, HttpListenerContext httpContext)
 	{
-		if (!httpContext.Request.HasEntityBody) return ServerResponse.NoContent;
 		Content = await httpContext.GetPostContentAsync<T>();
 
 		if (Content is null)
-			return new ServerResponse(HttpStatusCode.BadRequest, $"Expected JSON Schema {Json.Serialise(new T())}");
+		{
+			var error = new JObject
+			{
+				["Error"] = "Content is null",
+				["Schema"] = JToken.FromObject(new T())
+			};
+			return new ServerResponse(HttpStatusCode.BadRequest, error);
+		}
 		
 		return await ProcessAsync(server, httpContext, Content);
 	}

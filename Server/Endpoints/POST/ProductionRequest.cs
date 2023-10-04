@@ -39,12 +39,12 @@ public class ProductionRequest : EndpointPOST<ProductionRequest.Payload>
 			return new ServerResponse(HttpStatusCode.BadRequest, "Incorrect Password");
 
 		Environment.CurrentDirectory = workspace.Directory;
-		ClanforgeProcess(buildVersion);
+		await ClanforgeProcess(buildVersion);
 		RemoteConfigProcess(buildVersion);
 		return new ServerResponse(HttpStatusCode.OK, this);
 	}
 
-	private void ClanforgeProcess(string buildVersion)
+	private async Task ClanforgeProcess(string buildVersion)
 	{
 		// get highest build version
 		var pro = new RemoteClanforgeImageUpdate
@@ -54,7 +54,7 @@ public class ProductionRequest : EndpointPOST<ProductionRequest.Payload>
 			Desc = buildVersion
 		};
 
-		pro.Process();
+		await pro.ProcessAsync();
 	}
 
 	private void RemoteConfigProcess(string buildVersion)

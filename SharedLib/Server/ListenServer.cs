@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Reflection;
 using System.Text;
+using Newtonsoft.Json.Linq;
 using Server;
 
 namespace SharedLib.Server;
@@ -74,7 +75,14 @@ public sealed class ListenServer
 		}
 		catch (Exception e)
 		{
-			response = new ServerResponse(HttpStatusCode.InternalServerError, $"{e.GetType().Name}: {e.Message}");
+			var error = new JObject
+			{
+				["Code"] = HttpStatusCode.InternalServerError.ToString(),
+				["Exception"] = e.GetType().Name,
+				["Message"] = e.Message,
+				["StackTrace"] = new JArray(e.StackTrace?.Split(Environment.NewLine).Select(x => x.Trim()))
+			};
+			response = new ServerResponse(HttpStatusCode.InternalServerError, error);
 		}
 
 		Respond(context, response.StatusCode, response.Data);

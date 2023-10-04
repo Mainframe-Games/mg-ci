@@ -21,8 +21,8 @@ public class GameServerUpdate : EndpointPOST<GameServerUpdate.Payload>
 	public override async Task<ServerResponse> ProcessAsync(ListenServer server, HttpListenerContext httpContext, Payload content)
 	{
 		await Task.CompletedTask;
-		if (content.Usg != null) return content.Usg.Process();
-		if (content.Clanforge != null) return content.Clanforge.Process();
+		if (content.Usg != null) return await content.Usg.ProcessAsync();
+		if (content.Clanforge != null) return await content.Clanforge.ProcessAsync();
 		return new ServerResponse(HttpStatusCode.BadRequest, $"Issue with {nameof(GameServerUpdate)}. {Json.Serialise(this)}");
 	}
 }

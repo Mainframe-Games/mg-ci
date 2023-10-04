@@ -13,9 +13,24 @@ public class BuildWorkspace : EndpointPOST<BuildWorkspace.Payload>
 {
 	public class Payload
 	{
+		/// <summary>
+		/// Name of the workspace to build
+		/// </summary>
 		public string? WorkspaceName { get; set; }
+		
+		/// <summary>
+		/// Optional Args
+		/// </summary>
 		public string? Args { get; set; }
+		
+		/// <summary>
+		/// Optional discord IP:PORT
+		/// </summary>
 		public string? DiscordAddress { get; set; }
+		
+		/// <summary>
+		/// Optional commandIf from the discord server
+		/// </summary>
 		public ulong CommandId { get; set; }
 	}
 	

@@ -1,13 +1,13 @@
 ﻿using System.Net;
-using Deployment.Server;
 using SharedLib.Server;
 
 namespace Server.RemoteBuild;
 
 public class MultiplayServerUpdate : IProcessable
 {
-	public ServerResponse Process()
+	public async Task<ServerResponse> ProcessAsync()
 	{
+		await Task.CompletedTask;
 		return new ServerResponse(HttpStatusCode.NotImplemented, "😅");
 	}
 }

@@ -135,7 +135,7 @@ public class OffloadBuild : EndpointPOST<OffloadBuild.Payload>
 		if (deployProcess is null)
 			await Web.StreamToServerAsync(Content.SendBackUrl, asset.BuildPath, pipelineId, buildIdGuid);
 		else
-			deployProcess.Process();
+			await deployProcess.ProcessAsync();
 			
 		// tell master server build is completed
 		await SendToMasterServerAsync(buildIdGuid, asset.Name, result, result.IsErrors ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed);

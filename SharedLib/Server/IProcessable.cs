@@ -1,14 +1,6 @@
 ﻿namespace SharedLib.Server;
 
-/// <summary>
-/// Used for processing data on listen server
-/// </summary>
 public interface IProcessable
-{
-	ServerResponse Process();
-}
-
-public interface IProcessableAsync
 {
 	Task<ServerResponse> ProcessAsync();
 }

@@ -14,12 +14,13 @@ public class RemoteClanforgeImageUpdate : IProcessable
 	public string? Beta { get; set; }
 	public string? Desc { get; set; }
 
-	public ServerResponse Process()
+	public async Task<ServerResponse> ProcessAsync()
 	{
+		await Task.CompletedTask;
 		ProcessInternalAsync().FireAndForget();
 		return new ServerResponse(HttpStatusCode.OK, this);
 	}
-
+	
 	private async Task ProcessInternalAsync()
 	{
 		if (ServerConfig.Instance.Clanforge is null)
