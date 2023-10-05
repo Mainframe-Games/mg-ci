@@ -1,4 +1,7 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.WebSocket;
+using Newtonsoft.Json.Linq;
+using SharedLib;
 
 namespace DiscordBot.Commands;
 
@@ -6,9 +9,19 @@ public class CancelCommand : Command
 {
 	public override string? CommandName => "cancel-build";
 	public override string? Description => "Will cancel a build";
+
+	public override SlashCommandProperties Build()
+	{
+		return CreateCommand()
+			.AddOptions(BuildOptionNumber("pipelineId", "The pipelineId you want to cancel", false))
+			.Build();
+	}
+
 	public override async Task<CommandResponse> ExecuteAsync(SocketSlashCommand command)
 	{
-		await Task.CompletedTask;
-		return new CommandResponse("Not Implemented Yet", "This command isn't implemented yet");
+		var pipelineId = GetOptionValueNumber(command, "pipelineId");
+		var body = new JObject { ["pipelineId"] = pipelineId };
+		var res = await Web.SendAsync(HttpMethod.Post, $"{DiscordWrapper.Config.BuildServerUrl}/cancel", body: body);
+		return new CommandResponse($"Cancelling pipelineId: {pipelineId}", res.Content);
 	}
 }

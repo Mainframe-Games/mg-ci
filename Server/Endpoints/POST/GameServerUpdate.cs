@@ -8,7 +8,7 @@ namespace Server.Endpoints.POST;
 /// <summary>
 /// For updating game servers
 /// </summary>
-public class GameServerUpdate : EndpointPOST<GameServerUpdate.Payload>
+public class GameServerUpdate : EndpointBody<GameServerUpdate.Payload>
 {
 	public class Payload
 	{

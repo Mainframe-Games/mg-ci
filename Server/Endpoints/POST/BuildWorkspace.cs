@@ -9,7 +9,7 @@ namespace Server.Endpoints.POST;
 /// <summary>
 /// Builds the entire workspace from buildconfig.json (used for master build server)
 /// </summary>
-public class BuildWorkspace : EndpointPOST<BuildWorkspace.Payload>
+public class BuildWorkspace : EndpointBody<BuildWorkspace.Payload>
 {
 	public class Payload
 	{

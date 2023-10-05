@@ -31,16 +31,13 @@ public class BuildCommand : Command
 			// request to build server
 			var body = new JObject
 			{
-				["workspaceBuildRequest"] = new JObject
-				{
-					["workspaceName"] = workspaceName,
-					["args"] = args,
-					["commandId"] = command.Id,
-					["discordAddress"] = DiscordWrapper.Config.ListenServer?.Address
-				}
+				["workspaceName"] = workspaceName,
+				["args"] = args,
+				["commandId"] = command.Id,
+				["discordAddress"] = DiscordWrapper.Config.ListenServer?.Address
 			};
 
-			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl, body: body);
+			var res = await Web.SendAsync(HttpMethod.Post, $"{DiscordWrapper.Config.BuildServerUrl}/build", body: body);
 			var obj = Json.Deserialise<BuildPipelineResponse>(res.Content);
 			WorkspaceMeta = obj?.WorkspaceMeta;
 			

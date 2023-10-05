@@ -129,7 +129,7 @@ public static class App
 			var fullVersion = pipeline.BuildVersions?.FullVersion ?? string.Empty;
 			
 			// client deploys
-			DeployApple(pipeline); // apple first as apple takes longer to process on appstore connect
+			await DeployApple(pipeline); // apple first as apple takes longer to process on appstore connect
 			await DeployGoogle(pipeline, fullVersion);
 			DeploySteam(pipeline, fullVersion);
 
@@ -191,7 +191,7 @@ public static class App
 		await clanforge.Deploy();
 	}
 
-	private static void DeployApple(BuildPipeline pipeline)
+	private static async Task DeployApple(BuildPipeline pipeline)
 	{
 		if (pipeline.Config.Deploy?.AppleStore is not true || !OperatingSystem.IsMacOS())
 			return;
@@ -202,7 +202,7 @@ public static class App
 			Config = Config.AppleStore,
 		};
 		
-		apple.Process();
+		await apple.ProcessAsync();
 	}
 
 	private static async Task DeployGoogle(BuildPipeline pipeline, string buildVersionTitle)

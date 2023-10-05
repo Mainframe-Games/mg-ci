@@ -15,7 +15,7 @@ namespace Server.Endpoints.POST;
 /// Builds a specific target on an offload server
 /// Class send across network to do remote builds
 /// </summary>
-public class OffloadBuild : EndpointPOST<OffloadBuild.Payload>
+public class OffloadBuild : EndpointBody<OffloadBuild.Payload>
 {
 	public class Payload
 	{

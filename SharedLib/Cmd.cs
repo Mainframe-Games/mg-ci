@@ -5,6 +5,22 @@ namespace SharedLib;
 
 public static class Cmd
 {
+	public static readonly List<Process> Processes = new();
+
+	/// <summary>
+	/// Kills all active processes
+	/// </summary>
+	/// <param name="entireProcessTree"></param>
+	public static void KillAll(bool entireProcessTree = true)
+	{
+		foreach (var process in Processes)
+		{
+			Logger.Log($"Killing process: {process.ProcessName}");
+			process.Kill(entireProcessTree);
+		}
+		Processes.Clear();
+	}
+	
 	public static (int exitCode, string output) Run(string fileName, string ags, bool redirectOutput = true, bool logOutput = true)
 	{
 		if (logOutput)
@@ -20,10 +36,13 @@ public static class Cmd
 				UseShellExecute = false,
 				CreateNoWindow = true,
 				WorkingDirectory = Environment.CurrentDirectory,
-				Arguments = ags
+				Arguments = ags,
 			};
 
 			var proc = Process.Start(procStartInfo);
+			Logger.Log($"Process Started: {proc.ProcessName}");
+			Processes.Add(proc);
+			
 			var sb = new StringBuilder();
 			proc.ErrorDataReceived += (_, e) => { Write(sb, e.Data, logOutput); };
 			
@@ -35,8 +54,12 @@ public static class Cmd
 			
 			proc.BeginErrorReadLine();
 			proc.WaitForExit();
+			
 			var code = proc.ExitCode;
 			var output = sb.ToString().Trim();
+			
+			Processes.Remove(proc);
+			
 			return (code, output);
 		}
 		catch (Exception e)

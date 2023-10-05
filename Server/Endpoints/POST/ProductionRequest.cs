@@ -10,7 +10,7 @@ namespace Server.Endpoints.POST;
 /// <summary>
 /// Used to do any automation after switch `default` on Steam
 /// </summary>
-public class ProductionRequest : EndpointPOST<ProductionRequest.Payload>
+public class ProductionRequest : EndpointBody<ProductionRequest.Payload>
 {
 	public class Payload
 	{

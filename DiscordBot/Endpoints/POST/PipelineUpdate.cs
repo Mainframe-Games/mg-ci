@@ -4,7 +4,7 @@ using SharedLib.Server;
 
 namespace SharedLib.BuildToDiscord.POST;
 
-public class PipelineUpdate : EndpointPOST<PipelineUpdate.Payload>
+public class PipelineUpdate : EndpointBody<PipelineUpdate.Payload>
 {
 	public class Payload
 	{

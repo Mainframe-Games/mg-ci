@@ -10,7 +10,7 @@ namespace Server.Endpoints.POST;
 /// <summary>
 /// Response from offload server, used on master server
 /// </summary>
-public class OffloadBuildResponse : EndpointPOST<OffloadBuildResponse.Payload>
+public class OffloadBuildResponse : EndpointBody<OffloadBuildResponse.Payload>
 {
 	public class Payload
 	{

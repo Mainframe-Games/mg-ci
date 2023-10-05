@@ -4,7 +4,12 @@ using Server;
 
 namespace SharedLib.Server;
 
-public abstract class EndpointPOST<T> : Endpoint, IProcessable<ListenServer, HttpListenerContext, T> where T : class, new()
+
+/// <summary>
+/// Extension of Endpoint but with content body handled in a nice way
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public abstract class EndpointBody<T> : Endpoint, IProcessable<ListenServer, HttpListenerContext, T> where T : class, new()
 {
 	protected T Content { get; private set; }
 	
