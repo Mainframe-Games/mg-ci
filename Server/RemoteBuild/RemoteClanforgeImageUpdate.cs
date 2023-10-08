@@ -23,6 +23,10 @@ public class RemoteClanforgeImageUpdate : IProcessable
 	
 	private async Task ProcessInternalAsync()
 	{
+		// TODO: there is a bug where Clanforge config is null, seems the whole ServerConfig is null too which should be impossible. 
+		// so going to try load it again here before we continue to see if that improves.
+		ServerConfig.Load();
+		
 		if (ServerConfig.Instance.Clanforge is null)
 			throw new NullReferenceException($"{nameof(ClanforgeConfig)} is null on server config. {ServerConfig.Instance}");
 	
