@@ -294,7 +294,7 @@ public class BuildPipeline
 		if (_offloadable is null)
 			return true;
 		
-		var res = await Web.SendAsync(HttpMethod.Get, _offloadable.Url);
+		var res = await Web.SendAsync(HttpMethod.Head, _offloadable.Url);
 		
 		if (res.StatusCode is HttpStatusCode.OK)
 			return true;
