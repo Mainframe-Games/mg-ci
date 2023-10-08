@@ -13,7 +13,7 @@ public class CancelCommand : Command
 	public override SlashCommandProperties Build()
 	{
 		return CreateCommand()
-			.AddOptions(BuildOptionNumber("pipelineId", "The pipelineId you want to cancel", false))
+			.AddOptions(BuildOptionNumber("pipeline-id", "The pipelineId you want to cancel", false))
 			.Build();
 	}
 
