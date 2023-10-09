@@ -7,7 +7,6 @@ namespace Server.Endpoints;
 public class Workspaces : Endpoint<object>
 {
 	public override string Path => "/workspaces";
-	protected override bool IgnoreBodyProcess => true;
 
 	protected override async Task<ServerResponse> GET()
 	{

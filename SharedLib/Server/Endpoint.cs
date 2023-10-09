@@ -5,6 +5,10 @@ using SharedLib.Server;
 
 namespace Server;
 
+/// <summary>
+/// 
+/// </summary>
+/// <typeparam name="T">Use object type for no body</typeparam>
 public abstract class Endpoint<T> : IEndpoint, IProcessable<ListenServer, HttpListenerContext>
 {
 	/// <summary>
@@ -13,11 +17,6 @@ public abstract class Endpoint<T> : IEndpoint, IProcessable<ListenServer, HttpLi
 	public abstract string Path { get; }
 	protected ListenServer Server { get; private set; }
 	protected HttpListenerContext HttpContext { get; private set; }
-
-	/// <summary>
-	/// Set to true if you want to ignore processing body in the base class
-	/// </summary>
-	protected virtual bool IgnoreBodyProcess => false;
 
 	/// <summary>
 	/// Body content from POST etc...
@@ -32,7 +31,7 @@ public abstract class Endpoint<T> : IEndpoint, IProcessable<ListenServer, HttpLi
 		var method = httpContext.Request.HttpMethod;
 
 		// if contains body but doesn't deserialise properly
-		if (!IgnoreBodyProcess && !TryProcessBody(out var error))
+		if (!TryProcessBody(out var error))
 			return error;
 		
 		try
@@ -81,7 +80,7 @@ public abstract class Endpoint<T> : IEndpoint, IProcessable<ListenServer, HttpLi
 	protected virtual async Task<ServerResponse> HEAD()
 	{
 		await Task.CompletedTask;
-		return ServerResponse.NotImplemented;
+		return new ServerResponse(HttpStatusCode.NotImplemented, null);
 	}
 
 	protected virtual async Task<ServerResponse> DELETE()
@@ -109,30 +108,30 @@ public abstract class Endpoint<T> : IEndpoint, IProcessable<ListenServer, HttpLi
 
 	private bool TryProcessBody(out ServerResponse? error)
 	{
+		error = null;
+		
+		// ignore types that dont have properties
+		var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+		if (properties.Length == 0)
+			return true;
+		 
 		Content = HttpContext.GetPostContent<T?>();
 
-		if (Content is null)
-		{
-			var errorJson = new JObject
-			{
-				["Error"] = "Content is null",
-				["Schema"] = GetSchema(typeof(T))
-			};
-			
-			error = new ServerResponse(HttpStatusCode.BadRequest, errorJson);
-			return false;
-		}
-
-		error = null;
-		return true;
-	}
-
-	private static JObject GetSchema(IReflect type)
-	{
+		if (Content is not null) 
+			return true;
+		
+		// build schema
 		var schema = new JObject();
-		var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 		foreach (var propertyInfo in properties)
 			schema[propertyInfo.Name] = propertyInfo.PropertyType.Name;
-		return schema;
+		
+		var errorJson = new JObject
+		{
+			["Error"] = "Content is null",
+			["Schema"] = schema
+		};
+		error = new ServerResponse(HttpStatusCode.BadRequest, errorJson);
+		return false;
+
 	}
 }

@@ -12,7 +12,6 @@ namespace Server.Endpoints;
 public class Commits : Endpoint<object>
 {
 	public override string Path => "/commits";
-	protected override bool IgnoreBodyProcess => true;
 
 	private const string WORKSPACE = "workspace";
 	private const string CS_FROM = "csfrom";

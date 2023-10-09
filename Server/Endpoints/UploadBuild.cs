@@ -4,11 +4,9 @@ using SharedLib.Server;
 
 namespace Server.Endpoints;
 
-public class UploadBuild : Endpoint<byte[]>
+public class UploadBuild : Endpoint<object>
 {
 	public override string Path => "/upload";
-
-	protected override bool IgnoreBodyProcess => true;
 
 	protected override async Task<ServerResponse> PUT()
 	{

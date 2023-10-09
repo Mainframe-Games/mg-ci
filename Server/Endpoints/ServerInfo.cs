@@ -7,7 +7,7 @@ namespace Server.Endpoints;
 public class ServerInfo : Endpoint<object>
 {
 	public override string Path => "/info";
-	protected override bool IgnoreBodyProcess => true;
+	// protected override bool IgnoreBodyProcess => true;
 
 
 	protected override async Task<ServerResponse> GET()

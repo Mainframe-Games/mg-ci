@@ -6,7 +6,6 @@ namespace Server.Endpoints;
 public class TestServerConnection : Endpoint<object>
 {
 	public override string Path => "/test";
-	protected override bool IgnoreBodyProcess => true;
 
 	protected override async Task<ServerResponse> GET()
 	{
