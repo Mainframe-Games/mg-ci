@@ -320,13 +320,14 @@ public class Workspace
 		Environment.CurrentDirectory = Directory;
 		
 		var raw = Cmd.Run("cm", $"log --from=cs:{prevId} cs:{curId} --csformat=\"{{comment}}\"").output;
-		var changeLog = raw.Split(Environment.NewLine).Reverse().ToArray();
+		var changeLog = raw.Split(Environment.NewLine).Reverse().ToList();
+		changeLog.RemoveAll(x => x.StartsWith("_")); // remove all ignores
 		
 		if (print)
 			Logger.Log($"___Change Logs___\n{string.Join("\n", changeLog)}");
 		
 		Environment.CurrentDirectory = dirBefore;
-		return changeLog;
+		return changeLog.ToArray();
 	}
 
 	public void Commit(string commitMessage)

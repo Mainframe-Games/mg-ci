@@ -129,6 +129,7 @@ public class DiscordWrapper
 			.GetTypes()
 			.Where(t => t.IsSubclassOf(typeof(Command)) && !t.IsAbstract)
 			.Select(t => (Command)Activator.CreateInstance(t))
+			.Where(x => x is BuildCommand)
 			.ToArray();
 
 		await Command.IntialiseWorksapcesAsync();
