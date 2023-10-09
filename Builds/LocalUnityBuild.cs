@@ -78,15 +78,14 @@ public class LocalUnityBuild
 		}
 		
 		// collect errors
-		var errorMessage = "";
+		var errorMessage = new StringBuilder(output);
 		if (File.Exists(errorPath))
-			errorMessage = File.ReadAllText(errorPath);
+			errorMessage.AppendLine(File.ReadAllText(errorPath));
 
-		var verboseLog = $"Verbose log file: {Path.Combine(Environment.CurrentDirectory, logPath)}";
-		if (!string.IsNullOrEmpty(output))
-			verboseLog += $"\nRAW OUTPUT: {output}";
-		
-		Logger.Log($"Build Failed with code '{exitCode}'\n{verboseLog}");
+		var verboseLogPath = $"Verbose log file: {Path.Combine(Environment.CurrentDirectory, logPath)}";
+		Logger.Log($"Build Failed with code '{exitCode}'\n{verboseLogPath}");
+
+		errorMessage.AppendLine(verboseLogPath);
 			
 		return new BuildResult
 		{
@@ -96,8 +95,8 @@ public class LocalUnityBuild
 			{
 				Code = HttpStatusCode.InternalServerError,
 				Exception = $"Unity Build Error. exitCode: {exitCode}",
-				Message = errorMessage,
-				StackTrace = Environment.StackTrace.Split(Environment.NewLine).Select(x => x.Trim()).ToArray()
+				Message = errorMessage.ToString(),
+				StackTrace = ErrorResponse.ParseStackTrace(Environment.StackTrace)
 			}
 		};
 	}

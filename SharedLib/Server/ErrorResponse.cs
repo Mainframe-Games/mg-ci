@@ -17,7 +17,15 @@ public class ErrorResponse
 	{
 		Exception = e.GetType().Name;
 		Message = e.Message;
-		StackTrace = e.StackTrace?.Split(Environment.NewLine).Select(x => x.Trim()).ToArray();
+		StackTrace = ParseStackTrace(e.StackTrace);
+	}
+
+	public static string?[]? ParseStackTrace(string? stackTrace)
+	{
+		return stackTrace?
+			.Split(Environment.NewLine)
+			.Select(x => x.Trim())
+			.ToArray();
 	}
 
 	public override string ToString()

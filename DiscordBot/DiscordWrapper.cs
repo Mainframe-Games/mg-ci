@@ -6,9 +6,9 @@ using Discord.Rest;
 using Discord.WebSocket;
 using DiscordBot.Commands;
 using DiscordBot.Configs;
+using DiscordBot.Endpoints;
 using SharedLib;
 using SharedLib.BuildToDiscord;
-using SharedLib.BuildToDiscord.POST;
 using SharedLib.Server;
 using DiscordConfig = DiscordBot.Configs.DiscordConfig;
 
