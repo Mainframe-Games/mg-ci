@@ -118,7 +118,7 @@ public static class Web
 
 		var sw = Stopwatch.StartNew();
 		var totalBytes = rootDir.GetByteSize();
-		Logger.Log($"Uploading contents... {buildPath} ({totalBytes.ToByteSizeString()})");
+		Logger.Log($"Uploading contents... {buildPath} ({totalBytes.ToByteSizeString()}). url: {url}");
 		
 		var progressBar = new ProgressBar();
 		TotalUploadBytes = totalBytes;

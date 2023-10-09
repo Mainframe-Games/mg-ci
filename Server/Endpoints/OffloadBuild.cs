@@ -131,7 +131,7 @@ public class OffloadBuild : Endpoint<OffloadBuild.Payload>
 			
 		// if no deploy then master server does deploy, need to upload this build
 		if (deployProcess is null)
-			await Web.StreamToServerAsync(Content.SendBackUrl, asset.BuildPath, pipelineId, buildIdGuid);
+			await Web.StreamToServerAsync($"{Content.SendBackUrl}/upload", asset.BuildPath, pipelineId, buildIdGuid);
 		else
 			await deployProcess.ProcessAsync();
 			
