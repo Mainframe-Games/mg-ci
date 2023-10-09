@@ -2,20 +2,19 @@
 using Deployment;
 using Deployment.Configs;
 using Deployment.RemoteBuild;
-using Server.RemoteBuild;
 using Server.RemoteDeploy;
 using SharedLib;
 using SharedLib.Build;
 using SharedLib.BuildToDiscord;
 using SharedLib.Server;
 
-namespace Server.Endpoints.POST;
+namespace Server.Endpoints;
 
 /// <summary>
 /// Builds a specific target on an offload server
 /// Class send across network to do remote builds
 /// </summary>
-public class OffloadBuild : EndpointBody<OffloadBuild.Payload>
+public class OffloadBuild : Endpoint<OffloadBuild.Payload>
 {
 	public class Payload
 	{
@@ -23,21 +22,20 @@ public class OffloadBuild : EndpointBody<OffloadBuild.Payload>
 		public OffloadServerPacket? Packet { get; set; }
 	}
 	
-	public override HttpMethod Method => HttpMethod.Post;
 	public override string Path => "/offload-build";
-	
-	public override async Task<ServerResponse> ProcessAsync(ListenServer server, HttpListenerContext context, Payload content)
+
+	protected override async Task<ServerResponse> POST()
 	{
 		await Task.CompletedTask;
 		
-		if (content.Packet is null)
-			return new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(content.Packet)} can not be null");
+		if (Content.Packet is null)
+			return new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(Content.Packet)} can not be null");
 		
-		var workspaceName = new WorkspaceMapping().GetRemapping(content.Packet.WorkspaceName);
+		var workspaceName = new WorkspaceMapping().GetRemapping(Content.Packet.WorkspaceName);
 		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
 		
 		if (workspace is null)
-			return new ServerResponse(HttpStatusCode.BadRequest, $"Workspace not found: {content.Packet.WorkspaceName}");
+			return new ServerResponse(HttpStatusCode.BadRequest, $"Workspace not found: {Content.Packet.WorkspaceName}");
 		
 		ProcessAsync(workspace).FireAndForget();
 		return ServerResponse.Ok;
@@ -191,6 +189,6 @@ public class OffloadBuild : EndpointBody<OffloadBuild.Payload>
 	{
 		Logger.Log($"Sending build '{response.BuildIdGuid}' back to: {Content.SendBackUrl}");
 		var req = new OffloadBuildResponse();
-		await Web.SendAsync(req.Method, Content.SendBackUrl + req.Path, body: response);
+		await Web.SendAsync(HttpMethod.Post, Content.SendBackUrl + req.Path, body: response);
 	}
 }

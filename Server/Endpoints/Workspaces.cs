@@ -2,14 +2,14 @@
 using SharedLib;
 using SharedLib.Server;
 
-namespace Server.Endpoints.GET;
+namespace Server.Endpoints;
 
-public class Workspaces : Endpoint
+public class Workspaces : Endpoint<object>
 {
-	public override HttpMethod Method => HttpMethod.Get;
 	public override string Path => "/workspaces";
+	protected override bool IgnoreBodyProcess => true;
 
-	public override async Task<ServerResponse> ProcessAsync(ListenServer server, HttpListenerContext httpContext)
+	protected override async Task<ServerResponse> GET()
 	{
 		await Task.CompletedTask;
 		var workspaces = Workspace.GetAvailableWorkspaces().Select(x => x.Name).ToList();

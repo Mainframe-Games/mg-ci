@@ -5,12 +5,12 @@ using Server.RemoteBuild;
 using SharedLib;
 using SharedLib.Server;
 
-namespace Server.Endpoints.POST;
+namespace Server.Endpoints;
 
 /// <summary>
 /// Used to do any automation after switch `default` on Steam
 /// </summary>
-public class ProductionRequest : EndpointBody<ProductionRequest.Payload>
+public class ProductionRequest : Endpoint<ProductionRequest.Payload>
 {
 	public class Payload
 	{
@@ -20,27 +20,26 @@ public class ProductionRequest : EndpointBody<ProductionRequest.Payload>
 		public string? Password { get; set; }
 	}
 	
-	public override HttpMethod Method => HttpMethod.Post;
 	public override string Path => "/production";
-	
-	public override async Task<ServerResponse> ProcessAsync(ListenServer server, HttpListenerContext httpContext, Payload content)
+
+	protected override async Task<ServerResponse> POST()
 	{
 		await Task.CompletedTask;
 		
-		var workspace = Workspace.GetWorkspaceFromName(content.WorkspaceName);
+		var workspace = Workspace.GetWorkspaceFromName(Content.WorkspaceName);
 		
 		if (workspace == null)
-			return new ServerResponse(HttpStatusCode.BadRequest, $"Given namespace is not valid: {content.WorkspaceName}");
+			return new ServerResponse(HttpStatusCode.BadRequest, $"Given namespace is not valid: {Content.WorkspaceName}");
 		
 		workspace.Update();
 		var buildVersion = workspace.GetFullVersion();
 
-		if (buildVersion != content.Password)
+		if (buildVersion != Content.Password)
 			return new ServerResponse(HttpStatusCode.BadRequest, "Incorrect Password");
 
 		Environment.CurrentDirectory = workspace.Directory;
 		await ClanforgeProcess(buildVersion);
-		RemoteConfigProcess(buildVersion);
+        RemoteConfigProcess(buildVersion);
 		return new ServerResponse(HttpStatusCode.OK, this);
 	}
 

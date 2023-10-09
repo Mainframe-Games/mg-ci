@@ -3,12 +3,12 @@ using Server.RemoteBuild;
 using SharedLib;
 using SharedLib.Server;
 
-namespace Server.Endpoints.POST;
+namespace Server.Endpoints;
 
 /// <summary>
 /// For updating game servers
 /// </summary>
-public class GameServerUpdate : EndpointBody<GameServerUpdate.Payload>
+public class GameServerUpdate : Endpoint<GameServerUpdate.Payload>
 {
 	public class Payload
 	{
@@ -16,13 +16,12 @@ public class GameServerUpdate : EndpointBody<GameServerUpdate.Payload>
 		public RemoteClanforgeImageUpdate? Clanforge { get; set; }
 	}
 
-	public override HttpMethod Method => HttpMethod.Post;
 	public override string Path => "/game-server-update";
-	public override async Task<ServerResponse> ProcessAsync(ListenServer server, HttpListenerContext httpContext, Payload content)
+	protected override async Task<ServerResponse> POST()
 	{
 		await Task.CompletedTask;
-		if (content.Usg != null) return await content.Usg.ProcessAsync();
-		if (content.Clanforge != null) return await content.Clanforge.ProcessAsync();
+		if (Content.Usg != null) return await Content.Usg.ProcessAsync();
+		if (Content.Clanforge != null) return await Content.Clanforge.ProcessAsync();
 		return new ServerResponse(HttpStatusCode.BadRequest, $"Issue with {nameof(GameServerUpdate)}. {Json.Serialise(this)}");
 	}
 }

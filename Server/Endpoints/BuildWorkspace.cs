@@ -4,12 +4,12 @@ using SharedLib;
 using SharedLib.BuildToDiscord;
 using SharedLib.Server;
 
-namespace Server.Endpoints.POST;
+namespace Server.Endpoints;
 
 /// <summary>
 /// Builds the entire workspace from buildconfig.json (used for master build server)
 /// </summary>
-public class BuildWorkspace : EndpointBody<BuildWorkspace.Payload>
+public class BuildWorkspace : Endpoint<BuildWorkspace.Payload>
 {
 	public class Payload
 	{
@@ -34,21 +34,20 @@ public class BuildWorkspace : EndpointBody<BuildWorkspace.Payload>
 		public ulong CommandId { get; set; }
 	}
 	
-	public override HttpMethod Method => HttpMethod.Post;
 	public override string Path => "/build";
 
-	public override async Task<ServerResponse> ProcessAsync(ListenServer context0, HttpListenerContext context1, Payload content)
+	protected override async Task<ServerResponse> POST()
 	{
 		await Task.CompletedTask;
-		
-		var args = new Args(content.Args);
+
+		var args = new Args(Content.Args);
 		args.TryGetArg("-branch", out var branch, "main");
 
-		var workspaceName = new WorkspaceMapping().GetRemapping(content.WorkspaceName);
+		var workspaceName = new WorkspaceMapping().GetRemapping(Content.WorkspaceName);
 		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
 		
 		if (workspace is null)
-			return new ServerResponse(HttpStatusCode.BadRequest, $"Given namespace is not valid: {content.WorkspaceName}");
+			return new ServerResponse(HttpStatusCode.BadRequest, $"Given namespace is not valid: {Content.WorkspaceName}");
 		
 		Logger.Log($"Chosen workspace: {workspace}");
 		
@@ -72,7 +71,7 @@ public class BuildWorkspace : EndpointBody<BuildWorkspace.Payload>
 			Workspace = workspace.Name,
 			WorkspaceMeta = workspace.Meta,
 			Targets = string.Join(", ", workspace.GetBuildTargets().Select(x => x.Name)),
-			Args = content.Args,
+			Args = Content.Args,
 			UnityVersion = workspace.UnityVersion,
 			ChangesetId = changeSetId,
 			ChangesetGuid = guid,
@@ -81,7 +80,7 @@ public class BuildWorkspace : EndpointBody<BuildWorkspace.Payload>
 		};
 		return new ServerResponse(HttpStatusCode.OK, data);
 	}
-	
+
 	private async void OnReportUpdated(PipelineReport report)
 	{
 		if (string.IsNullOrEmpty(Content.DiscordAddress))

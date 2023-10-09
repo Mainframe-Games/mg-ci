@@ -3,16 +3,16 @@ using System.Net;
 using SharedLib;
 using SharedLib.Server;
 
-namespace Server.Endpoints.GET;
+namespace Server.Endpoints;
 
 /// <summary>
 /// Used for making massive patch notes from specific changeset.
 /// Good for Steam announcements
 /// </summary>
-public class Commits : Endpoint
+public class Commits : Endpoint<object>
 {
-	public override HttpMethod Method => HttpMethod.Get;
 	public override string Path => "/commits";
+	protected override bool IgnoreBodyProcess => true;
 
 	private const string WORKSPACE = "workspace";
 	private const string CS_FROM = "csfrom";
@@ -24,12 +24,12 @@ public class Commits : Endpoint
 		CS_TO
 	};
 
-	public override async Task<ServerResponse> ProcessAsync(ListenServer server, HttpListenerContext httpContext)
+	protected override async Task<ServerResponse> GET()
 	{
 		try
 		{
 			await Task.CompletedTask;
-			var query = httpContext.Request.QueryString;
+			var query = HttpContext.Request.QueryString;
 
 			if (!IsValid(query, out var error))
 				return error;

@@ -5,12 +5,12 @@ using SharedLib;
 using SharedLib.BuildToDiscord;
 using SharedLib.Server;
 
-namespace Server.Endpoints.POST;
+namespace Server.Endpoints;
 
 /// <summary>
 /// Response from offload server, used on master server
 /// </summary>
-public class OffloadBuildResponse : EndpointBody<OffloadBuildResponse.Payload>
+public class OffloadBuildResponse : Endpoint<OffloadBuildResponse.Payload>
 {
 	public class Payload
 	{
@@ -21,27 +21,26 @@ public class OffloadBuildResponse : EndpointBody<OffloadBuildResponse.Payload>
 		public BuildResult? BuildResult { get; set; }
 	}
 	
-	public override HttpMethod Method => HttpMethod.Post;
 	public override string Path => "/offload-response";
 
-	public override async Task<ServerResponse> ProcessAsync(ListenServer server, HttpListenerContext httpContext, Payload content)
+	protected override async Task<ServerResponse> POST()
 	{
 		await Task.CompletedTask;
 		
-		if (!App.Pipelines.TryGetValue(content.PipelineId, out var buildPipeline))
-			return LogAndReturn(new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(BuildPipeline)} is not active. Id: {content.PipelineId}"));
+		if (!App.Pipelines.TryGetValue(Content.PipelineId, out var buildPipeline))
+			return LogAndReturn(new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(BuildPipeline)} is not active. Id: {Content.PipelineId}"));
 
 		// if build name or buildGUID is null then errors could of happened before builds could even start
-		if (content.BuildName == null || content.BuildIdGuid == null)
+		if (Content.BuildName == null || Content.BuildIdGuid == null)
 		{
-			buildPipeline.SendErrorHook(new Exception(content.BuildResult?.Errors ?? "Unknown error. Something went wrong with offload server"));
+			buildPipeline.SendErrorHook(new Exception(Content.BuildResult?.Errors ?? "Unknown error. Something went wrong with offload server"));
 			return ServerResponse.Ok;
 		}
 
-		if (content.BuildResult == null && content.Status is BuildTaskStatus.Succeed or BuildTaskStatus.Failed)
+		if (Content.BuildResult == null && Content.Status is BuildTaskStatus.Succeed or BuildTaskStatus.Failed)
 			return LogAndReturn(new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(BuildResult)} can not be null"));
 
-		buildPipeline.SetOffloadBuildStatus(content.BuildIdGuid, content.BuildName, content.Status ?? default, content.BuildResult);
+		buildPipeline.SetOffloadBuildStatus(Content.BuildIdGuid, Content.BuildName, Content.Status ?? default, Content.BuildResult);
 		return ServerResponse.Ok;
 	}
 

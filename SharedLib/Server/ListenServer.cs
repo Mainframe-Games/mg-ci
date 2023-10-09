@@ -69,7 +69,7 @@ public sealed class ListenServer
 		
 		try
 		{
-			var endpoint = Endpoint.GetEndPoint(_assembly, context);
+			var endpoint = EndPointUtils.GetEndPoint(_assembly, context);
 			if (endpoint is not null)
 				response = await endpoint.ProcessAsync(this, context);
 		}

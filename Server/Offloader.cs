@@ -1,6 +1,5 @@
 ﻿using Deployment.Configs;
-using Server.Endpoints.POST;
-using Server.RemoteBuild;
+using Server.Endpoints;
 using Server.RemoteDeploy;
 using SharedLib;
 using SharedLib.Build;
@@ -80,7 +79,7 @@ public class Offloader : IOffloadable
 			Packet = Packet
 		};
 	
-		var res = await Web.SendAsync(offload.Method, Url + offload.Path, body: remoteBuild);
+		var res = await Web.SendAsync(HttpMethod.Post, Url + offload.Path, body: remoteBuild);
 		Logger.Log($"{nameof(Offloader)}: {res}");
 	}
 	
