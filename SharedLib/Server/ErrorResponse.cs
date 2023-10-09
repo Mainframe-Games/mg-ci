@@ -4,7 +4,7 @@ namespace SharedLib.Server;
 
 public class ErrorResponse
 {
-	public string? ErrorCode { get; set; } = HttpStatusCode.InternalServerError.ToString();
+	public HttpStatusCode? Code { get; set; } = HttpStatusCode.InternalServerError;
 	public string? Exception { get; set; }
 	public string? Message { get; set; }
 	public string?[]? StackTrace { get; set; }

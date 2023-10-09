@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
+using System.Net;
 using System.Text;
 using Deployment.Configs;
 using SharedLib;
+using SharedLib.Server;
 
 namespace Deployment;
 
@@ -62,33 +64,41 @@ public class LocalUnityBuild
 		
 		sw.Stop();
 
-		string? errors = null;
-
-		if (exitCode != 0)
+		if (exitCode == 0)
 		{
-			var verboseLog = $"Verbose log file: {Path.Combine(Environment.CurrentDirectory, logPath)}";
+			Logger.LogTimeStamp($"Build Success! {asset.Name}, Build Time: ", sw);
+			WriteBuildReport(logPath, buildReport);
 
-			if (!string.IsNullOrEmpty(output))
-				verboseLog += $"\nRAW OUTPUT: {output}";
-			
-			if (File.Exists(errorPath))
+			return new BuildResult
 			{
-				errors = File.ReadAllText(errorPath);
-				throw new Exception($"Build Failed with code '{exitCode}'\n{errors}\n{verboseLog}");
-			}
-
-			throw new Exception($"Build Failed with code '{exitCode}'\n{verboseLog}");
+				BuildName = asset.Name,
+				BuildSize = new DirectoryInfo(asset.BuildPath).GetByteSize(),
+				BuildTime = TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds),
+			};
 		}
 		
-		Logger.LogTimeStamp($"Build Success! {asset.Name}, Build Time: ", sw);
-		WriteBuildReport(logPath, buildReport);
+		// collect errors
+		var errorMessage = "";
+		if (File.Exists(errorPath))
+			errorMessage = File.ReadAllText(errorPath);
 
+		var verboseLog = $"Verbose log file: {Path.Combine(Environment.CurrentDirectory, logPath)}";
+		if (!string.IsNullOrEmpty(output))
+			verboseLog += $"\nRAW OUTPUT: {output}";
+		
+		Logger.Log($"Build Failed with code '{exitCode}'\n{verboseLog}");
+			
 		return new BuildResult
 		{
 			BuildName = asset.Name,
-			BuildSize = new DirectoryInfo(asset.BuildPath).GetByteSize(),
 			BuildTime = TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds),
-			Errors = errors,
+			Errors = new ErrorResponse
+			{
+				Code = HttpStatusCode.InternalServerError,
+				Exception = $"Unity Build Error. exitCode: {exitCode}",
+				Message = errorMessage,
+				StackTrace = Environment.StackTrace.Split(Environment.NewLine).Select(x => x.Trim()).ToArray()
+			}
 		};
 	}
 
