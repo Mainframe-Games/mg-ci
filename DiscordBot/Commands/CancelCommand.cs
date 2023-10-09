@@ -21,7 +21,7 @@ public class CancelCommand : Command
 	{
 		var pipelineId = GetOptionValueNumber(command, "pipelineId");
 		var body = new JObject { ["pipelineId"] = pipelineId };
-		var res = await Web.SendAsync(HttpMethod.Post, $"{DiscordWrapper.Config.BuildServerUrl}/cancel", body: body);
+		var res = await Web.SendAsync(HttpMethod.Delete, $"{DiscordWrapper.Config.BuildServerUrl}/cancel", body: body);
 		return new CommandResponse($"Cancelling pipelineId: {pipelineId}", res.Content);
 	}
 }

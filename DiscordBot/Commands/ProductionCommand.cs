@@ -35,16 +35,13 @@ public class ProductionCommand : Command
 			// request to build server
 			var body = new JObject
 			{
-				["productionProcess"] = new JObject
-				{
-					["workspaceName"] = workspaceName,
-					["profile"] = "proda",
-					["beta"] = "default",
-					["password"] = password
-				}
+				["workspaceName"] = workspaceName,
+				["profile"] = "proda",
+				["beta"] = "default",
+				["password"] = password
 			};
 			
-			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl, body: body);
+			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl + "/production", body: body);
 
 			if (res.StatusCode != HttpStatusCode.OK)
 				throw new Exception(res.Content);

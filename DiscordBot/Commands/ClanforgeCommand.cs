@@ -47,18 +47,15 @@ public class ClanforgeCommand : Command
 
 			var body = new JObject
 			{
-				["gameServerUpdate"] = new JObject
+				["clanforge"] = new JObject
 				{
-					["clanforge"] = new JObject
-					{
-						["profile"] = profile,
-						["beta"] = beta,
-						["desc"] = description,
-					}
+					["profile"] = profile,
+					["beta"] = beta,
+					["desc"] = description,
 				}
 			};
 			
-			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl, body: body);
+			var res = await Web.SendAsync(HttpMethod.Post, DiscordWrapper.Config.BuildServerUrl + "/game-server-update", body: body);
 			return new CommandResponse("Game Server Update Started", res.Content);
 		}
 		catch (Exception e)

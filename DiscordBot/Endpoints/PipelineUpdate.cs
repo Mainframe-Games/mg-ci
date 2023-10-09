@@ -1,9 +1,10 @@
 ﻿using System.Net;
 using DiscordBot;
 using Server;
+using SharedLib.BuildToDiscord;
 using SharedLib.Server;
 
-namespace SharedLib.BuildToDiscord.POST;
+namespace DiscordBot.Endpoints;
 
 public class PipelineUpdate : Endpoint<PipelineUpdate.Payload>
 {
