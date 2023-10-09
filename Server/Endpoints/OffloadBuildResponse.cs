@@ -33,7 +33,7 @@ public class OffloadBuildResponse : Endpoint<OffloadBuildResponse.Payload>
 		// if build name or buildGUID is null then errors could of happened before builds could even start
 		if (Content.BuildName == null || Content.BuildIdGuid == null)
 		{
-			buildPipeline.SendErrorHook(new Exception(Content.BuildResult?.Errors ?? "Unknown error. Something went wrong with offload server"));
+			buildPipeline.SendErrorHook(new Exception(Content.BuildResult?.Errors?.ToString() ?? "Unknown error. Something went wrong with offload server"));
 			return ServerResponse.Ok;
 		}
 

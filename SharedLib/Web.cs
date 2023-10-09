@@ -52,7 +52,7 @@ public static class Web
 		}
 
 		var jsonBodyLog = jsonBody.Length > 1000 ? $"{jsonBody[..1000]}...[truncated]" : jsonBody;
-		Logger.Log($"HTTP {method.ToString().ToUpper()} {url}\n{jsonBodyLog}");
+		Logger.Log($"HTTP_SEND {method.ToString().ToUpper()} {url}\n{jsonBodyLog}");
 		
 		try
 		{

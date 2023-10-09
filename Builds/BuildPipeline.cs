@@ -294,7 +294,7 @@ public class BuildPipeline
 		if (_offloadable is null)
 			return true;
 		
-		var res = await Web.SendAsync(HttpMethod.Head, _offloadable.Url);
+		var res = await Web.SendAsync(HttpMethod.Head, _offloadable.Url + "/test");
 		
 		if (res.StatusCode is HttpStatusCode.OK)
 			return true;
@@ -373,7 +373,7 @@ public class BuildPipeline
 				_buildResults.Add(buildResult);
 				_offloadable.PendingIds.Remove(buildGuid);
 				Logger.Log($"{buildName} Errors: {buildResult?.Errors}");
-				Report.Complete(BuildTaskStatus.Failed, $"Build Failed: {buildName}", buildResult?.Errors ?? "Reason unknown");
+				Report.Complete(BuildTaskStatus.Failed, $"Build Failed: {buildName}", buildResult?.Errors?.ToString() ?? "Reason unknown");
 				Cancel();
 				break;
 			

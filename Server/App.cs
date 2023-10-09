@@ -58,9 +58,9 @@ public static class App
 		}
 	}
 
-	public static void DumpLogs()
+	public static void DumpLogs(bool clearConsole = true)
 	{
-		Logger.WriteToFile(RootDirectory, true);
+		Logger.WriteToFile(RootDirectory, clearConsole);
 		CheckIfServerStillListening();
 		Environment.CurrentDirectory = RootDirectory; // reset cur dir back to root of exe
 	}

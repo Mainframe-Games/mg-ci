@@ -90,7 +90,7 @@ public class OffloadBuild : Endpoint<OffloadBuild.Payload>
 		}
 		finally
 		{
-			App.DumpLogs();
+			App.DumpLogs(false);
 		}
 	}
 	
@@ -158,7 +158,7 @@ public class OffloadBuild : Endpoint<OffloadBuild.Payload>
 		var result = new BuildResult
 		{
 			BuildName = assetName,
-			Errors = $"{e.GetType().Name}: {e.Message}"
+			Errors = new ErrorResponse(e)
 		};
 		
 		var response = new OffloadBuildResponse.Payload
@@ -175,7 +175,10 @@ public class OffloadBuild : Endpoint<OffloadBuild.Payload>
 
 	private async Task SendExceptionToMaster(Exception e)
 	{
-		var result = new BuildResult { Errors = $"{e.GetType().Name}: {e.Message}" };
+		var result = new BuildResult
+		{
+			Errors = new ErrorResponse(e)
+		};
 		var response = new OffloadBuildResponse.Payload
 		{
 			PipelineId = Content.Packet.PipelineId,
@@ -187,8 +190,8 @@ public class OffloadBuild : Endpoint<OffloadBuild.Payload>
 	
 	private async Task SendToMasterAsync(OffloadBuildResponse.Payload response)
 	{
-		Logger.Log($"Sending build '{response.BuildIdGuid}' back to: {Content.SendBackUrl}");
-		var req = new OffloadBuildResponse();
-		await Web.SendAsync(HttpMethod.Post, Content.SendBackUrl + req.Path, body: response);
+		var url = $"{Content.SendBackUrl}/offload-response";
+		Logger.Log($"Sending build '{response.BuildIdGuid}' back to: {url}");
+		await Web.SendAsync(HttpMethod.Post, url, body: response);
 	}
 }

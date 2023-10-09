@@ -75,14 +75,7 @@ public sealed class ListenServer
 		}
 		catch (Exception e)
 		{
-			var error = new JObject
-			{
-				["Code"] = HttpStatusCode.InternalServerError.ToString(),
-				["Exception"] = e.GetType().Name,
-				["Message"] = e.Message,
-				["StackTrace"] = new JArray(e.StackTrace?.Split(Environment.NewLine).Select(x => x.Trim()))
-			};
-			response = new ServerResponse(HttpStatusCode.InternalServerError, error);
+			response = new ServerResponse(HttpStatusCode.InternalServerError, new ErrorResponse(e));
 		}
 
 		Respond(context, response.StatusCode, response.Data);

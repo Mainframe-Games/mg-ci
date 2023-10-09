@@ -34,29 +34,17 @@ public abstract class Endpoint<T> : IEndpoint, IProcessable<ListenServer, HttpLi
 		if (!TryProcessBody(out var error))
 			return error;
 		
-		try
+		return method switch
 		{
-			return method switch
-			{
-				nameof(GET) => await GET(),
-				nameof(POST) => await POST(),
-				nameof(PUT) => await PUT(),
-				nameof(HEAD) => await HEAD(),
-				nameof(DELETE) => await DELETE(),
-				nameof(PATCH) => await PATCH(),
-				nameof(OPTIONS) => await OPTIONS(),
-				_ => ServerResponse.NotImplemented
-			};
-		}
-		catch (Exception e)
-		{
-			var errorJson = new JObject
-			{
-				["Exception"] = e.GetType().Name,
-				["StackTrace"] = e.StackTrace
-			};
-			return new ServerResponse(HttpStatusCode.InternalServerError, errorJson);
-		}
+			nameof(GET) => await GET(),
+			nameof(POST) => await POST(),
+			nameof(PUT) => await PUT(),
+			nameof(HEAD) => await HEAD(),
+			nameof(DELETE) => await DELETE(),
+			nameof(PATCH) => await PATCH(),
+			nameof(OPTIONS) => await OPTIONS(),
+			_ => ServerResponse.NotImplemented
+		};
 	}
 
 	protected virtual async Task<ServerResponse> GET()
