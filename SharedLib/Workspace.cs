@@ -251,7 +251,7 @@ public class Workspace
 		var rootDir = new DirectoryInfo(Directory);
 		
 		// delete folders
-		var dirs = new[] { "Library", "Builds", "obj" };
+		var dirs = new[] { "Library", "Builds", "obj", "Logs" };
 		foreach (var directory in rootDir.GetDirectories())
 			if (dirs.Contains(directory.Name))
 				DeleteIfExist(directory);
