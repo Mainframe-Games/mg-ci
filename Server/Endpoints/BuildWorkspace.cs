@@ -57,9 +57,6 @@ public class BuildWorkspace : Endpoint<BuildWorkspace.Payload>
 
 		var pipeline = App.CreateBuildPipeline(workspace, args);
 		pipeline.Report.OnReportUpdated += OnReportUpdated;
-
-		if (pipeline.ChangeLog.Length == 0)
-			return new ServerResponse(HttpStatusCode.NotAcceptable, "No changes to build");
 		
 		App.RunBuildPipe(pipeline).FireAndForget();
 		workspace.GetCurrent(out var changeSetId, out var guid);
