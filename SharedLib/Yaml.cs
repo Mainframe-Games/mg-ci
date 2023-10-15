@@ -30,17 +30,25 @@ public abstract class Yaml
 
 	private static JObject YamlToJson(string yml)
 	{
-		// convert string/file to YAML object
-		var r = new StringReader(yml);
-		var deserializer = new Deserializer();
-		var yamlObject = deserializer.Deserialize(r);
+		try
+		{
+			// convert string/file to YAML object
+			var r = new StringReader(yml);
+			var deserializer = new Deserializer();
+			var yamlObject = deserializer.Deserialize(r);
 
-		var serializer = new JsonSerializer();
-		var writer = new StringWriter();
-		serializer.Serialize(writer, yamlObject);
-		var json = writer.ToString();
-		var jObj = JObject.Parse(json);
-		return jObj;
+			var serializer = new JsonSerializer();
+			var writer = new StringWriter();
+			serializer.Serialize(writer, yamlObject);
+			var json = writer.ToString();
+			var jObj = JObject.Parse(json);
+			return jObj;
+		}
+		catch (Exception e)
+		{
+			Logger.Log(e);
+			return new JObject();
+		}
 	}
 	
 	private static string JsonToYaml(JToken jsonObject)
