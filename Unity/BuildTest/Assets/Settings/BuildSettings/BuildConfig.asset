@@ -12,8 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a126d26ae164865bdd2ec453c47686c, type: 3}
   m_Name: BuildConfig
   m_EditorClassIdentifier: 
-  Url: 
-  ThumbnailUrl: 
+  Meta:
+    ProjectName: BuildTest
+    Url: 
+    ThumbnailUrl: 
+    LastSuccessfulBuild: 0
   PreBuild:
     BuildNumberStandalone: 0
     BuildNumberIphone: 0

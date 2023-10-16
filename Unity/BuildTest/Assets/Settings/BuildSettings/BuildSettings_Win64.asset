@@ -23,8 +23,8 @@ MonoBehaviour:
   ExtraScriptingDefines: []
   AssetBundleManifestPath: 
   BuildOptions: 0
-  SteamId: 0
   DeleteFiles: 0
+  StripDontShipFolders: 0
   KeystorePath: 
   KeystoreAlias: 
   KeystorePassword: 
