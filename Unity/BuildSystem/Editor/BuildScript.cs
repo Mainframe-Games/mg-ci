@@ -231,8 +231,14 @@ namespace BuildSystem
 		private static BuildSettings GetBuildConfig()
 		{
 			var buildSettingsName = GetArgValue("-settings");
-			return AssetFinder.GetAsset<BuildSettings>(
-				config => config.name.Equals(buildSettingsName, StringComparison.OrdinalIgnoreCase));
+			
+			var asset = AssetFinder.GetAsset<BuildSettings>(
+				config => (bool)(config && config.name?.Equals(buildSettingsName, StringComparison.OrdinalIgnoreCase)));
+
+			if (!asset)
+				BS_Logger.Log($"Failed to find build settings: {buildSettingsName}");
+
+			return asset;
 		}
 		
 		private static string GetArgValue(string arg)
