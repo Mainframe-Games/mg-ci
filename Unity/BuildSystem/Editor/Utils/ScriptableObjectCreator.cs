@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.IO;
+using UnityEditor;
 using UnityEngine;
 
 namespace BuildSystem.Utils
@@ -11,11 +12,15 @@ namespace BuildSystem.Utils
 
 			if (asset)
 				return asset;
+
+			// create dir
+			var fileInfo = new FileInfo(path);
+			fileInfo.Directory?.Create();
 			
 			asset = ScriptableObject.CreateInstance<T>();
-			AssetDatabase.CreateAsset(asset, path);
-			AssetDatabase.SaveAssets();
-			return asset;
+            AssetDatabase.CreateAsset(asset, path);
+            AssetDatabase.SaveAssets();
+            return asset;
 		}
 	}
 }
