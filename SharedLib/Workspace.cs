@@ -54,11 +54,19 @@ public class Workspace
 
 		foreach (var workspace in workSpacesArray)
 		{
-			var split = workspace.Split('@');
-			var name = split[0];
-			var path = split[1].Replace(Environment.MachineName, string.Empty).Trim();
-			var ws = new Workspace(name, path);
-			workspaces.Add(ws);
+			try
+			{
+				var split = workspace.Split('@');
+				var name = split[0];
+				var path = split[1].Replace(Environment.MachineName, string.Empty).Trim();
+				var ws = new Workspace(name, path);
+				workspaces.Add(ws);
+			}
+			catch (Exception e)
+			{
+				Logger.Log($"Error with workspace: {workspace}");
+				Logger.Log(e);
+			}
 		}
 
 		return workspaces;
