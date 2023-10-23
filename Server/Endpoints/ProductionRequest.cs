@@ -40,7 +40,7 @@ public class ProductionRequest : Endpoint<ProductionRequest.Payload>
 		Environment.CurrentDirectory = workspace.Directory;
 		await ClanforgeProcess(buildVersion);
         RemoteConfigProcess(buildVersion);
-		return new ServerResponse(HttpStatusCode.OK, this);
+		return new ServerResponse(HttpStatusCode.OK, Content);
 	}
 
 	private async Task ClanforgeProcess(string buildVersion)

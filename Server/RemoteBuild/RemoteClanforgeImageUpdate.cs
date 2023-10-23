@@ -13,6 +13,7 @@ public class RemoteClanforgeImageUpdate : IProcessable
 	public string? Profile { get; set; }
 	public string? Beta { get; set; }
 	public string? Desc { get; set; }
+	public bool? Full { get; set; }
 
 	public async Task<ServerResponse> ProcessAsync()
 	{
@@ -35,7 +36,7 @@ public class RemoteClanforgeImageUpdate : IProcessable
 		
 		try
 		{
-			var clanforge = new ClanForgeDeploy(clanforgeConfig, Profile, Desc, Beta);
+			var clanforge = new ClanForgeDeploy(clanforgeConfig, Profile, Desc, Beta, Full);
 			await clanforge.Deploy();
 			SendHook(Desc, clanforgeConfig.BuildHookMessage(Profile, "Updated"));
 			Logger.Log("ClanForgeDeploy complete");

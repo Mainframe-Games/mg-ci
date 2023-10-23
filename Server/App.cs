@@ -187,7 +187,8 @@ public static class App
 
 		pipeline.Args.TryGetArg("-setlive", out var beta, Config.Steam.DefaultSetLive);
 		pipeline.Args.TryGetArg("-clanforge", out var profile, Config.Clanforge.DefaultProfile);
-		var clanforge = new ClanForgeDeploy(Config.Clanforge, profile, buildVersionTitle, beta);
+		var isFull = pipeline.Args.IsFlag("-full");
+		var clanforge = new ClanForgeDeploy(Config.Clanforge, profile, buildVersionTitle, beta, isFull);
 		await clanforge.Deploy();
 	}
 

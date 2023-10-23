@@ -20,10 +20,11 @@ public class ClanForgeDeploy
 	private uint ASID { get; }
 	private uint MachineId { get; }
 	private uint ImageId { get; }
+	private bool Full { get; }
 	private string Desc { get; }
 	private string Url { get; }
 
-	public ClanForgeDeploy(ClanforgeConfig? clanforgeConfig, string? profile, string? desc, string? beta)
+	public ClanForgeDeploy(ClanforgeConfig? clanforgeConfig, string? profile, string? desc, string? beta, bool? full)
 	{
 		if (clanforgeConfig == null)
 			throw new NullReferenceException($"Param {nameof(clanforgeConfig)} can not be null");
@@ -34,6 +35,7 @@ public class ClanForgeDeploy
 		ImageId = clanforgeConfig.GetImageId(profile);
 		Url = Uri.EscapeDataString(clanforgeConfig.GetUrl(beta));
 		Desc = desc ?? string.Empty;
+		Full = full ?? false;
 	}
 
 	public async Task Deploy()
@@ -121,7 +123,8 @@ public class ClanForgeDeploy
 	/// </summary>
 	private async Task CreateImageVersion(int diffId)
 	{
-		var url = $"{BASE_URL}/imageversion/create?diffid={diffId}&accountserviceid={ASID}&restart=0&force=1&full=1&game_build=\"{Desc}\"";
+		var fullNum = Full ? "1" : "0";
+		var url = $"{BASE_URL}/imageversion/create?diffid={diffId}&accountserviceid={ASID}&restart=0&force=1&full={fullNum}&game_build=\"{Desc}\"";
 		var content = await SendRequest(url);
 		ThrowIfNotSuccess(content);
 	}
