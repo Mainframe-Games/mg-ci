@@ -26,6 +26,8 @@ public class ProductionRequest : Endpoint<ProductionRequest.Payload>
 	{
 		await Task.CompletedTask;
 		
+		ServerConfig.Load();
+		
 		var workspace = Workspace.GetWorkspaceFromName(Content.WorkspaceName);
 		
 		if (workspace == null)
