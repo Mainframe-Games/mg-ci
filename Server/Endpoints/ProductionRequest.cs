@@ -26,8 +26,6 @@ public class ProductionRequest : Endpoint<ProductionRequest.Payload>
 	{
 		await Task.CompletedTask;
 		
-		ServerConfig.Load();
-		
 		var workspace = Workspace.GetWorkspaceFromName(Content.WorkspaceName);
 		
 		if (workspace == null)
@@ -48,11 +46,12 @@ public class ProductionRequest : Endpoint<ProductionRequest.Payload>
 	private async Task ClanforgeProcess(string buildVersion)
 	{
 		// get highest build version
-		var pro = new RemoteClanforgeImageUpdate
+		var pro = new ClanforgeImageUpdate
 		{
 			Profile = Content.Profile,
 			Beta = Content.Branch,
-			Desc = buildVersion
+			Desc = buildVersion,
+			Full = false
 		};
 
 		await pro.ProcessAsync();

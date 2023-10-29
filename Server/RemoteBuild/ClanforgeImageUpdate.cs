@@ -8,7 +8,7 @@ using SharedLib.Webhooks;
 
 namespace Server.RemoteBuild;
 
-public class RemoteClanforgeImageUpdate : IProcessable
+public class ClanforgeImageUpdate : IProcessable
 {
 	public string? Profile { get; set; }
 	public string? Beta { get; set; }
@@ -18,22 +18,26 @@ public class RemoteClanforgeImageUpdate : IProcessable
 	public async Task<ServerResponse> ProcessAsync()
 	{
 		await Task.CompletedTask;
-		ProcessInternalAsync().FireAndForget();
+		
+		// TODO: there is a bug where Clanforge config is null, seems the whole ServerConfig is null too which should be impossible. 
+		// so going to try load it again here before we continue to see if that improves.
+		if (ServerConfig.Instance.Clanforge is null)
+		{
+			Logger.Log("[ClanforgeImageUpdate] Clanforge config was null, reloading...");
+			ServerConfig.Load();
+		}
+
+		if (ServerConfig.Instance.Clanforge is null)
+			return new ServerResponse(HttpStatusCode.InternalServerError, $"{nameof(ClanforgeConfig)} is null on server config. {ServerConfig.Instance}");
+
+		var clone = ServerConfig.Instance.Clanforge.Clone();
+		Logger.Log($"Clanforge config cloned: {clone}");
+		ProcessInternalAsync(clone).FireAndForget();
 		return new ServerResponse(HttpStatusCode.OK, this);
 	}
 	
-	private async Task ProcessInternalAsync()
+	private async Task ProcessInternalAsync(ClanforgeConfig clanforgeConfig)
 	{
-		// TODO: there is a bug where Clanforge config is null, seems the whole ServerConfig is null too which should be impossible. 
-		// so going to try load it again here before we continue to see if that improves.
-		ServerConfig.Load();
-		
-		if (ServerConfig.Instance.Clanforge is null)
-			throw new NullReferenceException($"{nameof(ClanforgeConfig)} is null on server config. {ServerConfig.Instance}");
-	
-		var clanforgeConfig = ServerConfig.Instance.Clanforge.Clone();
-		Logger.Log($"Clanforge config cloned: {clanforgeConfig}");
-		
 		try
 		{
 			var clanforge = new ClanForgeDeploy(clanforgeConfig, Profile, Desc, Beta, Full);
@@ -51,11 +55,14 @@ public class RemoteClanforgeImageUpdate : IProcessable
 	{
 		var Hooks = ServerConfig.Instance.Hooks;
 	
-		if (Hooks == null)
+		if (Hooks is null)
 			return;
 
 		foreach (var hook in Hooks)
 		{
+			if (hook.IsErrorChannel is true)
+				continue;
+			
 			if (hook.IsDiscord())
 			{
 				var embed = new Discord.Embed

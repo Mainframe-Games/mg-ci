@@ -13,7 +13,7 @@ public class GameServerUpdate : Endpoint<GameServerUpdate.Payload>
 	public class Payload
 	{
 		public MultiplayServerUpdate? Usg { get; set; }
-		public RemoteClanforgeImageUpdate? Clanforge { get; set; }
+		public ClanforgeImageUpdate? Clanforge { get; set; }
 	}
 
 	public override string Path => "/game-server-update";
