@@ -27,10 +27,13 @@ public static class Logger
 		Log($"{message} {(DateTime.Now - startTime).ToHourMinSecString()}");
 	}
 	
-	public static void LogTimeStamp(string message, Stopwatch stopwatch)
+	public static void LogTimeStamp(string message, Stopwatch stopwatch, bool restartStopwatch = false)
 	{
 		var timeSpan = TimeSpan.FromMilliseconds(stopwatch.ElapsedMilliseconds);
 		Log($"{message} {timeSpan.ToHourMinSecString()}");
+		
+		if (restartStopwatch)
+			stopwatch.Restart();
 	}
 
 	/// <summary>

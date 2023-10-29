@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using Deployment.Configs;
 using Newtonsoft.Json.Linq;
@@ -38,35 +39,39 @@ public class ClanForgeDeploy
 		Full = full ?? false;
 	}
 
-	public async Task Deploy()
-	{
-		await DeployInternal(ImageId);
-	}
-
 	/// <summary>
 	/// Entry build for deploying build to clanforge.
 	/// Must be done after Steam Deploy
 	/// </summary>
-	private async Task DeployInternal(uint imageId)
+	public async Task Deploy()
 	{
+		var sw = Stopwatch.StartNew();
+		var startTime = DateTime.Now;
+		
 		// create image
 		Logger.Log("...creating new image");
-		var updateId = await CreateNewImage(imageId);
+		var updateId = await CreateNewImage(ImageId);
+		Logger.LogTimeStamp("Image Created: ", sw, true);
 
 		// poll for when diff is ready
 		Logger.Log("...polling image status");
 		await PollStatus("imageupdate", $"updateid={updateId}");
+		Logger.LogTimeStamp("Image Updated Polling: ", sw, true);
 
 		// generate diff
 		Logger.Log("...generating diff");
-		var diffId = await GenerateDiff(imageId);
+		var diffId = await GenerateDiff(ImageId);
+		Logger.LogTimeStamp("Generated Diff: ", sw, true);
 
 		// poll for diff status
 		Logger.Log("...polling diff status");
 		await PollStatus("imagediff", $"diffid={diffId}");
-		
+		Logger.LogTimeStamp("Generated Diff Polling: ", sw, true);
+
 		// accept diff and create new image version
 		await CreateImageVersion(diffId);
+		Logger.LogTimeStamp("Image Version Created: ", sw, true);
+		Logger.LogTimeStamp("Clanforge Deployed: ", startTime);
 	}
 
 	#region Requests
