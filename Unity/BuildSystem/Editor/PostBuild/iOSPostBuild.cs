@@ -13,12 +13,16 @@ namespace BuildSystem.PostBuild
 		{
 			if (report.summary.platform is not BuildTarget.iOS and not BuildTarget.tvOS)
 				return;
+			
+			var settings = BuildScript.CurrentBuildSettings;
+			if (!settings)
+				return;
 
 			var outputPath = report.summary.outputPath;
 			BS_Logger.Log($"[{nameof(iOSPostBuild)}] {report.summary.platform} PostProcess. Path: {outputPath}");
 
 			// var pbx = new PBXHelper(outputPath);
-			UpdateInfoPlist(BuildScript.CurrentBuildSettings, outputPath);
+			UpdateInfoPlist(settings, outputPath);
 		}
 		
 		private static void UpdateInfoPlist(BuildSettings settings, string outputPath)
@@ -30,6 +34,9 @@ namespace BuildSystem.PostBuild
 
 		private static void SetPListElements(BuildSettings settings, PListHelper plist)
 		{
+			if (!settings)
+				return;
+			
 			foreach (var p in settings.PListElementBools)
 			{
 				plist.SetBoolean(p.Key, p.Value);

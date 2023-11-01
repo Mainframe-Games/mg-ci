@@ -11,7 +11,12 @@ namespace BuildSystem.PostBuild
 
 		public void OnPostprocessBuild(BuildReport report)
 		{
-			if (!BuildScript.CurrentBuildSettings.StripDontShipFolders)
+			var settings = BuildScript.CurrentBuildSettings;
+			
+            if (!settings)
+				return;
+			
+			if (!settings.StripDontShipFolders)
 				return;
 			
 			var outputFile = new FileInfo(report.summary.outputPath);
