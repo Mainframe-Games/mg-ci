@@ -109,15 +109,27 @@ public abstract class Yaml
 			var propName = $"{propertyNames[index]}:";
 
 			// last index, return value
-			if (index == propertyNames.Length - 1 && _lines[i].Contains(propName, StringComparison.OrdinalIgnoreCase))
-				return i;
+			if (index == propertyNames.Length - 1)
+			{
+				if (IsProperty(line, propName))
+					return i;
+			}
 
 			// increase index when prop found
-			if (line.Contains(propName, StringComparison.OrdinalIgnoreCase))
+			if (IsProperty(line, propName))
 				index++;
 		}
 
 		throw new KeyNotFoundException($"Failed to find path: '{string.Join(", ", propertyNames)}'");
+		
+		bool IsProperty(string line, string propName)
+		{
+			if (!line.Contains(':'))
+				return false;
+			
+			var trim = $"{line.Split(':')[0].Trim()}:";
+			return trim.Equals(propName, StringComparison.OrdinalIgnoreCase);
+		}
 	}
 
 	protected static string ReplaceText(string? line, string? newValue)
