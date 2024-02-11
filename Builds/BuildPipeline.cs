@@ -134,7 +134,7 @@ public class BuildPipeline
 		Logger.Log("PreBuild process started...");
 
 		// pre build runner
-		var preBuild = new PreBuild(Workspace, Args);
+		var preBuild = new PreBuild(Workspace);
 		preBuild.Run(Config.PreBuild);
 		BuildVersions = preBuild.BuildVersions;
 		

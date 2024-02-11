@@ -37,13 +37,6 @@ public static class App
 				return;
 			}
 
-			// add bundle version bump flag
-			if (Cmd.Ask("Bump minor version?", false))
-			{
-				var index = Cmd.Ask("Version Index?", 1);
-				args.Add("-bundleversion", index.ToString());
-			}
-			
 			var pipeline = CreateBuildPipeline(workspace, args);
 			await RunBuildPipe(pipeline);
 		}
