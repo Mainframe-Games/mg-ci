@@ -1,17 +1,19 @@
 ﻿// Create a Silk.NET window as usual
 
 using System.Drawing;
+using GuiApp;
 using Silk.NET.Windowing;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.ImGui;
 
 using var window = Window.Create(WindowOptions.Default);
+var mainWindow = new MainWindow();
 
 // Declare some variables
-ImGuiController controller = null;
-GL gl = null;
-IInputContext inputContext = null;
+ImGuiController controller = null!;
+GL gl = null!;
+IInputContext inputContext = null!;
 
 // Our loading function
 window.Load += () =>
@@ -43,7 +45,7 @@ window.Render += delta =>
 
     // This is where you'll do all of your ImGUi rendering
     // Here, we're just showing the ImGui built-in demo window.
-    ImGuiNET.ImGui.ShowDemoWindow();
+    mainWindow.DrawGui();
 
     // Make sure ImGui renders too!
     controller.Render();
