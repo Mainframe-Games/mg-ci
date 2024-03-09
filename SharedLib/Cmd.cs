@@ -40,7 +40,7 @@ public static class Cmd
 			};
 
 			var proc = Process.Start(procStartInfo);
-			Logger.Log($"Process Started: {proc.ProcessName}");
+			// Logger.Log($"Process Started: {proc.ProcessName}");
 			Processes.Add(proc);
 			
 			var sb = new StringBuilder();

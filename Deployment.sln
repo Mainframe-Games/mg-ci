@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Builds", "Builds\Builds.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuiApp", "GuiApp\GuiApp.csproj", "{6C9A3F28-C2F9-4920-BEFA-9DBD7030CB13}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DockerRunner", "DockerRunner\DockerRunner.csproj", "{29FE1BE2-79BC-4F55-A7E8-01EAB54FD5EB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{6C9A3F28-C2F9-4920-BEFA-9DBD7030CB13}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C9A3F28-C2F9-4920-BEFA-9DBD7030CB13}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C9A3F28-C2F9-4920-BEFA-9DBD7030CB13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29FE1BE2-79BC-4F55-A7E8-01EAB54FD5EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29FE1BE2-79BC-4F55-A7E8-01EAB54FD5EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29FE1BE2-79BC-4F55-A7E8-01EAB54FD5EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29FE1BE2-79BC-4F55-A7E8-01EAB54FD5EB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
