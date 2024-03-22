@@ -26,7 +26,7 @@ public class ProductionRequest : Endpoint<ProductionRequest.Payload>
 	{
 		await Task.CompletedTask;
 		
-		var workspace = Workspace.GetWorkspaceFromName(Content.WorkspaceName);
+		var workspace = PlasticWorkspace.GetWorkspaceFromName(Content.WorkspaceName);
 		
 		if (workspace == null)
 			return new ServerResponse(HttpStatusCode.BadRequest, $"Given namespace is not valid: {Content.WorkspaceName}");

@@ -11,7 +11,7 @@ public class Workspaces : Endpoint<object>
 	protected override async Task<ServerResponse> GET()
 	{
 		await Task.CompletedTask;
-		var workspaces = Workspace.GetAvailableWorkspaces().Select(x => x.Name).ToList();
+		var workspaces = PlasticWorkspace.GetAvailableWorkspaces().Select(x => x.Name).ToList();
 		return new ServerResponse(HttpStatusCode.OK, workspaces);
 	}
 }

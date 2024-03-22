@@ -3,11 +3,11 @@ using Newtonsoft.Json.Linq;
 
 namespace SharedLib;
 
-public class Workspace
+public abstract class Workspace
 {
-	private const string PROJ_SETTINGS_ASSET = "ProjectSettings.asset";
-	private const string APP_VERSION_TXT = "app_version.txt";
-	private const string WORKSPACE_META_JSON = "WorkspaceMeta.json";
+	protected const string PROJ_SETTINGS_ASSET = "ProjectSettings.asset";
+	protected const string APP_VERSION_TXT = "app_version.txt";
+	protected const string WORKSPACE_META_JSON = "WorkspaceMeta.json";
 	
 	public string Name { get; }
 	public string Directory { get; }
@@ -20,7 +20,7 @@ public class Workspace
 	[JsonIgnore] public string BuildVersionPath => Path.Combine(Directory, "Assets", "StreamingAssets", APP_VERSION_TXT);
 	[JsonIgnore] public string MetaPath => Path.Combine(Directory, "BuildSystem", WORKSPACE_META_JSON);
 
-	private Workspace(string name, string directory)
+	protected Workspace(string name, string directory)
 	{
 		Name = name;
 		Directory = directory;
@@ -30,7 +30,7 @@ public class Workspace
 	/// <summary>
 	/// Refreshes ProjectSettings, UnityVersion, and WorkspaceMeta 
 	/// </summary>
-	private void RefreshMetaData()
+	protected void RefreshMetaData()
 	{
 		ProjectSettings = new ProjectSettings(ProjectSettingsPath);
 		UnityVersion = GetUnityVersion(Directory);
@@ -40,63 +40,6 @@ public class Workspace
 	public override string ToString()
 	{
 		return $"{Name} @ {Directory} | UnityVersion: {UnityVersion}";
-	}
-	
-	public static List<Workspace> GetAvailableWorkspaces()
-	{
-		var (exitCode, output) = Cmd.Run("cm", "workspace", logOutput: false);
-
-		if (exitCode != 0)
-			throw new Exception(output);
-
-		var workSpacesArray = output.Split(Environment.NewLine);
-		var workspaces = new List<Workspace>();
-
-		foreach (var workspace in workSpacesArray)
-		{
-			try
-			{
-				var split = workspace.Split('@');
-				var name = split[0];
-				var path = split[1].Replace(Environment.MachineName, string.Empty).Trim();
-				var ws = new Workspace(name, path);
-				workspaces.Add(ws);
-			}
-			catch (Exception e)
-			{
-				Logger.Log($"Error with workspace: {workspace}");
-				Logger.Log(e);
-			}
-		}
-
-		return workspaces;
-	}
-
-	public static bool TryAskWorkspace(out Workspace workspace)
-	{
-		var (exitCode, output) = Cmd.Run("cm", "workspace", logOutput: false);
-
-		if (exitCode != 0)
-			throw new Exception(output);
-
-		var workspaces = GetAvailableWorkspaces();
-		var workspaceNames = workspaces.Select(x => x.Name).ToList();
-
-		if (!Cmd.Choose("Choose workspace", workspaceNames, out var index))
-		{
-			workspace = null;
-			return false;
-		}
-		
-		workspace = workspaces[index];
-		Logger.Log($"Chosen workspace: {workspace}");
-		return true;
-	}
-
-	public static Workspace? GetWorkspaceFromName(string? workspaceName)
-	{
-		var workspaces = GetAvailableWorkspaces();
-		return workspaces.FirstOrDefault(x => string.Equals(x.Name, workspaceName, StringComparison.OrdinalIgnoreCase));
 	}
 	
 	private static string GetUnityVersion(string? workingDirectory)
@@ -226,33 +169,14 @@ public class Workspace
 
 		throw new FileNotFoundException($"Unable to find {nameof(BuildSettingsAsset)} with name '{name}'");
 	}
-	
-	public void Clear()
-	{
-		Cmd.Run("cm", $"unco -a \"{Directory}\"");
-		RefreshMetaData();
-	}
+
+	public abstract void Clear();
 
 	/// <summary>
 	/// Updates the workspace. 
 	/// </summary>
 	/// <param name="changeSetId">ChangeSetId to update to. -1 is latest</param>
-	public void Update(int changeSetId = -1)
-	{
-		// get all the latest updates
-		Cmd.Run("cm", $"update \"{Directory}\"");
-		
-		// set to a specific change set
-		if (changeSetId > 0)
-		{
-			var (exitCode, output) = Cmd.Run("cm", $"switch cs:{changeSetId} --workspace=\"{Directory}\"");
-			
-			if (exitCode != 0 || output.ToLower().Contains("does not exist"))
-				throw new Exception($"Plastic update error: {output}");
-		}
-
-		RefreshMetaData();
-	}
+	public abstract void Update(int changeSetId = -1);
 
 	public void CleanBuild()
 	{
@@ -272,40 +196,13 @@ public class Workspace
 			DeleteIfExist(file);
 	}
 
-	public void GetCurrent(out int changesetId, out string guid)
-	{
-		var currentDir = Environment.CurrentDirectory;
-		Environment.CurrentDirectory = Directory;
-		
-		var cmdRes = Cmd.Run(
-			"cm", $"find changeset \"where branch='{Branch}'\" \"order by date desc\" \"limit 1\" --format=\"{{changesetid}} {{guid}}\" --nototal",
-			logOutput: false);
-		
-		Environment.CurrentDirectory = currentDir;
+	public abstract void GetCurrent(out int changesetId, out string guid);
 
-		var split = cmdRes.output.Split(' ');
-		changesetId = int.TryParse(split[0], out var id) ? id : 0;
-		guid = split[1];
-	}
-	
 	/// <summary>
 	/// Gets previous changeSetId based on commit message
 	/// </summary>
 	/// <returns></returns>
-	public int GetPreviousChangeSetId(string key)
-	{
-		var req = Cmd.Run("cm",
-			$"find changeset \"where branch='{Branch}' and comment like '%{key}%'\" \"order by date desc\" \"limit 1\" --format=\"{{changesetid}}\" --nototal",
-			logOutput: false);
-		
-		// if empty from branch, try again in 'main'
-		if (string.IsNullOrEmpty(req.output))
-			req = Cmd.Run("cm", 
-				$"find changeset \"where branch='main' and comment like '%{key}%'\" \"order by date desc\" \"limit 1\" --format=\"{{changesetid}}\" --nototal",
-				logOutput: false);
-		
-		return int.TryParse(req.output, out var cs) ? cs : 0;
-	}
+	public abstract int GetPreviousChangeSetId(string key);
 	
 	/// <summary>
 	/// Gets all change logs between two changeSetIds
@@ -318,46 +215,13 @@ public class Workspace
 		Environment.CurrentDirectory = dirBefore;
 		return changeLog;
 	}
-	
+
 	/// <summary>
 	/// Gets all change logs between two changeSetIds
 	/// </summary>
-	public string[] GetChangeLog(int curId, int prevId, bool print = true)
-	{
-		var dirBefore = Environment.CurrentDirectory;
-		Environment.CurrentDirectory = Directory;
-		
-		var raw = Cmd.Run("cm", $"log --from=cs:{prevId} cs:{curId} --csformat=\"{{comment}}\"").output;
-		var changeLog = raw.Split(Environment.NewLine).Reverse().ToList();
-		changeLog.RemoveAll(x => x.StartsWith("_")); // remove all ignores
-		
-		if (print)
-			Logger.Log($"___Change Logs___\n{string.Join("\n", changeLog)}");
-		
-		Environment.CurrentDirectory = dirBefore;
-		return changeLog.ToArray();
-	}
+	public abstract string[] GetChangeLog(int curId, int prevId, bool print = true);
 
-	public void Commit(string commitMessage)
-	{
-		// update in case there are new changes in coming otherwise it will fail
-		// TODO: need to find a way to automatically resolve conflicts with cloud
-		Update();
-
-		var status = Cmd.Run("cm", "status --short").output;
-		var files = status.Split(Environment.NewLine);
-		var filesToCommit = files
-			.Where(x => x.Contains(".vdf")
-			            || x.Contains(PROJ_SETTINGS_ASSET)
-			            || x.Contains(APP_VERSION_TXT)
-			            || x.Contains(WORKSPACE_META_JSON))
-			.ToList();
-
-		// commit changes
-		var filesStr = $"\"{string.Join("\" \"", filesToCommit)}\"";
-		Logger.Log($"Commit: \"{commitMessage}\"");
-		Cmd.Run("cm", $"ci {filesStr} -c=\"{commitMessage}\"");
-	}
+	public abstract void Commit(string commitMessage);
 
 	private static void DeleteIfExist(FileSystemInfo fileSystemInfo)
 	{
@@ -369,14 +233,8 @@ public class Workspace
 		else
 			fileSystemInfo.Delete();
 	}
-	
-	public void SwitchBranch(string? branchPath)
-	{
-		var res = Cmd.Run("cm", $"switch {branchPath} --workspace=\"{Directory}\"");
-		if (res.exitCode != 0)
-			throw new Exception(res.output);
-		Branch = branchPath;
-	}
+
+	public abstract void SwitchBranch(string? branchPath);
 
 	public void SaveBuildVersion(string fullVersion)
 	{

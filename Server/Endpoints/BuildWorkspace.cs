@@ -44,7 +44,7 @@ public class BuildWorkspace : Endpoint<BuildWorkspace.Payload>
 		args.TryGetArg("-branch", out var branch, "main");
 
 		var workspaceName = new WorkspaceMapping().GetRemapping(Content.WorkspaceName);
-		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
+		var workspace = PlasticWorkspace.GetWorkspaceFromName(workspaceName);
 		
 		if (workspace is null)
 			return new ServerResponse(HttpStatusCode.BadRequest, $"Given namespace is not valid: {Content.WorkspaceName}");

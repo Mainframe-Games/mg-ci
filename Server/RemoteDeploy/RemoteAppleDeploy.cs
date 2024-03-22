@@ -13,7 +13,7 @@ public class RemoteAppleDeploy : IProcessable
 	public async Task<ServerResponse> ProcessAsync()
 	{
 		await Task.CompletedTask;
-		var workspace = Workspace.GetWorkspaceFromName(WorkspaceName);
+		var workspace = PlasticWorkspace.GetWorkspaceFromName(WorkspaceName);
 		var buildSettingsAsset = workspace.GetBuildTarget(BuildTargetFlag.iOS.ToString());
 		var productName = buildSettingsAsset.GetValue<string>("ProductName");
 		var buildPath = buildSettingsAsset.GetValue<string>("BuildPath");

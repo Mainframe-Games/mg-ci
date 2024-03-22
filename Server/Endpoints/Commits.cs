@@ -64,7 +64,7 @@ public class Commits : Endpoint<object>
 	{
 		try
 		{
-			var workspace = Workspace.GetWorkspaceFromName(workspaceName);
+			var workspace = PlasticWorkspace.GetWorkspaceFromName(workspaceName);
 			
 			if (workspace == null)
 				throw new Exception($"Workspace not found with name '{workspaceName}'");

@@ -31,14 +31,28 @@ public static class App
 		{
 			Logger.Log($"App Version: {Version}");
 
-			if (!Workspace.TryAskWorkspace(out var workspace))
+			if (Cmd.Choose("Git or Plastic SCM?", ["Git", "Plastic SCM"], out var i))
 			{
-				Logger.Log("No Workspace chosen");
-				return;
+				switch (i)
+				{
+					// git
+					case 0:
+						Console.WriteLine("Git not supported yet");
+						break;
+					
+					// Plastic
+					case 1: 
+						if (!PlasticWorkspace.TryAskWorkspace(out var workspace))
+						{
+							Logger.Log("No Workspace chosen");
+							return;
+						}
+						
+						var pipeline = CreateBuildPipeline(workspace, args);
+						await RunBuildPipe(pipeline);
+						break;
+				}
 			}
-
-			var pipeline = CreateBuildPipeline(workspace, args);
-			await RunBuildPipe(pipeline);
 		}
 		else
 		{
