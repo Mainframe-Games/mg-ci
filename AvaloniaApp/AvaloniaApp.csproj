@@ -1,8 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
-        <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
@@ -15,5 +13,16 @@
         <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.10"/>
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.10"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="content\settings.png" />
+      <AvaloniaResource Include="content\settings.png" />
+      <None Remove="content\github.png" />
+      <AvaloniaResource Include="content\github.png" />
+      <None Remove="content\new-project.png" />
+      <AvaloniaResource Include="content\new-project.png" />
+      <None Remove="content\folder.png" />
+      <AvaloniaResource Include="content\folder.png" />
     </ItemGroup>
 </Project>

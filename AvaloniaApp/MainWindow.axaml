@@ -3,7 +3,75 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        Width="1600" Height="900"
         x:Class="AvaloniaApp.MainWindow"
-        Title="AvaloniaApp">
-    Welcome to Avalonia!
+        Title="Deployment CI">
+
+    <Grid RowDefinitions="Auto, *, Auto">
+
+        <!-- Styles -->
+        <Grid.Styles>
+            <Style Selector="Button">
+                <Setter Property="Background" Value="Transparent"></Setter>
+            </Style>
+        </Grid.Styles>
+
+        <!-- Title bar -->
+        <Grid Grid.Row="0" Background="#444" Height="40" ColumnDefinitions="Auto, Auto, *, Auto, Auto">
+            <!-- New Project Button -->
+            <Button Grid.Column="0" Width="40" ToolTip.Tip="New Project">
+                <Image Width="40" Source="content/new-project.png"></Image>
+            </Button>
+            
+            <!-- Open Project -->
+            <Button Grid.Column="2" Width="40" ToolTip.Tip="Open Project" Click="Button_OpenProject_OnClick">
+                <Image Width="40" Source="content/folder.png"></Image>
+            </Button>
+            
+            <!-- Title -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Grid.Column="2">
+                <Label FontWeight="Black">DEPLOYMENT</Label>
+                <Label>Dashboard</Label>
+            </StackPanel>
+            
+            <!-- Github Button -->
+            <Button Grid.Column="3" Width="40" ToolTip.Tip="Github" Click="Button_Github_OnClick">
+                <Image Width="40" Source="content/github.png"></Image>
+            </Button>
+            
+            <!-- Settings Button -->
+            <Button Grid.Column="4" Width="40">
+                <Image Width="40" Source="content/settings.png"  ToolTip.Tip="Settings"></Image>
+            </Button>
+        </Grid>
+
+        <!-- Main content -->
+        <Grid Grid.Row="1" Background="#333">
+            <Grid ColumnDefinitions="Auto, *">
+
+                <!-- Sidebar -->
+                <!-- This is where we will have all context to the current project -->
+                <Grid Grid.Column="0" RowDefinitions="*" Width="400">
+                    <StackPanel Name="SideBar">
+                        <!-- Content will be dynamically loaded via code -->
+                    </StackPanel>
+                </Grid>
+
+                <!-- Content -->
+                <!-- Where info of the side bar contents will show, Project Config, Builds Configs etc.. -->
+                <Grid Grid.Column="1" Background="#555">
+                    <StackPanel Name="MainContent">
+                        <!-- Content will be dynamically loaded via code -->
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- Footer -->
+        <Grid Grid.Row="2" Background="#222">
+            <Label>Footer</Label>
+        </Grid>
+
+    </Grid>
 </Window>
