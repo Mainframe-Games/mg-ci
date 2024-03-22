@@ -209,18 +209,14 @@ public abstract class Workspace
 	/// </summary>
 	public string[] GetChangeLogInst(int curId, int prevId, bool print = true)
 	{
-		var dirBefore = Environment.CurrentDirectory;
-		Environment.CurrentDirectory = Directory;
-		var changeLog = GetChangeLog(curId, prevId, print);
-		Environment.CurrentDirectory = dirBefore;
-		return changeLog;
+		throw new NotImplementedException();
+		// var dirBefore = Environment.CurrentDirectory;
+		// Environment.CurrentDirectory = Directory;
+		// var changeLog = GetChangeLog(curId, prevId, print);
+		// Environment.CurrentDirectory = dirBefore;
+		// return changeLog;
 	}
-
-	/// <summary>
-	/// Gets all change logs between two changeSetIds
-	/// </summary>
-	public abstract string[] GetChangeLog(int curId, int prevId, bool print = true);
-
+	
 	public abstract void Commit(string commitMessage);
 
 	private static void DeleteIfExist(FileSystemInfo fileSystemInfo)

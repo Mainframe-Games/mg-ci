@@ -2,7 +2,7 @@ namespace SharedLib;
 
 public class PlasticWorkspace : Workspace
 {
-    protected PlasticWorkspace(string name, string directory) : base(name, directory)
+    private PlasticWorkspace(string name, string directory) : base(name, directory)
     {
         
     }
@@ -118,7 +118,10 @@ public class PlasticWorkspace : Workspace
         return int.TryParse(req.output, out var cs) ? cs : 0;
     }
 
-    public override string[] GetChangeLog(int curId, int prevId, bool print = true)
+    /// <summary>
+    /// Gets all change logs between two changeSetIds
+    /// </summary>
+    public string[] GetChangeLog(int curId, int prevId, bool print = true)
     {
         var dirBefore = Environment.CurrentDirectory;
         Environment.CurrentDirectory = Directory;

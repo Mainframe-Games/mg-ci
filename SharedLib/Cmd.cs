@@ -119,4 +119,15 @@ public static class Cmd
 			? integer
 			: defaultAnswer;
 	}
+    
+	public static string Ask(string question, string defaultAnswer)
+	{
+		Console.Write($"{question} [{defaultAnswer}]: ");
+		var response = Console.ReadLine();
+
+		if (string.IsNullOrEmpty(response))
+			return defaultAnswer;
+
+		return response;
+	}
 }

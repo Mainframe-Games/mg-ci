@@ -31,13 +31,32 @@ public static class App
 		{
 			Logger.Log($"App Version: {Version}");
 
+			BuildPipeline? buildPipeline = null;
+
 			if (Cmd.Choose("Git or Plastic SCM?", ["Git", "Plastic SCM"], out var i))
 			{
 				switch (i)
 				{
 					// git
 					case 0:
-						Console.WriteLine("Git not supported yet");
+						var gitDirPath = Cmd.Ask("Git directory: ", "");
+						var gitDir = new DirectoryInfo(gitDirPath);
+						if (!gitDir.Exists)
+						{
+							Logger.Log($"Directory does not exist: {gitDirPath}");
+							return;
+						}
+						
+						var childDirs = gitDir.GetDirectories();
+						if (childDirs.All(x => x.Name != ".git"))
+						{
+							Logger.Log("No .git directory found");
+							return;
+						}
+						
+						var gitWorkspace = new GitWorkspace(gitDir.Name, gitDir.FullName);
+						buildPipeline = CreateBuildPipeline(gitWorkspace, args);
+						
 						break;
 					
 					// Plastic
@@ -48,10 +67,14 @@ public static class App
 							return;
 						}
 						
-						var pipeline = CreateBuildPipeline(workspace, args);
-						await RunBuildPipe(pipeline);
+						buildPipeline = CreateBuildPipeline(workspace, args);
 						break;
 				}
+
+				if (buildPipeline is null)
+					throw new NullReferenceException();
+				
+				await RunBuildPipe(buildPipeline);
 			}
 		}
 		else
@@ -245,6 +268,9 @@ public static class App
 		
 		if (vdfPaths == null)
 			return;
+		
+		if (Config?.Steam is null)
+			throw new NullReferenceException("Steam config is null");
 		
 		pipeline.Args.TryGetArg("-setlive", out var setLive, Config.Steam.DefaultSetLive);
 		

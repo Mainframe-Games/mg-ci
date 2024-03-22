@@ -68,7 +68,16 @@ public class BuildPipeline
 		// Logger.Log($"[CHANGESET] cs:{prevChangeSetId} \u2192 cs:{_currentChangeSetId}, guid:{_currentGuid}");
 
 		Config = BuildConfig.GetConfig(Workspace.Directory);
-		ChangeLog = Workspace.GetChangeLog(_currentChangeSetId, Workspace.Meta.LastSuccessfulBuild);
+
+		switch (Workspace)
+		{
+			case PlasticWorkspace plastic:
+				ChangeLog = plastic.GetChangeLog(_currentChangeSetId, Workspace.Meta.LastSuccessfulBuild.GetValueOrDefault());
+				break;
+			case GitWorkspace gitWorkspace:
+				ChangeLog = gitWorkspace.GetChangeLog(_currentGuid, Workspace.Meta.LastSuccessfulSha);
+				break;
+		}
 		
 		var buildTargetNames = Workspace.GetBuildTargets().Select(x => x.Name).ToArray();
 		Report = new PipelineReport(buildTargetNames);
@@ -141,7 +150,16 @@ public class BuildPipeline
 		// write new versions to disk
 		Workspace.ProjectSettings.ReplaceVersions(preBuild.BuildVersions);
 		Workspace.SaveBuildVersion(preBuild.BuildVersions.FullVersion);
-		Workspace.Commit($"_Build Version: {preBuild.BuildVersions.FullVersion} | cs: {_currentChangeSetId} | guid: {_currentGuid}");
+
+		switch (Workspace)
+		{
+			case PlasticWorkspace:
+				Workspace.Commit($"_Build Version: {preBuild.BuildVersions.FullVersion} | cs: {_currentChangeSetId} | guid: {_currentGuid}");
+				break;
+			case GitWorkspace:
+				Workspace.Commit($"_Build Version: {preBuild.BuildVersions.FullVersion} | sha: {_currentGuid}");
+				break;
+		}
 		
 		await Task.CompletedTask;
 	}
@@ -186,6 +204,9 @@ public class BuildPipeline
 			var buildResult = unity.Build(localBuild);
 			_buildResults.Add(buildResult);
 			Report.UpdateBuildTarget(localBuild.Name, buildResult.IsErrors ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed);
+
+			if (buildResult.IsErrors)
+				throw new Exception($"Build failed: {buildResult.Errors}");
 		}
 		
 		// wait for offload builds to complete
@@ -274,7 +295,19 @@ public class BuildPipeline
 		Report.Complete(BuildTaskStatus.Succeed, title, hookMessage.ToString());
 		
 		// store last successful changeset id
-		Workspace.Meta.LastSuccessfulBuild = _currentChangeSetId;
+		if (Workspace.Meta is not null)
+		{
+			switch (Workspace)
+			{
+				case PlasticWorkspace :
+					Workspace.Meta.LastSuccessfulBuild = _currentChangeSetId;
+					break;
+				case GitWorkspace :
+					Workspace.Meta.LastSuccessfulSha = _currentGuid;
+					break;
+			}
+		}
+		
 		Workspace.SaveMeta();
 		Workspace.Commit($"_Build Successful. {BuildVersions?.FullVersion}");
 		// Workspace.Clear();
