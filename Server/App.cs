@@ -31,51 +31,37 @@ public static class App
 		{
 			Logger.Log($"App Version: {Version}");
 
-			BuildPipeline? buildPipeline = null;
 
-			if (Cmd.Choose("Git or Plastic SCM?", ["Git", "Plastic SCM"], out var i))
+			var isGit = args.IsFlag("-git");
+			var isPlastic = args.IsFlag("-plastic");
+			
+			// if no flags are set, ask user
+			if (!isGit && !isPlastic)
 			{
+				Cmd.Choose("Git or Plastic SCM?", ["Git", "Plastic SCM"], out var i);
 				switch (i)
 				{
-					// git
 					case 0:
-						var gitDirPath = Cmd.Ask("Git directory: ", "");
-						var gitDir = new DirectoryInfo(gitDirPath);
-						if (!gitDir.Exists)
-						{
-							Logger.Log($"Directory does not exist: {gitDirPath}");
-							return;
-						}
-						
-						var childDirs = gitDir.GetDirectories();
-						if (childDirs.All(x => x.Name != ".git"))
-						{
-							Logger.Log("No .git directory found");
-							return;
-						}
-						
-						var gitWorkspace = new GitWorkspace(gitDir.Name, gitDir.FullName);
-						buildPipeline = CreateBuildPipeline(gitWorkspace, args);
-						
+						isGit = true;
 						break;
-					
-					// Plastic
-					case 1: 
-						if (!PlasticWorkspace.TryAskWorkspace(out var workspace))
-						{
-							Logger.Log("No Workspace chosen");
-							return;
-						}
-						
-						buildPipeline = CreateBuildPipeline(workspace, args);
+					case 1:
+						isPlastic = true;
 						break;
 				}
-
-				if (buildPipeline is null)
-					throw new NullReferenceException();
-				
-				await RunBuildPipe(buildPipeline);
 			}
+
+			BuildPipeline? buildPipeline = null;
+			
+			if (isGit && !InitializeGit(args, out buildPipeline))
+				return;
+
+			if (isPlastic && !InitializePlastic(args, out buildPipeline))
+				return;
+			
+			if (buildPipeline is null)
+				throw new NullReferenceException();
+				
+			await RunBuildPipe(buildPipeline);
 		}
 		else
 		{
@@ -86,6 +72,46 @@ public static class App
 			await Task.Delay(-1);
 			Logger.Log("Server stopped");
 		}
+	}
+
+	private static bool InitializePlastic(Args args, out BuildPipeline? buildPipeline)
+	{
+		buildPipeline = null;
+			
+		if (!PlasticWorkspace.TryAskWorkspace(out var workspace))
+		{
+			Logger.Log("No Workspace chosen");
+			return false;
+		}
+		
+		buildPipeline = CreateBuildPipeline(workspace, args);
+		return true;
+	}
+
+	private static bool InitializeGit(Args args, out BuildPipeline? buildPipeline)
+	{
+		if (!args.TryGetArg("-git", out var gitDirPath))
+			gitDirPath = Cmd.Ask("Git directory: ", string.Empty);
+
+		buildPipeline = null;
+		
+		var gitDir = new DirectoryInfo(gitDirPath);
+		if (!gitDir.Exists)
+		{
+			Logger.Log($"Directory does not exist: {gitDirPath}");
+			return false;
+		}
+						
+		var childDirs = gitDir.GetDirectories();
+		if (childDirs.All(x => x.Name != ".git"))
+		{
+			Logger.Log("No .git directory found");
+			return false;
+		}
+						
+		var gitWorkspace = new GitWorkspace(gitDir.Name, gitDir.FullName);
+		buildPipeline = CreateBuildPipeline(gitWorkspace, args);
+		return true;
 	}
 
 	public static void DumpLogs(bool clearConsole = true)

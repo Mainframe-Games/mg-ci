@@ -108,7 +108,7 @@ public class Args
 	/// <returns></returns>
 	public bool IsFlag(string cmd)
 	{
-		return TryGetArgs(cmd, out _);
+		return _cmds.ContainsKey(cmd);
 	}
 	
 	private static string[] ParseCommandLine(string commandLine)
