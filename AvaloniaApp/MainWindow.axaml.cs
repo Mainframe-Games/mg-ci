@@ -42,6 +42,12 @@ public partial class MainWindow : Window
             new FolderPickerOpenOptions { Title = "Open Project", AllowMultiple = false }
         );
 
+        if (folders.Count == 0)
+        {
+            Console.WriteLine("No folder selected");
+            return;
+        }
+
         var rootDir = new DirectoryInfo(folders[0].Path.AbsolutePath);
         var childDirs = rootDir.GetDirectories();
         if (childDirs.All(x => x.Name != ".ci"))
