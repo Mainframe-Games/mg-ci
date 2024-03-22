@@ -40,7 +40,7 @@ public class DiscordConfig
 	public async Task<List<string>> SetWorkspaceNamesAsync()
 	{
 		if (string.IsNullOrEmpty(BuildServerUrl) || Args.Environment.IsFlag("-local"))
-			return Workspace.GetAvailableWorkspaces().Select(x => x.Name).ToList();
+			return PlasticWorkspace.GetAvailableWorkspaces().Select(x => x.Name).ToList();
 
 		try
 		{

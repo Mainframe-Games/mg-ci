@@ -32,7 +32,7 @@ public class OffloadBuild : Endpoint<OffloadBuild.Payload>
 			return new ServerResponse(HttpStatusCode.BadRequest, $"{nameof(Content.Packet)} can not be null");
 		
 		var workspaceName = new WorkspaceMapping().GetRemapping(Content.Packet.WorkspaceName);
-		var workspace = Workspace.GetWorkspaceFromName(workspaceName);
+		var workspace = PlasticWorkspace.GetWorkspaceFromName(workspaceName);
 		
 		if (workspace is null)
 			return new ServerResponse(HttpStatusCode.BadRequest, $"Workspace not found: {Content.Packet.WorkspaceName}");
