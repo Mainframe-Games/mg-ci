@@ -15,7 +15,11 @@ public class ViewLocator : IDataTemplate
     {
         RegisterViewFactory<MainWindowViewModel, MainWindow>();
         RegisterViewFactory<HomePageViewModel, HomePageView>();
-        RegisterViewFactory<ButtonsPageViewModel, ButtonsPageView>();
+        RegisterViewFactory<ProjectSettingsViewModel, ProjectSettingsView>();
+        RegisterViewFactory<PrebuildViewModel, PrebuildView>();
+        RegisterViewFactory<BuildTargetsViewModel, BuildTargetsView>();
+        RegisterViewFactory<DeployViewModel, DeployView>();
+        RegisterViewFactory<HooksViewModel, HooksView>();
     }
 
     public Control Build(object? data)

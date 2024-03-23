@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using AvaloniaApp;
@@ -18,6 +19,12 @@ public partial class MainWindow : AppWindow
         // TitleBar.ExtendsContentIntoTitleBar = true;
         // TitleBar.TitleBarHitTestType = TitleBarHitTestType.Complex;
         // SplashScreen = new ComplexSplashScreen();
+    }
+
+    protected override void OnResized(WindowResizedEventArgs e)
+    {
+        base.OnResized(e);
+        Console.WriteLine($"Window Resized: {e.ClientSize}");
     }
 
     protected override void OnClosed(EventArgs e)

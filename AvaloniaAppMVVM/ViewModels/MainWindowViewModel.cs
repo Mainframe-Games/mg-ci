@@ -26,10 +26,21 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private Project? _currentProject = new();
 
+    /// <summary>
+    /// Get icons from: https://avaloniaui.github.io/icons.html
+    /// </summary>
     public ObservableCollection<ListItemTemplate> Items { get; } =
         [
-            new ListItemTemplate(typeof(HomePageViewModel), "HomeRegular"),
-            new ListItemTemplate(typeof(ButtonsPageViewModel), "CursorHoverRegular"),
+            new ListItemTemplate(typeof(HomePageViewModel), "Home", "home_regular"),
+            new ListItemTemplate(
+                typeof(ProjectSettingsViewModel),
+                "Project Settings",
+                "edit_settings_regular"
+            ),
+            new ListItemTemplate(typeof(PrebuildViewModel), "Pre Build", "app_generic_regular"),
+            new ListItemTemplate(typeof(BuildTargetsViewModel), "Build Targets", "target_regular"),
+            new ListItemTemplate(typeof(DeployViewModel), "Deploy", "rocket_regular"),
+            new ListItemTemplate(typeof(HooksViewModel), "Hooks", "share_android_regular"),
         ];
 
     public MainWindowViewModel()
@@ -96,10 +107,10 @@ public class ListItemTemplate
     public Type ModelType { get; set; }
     public StreamGeometry Icon { get; set; }
 
-    public ListItemTemplate(Type modelType, string iconKey)
+    public ListItemTemplate(Type modelType, string label, string iconKey)
     {
         ModelType = modelType;
-        Label = modelType.Name.Replace("PageViewModel", string.Empty);
+        Label = label;
 
         Application.Current!.TryGetResource(iconKey, out var res);
         Icon = (StreamGeometry)res!;

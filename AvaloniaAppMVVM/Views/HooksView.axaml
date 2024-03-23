@@ -4,12 +4,26 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:AvaloniaAppMVVM.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AvaloniaAppMVVM.Views.HomePageView">
+             x:Class="AvaloniaAppMVVM.Views.HooksView">
     
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <viewModels:HomePageViewModel/>
+        <viewModels:HooksViewModel />
     </Design.DataContext>
-    <TextBlock Margin="10 20">Home Page</TextBlock>
+    
+    <ScrollViewer>
+        <StackPanel Margin="20 0" Spacing="10">
+            <TextBlock FontSize="25" FontWeight="Black">Hooks</TextBlock>
+            
+            <TextBlock>Title</TextBlock>
+            <TextBox Watermark="Captain Hook"/>
+            
+            <TextBlock>Url</TextBlock>
+            <TextBox Watermark="https://"/>
+            
+            <CheckBox Content="Is Error Channel"></CheckBox>
+            
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

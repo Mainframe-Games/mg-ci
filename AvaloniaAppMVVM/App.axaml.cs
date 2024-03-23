@@ -46,13 +46,21 @@ public partial class App : Application
     [Singleton(typeof(NewProjectWindowViewModel))]
     [Singleton(typeof(SettingsWindowViewModel))]
     [Transient(typeof(HomePageViewModel))]
-    [Transient(typeof(ButtonsPageViewModel))]
+    [Transient(typeof(ProjectSettingsViewModel))]
+    [Transient(typeof(PrebuildViewModel))]
+    [Transient(typeof(BuildTargetsViewModel))]
+    [Transient(typeof(DeployViewModel))]
+    [Transient(typeof(HooksViewModel))]
     internal static partial void ConfigureViewModels(IServiceCollection services);
 
     [Singleton(typeof(MainWindow))]
     [Singleton(typeof(NewProjectWindow))]
     [Singleton(typeof(SettingsWindow))]
     [Transient(typeof(HomePageView))]
-    [Transient(typeof(ButtonsPageView))]
+    [Transient(typeof(ProjectSettingsView))]
+    [Transient(typeof(PrebuildView))]
+    [Transient(typeof(BuildTargetsView))]
+    [Transient(typeof(DeployView))]
+    [Transient(typeof(HooksView))]
     internal static partial void ConfigureViews(IServiceCollection services);
 }
