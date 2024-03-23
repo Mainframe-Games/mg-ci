@@ -14,5 +14,6 @@
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     <PackageVersion Include="FluentAvaloniaUI" Version="2.0.5" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageVersion Include="Tomlyn" Version="0.17.0" />
   </ItemGroup>
 </Project>

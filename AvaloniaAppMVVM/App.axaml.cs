@@ -28,13 +28,12 @@ public partial class App : Application
             var services = new ServiceCollection();
             ConfigureViewModels(services);
             ConfigureViews(services);
-            var provider = services.BuildServiceProvider();
 
+            var provider = services.BuildServiceProvider();
             Ioc.Default.ConfigureServices(provider);
 
             var vm = Ioc.Default.GetService<MainWindowViewModel>();
-            var b = locator.Build(vm);
-            var view = (Window)b;
+            var view = (Window)locator.Build(vm);
             view.DataContext = vm;
 
             desktop.MainWindow = view;
@@ -44,11 +43,14 @@ public partial class App : Application
     }
 
     [Singleton(typeof(MainWindowViewModel))]
+    [Singleton(typeof(NewProjectWindowViewModel))]
+    [Singleton(typeof(SettingsWindowViewModel))]
     [Transient(typeof(HomePageViewModel))]
     [Transient(typeof(ButtonsPageViewModel))]
     internal static partial void ConfigureViewModels(IServiceCollection services);
 
     [Singleton(typeof(MainWindow))]
+    [Singleton(typeof(NewProjectWindow))]
     [Singleton(typeof(SettingsWindow))]
     [Transient(typeof(HomePageView))]
     [Transient(typeof(ButtonsPageView))]

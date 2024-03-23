@@ -21,12 +21,9 @@ public class ViewLocator : IDataTemplate
     public Control Build(object? data)
     {
         if (data is null)
-        {
             return new TextBlock { Text = "No VM provided" };
-        }
 
         _locator.TryGetValue(data.GetType(), out var factory);
-
         return factory?.Invoke() ?? new TextBlock { Text = $"VM Not Registered: {data.GetType()}" };
     }
 
@@ -42,4 +39,23 @@ public class ViewLocator : IDataTemplate
             typeof(TViewModel),
             Design.IsDesignMode ? Activator.CreateInstance<TView> : Ioc.Default.GetService<TView>
         );
+
+    public static ViewModelBase GetViewModel(Type type)
+    {
+        var vm = Design.IsDesignMode
+            ? Activator.CreateInstance(type)
+            : Ioc.Default.GetService(type);
+
+        return vm as ViewModelBase ?? throw new NullReferenceException();
+    }
+
+    public static T GetViewModel<T>()
+        where T : ViewModelBase
+    {
+        var instance = Design.IsDesignMode
+            ? Activator.CreateInstance<T>()
+            : Ioc.Default.GetService<T>();
+
+        return instance ?? throw new NullReferenceException();
+    }
 }

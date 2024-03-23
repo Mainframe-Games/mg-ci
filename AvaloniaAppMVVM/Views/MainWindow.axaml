@@ -20,7 +20,8 @@
         <!-- Title bar -->
         <Grid Grid.Row="0" Background="#444" Height="40" ColumnDefinitions="Auto, Auto, *, Auto, Auto">
             <!-- New Project Button -->
-            <Button Grid.Column="0" Width="40" ToolTip.Tip="New Project">
+            <Button Grid.Column="0" Width="40" ToolTip.Tip="New Project"
+                    Click="Button_NewProject_OnClick">
                 <PathIcon Data="{StaticResource FormNewRegular}"></PathIcon>
             </Button>
             
