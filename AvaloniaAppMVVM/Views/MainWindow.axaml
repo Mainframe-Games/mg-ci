@@ -1,0 +1,100 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AvaloniaAppMVVM.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="AvaloniaAppMVVM.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Deployment CI">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel />
+    </Design.DataContext>
+    
+    <Grid RowDefinitions="Auto, *, Auto">
+        
+        <!-- Title bar -->
+        <Grid Grid.Row="0" Background="#444" Height="40" ColumnDefinitions="Auto, Auto, *, Auto, Auto">
+            <!-- New Project Button -->
+            <Button Grid.Column="0" Width="40" ToolTip.Tip="New Project">
+                <PathIcon Data="{StaticResource FormNewRegular}"></PathIcon>
+            </Button>
+            
+            <!-- Open Project -->
+            <Button Grid.Column="2" Width="40" ToolTip.Tip="Open Project">
+                <PathIcon Data="{StaticResource FolderOpenRegular}"></PathIcon>
+            </Button>
+            
+            <!-- Title -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Grid.Column="2">
+                <Label FontWeight="Black">DEPLOYMENT</Label>
+                <Label>Dashboard</Label>
+            </StackPanel>
+            
+            <!-- Github Button -->
+            <Button Grid.Column="3" Width="40" ToolTip.Tip="Github">
+                <!-- TODO: add better github icon -->
+                <Image Width="20" Source="/Assets/github.png"></Image>
+            </Button>
+            
+            <!-- Settings Button -->
+            <Button Grid.Column="4" Width="40" ToolTip.Tip="Settings">
+                <PathIcon Data="{StaticResource SettingsRegular}" Width="14"></PathIcon>
+            </Button>
+        </Grid>
+        
+        <!-- Main Content -->
+        <SplitView Grid.Row="1" IsPaneOpen="{Binding IsPaneOpen}"
+                   OpenPaneLength="200"
+                   DisplayMode="CompactInline"
+                   CompactPaneLength="50"
+                   Background="#555"
+                   PaneBackground="#555">
+        
+            <!-- Side Bar -->
+            <SplitView.Pane>
+                <StackPanel Spacing="5" Margin="5">
+                    <Button Command="{Binding TogglePaneCommand}">
+                        <PathIcon Data="{StaticResource LineHorizontal3Regular}"></PathIcon>
+                    </Button>
+                    
+                    <ListBox ItemsSource="{Binding Items}" 
+                             SelectedItem="{Binding SelectedListItem}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:ListItemTemplate}">
+                                <StackPanel Spacing="15" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <PathIcon Data="{Binding Icon}" Width="15"></PathIcon>
+                                    <TextBlock Text="{Binding Label}"></TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    
+                </StackPanel>
+            </SplitView.Pane>
+
+            <!-- Content -->
+            <SplitView.Content>
+                <Border CornerRadius="12 0 0 0" Background="#333">
+
+                    <TransitioningContentControl Content="{Binding CurrentPage}">
+                    </TransitioningContentControl>
+
+                </Border>
+            </SplitView.Content>
+
+        </SplitView>
+        
+        <!-- Footer -->
+        <Grid Grid.Row="2" Background="#222">
+            <Label>Footer</Label>
+        </Grid>
+        
+    </Grid>
+
+</Window>
