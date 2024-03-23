@@ -1,7 +1,11 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
+using AvaloniaApp;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
@@ -44,6 +48,13 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
 
         CurrentPage = (ViewModelBase)instance;
+    }
+
+    [RelayCommand]
+    public void Button_Github_OnClick()
+    {
+        const string url = "https://github.com/Mainframe-Games/mg-ci";
+        Process.Start("explorer", url);
     }
 }
 

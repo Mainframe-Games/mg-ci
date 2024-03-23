@@ -25,7 +25,8 @@
             </Button>
             
             <!-- Open Project -->
-            <Button Grid.Column="2" Width="40" ToolTip.Tip="Open Project">
+            <Button Grid.Column="2" Width="40" ToolTip.Tip="Open Project"
+                    Click="Button_OpenProject_OnClick">
                 <PathIcon Data="{StaticResource FolderOpenRegular}"></PathIcon>
             </Button>
             
@@ -37,13 +38,15 @@
             </StackPanel>
             
             <!-- Github Button -->
-            <Button Grid.Column="3" Width="40" ToolTip.Tip="Github">
+            <Button Grid.Column="3" Width="40" ToolTip.Tip="Github"
+                    Command="{Binding Button_Github_OnClick}">
                 <!-- TODO: add better github icon -->
                 <Image Width="20" Source="/Assets/github.png"></Image>
             </Button>
             
             <!-- Settings Button -->
-            <Button Grid.Column="4" Width="40" ToolTip.Tip="Settings">
+            <Button Grid.Column="4" Width="40" ToolTip.Tip="Settings"
+                    Click="Button_Settings_OnClick">
                 <PathIcon Data="{StaticResource SettingsRegular}" Width="14"></PathIcon>
             </Button>
         </Grid>
@@ -59,17 +62,21 @@
             <!-- Side Bar -->
             <SplitView.Pane>
                 <StackPanel Spacing="5" Margin="5">
+                    
+                    <!-- Menu Button -->
                     <Button Command="{Binding TogglePaneCommand}">
                         <PathIcon Data="{StaticResource LineHorizontal3Regular}"></PathIcon>
                     </Button>
                     
-                    <ListBox ItemsSource="{Binding Items}" 
-                             SelectedItem="{Binding SelectedListItem}">
+                    <!-- List Box -->
+                    <ListBox Margin="-5 0 -100 0"
+                        ItemsSource="{Binding Items}" 
+                        SelectedItem="{Binding SelectedListItem}">
                         <ListBox.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:ListItemTemplate}">
-                                <StackPanel Spacing="15" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <PathIcon Data="{Binding Icon}" Width="15"></PathIcon>
-                                    <TextBlock Text="{Binding Label}"></TextBlock>
+                                <StackPanel Spacing="17" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <PathIcon Data="{Binding Icon}" Width="20"></PathIcon>
+                                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center"></TextBlock>
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

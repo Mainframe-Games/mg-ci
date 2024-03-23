@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using AvaloniaApp;
 using AvaloniaAppMVVM.ViewModels;
 using AvaloniaAppMVVM.Views;
 using CommunityToolkit.Extensions.DependencyInjection;
@@ -48,6 +49,7 @@ public partial class App : Application
     internal static partial void ConfigureViewModels(IServiceCollection services);
 
     [Singleton(typeof(MainWindow))]
+    [Singleton(typeof(SettingsWindow))]
     [Transient(typeof(HomePageView))]
     [Transient(typeof(ButtonsPageView))]
     internal static partial void ConfigureViews(IServiceCollection services);

@@ -12,8 +12,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Builds", "Builds\Builds.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DockerRunner", "DockerRunner\DockerRunner.csproj", "{29FE1BE2-79BC-4F55-A7E8-01EAB54FD5EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvaloniaApp", "AvaloniaApp\AvaloniaApp.csproj", "{038B30DC-99AA-4B04-9144-5BE4A28A9A32}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvaloniaAppMVVM", "AvaloniaAppMVVM\AvaloniaAppMVVM.csproj", "{4894B33D-44D4-48CA-8C95-D8D98206C695}"
 EndProject
 Global
@@ -46,10 +44,6 @@ Global
 		{29FE1BE2-79BC-4F55-A7E8-01EAB54FD5EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29FE1BE2-79BC-4F55-A7E8-01EAB54FD5EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29FE1BE2-79BC-4F55-A7E8-01EAB54FD5EB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{038B30DC-99AA-4B04-9144-5BE4A28A9A32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{038B30DC-99AA-4B04-9144-5BE4A28A9A32}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{038B30DC-99AA-4B04-9144-5BE4A28A9A32}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{038B30DC-99AA-4B04-9144-5BE4A28A9A32}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4894B33D-44D4-48CA-8C95-D8D98206C695}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4894B33D-44D4-48CA-8C95-D8D98206C695}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4894B33D-44D4-48CA-8C95-D8D98206C695}.Release|Any CPU.ActiveCfg = Release|Any CPU

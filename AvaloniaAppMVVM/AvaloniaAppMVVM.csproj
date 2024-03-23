@@ -29,4 +29,11 @@
         <AvaloniaResource Include="Assets\github.png" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="Views\SettingsWindow.axaml.cs">
+        <DependentUpon>SettingsWindow.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
+
 </Project>
