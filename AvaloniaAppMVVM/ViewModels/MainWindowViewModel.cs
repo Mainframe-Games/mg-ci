@@ -12,7 +12,8 @@ namespace AvaloniaAppMVVM.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    private readonly AppSettings _appSettings;
+    [ObservableProperty]
+    private AppSettings _appSettings;
 
     [ObservableProperty]
     private bool _isPaneOpen = true;
@@ -43,6 +44,8 @@ public partial class MainWindowViewModel : ViewModelBase
             new ListItemTemplate(typeof(HooksViewModel), "Hooks", "share_android_regular"),
         ];
 
+    public ObservableCollection<Project> ProjectOptions { get; } = [];
+
     public MainWindowViewModel()
     {
         // load settings
@@ -51,8 +54,12 @@ public partial class MainWindowViewModel : ViewModelBase
             ? Toml.ToModel<AppSettings>(File.ReadAllText("settings.toml"))
             : new AppSettings();
 
+        // load all projects
+        foreach (var path in _appSettings.LoadedProjectPaths)
+            ProjectOptions.Add(Project.Load(path));
+
         // load project
-        LoadProject(_appSettings.LastProjectLocation);
+        LoadCurrentProject(_appSettings.LastProjectLocation);
     }
 
     public void OnAppClose()
@@ -68,9 +75,26 @@ public partial class MainWindowViewModel : ViewModelBase
         Console.WriteLine("Saved settings");
     }
 
-    public void LoadProject(string? location)
+    public void LoadCurrentProject(string? location)
     {
+        if (string.IsNullOrEmpty(location))
+            return;
+
+        // return if already loaded
+        if (CurrentProject?.Location == location)
+            return;
+
+        // load project
         CurrentProject = Project.Load(location);
+
+        // add to combo box
+        if (!AppSettings.LoadedProjectPaths.Contains(location))
+            AppSettings.LoadedProjectPaths.Add(location);
+
+        if (!ProjectOptions.Contains(CurrentProject))
+            ProjectOptions.Add(CurrentProject);
+
+        SaveAppSettings();
     }
 
     [RelayCommand]

@@ -1,3 +1,10 @@
-﻿namespace AvaloniaAppMVVM.ViewModels;
+﻿using AvaloniaAppMVVM.Data;
+using CommunityToolkit.Mvvm.ComponentModel;
 
-public class HomePageViewModel : ViewModelBase { }
+namespace AvaloniaAppMVVM.ViewModels;
+
+public partial class HomePageViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private Project _project;
+}

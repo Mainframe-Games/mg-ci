@@ -1,5 +1,4 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.ViewModels;
@@ -9,8 +8,10 @@ namespace AvaloniaAppMVVM.Views;
 public abstract class MyUserControl<T> : UserControl
     where T : ViewModelBase
 {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     protected T _viewModel;
     protected Project _project;
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
     protected abstract void OnInit();
     protected abstract void OnPreSave();

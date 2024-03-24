@@ -19,7 +19,7 @@
             <TextBlock>Project Name</TextBlock>
             <TextBox Text="{Binding ProjectName}"/>
             
-            <TextBlock>Build Location</TextBlock>
+            <TextBlock>Location</TextBlock>
             <TextBlock Text="{Binding Location}"
                        Background="#333"/>
             

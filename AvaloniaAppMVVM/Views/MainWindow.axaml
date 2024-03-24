@@ -3,6 +3,7 @@
         xmlns:vm="using:AvaloniaAppMVVM.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:data="clr-namespace:AvaloniaAppMVVM.Data"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         Width="1000" Height="600"
         x:Class="AvaloniaAppMVVM.Views.MainWindow"
@@ -19,15 +20,29 @@
     <Grid RowDefinitions="Auto, *, Auto">
         
         <!-- Title bar -->
-        <Grid Grid.Row="0" Background="#444" Height="40" ColumnDefinitions="Auto, Auto, *, Auto, Auto">
-            <!-- New Project Button -->
-            <Button Grid.Column="0" Width="40" ToolTip.Tip="New Project"
-                    Click="Button_NewProject_OnClick">
-                <PathIcon Data="{StaticResource FormNewRegular}"></PathIcon>
-            </Button>
+        <Grid Grid.Row="0" Background="#444" Height="40"
+              ColumnDefinitions="Auto, Auto, *, Auto, Auto">
+            
+            <ComboBox Grid.Column="1"
+                      Name = "ProjectsComboBox"
+                      MinWidth="120" 
+                      Margin="5 0 0 0"
+                      SelectedIndex="0"
+                      VerticalAlignment="Center"
+                      HorizontalContentAlignment="Center"
+                      ItemsSource="{Binding ProjectOptions}"
+                      SelectedItem="{Binding CurrentProject}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type data:Project}">
+                        <StackPanel Spacing="17" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Settings.ProjectName}" VerticalAlignment="Center"></TextBlock>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
             
             <!-- Open Project -->
-            <Button Grid.Column="2" Width="40" ToolTip.Tip="Open Project"
+            <Button Grid.Column="0" Width="40" ToolTip.Tip="Open Project" Margin="5 0 0 0"
                     Click="Button_OpenProject_OnClick">
                 <PathIcon Data="{StaticResource FolderOpenRegular}"></PathIcon>
             </Button>
@@ -70,11 +85,6 @@
                         <Button Command="{Binding TogglePaneCommand}">
                             <PathIcon Data="{StaticResource LineHorizontal3Regular}"></PathIcon>
                         </Button>
-                        <Label Grid.Column="1"
-                               FontWeight="Bold"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               Content="{Binding CurrentProject.Settings.ProjectName}"></Label>
                     </Grid>
                     
                     <!-- List Box -->
