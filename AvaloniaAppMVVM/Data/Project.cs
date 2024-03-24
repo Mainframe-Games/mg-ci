@@ -79,7 +79,12 @@ public class ProjectSettings
     public string? LastSuccessfulBuild { get; set; }
 }
 
-public class Prebuild { }
+public class Prebuild
+{
+    public bool BuildNumberStandalone { get; set; }
+    public bool BuildNumberIphone { get; set; }
+    public bool AndroidVersionCode { get; set; }
+}
 
 public class BuildTargets { }
 
