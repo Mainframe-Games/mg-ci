@@ -83,7 +83,14 @@ public class Prebuild { }
 
 public class BuildTargets { }
 
-public class Deployment { }
+public class Deployment
+{
+    public List<string> SteamVdfs { get; set; } = [];
+    public bool AppleStore { get; set; }
+    public bool GoogleStore { get; set; }
+    public bool Clanforge { get; set; }
+    public bool AwsS3 { get; set; }
+}
 
 public class HookItemTemplate
 {

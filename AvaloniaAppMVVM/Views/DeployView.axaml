@@ -2,34 +2,44 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:AvaloniaAppMVVM.ViewModels"
+             xmlns:vm="clr-namespace:AvaloniaAppMVVM.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AvaloniaAppMVVM.Views.DeployView">
+             x:Class="AvaloniaAppMVVM.Views.DeployView"
+             x:DataType="vm:DeployViewModel">
     
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <viewModels:DeployViewModel />
+        <vm:DeployViewModel />
     </Design.DataContext>
     
     <ScrollViewer>
         <StackPanel Margin="20 0" Spacing="10">
             <TextBlock FontSize="25" FontWeight="Black">Deploy</TextBlock>
             
-            <TextBlock>Steam</TextBlock>
-            <ListBox>
-                <ListBoxItem>
-                    <TextBox Watermark="file://.vdf"/>
-                </ListBoxItem>
-                <ListBoxItem>
-                    <TextBox Watermark="file://.vdf"/>
-                </ListBoxItem>
-            </ListBox>
+            <Grid ColumnDefinitions="*, Auto">
+            <TextBlock FontSize="18" VerticalAlignment="Center">Steam</TextBlock>
+                <Button Grid.Column="1" Command="{Binding AddSteamVdf}">Add</Button>
+            </Grid>
+            <ItemsRepeater ItemsSource="{Binding SteamVdfs}">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="*, Auto">
+                            <TextBox Text="{Binding Value}" Margin="2"/>
+                            <Button Grid.Column="1" 
+                                    Background="Firebrick"
+                                    Click="Button_DeleteSteamVdf_OnClick">
+                                Delete
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
             
-            <CheckBox Content="AppleStore"></CheckBox>
-            <CheckBox Content="GoogleStore"></CheckBox>
-            <CheckBox Content="Clanforge"></CheckBox>
-            <CheckBox Content="AWS S3"></CheckBox>
+            <CheckBox Content="AppleStore" IsChecked="{Binding AppleStore}"></CheckBox>
+            <CheckBox Content="GoogleStore" IsChecked="{Binding GoogleStore}"></CheckBox>
+            <CheckBox Content="Clanforge" IsChecked="{Binding Clanforge}"></CheckBox>
+            <CheckBox Content="AWS S3" IsChecked="{Binding AwsS3}"></CheckBox>
             
         </StackPanel>
     </ScrollViewer>

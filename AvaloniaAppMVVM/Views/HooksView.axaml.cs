@@ -5,30 +5,26 @@ using AvaloniaAppMVVM.ViewModels;
 
 namespace AvaloniaAppMVVM.Views;
 
-public partial class HooksView : UserControl
+public partial class HooksView : MyUserControl<HooksViewModel>
 {
-    private HooksViewModel ViewModel => (HooksViewModel)DataContext;
-
-    private Project? _project;
-
     public HooksView()
     {
         InitializeComponent();
     }
 
-    protected override void OnLoaded(RoutedEventArgs e)
+    private void Button_Delete_OnClick(object? sender, RoutedEventArgs e)
     {
-        base.OnLoaded(e);
+        if (sender is Button { DataContext: HookItemTemplate item })
+            _viewModel.DeleteItem(item);
+    }
 
-        _project = ViewLocator.GetViewModel<MainWindowViewModel>().CurrentProject;
-        var hooks = _project?.Hooks;
-
-        if (hooks is null)
-            return;
+    protected override void OnInit()
+    {
+        var hooks = _project.Hooks;
 
         foreach (var hook in hooks)
         {
-            ViewModel.Items.Add(
+            _viewModel.Items.Add(
                 new HookItemTemplate
                 {
                     Title = hook.Title,
@@ -39,15 +35,10 @@ public partial class HooksView : UserControl
         }
     }
 
-    protected override void OnUnloaded(RoutedEventArgs e)
+    protected override void OnPreSave()
     {
-        base.OnUnloaded(e);
-
-        if (_project is null)
-            return;
-
         _project.Hooks.Clear();
-        foreach (var item in ViewModel.Items)
+        foreach (var item in _viewModel.Items)
         {
             _project.Hooks.Add(
                 new HookItemTemplate
@@ -57,16 +48,6 @@ public partial class HooksView : UserControl
                     IsErrorChannel = item.IsErrorChannel
                 }
             );
-        }
-
-        _project.Save();
-    }
-
-    private void Button_Delete_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is Button { DataContext: HookItemTemplate item })
-        {
-            ViewModel.DeleteItem(item);
         }
     }
 }

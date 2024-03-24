@@ -24,7 +24,7 @@
                 <Button Grid.Column="1" Command="{Binding NewHookCommand}">New Hook</Button>
             </Grid>
             
-            <ItemsRepeater Name="ItemsRepeater" ItemsSource="{Binding Items}">
+            <ItemsRepeater ItemsSource="{Binding Items}">
                 <ItemsRepeater.Layout>
                     <StackLayout Spacing="10"></StackLayout>
                 </ItemsRepeater.Layout>
@@ -38,17 +38,19 @@
                                         VerticalAlignment="Center">
                             
                                 <TextBlock>Title</TextBlock>
-                                <TextBox Text="{Binding Title}"></TextBox>
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBox Text="{Binding Title}"
+                                             Margin="0 0 5 0"></TextBox>
+                                    <Button Grid.Column="1" Background="Firebrick"
+                                            Click="Button_Delete_OnClick">Delete</Button>
+                                </Grid>
                             
                                 <TextBlock>Url</TextBlock>
                                 <TextBox Text="{Binding Url}"></TextBox>
                             
                                 <CheckBox Content="Is Error Channel" IsChecked="{Binding IsErrorChannel}"></CheckBox>
                             
-                                <Grid ColumnDefinitions="*, Auto">
-                                    <Button Grid.Column="1" Background="Firebrick"
-                                            Click="Button_Delete_OnClick">Delete</Button>
-                                </Grid>
+  
                             
                             </StackPanel>
                             
