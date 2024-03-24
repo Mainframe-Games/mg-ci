@@ -25,7 +25,7 @@ public class Project
 
     public ProjectSettings Settings { get; set; } = new();
     public Prebuild Prebuild { get; set; } = new();
-    public List<BuildTargetTemplate> BuildTargets { get; set; } = new();
+    public List<UnityBuildTarget> BuildTargets { get; set; } = new();
     public Deployment Deployment { get; set; } = new();
     public List<HookItemTemplate> Hooks { get; set; } = [];
 
@@ -48,7 +48,7 @@ public class Project
     {
         var toml = Toml.FromModel(this, new TomlModelOptions { IgnoreMissingProperties = true, });
         File.WriteAllText(Path.Combine(Location!, ".ci", "project.toml"), toml);
-        // Console.WriteLine($"Saved project: {Location}");
+        Console.WriteLine($"Saved project: {Location}\n{toml}");
     }
 }
 
@@ -89,11 +89,6 @@ public class Prebuild
     public bool BuildNumberStandalone { get; set; }
     public bool BuildNumberIphone { get; set; }
     public bool AndroidVersionCode { get; set; }
-}
-
-public class BuildTargetTemplate
-{
-    public string? Name { get; set; } = "New Build Target";
 }
 
 public class Deployment

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using AvaloniaAppMVVM.ViewModels;
 
 namespace AvaloniaAppMVVM.Data;
 
@@ -528,8 +529,10 @@ public class Unity
     }
 }
 
-public class UnityBuildTargetTemplate : BuildTargetTemplate
+public class UnityBuildTarget
 {
+    public string? Name { get; set; } = "New Build Target";
+
     // config
     public string? Extension { get; set; } = ".exe";
     public string? ProductName { get; set; }
@@ -540,7 +543,7 @@ public class UnityBuildTargetTemplate : BuildTargetTemplate
     public List<string> Scenes { get; set; } = [];
     public List<string> ExtraScriptingDefines { get; set; } = [];
     public List<string> AssetBundleManifestPath { get; set; } = [];
-    public Unity.BuildOptions BuildOptions { get; set; } = Unity.BuildOptions.None;
+    public int BuildOptions { get; set; } = (int)Unity.BuildOptions.None;
 
     [IgnoreDataMember]
     public ObservableCollection<string> ExtensionOptions { get; } =
@@ -561,4 +564,21 @@ public class UnityBuildTargetTemplate : BuildTargetTemplate
     [IgnoreDataMember]
     public ObservableCollection<string> BuildOptionOptions { get; } =
         new(Enum.GetNames(typeof(Unity.BuildOptions)));
+
+    public UnityBuildTarget() { }
+
+    // public UnityBuildTarget(UnityBuildTargetTemplate template)
+    // {
+    //     Name = template.Name;
+    //     Extension = template.Extension;
+    //     ProductName = template.ProductName;
+    //     Target = Enum.Parse<Unity.BuildTarget>(template.Target);
+    //     TargetGroup = Enum.Parse<Unity.BuildTargetGroup>(template.TargetGroup);
+    //     SubTarget = Enum.Parse<Unity.SubTarget>(template.SubTarget);
+    //     BuildPath = template.BuildPath;
+    //     Scenes = template.Scenes.Select(x => x.Value).ToList();
+    //     ExtraScriptingDefines = template.ExtraScriptingDefines.Select(x => x.Value).ToList();
+    //     AssetBundleManifestPath = template.AssetBundleManifestPath.Select(x => x.Value).ToList();
+    //     BuildOptions = template.BuildOptions;
+    // }
 }

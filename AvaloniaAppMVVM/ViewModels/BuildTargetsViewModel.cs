@@ -6,14 +6,8 @@ namespace AvaloniaAppMVVM.ViewModels;
 
 public partial class BuildTargetsViewModel : ViewModelBase
 {
-    [ObservableProperty]
-    private string? _name;
+    public ObservableCollection<UnityBuildTarget> BuildTargets { get; } = [];
 
     [ObservableProperty]
-    private string? _projectName;
-
-    public ObservableCollection<UnityBuildTargetTemplate> BuildTargets { get; } = [];
-
-    [ObservableProperty]
-    private UnityBuildTargetTemplate? _selectedBuildTarget;
+    private UnityBuildTarget? _selectedBuildTarget;
 }

@@ -1,5 +1,4 @@
-﻿using Avalonia.Controls;
-using Avalonia.Interactivity;
+﻿using Avalonia.Interactivity;
 using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.ViewModels;
 
@@ -15,57 +14,40 @@ public partial class BuildTargetsView : MyUserControl<BuildTargetsViewModel>
     protected override void OnInit()
     {
         foreach (var buildTarget in _project.BuildTargets)
-            _viewModel.BuildTargets.Add(buildTarget as UnityBuildTargetTemplate);
+            _viewModel.BuildTargets.Add(buildTarget);
     }
 
     protected override void OnPreSave()
     {
-        _project.BuildTargets = new List<BuildTargetTemplate>(_viewModel.BuildTargets);
+        _project.BuildTargets.Clear();
+        foreach (var template in _viewModel.BuildTargets)
+        {
+            _project.BuildTargets.Add(template);
+        }
     }
 
     private void Button_NewTarget_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is BuildTargetsViewModel vm)
-        {
-            vm.BuildTargets.Add(new UnityBuildTargetTemplate());
-        }
+        _viewModel.BuildTargets.Add(new UnityBuildTarget());
     }
 
     private void Button_AddScene_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is Button && DataContext is BuildTargetsViewModel vm)
-        {
-            vm.SelectedBuildTarget?.Scenes.Add("");
-        }
+        // _viewModel.SelectedBuildTarget?.Scenes.Add(new StringWrap(string.Empty));
     }
 
     private void Button_DeleteScene_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (
-            sender is Button { DataContext: string scene }
-            && DataContext is BuildTargetsViewModel vm
-        )
-        {
-            vm.SelectedBuildTarget?.Scenes.Remove(scene);
-        }
+        // _viewModel.SelectedBuildTarget?.Scenes.Remove(new StringWrap(string.Empty));
     }
 
     private void Button_AddExtraScriptingDefine_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is Button && DataContext is BuildTargetsViewModel vm)
-        {
-            vm.SelectedBuildTarget?.ExtraScriptingDefines.Add("");
-        }
+        // _viewModel.SelectedBuildTarget?.ExtraScriptingDefines.Add(new StringWrap(string.Empty));
     }
 
     private void Button_DeleteExtraScriptingDefine_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (
-            sender is Button { DataContext: string define }
-            && DataContext is BuildTargetsViewModel vm
-        )
-        {
-            vm.SelectedBuildTarget?.ExtraScriptingDefines.Remove(define);
-        }
+        // _viewModel.SelectedBuildTarget?.ExtraScriptingDefines.Remove(new StringWrap(string.Empty));
     }
 }

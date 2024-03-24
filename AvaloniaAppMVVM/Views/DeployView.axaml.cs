@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
+using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.ViewModels;
 
 namespace AvaloniaAppMVVM.Views;
@@ -13,7 +14,7 @@ public partial class DeployView : MyUserControl<DeployViewModel>
 
     private void Button_DeleteSteamVdf_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is not Button { DataContext: SteamVdf vdf })
+        if (sender is not Button { DataContext: StringWrap vdf })
             return;
 
         if (DataContext is DeployViewModel vm)
@@ -23,7 +24,7 @@ public partial class DeployView : MyUserControl<DeployViewModel>
     protected override void OnInit()
     {
         foreach (var steamVdf in _project.Deployment.SteamVdfs)
-            _viewModel.SteamVdfs.Add(new SteamVdf(steamVdf));
+            _viewModel.SteamVdfs.Add(new StringWrap(steamVdf));
 
         _viewModel.AppleStore = _project.Deployment.AppleStore;
         _viewModel.GoogleStore = _project.Deployment.GoogleStore;

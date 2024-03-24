@@ -25,7 +25,9 @@
                 </Button>
             </Grid>
             
-            <TabControl ItemsSource="{Binding BuildTargets}">
+            <TabControl 
+                ItemsSource="{Binding BuildTargets}"
+                SelectedItem="{Binding SelectedBuildTarget}">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Name}" />
@@ -33,7 +35,8 @@
                 </TabControl.ItemTemplate>
                 
                 <TabControl.ContentTemplate>
-                    <DataTemplate DataType="{x:Type data:UnityBuildTargetTemplate}">
+                    <DataTemplate DataType="{x:Type data:UnityBuildTarget}">
+                    <!-- <DataTemplate> -->
                         <ScrollViewer>
                             <StackPanel 
                                 Margin="10"
