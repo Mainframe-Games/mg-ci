@@ -71,7 +71,7 @@
                     </Button>
                     
                     <!-- List Box -->
-                    <ListBox Margin="-5 0 -100 0"
+                    <ListBox Margin="-5 0 -100 0" SelectionMode="AlwaysSelected"
                         ItemsSource="{Binding Items}" 
                         SelectedItem="{Binding SelectedListItem}">
                         <ListBox.ItemTemplate>

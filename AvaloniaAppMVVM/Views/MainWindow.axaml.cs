@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using AvaloniaApp;
+using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.ViewModels;
 using FluentAvalonia.UI.Windowing;
 using Tomlyn;
