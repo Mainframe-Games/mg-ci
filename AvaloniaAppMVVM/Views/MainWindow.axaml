@@ -66,14 +66,22 @@
                 <StackPanel Spacing="5" Margin="5">
                     
                     <!-- Menu Button -->
-                    <Button Command="{Binding TogglePaneCommand}">
-                        <PathIcon Data="{StaticResource LineHorizontal3Regular}"></PathIcon>
-                    </Button>
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Button Command="{Binding TogglePaneCommand}">
+                            <PathIcon Data="{StaticResource LineHorizontal3Regular}"></PathIcon>
+                        </Button>
+                        <Label Grid.Column="1"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Content="{Binding CurrentProject.Settings.ProjectName}"></Label>
+                    </Grid>
                     
                     <!-- List Box -->
-                    <ListBox Margin="-5 0 -100 0" SelectionMode="AlwaysSelected"
-                        ItemsSource="{Binding Items}" 
-                        SelectedItem="{Binding SelectedListItem}">
+                    <ListBox Margin="-5 0 -100 0" 
+                             SelectionMode="AlwaysSelected"
+                             ItemsSource="{Binding Items}" 
+                             SelectedItem="{Binding SelectedListItem}">
                         <ListBox.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:ListItemTemplate}">
                                 <StackPanel Spacing="17" Orientation="Horizontal" VerticalAlignment="Center" ToolTip.Tip="{Binding Label}">

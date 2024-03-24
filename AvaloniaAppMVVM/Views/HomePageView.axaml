@@ -11,5 +11,5 @@
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <viewModels:HomePageViewModel/>
     </Design.DataContext>
-    <TextBlock Margin="10 20">Home Page</TextBlock>
+    <TextBlock Margin="20 20">Home Page</TextBlock>
 </UserControl>

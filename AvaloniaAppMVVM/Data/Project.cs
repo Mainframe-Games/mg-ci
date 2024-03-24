@@ -25,7 +25,7 @@ public class Project
 
     public ProjectSettings Settings { get; set; } = new();
     public Prebuild Prebuild { get; set; } = new();
-    public BuildTargets BuildTargets { get; set; } = new();
+    public List<BuildTargetTemplate> BuildTargets { get; set; } = new();
     public Deployment Deployment { get; set; } = new();
     public List<HookItemTemplate> Hooks { get; set; } = [];
 
@@ -91,7 +91,10 @@ public class Prebuild
     public bool AndroidVersionCode { get; set; }
 }
 
-public class BuildTargets { }
+public class BuildTargetTemplate
+{
+    public string? Name { get; set; } = "New Build Target";
+}
 
 public class Deployment
 {

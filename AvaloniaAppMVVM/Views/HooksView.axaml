@@ -17,7 +17,7 @@
     
     <ScrollViewer>
         
-        <StackPanel Margin="20 0" Spacing="10">
+        <StackPanel Margin="20 20" Spacing="10">
             <TextBlock FontSize="25" FontWeight="Black">Hooks</TextBlock>
             
             <Grid ColumnDefinitions="*, Auto">

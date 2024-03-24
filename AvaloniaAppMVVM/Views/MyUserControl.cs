@@ -18,13 +18,8 @@ public abstract class MyUserControl<T> : UserControl
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-
         _viewModel = DataContext as T ?? throw new NullReferenceException();
-
-        _project =
-            ViewLocator.GetViewModel<MainWindowViewModel>().CurrentProject
-            ?? throw new NullReferenceException();
-
+        _project = ViewLocator.GetViewModel<MainWindowViewModel>().CurrentProject ?? new Project();
         OnInit();
     }
 
