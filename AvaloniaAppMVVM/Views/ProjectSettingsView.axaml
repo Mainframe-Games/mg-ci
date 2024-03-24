@@ -4,7 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:AvaloniaAppMVVM.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AvaloniaAppMVVM.Views.ProjectSettingsView">
+             x:Class="AvaloniaAppMVVM.Views.ProjectSettingsView"
+             x:DataType="viewModels:ProjectSettingsViewModel">
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
@@ -12,35 +13,41 @@
     </Design.DataContext>
 
     <ScrollViewer>
-        <StackPanel Margin="20 0" Spacing="10">
+        <StackPanel Margin="20 20" Spacing="10">
             <TextBlock FontSize="25" FontWeight="Black">Project Settings</TextBlock>
             
             <TextBlock>Project Name</TextBlock>
-            <TextBox Watermark="Project"/>
+            <TextBox Text="{Binding ProjectName}"/>
+            
+            <TextBlock>Build Location</TextBlock>
+            <TextBlock Text="{Binding Location}"
+                       Background="#333"/>
             
             <TextBlock>Version control</TextBlock>
-            <ComboBox SelectedIndex="0">
-                <ComboBoxItem>Git</ComboBoxItem>
-                <ComboBoxItem>Plastic SCM</ComboBoxItem>
+            <ComboBox SelectedIndex="0"
+                      ItemsSource="{Binding VersionControlOptions}"
+                      SelectedItem="{Binding VersionControl}">
             </ComboBox>
             
             <TextBlock>Game Engine</TextBlock>
-            <ComboBox SelectedIndex="0">
-                <ComboBoxItem>Unity</ComboBoxItem>
-                <ComboBoxItem>Godot</ComboBoxItem>
+            <ComboBox SelectedIndex="0"
+                      ItemsSource="{Binding GameEngineOptions}"
+                      SelectedItem="{Binding GameEngine}">
             </ComboBox>
             
-            <!-- Meta Data -->
+            <Line Height="20"></Line>
             
+            <!-- Meta Data -->
             <TextBlock FontSize="18" FontWeight="Black">Meta Data</TextBlock>
             <TextBlock>Store Url</TextBlock>
-            <TextBox Watermark="https://"/>
+            <TextBox Text="{Binding StoreUrl}"/>
             
             <TextBlock>Thumbnail Url</TextBlock>
-            <TextBox Watermark="https://"/>
+            <TextBox Text="{Binding StoreThumbnailUrl}"/>
             
             <TextBlock>Last Successful Build</TextBlock>
-            <TextBlock Text="0"/>
+            <TextBlock Text="{Binding LastSuccessfulBuild}"
+                       Background="#333"/>
             
         </StackPanel>
     </ScrollViewer>

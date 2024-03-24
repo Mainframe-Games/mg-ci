@@ -1,4 +1,3 @@
-using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using AvaloniaApp;
@@ -20,12 +19,6 @@ public partial class MainWindow : AppWindow
         // TitleBar.ExtendsContentIntoTitleBar = true;
         // TitleBar.TitleBarHitTestType = TitleBarHitTestType.Complex;
         // SplashScreen = new ComplexSplashScreen();
-    }
-
-    protected override void OnResized(WindowResizedEventArgs e)
-    {
-        base.OnResized(e);
-        Console.WriteLine($"Window Resized: {e.ClientSize}");
     }
 
     protected override void OnClosed(EventArgs e)
@@ -92,10 +85,10 @@ public partial class MainWindow : AppWindow
 
         var project = new Project
         {
-            Name = rootDir.Name,
             Location = rootDir.FullName,
             Settings = new ProjectSettings
             {
+                ProjectName = rootDir.Name,
                 VersionControl = VersionControlType.Git,
                 GameEngine = GameEngineType.Unity,
             }

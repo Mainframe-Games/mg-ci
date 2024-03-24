@@ -1,4 +1,5 @@
-﻿using Tomlyn;
+﻿using System.Runtime.Serialization;
+using Tomlyn;
 
 namespace AvaloniaAppMVVM.Data;
 
@@ -19,8 +20,9 @@ public enum GameEngineType
 /// </summary>
 public class Project
 {
-    public string? Name { get; set; }
-    public string? Location { get; set; }
+    [IgnoreDataMember]
+    public string? Location { get; set; } = "C:\\";
+
     public ProjectSettings Settings { get; set; } = new();
     public Prebuild Prebuild { get; set; } = new();
     public BuildTargets BuildTargets { get; set; } = new();
@@ -37,6 +39,7 @@ public class Project
             toml,
             options: new TomlModelOptions { IgnoreMissingProperties = true }
         );
+        proj.Location = location;
         Console.WriteLine($"Loading project: {proj.Location}");
         return proj;
     }
@@ -45,12 +48,14 @@ public class Project
     {
         var toml = Toml.FromModel(this, new TomlModelOptions { IgnoreMissingProperties = true, });
         File.WriteAllText(Path.Combine(Location!, ".ci", "project.toml"), toml);
-        Console.WriteLine($"Saved project: {Location}");
+        // Console.WriteLine($"Saved project: {Location}");
     }
 }
 
 public class ProjectSettings
 {
+    public string? ProjectName { get; set; } = "Project";
+
     /// <summary>
     /// The version control system used for the project
     /// </summary>
@@ -64,19 +69,19 @@ public class ProjectSettings
     /// <summary>
     /// URL to game page
     /// </summary>
-    public string? Url { get; set; }
+    public string? StoreUrl { get; set; } = "https://";
 
     /// <summary>
     /// Thumbnail image for page
     /// </summary>
-    public string? Thumbnail { get; set; }
+    public string? StoreThumbnailUrl { get; set; } = "https://";
 
     /// <summary>
     /// Plastic: Changeset ID of last successful build
     /// <para></para>
     /// Git: Sha of last successful build
     /// </summary>
-    public string? LastSuccessfulBuild { get; set; }
+    public string? LastSuccessfulBuild { get; set; } = "0";
 }
 
 public class Prebuild
