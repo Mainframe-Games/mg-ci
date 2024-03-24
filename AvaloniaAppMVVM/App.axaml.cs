@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using AvaloniaApp;
 using AvaloniaAppMVVM.ViewModels;
 using AvaloniaAppMVVM.Views;
 using CommunityToolkit.Extensions.DependencyInjection;
@@ -43,8 +42,6 @@ public partial class App : Application
     }
 
     [Singleton(typeof(MainWindowViewModel))]
-    [Singleton(typeof(NewProjectWindowViewModel))]
-    [Singleton(typeof(SettingsWindowViewModel))]
     [Transient(typeof(HomePageViewModel))]
     [Transient(typeof(ProjectSettingsViewModel))]
     [Transient(typeof(PrebuildViewModel))]
@@ -54,8 +51,6 @@ public partial class App : Application
     internal static partial void ConfigureViewModels(IServiceCollection services);
 
     [Singleton(typeof(MainWindow))]
-    [Singleton(typeof(NewProjectWindow))]
-    [Singleton(typeof(SettingsWindow))]
     [Transient(typeof(HomePageView))]
     [Transient(typeof(ProjectSettingsView))]
     [Transient(typeof(PrebuildView))]

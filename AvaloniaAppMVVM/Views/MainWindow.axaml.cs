@@ -1,6 +1,5 @@
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using AvaloniaApp;
 using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.ViewModels;
 using FluentAvalonia.UI.Windowing;
@@ -27,11 +26,7 @@ public partial class MainWindow : AppWindow
         ViewModel.OnAppClose();
     }
 
-    public void Button_Settings_OnClick(object? sender, RoutedEventArgs e)
-    {
-        var settingsWindow = new SettingsWindow();
-        settingsWindow.Show(this);
-    }
+    public void Button_Settings_OnClick(object? sender, RoutedEventArgs e) { }
 
     private async void Button_OpenProject_OnClick(object? sender, RoutedEventArgs e)
     {
