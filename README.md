@@ -1,13 +1,18 @@
 ## ⚠️ This project is under active development. Use with care. ⚠️
  
- # Unity Build and Deployment Server
+# Build and Deployment Server
 
-## Projects
+![](img/gui-client.png)
 
-- [Deployment](Deployment/README.md): Builds and deploys Unity projects.
-- [Server](Server/README.md): Builds and deploys Unity projects.
+# Project Contents
+
+This project is a collection of tools for managing builds and deployments of Unity and Godot projects. It is designed to be used with Unity and Godot projects that are built for multiple platforms and require automated deployment to storefronts.
+
+- [AvaloniaAppMVVM](AvaloniaAppMVVM/README.md): Gui for managing builds and deployments.
+- [Deployment](Deployment/README.md): Deploys artifacts to storefronts (Steam, Itch.io, Google Play Store, Apple Store)
+- [Server](Server/README.md): Web socket server for conducting builds and deployments.
 - [DiscordBot](DiscordBot/README.md): For triggering builds from discord.
-- [BuildSystem](Unity/BuildSystem/README.md): Unity Package for build script and platform configs
+- [Unity Package](Unity/BuildSystem/README.md): Unity Package for build script and platform configs
 
 # Setup Guide
 
