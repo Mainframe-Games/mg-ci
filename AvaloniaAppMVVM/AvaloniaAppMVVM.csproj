@@ -25,6 +25,7 @@
         <PackageReference Include="LoadingIndicators.Avalonia" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
         <PackageReference Include="Tomlyn" />
+        <PackageReference Include="WebSocketSharp" />
     </ItemGroup>
 
     <ItemGroup>

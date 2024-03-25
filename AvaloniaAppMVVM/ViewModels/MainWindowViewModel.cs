@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using AvaloniaAppMVVM.Data;
+using AvaloniaAppMVVM.WebClient;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Tomlyn;
@@ -26,6 +27,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private Project? _currentProject = new();
+
+    private readonly Client _client = new();
 
     /// <summary>
     /// Get icons from: https://avaloniaui.github.io/icons.html
