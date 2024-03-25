@@ -34,42 +34,16 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     public ObservableCollection<ListItemTemplate> Items { get; } =
         [
-            new ListItemTemplate(
-                typeof(HomePageViewModel),
-                typeof(HomePageView),
-                "Home",
-                "home_regular"
-            ),
+            new ListItemTemplate(typeof(HomePageViewModel), "Home", "home_regular"),
             new ListItemTemplate(
                 typeof(ProjectSettingsViewModel),
-                typeof(ProjectSettingsView),
                 "Project Settings",
                 "edit_settings_regular"
             ),
-            new ListItemTemplate(
-                typeof(PrebuildViewModel),
-                typeof(PrebuildView),
-                "Pre Build",
-                "app_generic_regular"
-            ),
-            new ListItemTemplate(
-                typeof(BuildTargetsViewModel),
-                typeof(BuildTargetsView),
-                "Build Targets",
-                "target_regular"
-            ),
-            new ListItemTemplate(
-                typeof(DeployViewModel),
-                typeof(DeployView),
-                "Deploy",
-                "rocket_regular"
-            ),
-            new ListItemTemplate(
-                typeof(HooksViewModel),
-                typeof(HooksView),
-                "Hooks",
-                "share_android_regular"
-            ),
+            new ListItemTemplate(typeof(PrebuildViewModel), "Pre Build", "app_generic_regular"),
+            new ListItemTemplate(typeof(BuildTargetsViewModel), "Build Targets", "target_regular"),
+            new ListItemTemplate(typeof(DeployViewModel), "Deploy", "rocket_regular"),
+            new ListItemTemplate(typeof(HooksViewModel), "Hooks", "share_android_regular"),
         ];
 
     public MainWindowViewModel()
@@ -160,13 +134,11 @@ public class ListItemTemplate
 {
     public string Label { get; set; }
     public Type ModelType { get; set; }
-    public Type ViewType { get; set; }
     public StreamGeometry Icon { get; set; }
 
-    public ListItemTemplate(Type modelType, Type viewType, string label, string iconKey)
+    public ListItemTemplate(Type modelType, string label, string iconKey)
     {
         ModelType = modelType;
-        ViewType = viewType;
         Label = label;
 
         Application.Current!.TryGetResource(iconKey, out var res);
