@@ -1,12 +1,20 @@
 <Project>
-    <PropertyGroup>
-        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-        <TargetFramework>net8.0</TargetFramework>
-        <LangVersion>12</LangVersion>
-        <Authors>brogan89</Authors>
-        <Company>Mainframe Games</Company>
-        <RepositoryUrl>https://github.com/Mainframe-Games/UnityDeployment</RepositoryUrl>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <Authors>brogan89</Authors>
+    <Company>Mainframe Games</Company>
+    <RepositoryUrl>https://github.com/Mainframe-Games/UnityDeployment</RepositoryUrl>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="CommunityToolkit.Labs.Extensions.DependencyInjection" Version="0.1.240305-build.1659" />
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageVersion Include="FluentAvaloniaUI" Version="2.0.5" />
+    <PackageVersion Include="LoadingIndicators.Avalonia" Version="11.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageVersion Include="Tomlyn" Version="0.17.0" />
+  </ItemGroup>
 </Project>

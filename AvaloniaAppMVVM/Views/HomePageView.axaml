@@ -1,0 +1,105 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:AvaloniaAppMVVM.ViewModels"
+             xmlns:avalonia="clr-namespace:LoadingIndicators.Avalonia;assembly=LoadingIndicators.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AvaloniaAppMVVM.Views.HomePageView"
+             x:DataType="viewModels:HomePageViewModel">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <viewModels:HomePageViewModel />
+    </Design.DataContext>
+
+    <ScrollViewer>
+        <StackPanel>
+            
+            <Label
+                FontWeight="Bold"
+                FontSize="40"
+                Margin="10 20 0 0"
+                Content="{Binding Project.Settings.ProjectName}">
+            </Label>
+
+            <Button Content="Start Build"
+                    CornerRadius=" 10"
+                    Background="DarkGreen"
+                    Width="100"
+                    Height="40"
+                    Margin="10 10 0 10"
+                    Command="{Binding OpenStoreLinkCommand}"
+                    ToolTip.Tip="{Binding Project.Settings.StoreUrl}">
+            </Button>
+
+            <Border CornerRadius="10" ClipToBounds="True" Width="300">
+                <Image Source="{Binding ImageSourceBitmapWeb}"
+                       MaxWidth="300"
+                       HorizontalAlignment="Center" />
+            </Border>
+
+            <ItemsRepeater ItemsSource="{Binding Processes}">
+                <ItemsRepeater.Layout>
+                    <StackLayout Spacing="10"></StackLayout>
+                </ItemsRepeater.Layout>
+
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate>
+
+                        <Expander VerticalAlignment="Top"
+                                  Margin=" 10 0 10 0"
+                                  CornerRadius="15">
+                            <Expander.Header>
+
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <avalonia:LoadingIndicator
+                                        Grid.Column="0"
+                                        Margin="0 0 0 0"
+                                        IsActive="{Binding IsBusy}"
+                                        Mode="Arc"
+                                        SpeedRatio="1.2"/>
+                                    
+                                    <avalonia:LoadingIndicator
+                                        Grid.Column="0"
+                                        IsActive="{Binding IsQueued}"
+                                        Mode="ThreeDots"
+                                        SpeedRatio="0"/>
+                                    
+                                    <PathIcon Grid.Column="0"
+                                        Foreground="Green"
+                                        Data="{StaticResource checkmark_regular}"
+                                        IsVisible="{Binding Succeeded}"/>
+                                    
+                                    <PathIcon Grid.Column="0"
+                                              Foreground="Red"
+                                              Data="{StaticResource error_circle_regular}"
+                                              IsVisible="{Binding Failed}"/>
+                                    
+                                    <TextBlock Grid.Column="1" 
+                                               Text="{Binding Id}"
+                                               Margin="30 0 0 0"
+                                               FontSize="20"
+                                               FontWeight="Black"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+
+                            </Expander.Header>
+                            
+                            <ScrollViewer>
+                                
+                                <TextBox Text="{Binding Logs}" 
+                                         IsReadOnly="True"
+                                         MaxHeight="500"/>
+                                
+                            </ScrollViewer>
+                            
+                        </Expander>
+
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

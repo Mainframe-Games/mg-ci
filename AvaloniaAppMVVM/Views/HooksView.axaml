@@ -1,0 +1,64 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:AvaloniaAppMVVM.ViewModels"
+             xmlns:data="clr-namespace:AvaloniaAppMVVM.Data"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AvaloniaAppMVVM.Views.HooksView"
+             x:DataType="vm:HooksViewModel"
+             >
+    
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:HooksViewModel />
+    </Design.DataContext>
+    
+    <ScrollViewer>
+        
+        <StackPanel Margin="20 20" Spacing="10">
+            <TextBlock FontSize="25" FontWeight="Black">Hooks</TextBlock>
+            
+            <Grid ColumnDefinitions="*, Auto">
+                <Button Grid.Column="1" Command="{Binding NewHookCommand}">New Hook</Button>
+            </Grid>
+            
+            <ItemsRepeater ItemsSource="{Binding Items}">
+                <ItemsRepeater.Layout>
+                    <StackLayout Spacing="10"></StackLayout>
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="{x:Type data:HookItemTemplate}">
+                        <Border Background="#333" 
+                                CornerRadius="10">
+                            
+                            <StackPanel Spacing="10"
+                                        Margin="10"
+                                        VerticalAlignment="Center">
+                            
+                                <TextBlock>Title</TextBlock>
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBox Text="{Binding Title}"
+                                             Margin="0 0 5 0"></TextBox>
+                                    <Button Grid.Column="1" Background="Firebrick"
+                                            Click="Button_Delete_OnClick">Delete</Button>
+                                </Grid>
+                            
+                                <TextBlock>Url</TextBlock>
+                                <TextBox Text="{Binding Url}"></TextBox>
+                            
+                                <CheckBox Content="Is Error Channel" IsChecked="{Binding IsErrorChannel}"></CheckBox>
+                            
+  
+                            
+                            </StackPanel>
+                            
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+            
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
