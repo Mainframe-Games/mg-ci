@@ -2,7 +2,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
-using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaAppMVVM.Data;
@@ -13,7 +12,95 @@ namespace AvaloniaAppMVVM.Views;
 
 public class ProcessesTemplate
 {
-    public IProcess Process { get; set; }
+    public ProcessesTemplate(IProcess process)
+    {
+        Process = process;
+    }
+
+    public string? Id => Process.Id;
+    public IProcess Process { get; }
+    public Expander Expander { get; set; }
+
+    // controls
+    public LoadingIndicator BusyIndicator { get; set; }
+    public LoadingIndicator QueuedIndicator { get; set; }
+    public PathIcon SuccessIcon { get; set; }
+    public PathIcon FailedIcon { get; set; }
+    public TextBox LogText { get; set; }
+    public TextBlock TimeText { get; set; }
+
+    public bool IsBusy
+    {
+        get => Process.IsBusy;
+        set
+        {
+            Process.IsBusy = value;
+            BusyIndicator.IsVisible = value;
+        }
+    }
+
+    public bool IsQueued
+    {
+        get => Process.IsQueued;
+        set
+        {
+            Process.IsQueued = value;
+            QueuedIndicator.IsVisible = value;
+        }
+    }
+
+    public bool Succeeded
+    {
+        get => Process.Succeeded;
+        set
+        {
+            Process.Succeeded = value;
+            SuccessIcon.IsVisible = value;
+        }
+    }
+
+    public bool Failed
+    {
+        get => Process.Failed;
+        set
+        {
+            Process.Failed = value;
+            FailedIcon.IsVisible = value;
+        }
+    }
+
+    public string? Logs
+    {
+        get => Process.Logs;
+        set
+        {
+            Process.Logs = value;
+            LogText.Text = value;
+        }
+    }
+
+    public string? Time
+    {
+        get => Process.TotalTime;
+        set
+        {
+            Process.TotalTime = value;
+            TimeText.Text = value;
+        }
+    }
+}
+
+public class Icons
+{
+    public static Geometry Checkmark =>
+        Application.Current!.TryGetResource("checkmark_regular", out var res)
+            ? (Geometry)res
+            : null;
+
+    public static Geometry Error =>
+        Application.Current!.TryGetResource("error_circle_regular", out var res)
+            ? (Geometry)res
+            : null;
 }
 
 public partial class HomePageView : MyUserControl<HomePageViewModel>
@@ -22,21 +109,21 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 
     private readonly List<ProcessesTemplate> _processes =
     [
-        new ProcessesTemplate { Process = new CiProcess { Id = "PreBuild" } },
-        new ProcessesTemplate { Process = new CiProcess { Id = "Build" } },
-        new ProcessesTemplate { Process = new CiProcess { Id = "Deploy" } },
-        new ProcessesTemplate { Process = new CiProcess { Id = "Hooks" } }
+        new ProcessesTemplate(new CiProcess { Id = "PreBuild" }),
+        new ProcessesTemplate(new CiProcess { Id = "Build" }),
+        new ProcessesTemplate(new CiProcess { Id = "Deploy" }),
+        new ProcessesTemplate(new CiProcess { Id = "Hooks" })
     ];
 
     public HomePageView()
     {
         InitializeComponent();
+        BuildView();
     }
 
     protected override void OnInit()
     {
         _viewModel.Project = _project;
-        BuildView();
     }
 
     protected override void OnPreSave() { }
@@ -45,78 +132,82 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 
     private void BuildView()
     {
-        var g = new Grid();
-        g.ColumnDefinitions = new ColumnDefinitions("Auto *");
         for (var i = 0; i < _processes.Count; i++)
         {
             var process = _processes[i];
+            process.LogText = new TextBox
+            {
+                Name = $"{process.Id}_Log",
+                Text = string.Empty,
+                IsReadOnly = true,
+                MaxHeight = 500,
+            };
             var expander = new Expander
             {
-                Name = $"ProcessExpander_{i}",
+                Name = $"{process.Id}_Expander",
                 VerticalAlignment = VerticalAlignment.Top,
                 Margin = new Thickness(0, 10, 0, 0),
                 CornerRadius = new CornerRadius(15),
-                Header = BuildGridHeader(process, i),
-                Content = new TextBox
-                {
-                    Name = $"Logs_{i}",
-                    Text = "Logs...",
-                    IsReadOnly = true,
-                    MaxHeight = 500,
-                }
+                Header = BuildGridHeader(process),
+                Content = process.LogText
             };
 
             ProcessContainer.Children.Add(expander);
+            process.Expander = expander;
         }
     }
 
-    private Grid BuildGridHeader(ProcessesTemplate process, int i)
+    private static Grid BuildGridHeader(ProcessesTemplate process)
     {
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto *") };
 
         // Icons
         // busy
-        grid.Children.Add(
-            new LoadingIndicator
-            {
-                Mode = LoadingIndicatorMode.Arc,
-                SpeedRatio = 1.2,
-                IsVisible = false
-            }
-        );
-        // queued
-        grid.Children.Add(
-            new LoadingIndicator
-            {
-                Mode = LoadingIndicatorMode.ThreeDots,
-                SpeedRatio = 0,
-                IsVisible = false
-            }
-        );
-        // success
-        grid.Children.Add(
-            new PathIcon
-            {
-                Foreground = Brushes.Green,
-                Data = (Geometry)Application.Current!.Resources["checkmark_regular"]!,
-                IsVisible = true
-            }
-        );
-        //failed
-        grid.Children.Add(
-            new PathIcon
-            {
-                Foreground = Brushes.Green,
-                Data = (Geometry)Application.Current!.Resources["error_circle_regular"]!,
-                IsVisible = true
-            }
-        );
+        process.BusyIndicator = new LoadingIndicator
+        {
+            Name = $"{process.Id}_BusyIndicator",
+            Mode = LoadingIndicatorMode.Arc,
+            SpeedRatio = 1.2,
+            IsVisible = false
+        };
+        grid.Children.Add(process.BusyIndicator);
 
-        // Text
+        // queued
+        process.QueuedIndicator = new LoadingIndicator
+        {
+            Name = $"{process.Id}_QueuedIndicator",
+            Mode = LoadingIndicatorMode.ThreeDots,
+            SpeedRatio = 0,
+            IsVisible = false
+        };
+        grid.Children.Add(process.QueuedIndicator);
+
+        // success
+        process.SuccessIcon = new PathIcon
+        {
+            Name = $"{process.Id}_SuccessIcon",
+            Foreground = Brushes.Green,
+            Data = Icons.Checkmark,
+            IsVisible = false
+        };
+        grid.Children.Add(process.SuccessIcon);
+
+        // failed
+        process.FailedIcon = new PathIcon
+        {
+            Name = $"{process.Id}_FailedIcon",
+            Foreground = Brushes.Firebrick,
+            Data = Icons.Error,
+            IsVisible = false
+        };
+        grid.Children.Add(process.FailedIcon);
+
+        // Label text
         var textStack = new StackPanel { Orientation = Orientation.Horizontal };
         textStack.Children.Add(
             new TextBlock
             {
+                Name = $"{process.Id}_Label",
                 Text = process.Process.Id,
                 Margin = new Thickness(30, 0, 0, 0),
                 FontSize = 20,
@@ -124,15 +215,17 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
                 VerticalAlignment = VerticalAlignment.Center
             }
         );
-        textStack.Children.Add(
-            new TextBlock
-            {
-                Text = process.Process.TotalTime,
-                Margin = new Thickness(30, 0, 0, 0),
-                FontSize = 12,
-                VerticalAlignment = VerticalAlignment.Center
-            }
-        );
+        // time text
+        process.TimeText = new TextBlock
+        {
+            Name = $"{process.Id}_Time",
+            Text = process.Process.TotalTime,
+            Margin = new Thickness(30, 0, 0, 0),
+            FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        textStack.Children.Add(process.TimeText);
+
         grid.Children.Add(textStack);
         Grid.SetColumn(textStack, 1);
 
@@ -159,7 +252,7 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
     private void RefreshProcesses()
     {
         // refresh processes
-        foreach (var process in _viewModel.Processes)
+        foreach (var process in _processes)
         {
             process.IsQueued = false;
             process.Failed = false;
@@ -178,7 +271,7 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
         RefreshProcesses();
 
         // do builds
-        foreach (var process in _viewModel.Processes)
+        foreach (var process in _processes)
         {
             process.IsBusy = true;
             var startTime = DateTime.Now;
@@ -194,6 +287,7 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 
             process.IsBusy = false;
             process.Succeeded = true;
+            process.Time = $@"{DateTime.Now - startTime:hh\:mm\:ss}";
         }
 
         Console.WriteLine("Done");

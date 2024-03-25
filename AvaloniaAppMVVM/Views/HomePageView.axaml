@@ -52,76 +52,7 @@
 
             <!-- Processes -->
             <StackPanel Name="ProcessContainer" Margin="10"/>
-            
-            <!-- <ItemsControl -->
-            <!--     Name="ProcessesRepeater" -->
-            <!--     ItemsSource="{Binding Processes}"> -->
-            <!--      -->
-            <!--     <ItemsControl.ItemTemplate> -->
-            <!--         <DataTemplate> -->
-            <!-- -->
-            <!--             <Expander -->
-            <!--                 VerticalAlignment="Top" -->
-            <!--                       Margin=" 10 0 10 0" -->
-            <!--                       CornerRadius="15"> -->
-            <!--                 <Expander.Header> -->
-            <!--                     <Grid ColumnDefinitions="Auto, *"> -->
-            <!--                         <avalonia:LoadingIndicator -->
-            <!--                             Grid.Column="0" -->
-            <!--                             Margin="0 0 0 0" -->
-            <!--                             IsActive="{Binding IsBusy}" -->
-            <!--                             Mode="Arc" -->
-            <!--                             SpeedRatio="1.2"/> -->
-            <!--                          -->
-            <!--                         <avalonia:LoadingIndicator -->
-            <!--                             Grid.Column="0" -->
-            <!--                             IsActive="{Binding IsQueued}" -->
-            <!--                             Mode="ThreeDots" -->
-            <!--                             SpeedRatio="0"/> -->
-            <!--                          -->
-            <!--                         <PathIcon Grid.Column="0" -->
-            <!--                             Foreground="Green" -->
-            <!--                             Data="{StaticResource checkmark_regular}" -->
-            <!--                             IsVisible="{Binding Succeeded}"/> -->
-            <!--                          -->
-            <!--                         <PathIcon Grid.Column="0" -->
-            <!--                                   Foreground="Red" -->
-            <!--                                   Data="{StaticResource error_circle_regular}" -->
-            <!--                                   IsVisible="{Binding Failed}"/> -->
-            <!--                          -->
-            <!--                         <Grid Grid.Column="1" ColumnDefinitions="Auto *"> -->
-            <!--                             <TextBlock Grid.Column="0" -->
-            <!--                                        Text="{Binding Id}" -->
-            <!--                                        Margin="30 0 0 0" -->
-            <!--                                        FontSize="20" -->
-            <!--                                        FontWeight="Black" -->
-            <!--                                        VerticalAlignment="Center"/> -->
-            <!--                              -->
-            <!--                             <TextBlock Grid.Column="1" -->
-            <!--                                        Name="TotalTime" -->
-            <!--                                        Text="{Binding TotalTime}" -->
-            <!--                                        Margin="30 0 0 0" -->
-            <!--                                        FontSize="12" -->
-            <!--                                        VerticalAlignment="Center"> -->
-            <!--                             </TextBlock> -->
-            <!--                         </Grid> -->
-            <!--                     </Grid> -->
-            <!-- -->
-            <!--                 </Expander.Header> -->
-            <!--                  -->
-            <!--                 <ScrollViewer> -->
-            <!--                      -->
-            <!--                     <TextBox Text="{Binding Logs}"  -->
-            <!--                              IsReadOnly="True" -->
-            <!--                              MaxHeight="500"/> -->
-            <!--                      -->
-            <!--                 </ScrollViewer> -->
-            <!--                  -->
-            <!--             </Expander> -->
-            <!-- -->
-            <!--         </DataTemplate> -->
-            <!--     </ItemsControl.ItemTemplate> -->
-            <!-- </ItemsControl> -->
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>
