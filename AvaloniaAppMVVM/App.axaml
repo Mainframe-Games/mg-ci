@@ -13,4 +13,13 @@
         <styling:FluentAvaloniaTheme PreferUserAccentColor="True" />
         <StyleInclude Source="avares://AvaloniaAppMVVM/Assets/Icons.axaml"></StyleInclude>
     </Application.Styles>
+    
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://LoadingIndicators.Avalonia/LoadingIndicators.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+    
 </Application>

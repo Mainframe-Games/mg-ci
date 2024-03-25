@@ -22,6 +22,7 @@
         <PackageReference Include="CommunityToolkit.Labs.Extensions.DependencyInjection" />
         <PackageReference Include="CommunityToolkit.Mvvm" />
         <PackageReference Include="FluentAvaloniaUI" />
+        <PackageReference Include="LoadingIndicators.Avalonia" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
         <PackageReference Include="Tomlyn" />
     </ItemGroup>

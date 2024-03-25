@@ -529,7 +529,7 @@ public class Unity
     }
 }
 
-public class UnityBuildTarget
+public class UnityBuildTarget : CiProcess
 {
     public string? Name { get; set; } = "New Build Target";
 
@@ -564,21 +564,4 @@ public class UnityBuildTarget
     [IgnoreDataMember]
     public ObservableCollection<string> BuildOptionOptions { get; } =
         new(Enum.GetNames(typeof(Unity.BuildOptions)));
-
-    public UnityBuildTarget() { }
-
-    // public UnityBuildTarget(UnityBuildTargetTemplate template)
-    // {
-    //     Name = template.Name;
-    //     Extension = template.Extension;
-    //     ProductName = template.ProductName;
-    //     Target = Enum.Parse<Unity.BuildTarget>(template.Target);
-    //     TargetGroup = Enum.Parse<Unity.BuildTargetGroup>(template.TargetGroup);
-    //     SubTarget = Enum.Parse<Unity.SubTarget>(template.SubTarget);
-    //     BuildPath = template.BuildPath;
-    //     Scenes = template.Scenes.Select(x => x.Value).ToList();
-    //     ExtraScriptingDefines = template.ExtraScriptingDefines.Select(x => x.Value).ToList();
-    //     AssetBundleManifestPath = template.AssetBundleManifestPath.Select(x => x.Value).ToList();
-    //     BuildOptions = template.BuildOptions;
-    // }
 }

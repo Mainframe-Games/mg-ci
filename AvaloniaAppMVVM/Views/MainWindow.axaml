@@ -44,7 +44,7 @@
             <!-- Open Project -->
             <Button Grid.Column="0" Width="40" ToolTip.Tip="Open Project" Margin="5 0 0 0"
                     Click="Button_OpenProject_OnClick">
-                <PathIcon Data="{StaticResource FolderOpenRegular}"></PathIcon>
+                <PathIcon Data="{StaticResource folder_open_regular}"></PathIcon>
             </Button>
             
             <!-- Title -->
@@ -64,7 +64,7 @@
             <!-- Settings Button -->
             <Button Grid.Column="4" Width="40" ToolTip.Tip="Settings"
                     Click="Button_Settings_OnClick">
-                <PathIcon Data="{StaticResource SettingsRegular}" Width="14"></PathIcon>
+                <PathIcon Data="{StaticResource settings_regular}" Width="14"></PathIcon>
             </Button>
         </Grid>
         
@@ -83,7 +83,7 @@
                     <!-- Menu Button -->
                     <Grid ColumnDefinitions="Auto, *">
                         <Button Command="{Binding TogglePaneCommand}">
-                            <PathIcon Data="{StaticResource LineHorizontal3Regular}"></PathIcon>
+                            <PathIcon Data="{StaticResource line_horizontal_3_regular}"></PathIcon>
                         </Button>
                     </Grid>
                     
