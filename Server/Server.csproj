@@ -11,5 +11,9 @@
       <ProjectReference Include="..\SharedLib\SharedLib.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="WebSocketSharp" />
+    </ItemGroup>
+
 
 </Project>
