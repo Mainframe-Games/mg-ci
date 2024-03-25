@@ -7,7 +7,9 @@ public interface IProcess
     public bool Succeeded { get; set; }
     public bool Failed { get; set; }
     public string? Id { get; set; }
-    public string? Logs{get; set;}
+    public string? Logs { get; set; }
+    public string? TotalTime { get; set; }
+    void Run();
 }
 
 public class CiProcess : IProcess
@@ -18,6 +20,9 @@ public class CiProcess : IProcess
     public bool Failed { get; set; }
     public string? Id { get; set; }
     public string? Logs { get; set; }
-    
+    public string? TotalTime { get; set; }
+
     public List<IProcess>? SubProcesses { get; set; }
+
+    public void Run() { }
 }
