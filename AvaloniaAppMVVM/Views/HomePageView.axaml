@@ -12,11 +12,44 @@
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <viewModels:HomePageViewModel/>
     </Design.DataContext>
-    <Grid ColumnDefinitions="Auto, *">
-        <Label Grid.Column="1"
-               FontWeight="Bold"
-               FontSize="40"
-               HorizontalAlignment="Center"
-               Content="{Binding Project.Settings.ProjectName}"></Label>
-    </Grid>
+    
+    <ScrollViewer>
+        <StackPanel>
+            <Label 
+                   FontWeight="Bold"
+                   FontSize="40"
+                   HorizontalAlignment="Center"
+                   Content="{Binding Project.Settings.ProjectName}">
+            </Label>
+            
+            <Button HorizontalAlignment="Center"
+                    Command="{Binding OpenStoreLinkCommand}"
+                    ToolTip.Tip = "{Binding Project.Settings.StoreUrl}">
+                Steam
+            </Button>
+
+            <Border CornerRadius="10" ClipToBounds="True" Width="300">
+                <Image Source="{Binding ImageSourceBitmapWeb}"
+                       MaxWidth="300" 
+                       HorizontalAlignment="Center"/>
+            </Border>
+            
+            <ItemsRepeater ItemsSource="{Binding Project.BuildTargets}">
+                <ItemsRepeater.Layout>
+                    <StackLayout Spacing="10"></StackLayout>
+                </ItemsRepeater.Layout>
+                
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Name}"/>
+                            <TextBlock Text="{Binding Target}"/>
+                            <TextBlock Text="{Binding BuildPath}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+                
+            </ItemsRepeater>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>
