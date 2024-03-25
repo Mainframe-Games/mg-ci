@@ -1,4 +1,3 @@
-using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using AvaloniaAppMVVM.Data;
@@ -19,16 +18,6 @@ public partial class MainWindow : AppWindow
         // TitleBar.ExtendsContentIntoTitleBar = true;
         // TitleBar.TitleBarHitTestType = TitleBarHitTestType.Complex;
         // SplashScreen = new ComplexSplashScreen();
-
-        ProjectsComboBox.SelectionChanged += ProjectsComboBoxOnSelectionChanged;
-    }
-
-    private void ProjectsComboBoxOnSelectionChanged(object? sender, SelectionChangedEventArgs e)
-    {
-        if (ProjectsComboBox.SelectedItem is not Project project)
-        {
-            return;
-        }
     }
 
     protected override void OnClosed(EventArgs e)

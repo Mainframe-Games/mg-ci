@@ -4,7 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using AvaloniaAppMVVM.Data;
-using AvaloniaAppMVVM.WebClient;
+using AvaloniaAppMVVM.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Tomlyn;
@@ -20,34 +20,57 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _isPaneOpen = true;
 
     [ObservableProperty]
-    private ViewModelBase _currentPage = new HomePageViewModel();
+    private ViewModelBase? _currentPage;
 
     [ObservableProperty]
     private ListItemTemplate? _selectedListItem;
 
     [ObservableProperty]
     private Project? _currentProject = new();
-
-    private readonly Client _client = new();
+    public ObservableCollection<Project> ProjectOptions { get; } = [];
 
     /// <summary>
     /// Get icons from: https://avaloniaui.github.io/icons.html
     /// </summary>
     public ObservableCollection<ListItemTemplate> Items { get; } =
         [
-            new ListItemTemplate(typeof(HomePageViewModel), "Home", "home_regular"),
+            new ListItemTemplate(
+                typeof(HomePageViewModel),
+                typeof(HomePageView),
+                "Home",
+                "home_regular"
+            ),
             new ListItemTemplate(
                 typeof(ProjectSettingsViewModel),
+                typeof(ProjectSettingsView),
                 "Project Settings",
                 "edit_settings_regular"
             ),
-            new ListItemTemplate(typeof(PrebuildViewModel), "Pre Build", "app_generic_regular"),
-            new ListItemTemplate(typeof(BuildTargetsViewModel), "Build Targets", "target_regular"),
-            new ListItemTemplate(typeof(DeployViewModel), "Deploy", "rocket_regular"),
-            new ListItemTemplate(typeof(HooksViewModel), "Hooks", "share_android_regular"),
+            new ListItemTemplate(
+                typeof(PrebuildViewModel),
+                typeof(PrebuildView),
+                "Pre Build",
+                "app_generic_regular"
+            ),
+            new ListItemTemplate(
+                typeof(BuildTargetsViewModel),
+                typeof(BuildTargetsView),
+                "Build Targets",
+                "target_regular"
+            ),
+            new ListItemTemplate(
+                typeof(DeployViewModel),
+                typeof(DeployView),
+                "Deploy",
+                "rocket_regular"
+            ),
+            new ListItemTemplate(
+                typeof(HooksViewModel),
+                typeof(HooksView),
+                "Hooks",
+                "share_android_regular"
+            ),
         ];
-
-    public ObservableCollection<Project> ProjectOptions { get; } = [];
 
     public MainWindowViewModel()
     {
@@ -108,9 +131,15 @@ public partial class MainWindowViewModel : ViewModelBase
 
     partial void OnSelectedListItemChanged(ListItemTemplate? value)
     {
-        CurrentPage = ViewLocator.GetViewModel(
-            value?.ModelType ?? throw new NullReferenceException()
-        );
+        if (value is null)
+            throw new NullReferenceException();
+
+        CurrentPage = ViewLocator.GetViewModel(value.ModelType);
+    }
+
+    partial void OnCurrentProjectChanged(Project? value)
+    {
+        RefreshPage();
     }
 
     [RelayCommand]
@@ -119,17 +148,25 @@ public partial class MainWindowViewModel : ViewModelBase
         const string url = "https://github.com/Mainframe-Games/mg-ci";
         Process.Start("explorer", url);
     }
+
+    private void RefreshPage()
+    {
+        if (CurrentPage is not null)
+            CurrentPage = ViewLocator.GetViewModel(CurrentPage.GetType());
+    }
 }
 
 public class ListItemTemplate
 {
     public string Label { get; set; }
     public Type ModelType { get; set; }
+    public Type ViewType { get; set; }
     public StreamGeometry Icon { get; set; }
 
-    public ListItemTemplate(Type modelType, string label, string iconKey)
+    public ListItemTemplate(Type modelType, Type viewType, string label, string iconKey)
     {
         ModelType = modelType;
+        ViewType = viewType;
         Label = label;
 
         Application.Current!.TryGetResource(iconKey, out var res);
