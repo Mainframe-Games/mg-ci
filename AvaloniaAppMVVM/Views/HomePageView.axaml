@@ -32,8 +32,7 @@
                         Width="100"
                         Height="40"
                         Margin="10 10 0 10"
-                        Click="Button_StartBuild_OnClick"
-                        ToolTip.Tip="{Binding Project.Settings.StoreUrl}"/>
+                        Click="Button_StartBuild_OnClick"/>
             
                 <TextBlock
                     Name="TestStatus"
@@ -41,6 +40,14 @@
                     FontSize="12"
                     FontStretch="ExtraCondensed"
                     VerticalAlignment="Center"/>
+                
+                <Button Content="Start Client"
+                        CornerRadius=" 10"
+                        Background="DarkCyan"
+                        Width="100"
+                        Height="40"
+                        Margin="10 10 0 10"
+                        Click="Button_StartClient_OnClick"/>
                 
             </StackPanel>
             

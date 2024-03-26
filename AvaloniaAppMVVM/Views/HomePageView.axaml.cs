@@ -6,6 +6,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.ViewModels;
+using AvaloniaAppMVVM.WebClient;
 using LoadingIndicators.Avalonia;
 
 namespace AvaloniaAppMVVM.Views;
@@ -106,6 +107,7 @@ public class Icons
 public partial class HomePageView : MyUserControl<HomePageViewModel>
 {
     private bool _isBuilding;
+    private readonly Client _client = new("Test");
 
     private readonly List<ProcessesTemplate> _processes =
     [
@@ -295,4 +297,9 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
     }
 
     #endregion
+
+    private void Button_StartClient_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _client.Connect();
+    }
 }

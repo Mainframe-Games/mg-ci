@@ -15,19 +15,17 @@ public class TestService : WebSocketBehavior
     protected override void OnError(ErrorEventArgs e)
     {
         base.OnError(e);
-        Console.WriteLine($"OnError: {e.Exception}");
-        Console.WriteLine($"OnErrorMessage: {e.Message}");
+        throw e.Exception;
     }
 
     protected override void OnMessage(MessageEventArgs e)
     {
         base.OnMessage(e);
         Console.WriteLine($"OnMessage: {e.Data}");
-    }
-
-    protected override void OnOpen()
-    {
-        base.OnOpen();
-        Console.WriteLine("Test open");
+        
+        if (e.Data == "Ping")
+            Send("Pong");
+        else
+            Send("Message from server");
     }
 }
