@@ -110,7 +110,7 @@ public class Icons
 public partial class HomePageView : MyUserControl<HomePageViewModel>
 {
     private bool _isBuilding;
-    private readonly Client _client = new("build");
+    private readonly Client _clientBuild = new("build");
 
     private readonly List<ProcessesTemplate> _processes =
     [
@@ -131,9 +131,9 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
         _viewModel.Project = _project;
 
         if (!Design.IsDesignMode)
-            _client.Connect();
+            _clientBuild.Connect();
 
-        ServerStatus.Text = _client.Status;
+        ServerStatus.Text = _clientBuild.Status;
     }
 
     protected override void OnPreSave() { }
@@ -141,7 +141,7 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
     protected override void OnUnloaded(RoutedEventArgs e)
     {
         base.OnUnloaded(e);
-        _client.Close();
+        _clientBuild.Close();
     }
 
     #region Build View
@@ -262,7 +262,7 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 
         _isBuilding = true;
         RefreshProcesses();
-        _client.Send(new NetworkPayload { Data = _project });
+        _clientBuild.Send(_project);
     }
 
     private void RefreshProcesses()

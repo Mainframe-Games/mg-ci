@@ -7,9 +7,9 @@ public enum MessageType : byte
     Message,
 }
 
-public class NetworkPayload
+public class NetworkPayload(MessageType type, ushort clientId, object? data)
 {
-    public MessageType Type { get; set; } = MessageType.Message;
-    public ushort ClientId { get; set; }
-    public object? Data { get; set; }
+    public MessageType Type { get; set; } = type;
+    public ushort ClientId { get; set; } = clientId;
+    public object? Data { get; set; } = data;
 }

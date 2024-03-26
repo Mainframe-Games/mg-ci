@@ -1,5 +1,6 @@
 using AvaloniaAppMVVM.Utils;
 using ServerClientShared;
+using Tomlyn.Model;
 using WebSocketSharp;
 
 namespace AvaloniaAppMVVM.WebClient;
@@ -88,7 +89,7 @@ public class Client()
         _ws?.Send(data);
     }
 
-    public void Send(NetworkPayload payload)
+    public void Send(object data)
     {
         if (_ws?.ReadyState is not WebSocketState.Open)
         {
@@ -96,6 +97,7 @@ public class Client()
             Connect();
         }
 
+        var payload = new NetworkPayload(MessageType.Message, _clientId, data);
         var json = Json.Serialise(payload);
         _ws?.Send(json);
     }

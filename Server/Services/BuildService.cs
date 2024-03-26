@@ -1,4 +1,5 @@
 using System.Net;
+using AvaloniaAppMVVM.Data;
 using Deployment.RemoteBuild;
 using ServerClientShared;
 using SharedLib;
@@ -54,7 +55,23 @@ public class BuildService : WebSocketBehavior
     {
         base.OnMessage(e);
 
-        var json = Json.Deserialise<NetworkPayload>(e.Data);
+        Console.WriteLine($"Build start requested: {e.Data}");
+        var json = Json.Deserialise<NetworkPayload>(e.Data) ?? throw new NullReferenceException();
+
+        switch (json.Type)
+        {
+            case MessageType.Connection:
+                break;
+            case MessageType.Disconnection:
+                break;
+            case MessageType.Message:
+                var project =
+                    Json.Deserialise<Project>(json.Data?.ToString())
+                    ?? throw new NullReferenceException();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
 
         // ServerResponse? response = null;
         //
