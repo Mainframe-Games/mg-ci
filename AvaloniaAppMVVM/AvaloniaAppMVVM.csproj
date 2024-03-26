@@ -33,4 +33,8 @@
         <AvaloniaResource Include="Assets\github.png" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\ServerClientShared\ServerClientShared.csproj" />
+    </ItemGroup>
+
 </Project>

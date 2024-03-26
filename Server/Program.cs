@@ -1,4 +1,5 @@
 ﻿using Server;
+using Server.Configs;
 using Server.Services;
 using SharedLib;
 using WebSocketSharp.Server;
@@ -7,7 +8,9 @@ try
 {
     Console.Title = $"Build Server - {App.Version}";
 
-    var server = new WebSocketServer("ws://localhost:8080");
+    var config = ServerConfig.Load();
+
+    var server = new WebSocketServer($"ws://{config.IP}:{config.Port}");
     server.AddWebSocketService<TestService>("/test");
     server.AddWebSocketService<BuildService>("/build");
     server.Start();

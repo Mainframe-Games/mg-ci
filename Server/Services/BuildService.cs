@@ -1,5 +1,6 @@
 using System.Net;
 using Deployment.RemoteBuild;
+using ServerClientShared;
 using SharedLib;
 using SharedLib.BuildToDiscord;
 using SharedLib.Server;
@@ -16,17 +17,17 @@ public class BuildService : WebSocketBehavior
         public _Plastic? Plastic { get; set; }
         public _Git? Git { get; set; }
         public _Discord? Discord { get; set; }
-        
+
         /// <summary>
         /// Optional Args
         /// </summary>
         public string? Args { get; set; }
-        
+
         public class _Git
         {
             public string? Url { get; set; }
         }
-        
+
         public class _Plastic
         {
             /// <summary>
@@ -41,37 +42,37 @@ public class BuildService : WebSocketBehavior
             /// Optional discord IP:PORT
             /// </summary>
             public string? DiscordAddress { get; set; }
-		    
+
             /// <summary>
             /// Optional commandId from the discord server
             /// </summary>
             public ulong CommandId { get; set; }
         }
     }
-    
+
     protected override void OnMessage(MessageEventArgs e)
     {
         base.OnMessage(e);
-        
-        var json = Json.Deserialise<Payload>(e.Data);
 
-        ServerResponse? response = null;
-        
-        if (json?.Plastic is not null)
-        {
-            response = StartBuildPlastic(json);
-        }
-        else
-        {
-          // implement git   
-        }
-        
-        if (response is null)
-            return;
-        
-        Send(Json.Serialise(response));
+        var json = Json.Deserialise<NetworkPayload>(e.Data);
+
+        // ServerResponse? response = null;
+        //
+        // if (json?.Plastic is not null)
+        // {
+        //     response = StartBuildPlastic(json);
+        // }
+        // else
+        // {
+        //     // implement git
+        // }
+        //
+        // if (response is null)
+        //     return;
+        //
+        // Send(Json.Serialise(response));
     }
-    
+
     private void OnReportUpdated(PipelineReport report)
     {
         var body = new Dictionary<string, object>
@@ -79,7 +80,7 @@ public class BuildService : WebSocketBehavior
             // ["CommandId"] = Content.CommandId,
             ["Report"] = report,
         };
-        
+
         Sessions.Broadcast(Json.Serialise(body));
     }
 
@@ -87,25 +88,28 @@ public class BuildService : WebSocketBehavior
     {
         if (payload.Plastic is null)
             return new ServerResponse(HttpStatusCode.BadRequest, "Payload is null");
-        
+
         var args = new Args(payload.Args);
         args.TryGetArg("-branch", out var branch, "main");
 
         var workspaceName = new WorkspaceMapping().GetRemapping(payload.Plastic.WorkspaceName);
         var workspace = PlasticWorkspace.GetWorkspaceFromName(workspaceName);
-		
+
         if (workspace is null)
-            return new ServerResponse(HttpStatusCode.BadRequest, $"Given namespace is not valid: {payload.Plastic.WorkspaceName}");
-		
+            return new ServerResponse(
+                HttpStatusCode.BadRequest,
+                $"Given namespace is not valid: {payload.Plastic.WorkspaceName}"
+            );
+
         Logger.Log($"Chosen workspace: {workspace}");
-		
+
         workspace.Clear();
         workspace.Update();
         workspace.SwitchBranch(branch);
 
         var pipeline = App.CreateBuildPipeline(workspace, args);
         pipeline.Report.OnReportUpdated += OnReportUpdated;
-		
+
         App.RunBuildPipe(pipeline).FireAndForget();
         workspace.GetCurrent(out var changeSetId, out var guid);
 

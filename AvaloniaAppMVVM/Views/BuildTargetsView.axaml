@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:AvaloniaAppMVVM.ViewModels"
-             xmlns:data="clr-namespace:AvaloniaAppMVVM.Data"
+             xmlns:shared="clr-namespace:AvaloniaAppMVVM.Data.Shared"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AvaloniaAppMVVM.Views.BuildTargetsView"
              x:DataType="vm:BuildTargetsViewModel">
@@ -30,12 +30,12 @@
                 SelectedItem="{Binding SelectedBuildTarget}">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Name}" />
+                        <TextBlock Text="{Binding Data.Name}" />
                     </DataTemplate>
                 </TabControl.ItemTemplate>
                 
                 <TabControl.ContentTemplate>
-                    <DataTemplate DataType="{x:Type data:UnityBuildTarget}">
+                    <DataTemplate DataType="{x:Type shared:UnityBuildTargetTemplate}">
                     <!-- <DataTemplate> -->
                         <ScrollViewer>
                             <StackPanel 
@@ -45,48 +45,48 @@
                                 <TextBlock Text="File" FontSize="25" />
                             
                                 <TextBlock Text="Name" />
-                                <TextBox Text="{Binding Name}" />
+                                <TextBox Text="{Binding Data.Name}" />
                             
                                 <Line Height="30"></Line>
                             
                                 <TextBlock Text="Build Config" FontSize="25" />
                             
                                 <TextBlock Text="Product Name" />
-                                <TextBox Text="{Binding ProductName}" />
+                                <TextBox Text="{Binding Data.ProductName}" />
                                 
                                 <TextBlock Text="Extension" />
                                 <ComboBox SelectedIndex="0"
-                                          SelectedValue="{Binding Extension}"
+                                          SelectedValue="{Binding Data.Extension}"
                                           ItemsSource="{Binding ExtensionOptions}">
                                 </ComboBox>
 
                                 <TextBlock Text="Target" />
                                 <ComboBox SelectedIndex="0"
-                                          SelectedValue="{Binding Target}"
+                                          SelectedValue="{Binding Data.Target}"
                                           ItemsSource="{Binding BuildTargetOptions}">
                                 </ComboBox>
                                 
                                 <TextBlock Text="Target Group" />
                                 <ComboBox SelectedIndex="0"
-                                          SelectedValue="{Binding TargetGroup}"
+                                          SelectedValue="{Binding Data.TargetGroup}"
                                           ItemsSource="{Binding BuildTargetGroupOptions}">
                                 </ComboBox>
                                 
                                 <TextBlock Text="Sub Target" />
                                 <ComboBox SelectedIndex="0"
-                                          SelectedValue="{Binding SubTarget}"
+                                          SelectedValue="{Binding Data.SubTarget}"
                                           ItemsSource="{Binding SubTargetOptions}">
                                 </ComboBox>
                                 
                                 <TextBlock Text="Build Path" />
-                                <TextBox Text="{Binding BuildPath}" />
+                                <TextBox Text="{Binding Data.BuildPath}" />
                                 
                                 <!-- Scenes -->
                                 <Grid ColumnDefinitions="*, Auto">
                                     <TextBlock FontSize="18" VerticalAlignment="Center">Scenes</TextBlock>
                                     <Button Grid.Column="1" Click="Button_AddScene_OnClick">Add</Button>
                                 </Grid>
-                                <ItemsRepeater ItemsSource="{Binding Scenes}">
+                                <ItemsRepeater ItemsSource="{Binding Data.Scenes}">
                                     <ItemsRepeater.ItemTemplate>
                                         <DataTemplate>
                                             <Grid ColumnDefinitions="*, Auto">
@@ -108,7 +108,7 @@
                                     </TextBlock>
                                     <Button Grid.Column="1" Click="Button_AddExtraScriptingDefine_OnClick">Add</Button>
                                 </Grid>
-                                <ItemsRepeater ItemsSource="{Binding ExtraScriptingDefines}">
+                                <ItemsRepeater ItemsSource="{Binding Data.ExtraScriptingDefines}">
                                     <ItemsRepeater.ItemTemplate>
                                         <DataTemplate>
                                             <Grid ColumnDefinitions="*, Auto">
@@ -130,7 +130,7 @@
                                     </TextBlock>
                                     <Button Grid.Column="1" Click="Button_AddExtraScriptingDefine_OnClick">Add</Button>
                                 </Grid>
-                                <ItemsRepeater ItemsSource="{Binding AssetBundleManifestPath}">
+                                <ItemsRepeater ItemsSource="{Binding Data.AssetBundleManifestPath}">
                                     <ItemsRepeater.ItemTemplate>
                                         <DataTemplate>
                                             <Grid ColumnDefinitions="*, Auto">
@@ -148,7 +148,7 @@
                                 <!-- Build Options -->
                                 <TextBlock Text="Build Options" />
                                 <ComboBox SelectedIndex="0"
-                                          SelectedValue="{Binding BuildOptions}"
+                                          SelectedValue="{Binding Data.BuildOptions}"
                                           ItemsSource="{Binding BuildOptionOptions}">
                                 </ComboBox>
                                 

@@ -6,7 +6,6 @@ using Avalonia.Media;
 using AvaloniaAppMVVM.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Tomlyn;
 
 namespace AvaloniaAppMVVM.ViewModels;
 
@@ -47,11 +46,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public MainWindowViewModel()
     {
-        // load settings
-        var file = new FileInfo("settings.toml");
-        _appSettings = file.Exists
-            ? Toml.ToModel<AppSettings>(File.ReadAllText("settings.toml"))
-            : new AppSettings();
+        _appSettings = AppSettings.Singleton;
 
         // load all projects
         foreach (var path in _appSettings.LoadedProjectPaths)
@@ -63,15 +58,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public void OnAppClose()
     {
-        _appSettings.LastProjectLocation = CurrentProject?.Location;
+        AppSettings.LastProjectLocation = CurrentProject?.Location;
         SaveAppSettings();
     }
 
     private void SaveAppSettings()
     {
-        var toml = Toml.FromModel(_appSettings);
-        File.WriteAllText("settings.toml", toml);
-        Console.WriteLine("Saved settings");
+        AppSettings.Save();
     }
 
     public void LoadCurrentProject(string? location)

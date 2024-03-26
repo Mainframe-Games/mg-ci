@@ -10,6 +10,7 @@ using AvaloniaAppMVVM.ViewModels;
 using AvaloniaAppMVVM.WebClient;
 using LoadingIndicators.Avalonia;
 using Newtonsoft.Json.Linq;
+using ServerClientShared;
 
 namespace AvaloniaAppMVVM.Views;
 
@@ -128,10 +129,20 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
     protected override void OnInit()
     {
         _viewModel.Project = _project;
-        _client.Connect();
+
+        if (!Design.IsDesignMode)
+            _client.Connect();
+
+        ServerStatus.Text = _client.Status;
     }
 
     protected override void OnPreSave() { }
+
+    protected override void OnUnloaded(RoutedEventArgs e)
+    {
+        base.OnUnloaded(e);
+        _client.Close();
+    }
 
     #region Build View
 
@@ -239,7 +250,6 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 
     #endregion
 
-
     #region Build Process
 
     private void Button_StartBuild_OnClick(object? sender, RoutedEventArgs e)
@@ -251,7 +261,8 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
         }
 
         _isBuilding = true;
-        Dispatcher.UIThread.Post(() => BuildProcessTask(), DispatcherPriority.Background);
+        RefreshProcesses();
+        _client.Send(new NetworkPayload { Data = _project });
     }
 
     private void RefreshProcesses()
@@ -269,9 +280,6 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 
     private async Task BuildProcessTask()
     {
-        Console.WriteLine("Start build Task");
-        TestStatus.Text = "Building...";
-
         // refresh processes
         RefreshProcesses();
 
@@ -296,13 +304,7 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
         }
 
         Console.WriteLine("Done");
-        TestStatus.Text = "Done";
     }
 
     #endregion
-
-    private void Button_StartClient_OnClick(object? sender, RoutedEventArgs e)
-    {
-        _client.SendJson(_project);
-    }
 }

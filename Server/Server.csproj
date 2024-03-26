@@ -8,10 +8,12 @@
     <ItemGroup>
       <ProjectReference Include="..\Builds\Builds.csproj" />
       <ProjectReference Include="..\Deployment\Deployment.csproj" />
+      <ProjectReference Include="..\ServerClientShared\ServerClientShared.csproj" />
       <ProjectReference Include="..\SharedLib\SharedLib.csproj" />
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Tomlyn" />
       <PackageReference Include="WebSocketSharp" />
     </ItemGroup>
 

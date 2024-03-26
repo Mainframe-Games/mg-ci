@@ -1,15 +1,28 @@
 using AvaloniaAppMVVM.Utils;
+using ServerClientShared;
 using WebSocketSharp;
 
 namespace AvaloniaAppMVVM.WebClient;
 
-public class Client(string path)
+public class Client()
 {
     private const int WAIT_TIME = 60;
-    
+    private static ushort _nextClientId;
+
     private WebSocket? _ws;
 
     public bool IsAlive => _ws?.IsAlive ?? false;
+    public string Status => _ws?.ReadyState.ToString() ?? "Not connected";
+
+    private readonly string? _path;
+    private readonly ushort _clientId;
+
+    public Client(string path)
+        : this()
+    {
+        _clientId = _nextClientId++;
+        _path = path;
+    }
 
     public void Connect()
     {
@@ -21,10 +34,13 @@ public class Client(string path)
             return;
         }
 
-        _ws = new WebSocket($"ws://localhost:8080/{path}");
+        _ws = new WebSocket($"ws://localhost:8080/{_path}");
         _ws.WaitTime = TimeSpan.FromSeconds(WAIT_TIME);
-        
-        _ws.OnOpen += (sender, e) => _ws.Send("Hi, from client");
+
+        _ws.OnOpen += (sender, e) =>
+        {
+            Console.WriteLine($"Client connected: {_path}");
+        };
 
         _ws.OnMessage += (sender, e) =>
         {
@@ -45,7 +61,7 @@ public class Client(string path)
         _ws.Connect();
         PingLoop();
     }
-    
+
     public void Close()
     {
         _ws?.Close();
@@ -55,27 +71,32 @@ public class Client(string path)
     {
         while (_ws?.IsAlive is true)
         {
-            await Task.Delay(2000);
-            Send("Ping");
+            await Task.Delay(TimeSpan.FromSeconds(10));
+            Send([0]);
         }
-        
+
         Console.WriteLine("Ping loop end");
     }
 
-    public void Send(string message)
+    private void Send(byte[] data)
     {
         if (_ws?.ReadyState is not WebSocketState.Open)
         {
             Console.WriteLine("Socket is not open.");
             Connect();
         }
-        
-        _ws?.Send(message);
+        _ws?.Send(data);
     }
 
-    public void SendJson(object data)
+    public void Send(NetworkPayload payload)
     {
-        var json = Json.Serialise(data);
-        Send(json);
+        if (_ws?.ReadyState is not WebSocketState.Open)
+        {
+            Console.WriteLine("Socket is not open.");
+            Connect();
+        }
+
+        var json = Json.Serialise(payload);
+        _ws?.Send(json);
     }
 }

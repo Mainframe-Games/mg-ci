@@ -21,11 +21,22 @@ public class TestService : WebSocketBehavior
     protected override void OnMessage(MessageEventArgs e)
     {
         base.OnMessage(e);
-        Console.WriteLine($"OnMessage: {e.Data}");
-        
-        if (e.Data == "Ping")
+
+        if (e.IsPing)
+        {
             Send("Pong");
+        }
+        else if (e.IsBinary)
+        {
+            Console.WriteLine($"OnMessage Binary: {e.RawData}, length: {e.RawData.Length}");
+        }
+        else if (e.IsText)
+        {
+            Console.WriteLine($"OnMessage Text: {e.Data}");
+        }
         else
-            Send("Message from server");
+        {
+            Console.WriteLine($"OnMessage None: {e.Data}");
+        }
     }
 }

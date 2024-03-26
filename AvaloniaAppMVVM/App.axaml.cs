@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.ViewModels;
 using AvaloniaAppMVVM.Views;
 using CommunityToolkit.Extensions.DependencyInjection;
@@ -15,6 +16,7 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        AppSettings.Load();
     }
 
     public override void OnFrameworkInitializationCompleted()

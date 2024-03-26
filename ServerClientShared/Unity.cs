@@ -1,11 +1,8 @@
-using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Runtime.Serialization;
-using AvaloniaAppMVVM.ViewModels;
 
-namespace AvaloniaAppMVVM.Data;
+namespace ServerClientShared;
 
-public class Unity
+public static class Unity
 {
     public enum BuildTarget
     {
@@ -527,41 +524,4 @@ public class Unity
         /// </summary>
         ShaderLivelinkSupport = 1073741824, // 0x40000000
     }
-}
-
-public class UnityBuildTarget : CiProcess
-{
-    public string? Name { get; set; } = "New Build Target";
-
-    // config
-    public string? Extension { get; set; } = ".exe";
-    public string? ProductName { get; set; }
-    public Unity.BuildTarget Target { get; set; } = Unity.BuildTarget.StandaloneWindows64;
-    public Unity.BuildTargetGroup TargetGroup { get; set; } = Unity.BuildTargetGroup.Standalone;
-    public Unity.SubTarget? SubTarget { get; set; } = Unity.SubTarget.Player;
-    public string? BuildPath { get; set; }
-    public List<string> Scenes { get; set; } = [];
-    public List<string> ExtraScriptingDefines { get; set; } = [];
-    public List<string> AssetBundleManifestPath { get; set; } = [];
-    public int BuildOptions { get; set; } = (int)Unity.BuildOptions.None;
-
-    [IgnoreDataMember]
-    public ObservableCollection<string> ExtensionOptions { get; } =
-        [".exe", ".app", ".x86_64", ".apk", "/"];
-
-    [IgnoreDataMember]
-    public ObservableCollection<string> BuildTargetOptions { get; } =
-        new(Enum.GetNames(typeof(Unity.BuildTarget)));
-
-    [IgnoreDataMember]
-    public ObservableCollection<string> BuildTargetGroupOptions { get; } =
-        new(Enum.GetNames(typeof(Unity.BuildTargetGroup)));
-
-    [IgnoreDataMember]
-    public ObservableCollection<string> SubTargetOptions { get; } =
-        new(Enum.GetNames(typeof(Unity.SubTarget)));
-
-    [IgnoreDataMember]
-    public ObservableCollection<string> BuildOptionOptions { get; } =
-        new(Enum.GetNames(typeof(Unity.BuildOptions)));
 }

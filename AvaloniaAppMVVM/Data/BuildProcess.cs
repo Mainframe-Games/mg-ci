@@ -9,7 +9,6 @@ public interface IProcess
     public string? Id { get; set; }
     public string? Logs { get; set; }
     public string? TotalTime { get; set; }
-    void Run();
 }
 
 public class CiProcess : IProcess
@@ -23,6 +22,4 @@ public class CiProcess : IProcess
     public string? TotalTime { get; set; }
 
     public List<IProcess>? SubProcesses { get; set; }
-
-    public void Run() { }
 }
