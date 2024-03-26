@@ -24,6 +24,7 @@
         <PackageReference Include="FluentAvaloniaUI" />
         <PackageReference Include="LoadingIndicators.Avalonia" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+        <PackageReference Include="Newtonsoft.Json" />
         <PackageReference Include="Tomlyn" />
         <PackageReference Include="WebSocketSharp" />
     </ItemGroup>

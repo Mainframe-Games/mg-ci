@@ -3,7 +3,7 @@ using SharedLib;
 
 namespace Deployment.Configs;
 
-public class ClanforgeConfig : ICloneable<ClanforgeConfig>
+public class ClanforgeConfig 
 {
 	public string? AccessKey { get; set; }
 	public string? SecretKey { get; set; }

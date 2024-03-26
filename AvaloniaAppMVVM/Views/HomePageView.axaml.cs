@@ -5,9 +5,11 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaAppMVVM.Data;
+using AvaloniaAppMVVM.Utils;
 using AvaloniaAppMVVM.ViewModels;
 using AvaloniaAppMVVM.WebClient;
 using LoadingIndicators.Avalonia;
+using Newtonsoft.Json.Linq;
 
 namespace AvaloniaAppMVVM.Views;
 
@@ -107,7 +109,7 @@ public class Icons
 public partial class HomePageView : MyUserControl<HomePageViewModel>
 {
     private bool _isBuilding;
-    private readonly Client _client = new("Test");
+    private readonly Client _client = new("build");
 
     private readonly List<ProcessesTemplate> _processes =
     [
@@ -126,6 +128,7 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
     protected override void OnInit()
     {
         _viewModel.Project = _project;
+        _client.Connect();
     }
 
     protected override void OnPreSave() { }
@@ -300,6 +303,6 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 
     private void Button_StartClient_OnClick(object? sender, RoutedEventArgs e)
     {
-        _client.Connect();
+        _client.SendJson(_project);
     }
 }

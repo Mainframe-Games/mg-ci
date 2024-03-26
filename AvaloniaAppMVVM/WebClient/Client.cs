@@ -1,3 +1,4 @@
+using AvaloniaAppMVVM.Utils;
 using WebSocketSharp;
 
 namespace AvaloniaAppMVVM.WebClient;
@@ -44,6 +45,11 @@ public class Client(string path)
         _ws.Connect();
         PingLoop();
     }
+    
+    public void Close()
+    {
+        _ws?.Close();
+    }
 
     private async void PingLoop()
     {
@@ -67,8 +73,9 @@ public class Client(string path)
         _ws?.Send(message);
     }
 
-    public void Close()
+    public void SendJson(object data)
     {
-        _ws?.Close();
+        var json = Json.Serialise(data);
+        Send(json);
     }
 }

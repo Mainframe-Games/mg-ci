@@ -2,7 +2,7 @@ using WebSocketSharp;
 using WebSocketSharp.Server;
 using ErrorEventArgs = WebSocketSharp.ErrorEventArgs;
 
-namespace Server;
+namespace Server.Services;
 
 public class TestService : WebSocketBehavior
 {
