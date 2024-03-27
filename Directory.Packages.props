@@ -16,6 +16,7 @@
     <PackageVersion Include="LoadingIndicators.Avalonia" Version="11.0.10" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageVersion Include="Tomlyn" Version="0.17.0" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="WebSocketSharp" Version="1.0.3-rc11" />
   </ItemGroup>
 </Project>
