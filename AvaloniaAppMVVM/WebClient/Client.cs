@@ -1,8 +1,8 @@
 using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.Utils;
 using ServerClientShared;
-using Tomlyn.Model;
 using WebSocketSharp;
+using ErrorEventArgs = WebSocketSharp.ErrorEventArgs;
 
 namespace AvaloniaAppMVVM.WebClient;
 
@@ -28,8 +28,6 @@ public class Client()
 
     public void Connect()
     {
-        Console.WriteLine($"Socket State: {_ws?.ReadyState}");
-
         if (IsAlive)
         {
             Console.WriteLine("Socket already connected.");
@@ -42,29 +40,12 @@ public class Client()
         _ws = new WebSocket($"ws://{ip}:{port}/{_path}");
         _ws.WaitTime = TimeSpan.FromSeconds(WAIT_TIME);
 
-        _ws.OnOpen += (sender, e) =>
-        {
-            Console.WriteLine($"Client connected: {_path}");
-        };
-
-        _ws.OnMessage += (sender, e) =>
-        {
-            var body = !e.IsPing ? e.Data : "A ping was received.";
-            Console.WriteLine("[WebSocket Message] {0}", body);
-        };
-
-        _ws.OnError += (sender, e) =>
-        {
-            Console.WriteLine("[WebSocket Error] {0}", e.Message);
-        };
-
-        _ws.OnClose += (sender, e) =>
-        {
-            Console.WriteLine("[WebSocket Close ({0})] {1}", e.Code, e.Reason);
-        };
+        _ws.OnOpen += OnOpen;
+        _ws.OnMessage += OnMessage;
+        _ws.OnError += OnError;
+        _ws.OnClose += OnClose;
 
         _ws.Connect();
-        PingLoop();
     }
 
     public void Close()
@@ -72,25 +53,28 @@ public class Client()
         _ws?.Close();
     }
 
-    private async void PingLoop()
+    private void OnOpen(object? sender, EventArgs eventArgs)
     {
-        while (_ws?.IsAlive is true)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(10));
-            Send([0]);
-        }
-
-        Console.WriteLine("Ping loop end");
+        Console.WriteLine($"Client connected: {_path}");
+        var payload = new NetworkPayload(MessageType.Connection, _clientId, "Hello");
+        var json = Json.Serialise(payload);
+        _ws?.Send(json);
     }
-
-    private void Send(byte[] data)
+    
+    private void OnMessage(object? sender, MessageEventArgs e)
     {
-        if (_ws?.ReadyState is not WebSocketState.Open)
-        {
-            Console.WriteLine("Socket is not open.");
-            Connect();
-        }
-        _ws?.Send(data);
+        var body = !e.IsPing ? e.Data : "A ping was received.";
+        Console.WriteLine($"[WebSocket Message] {body}");
+    }
+    
+    private void OnError(object? sender, ErrorEventArgs e)
+    {
+        Console.WriteLine($"[WebSocket Error] {e.Message}");
+    }
+    
+    private void OnClose(object? sender, CloseEventArgs e)
+    {
+        Console.WriteLine($"[WebSocket Close ({e.Code})] {e.Reason}");
     }
 
     public void Send(object data)

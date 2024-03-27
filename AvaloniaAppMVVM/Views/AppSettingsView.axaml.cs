@@ -23,7 +23,6 @@ public partial class AppSettingsView : AppWindow
         setting.ServerIp = ServerIp.Text;
         setting.ServerPort = ushort.TryParse(ServerPort.Text, out var port) ? port: (ushort)8080;
         
-        
         AppSettings.Singleton.Save();
     }
 }

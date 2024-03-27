@@ -4,7 +4,7 @@ using ErrorEventArgs = WebSocketSharp.ErrorEventArgs;
 
 namespace Server.Services;
 
-public class TestService : WebSocketBehavior
+public class TestService : ServiceBase
 {
     protected override void OnClose(CloseEventArgs e)
     {

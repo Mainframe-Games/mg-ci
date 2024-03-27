@@ -5,6 +5,7 @@ public enum MessageType : byte
     Connection,
     Disconnection,
     Message,
+    Error,
 }
 
 public class NetworkPayload(MessageType type, ushort clientId, object? data)

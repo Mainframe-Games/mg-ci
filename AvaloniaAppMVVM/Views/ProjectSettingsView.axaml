@@ -2,14 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:AvaloniaAppMVVM.ViewModels"
+             xmlns:vm="clr-namespace:AvaloniaAppMVVM.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AvaloniaAppMVVM.Views.ProjectSettingsView"
-             x:DataType="viewModels:ProjectSettingsViewModel">
+             x:DataType="vm:ProjectSettingsViewModel">
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <viewModels:ProjectSettingsViewModel />
+        <vm:ProjectSettingsViewModel />
     </Design.DataContext>
 
     <ScrollViewer>
@@ -19,35 +19,69 @@
             <TextBlock>Project Name</TextBlock>
             <TextBox Text="{Binding Project.Settings.ProjectName}"/>
             
-            <TextBlock>Location</TextBlock>
-            <TextBlock Text="{Binding Project.Location}"
-                       Background="#333"/>
+            <TextBlock FontWeight="Bold">GUID</TextBlock>
+            <TextBlock Text="{Binding Project.Guid}"/>
             
-            <TextBlock>Version control</TextBlock>
-            <ComboBox SelectedIndex="0"
+            <TextBlock FontWeight="Bold">Location</TextBlock>
+            <TextBlock Text="{Binding Project.Location}"/>
+            
+            <TextBlock FontWeight="Bold">Version control</TextBlock>
+            <ComboBox Name="VersionControlComboBox"
+                      SelectedIndex="0"
                       ItemsSource="{Binding VersionControlOptions}"
-                      SelectedItem="{Binding Project.Settings.VersionControl}">
+                      SelectedItem="{Binding Project.Settings.VersionControl}"
+                      SelectionChanged="SelectingItemsControl_OnSelectionChanged">
             </ComboBox>
             
-            <TextBlock>Game Engine</TextBlock>
+             <!-- git settings -->
+            <StackPanel 
+                Name = "GitSettingsStackPanel"
+                Margin="20 5 20 0" Spacing="10">
+                <TextBlock FontWeight="Bold" FontSize="18">Git Settings</TextBlock>
+                
+                <TextBlock FontWeight="Bold">Repository Url</TextBlock>
+                <TextBox Text="{Binding Project.Settings.GitRepositoryUrl}"/>
+                
+                <TextBlock FontWeight="Bold">Branch</TextBlock>
+                <ComboBox Name="BranchComboBox"
+                    SelectedItem="{Binding Project.Settings.Branch}"/>
+                
+            </StackPanel>
+            
+            <!-- Plastic settings -->
+            <StackPanel
+                Name="PlasticSettingsStackPanel"
+                Margin="20 5 20 0" Spacing="10">
+                <TextBlock FontWeight="Bold" FontSize="18">Plastic Settings</TextBlock>
+                
+                <TextBlock FontWeight="Bold">Workspace Name</TextBlock>
+                <TextBox Text="{Binding Project.Settings.PlasticWorkspaceName}"/>
+                
+                <TextBlock FontWeight="Bold">Branch</TextBlock>
+                <TextBox Text="{Binding Project.Settings.Branch}"/>
+            </StackPanel>
+            
+            <!-- Game engine -->
+            <TextBlock FontWeight="Bold">Game Engine</TextBlock>
             <ComboBox SelectedIndex="0"
                       ItemsSource="{Binding GameEngineOptions}"
                       SelectedItem="{Binding Project.Settings.GameEngine}">
             </ComboBox>
             
-            <Line Height="20"></Line>
+            <Line Height="10"></Line>
+            <Separator></Separator>
+            <Line Height="10"></Line>
             
             <!-- Meta Data -->
             <TextBlock FontSize="18" FontWeight="Black">Meta Data</TextBlock>
-            <TextBlock>Store Url</TextBlock>
+            <TextBlock FontWeight="Bold">Store Url</TextBlock>
             <TextBox Text="{Binding Project.Settings.StoreUrl}"/>
             
-            <TextBlock>Thumbnail Url</TextBlock>
+            <TextBlock FontWeight="Bold">Thumbnail Url</TextBlock>
             <TextBox Text="{Binding Project.Settings.StoreThumbnailUrl}"/>
             
-            <TextBlock>Last Successful Build</TextBlock>
-            <TextBlock Text="{Binding Project.Settings.LastSuccessfulBuild}"
-                       Background="#333"/>
+            <TextBlock FontWeight="Bold">Last Successful Build</TextBlock>
+            <TextBlock Text="{Binding Project.Settings.LastSuccessfulBuild}"/>
             
         </StackPanel>
     </ScrollViewer>

@@ -24,6 +24,7 @@ public class Project
     [IgnoreDataMember]
     public string? Location { get; set; }
 
+    public string? Guid { get; set; } = System.Guid.NewGuid().ToString();
     public ProjectSettings Settings { get; set; } = new();
     public Prebuild Prebuild { get; set; } = new();
     public List<UnityBuildTarget> BuildTargets { get; set; } = [];
@@ -80,6 +81,12 @@ public class ProjectSettings
     /// The version control system used for the project
     /// </summary>
     public VersionControlType VersionControl { get; set; }
+
+    public string? Branch { get; set; }
+    
+    public string? GitRepositoryUrl { get; set; }
+    
+    public string? PlasticWorkspaceName { get; set; }
 
     /// <summary>
     /// The game engine used for the project

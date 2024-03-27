@@ -42,7 +42,6 @@ public class BuildPipeline
 	private string TimeSinceStart => $"{(DateTime.Now - StartTime).ToHourMinSecString()}";
 
 	private readonly CancellationTokenSource _cancellation = new();
-	private CancellationToken _cancellationToken => _cancellation.Token;
 
 	public BuildPipeline(ulong id, Workspace workspace, Args args, IOffloadable? offloadable)
 	{

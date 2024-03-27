@@ -1,6 +1,9 @@
+guid = "25f1670b-3be3-4f75-aacc-3b5390d355a0"
 [settings]
 project_name = "Unity Mono"
 version_control = "Git"
+branch = "master"
+git_repository_url = "https://github.com/Mainframe-Games/mg-ci.git?path=/TestProjects/UnityMono"
 game_engine = "Unity"
 store_url = "https://"
 store_thumbnail_url = "https://"

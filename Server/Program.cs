@@ -13,6 +13,7 @@ try
     var server = new WebSocketServer($"ws://{config.IP}:{config.Port}");
     server.AddWebSocketService<TestService>("/test");
     server.AddWebSocketService<BuildService>("/build");
+    server.AddWebSocketService<ReportService>("/report");
     server.Start();
 
     Console.WriteLine($"Server started on {server.Address}:{server.Port}");
@@ -26,11 +27,9 @@ try
     }
 
     Console.WriteLine("\nPress Enter key to stop the server...");
+    
     Console.ReadLine();
-
     server.Stop();
-
-    // await App.RunAsync(new Args(args));
 }
 catch (Exception e)
 {

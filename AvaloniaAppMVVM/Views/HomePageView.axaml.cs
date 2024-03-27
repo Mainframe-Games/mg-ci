@@ -107,6 +107,7 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 {
     private bool _isBuilding;
     private readonly Client _clientBuild = new("build");
+    private readonly Client _clientReport = new("report");
 
     private readonly List<ProcessesTemplate> _processes =
     [
@@ -127,7 +128,11 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
         _viewModel.Project = _project;
 
         if (!Design.IsDesignMode)
+        {
             _clientBuild.Connect();
+            _clientReport.Connect();
+            _clientReport.Send(_project.Guid);
+        }
 
         ServerStatus.Text = _clientBuild.Status;
     }

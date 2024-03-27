@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using AvaloniaAppMVVM.Data;
 using Deployment;
 using Deployment.Deployments;
 using Deployment.Server.Unity;
@@ -19,6 +20,7 @@ public static class App
 
 	private static ulong NextPipelineId { get; set; }
 	public static readonly Dictionary<ulong, BuildPipeline> Pipelines = new();
+	public static readonly Dictionary<string, BuildPipeline> PipelinesMap = new();
 
 	public static async Task RunAsync(Args args)
 	{
@@ -159,6 +161,36 @@ public static class App
 		// TODO: this should maybe be set in the BuildPipeline ctor but BuildConfig is not in Builds namespace
 		if (offloader is not null)
 			offloader.BuildConfig = pipeline.Config;
+		
+		return pipeline;
+	}
+	
+	public static BuildPipeline CreateBuildPipeline(Workspace workspace, Args args, Project project)
+	{
+		var pipelineId = NextPipelineId++;
+		Offloader? offloader = null;
+		
+		if (Config?.Offload is not null)
+		{
+			offloader = new Offloader
+			{
+				Url = Config.Offload.Url,
+				Targets = Config.Offload.Targets,
+				SendBackUrl = $"http://{Config.IP}:{Config.Port}",
+				WorkspaceName = workspace.Name,
+				WorkspaceBranch = workspace.Branch,
+				PipelineId = pipelineId,
+				XcodeConfig = Config.AppleStore
+			};
+		}
+		
+		var pipeline = new BuildPipeline(pipelineId, workspace, args, offloader);
+		
+		// TODO: this should maybe be set in the BuildPipeline ctor but BuildConfig is not in Builds namespace
+		if (offloader is not null)
+			offloader.BuildConfig = pipeline.Config;
+		
+		PipelinesMap.Add(project.Guid, pipeline);
 		
 		return pipeline;
 	}
