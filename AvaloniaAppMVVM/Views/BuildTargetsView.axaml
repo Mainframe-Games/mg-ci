@@ -33,11 +33,21 @@
                     New Target
                     <Button.Flyout>
                         <MenuFlyout ItemsSource="{Binding NewTargetTemplates}">
-                            <MenuItem Header="Windows" Command="{Binding NewTargetCommand}" CommandParameter="Windows" />
-                            <MenuItem Header="Mac" Command="{Binding NewTargetCommand}" CommandParameter="Mac"/>
-                            <MenuItem Header="Linux" Command="{Binding NewTargetCommand}" CommandParameter="Linux"/>
-                            <MenuItem Header="Android" Command="{Binding NewTargetCommand}" CommandParameter="Android"/>
-                            <MenuItem Header="iOS" Command="{Binding NewTargetCommand}" CommandParameter="iOS"/>
+                            <MenuItem Header="Windows"
+                                      Command="{Binding NewTargetCommand}" 
+                                      CommandParameter="Windows" />
+                            <MenuItem Header="Mac"
+                                      Command="{Binding NewTargetCommand}"
+                                      CommandParameter="Mac"/>
+                            <MenuItem Header="Linux"
+                                      Command="{Binding NewTargetCommand}"
+                                      CommandParameter="Linux"/>
+                            <MenuItem Header="Android"
+                                      Command="{Binding NewTargetCommand}"
+                                      CommandParameter="Android"/>
+                            <MenuItem Header="iOS"
+                                      Command="{Binding NewTargetCommand}"
+                                      CommandParameter="iOS"/>
                         </MenuFlyout>
                     </Button.Flyout>
                 </Button>
@@ -165,7 +175,7 @@
                           SelectedValue="{Binding SelectedBuildTarget.Data.BuildOptions}"
                           ItemsSource="{Binding BuildOptionOptions}">
                 </ComboBox>
-
+                
                 <Border CornerRadius="10" Background="#333">
                     <StackPanel>
                         <Label HorizontalAlignment="Center" FontSize="25" FontWeight="Heavy">DANGER ZONE</Label>

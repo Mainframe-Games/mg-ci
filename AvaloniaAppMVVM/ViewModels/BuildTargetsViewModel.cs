@@ -17,20 +17,19 @@ public partial class BuildTargetsViewModel : ViewModelBase
         [".exe", ".app", ".x86_64", ".apk", "/"];
 
     [IgnoreDataMember]
-    public static ObservableCollection<string> BuildTargetOptions { get; } =
-        new(Enum.GetNames(typeof(Unity.BuildTarget)));
+    public static ObservableCollection<Unity.BuildTarget> BuildTargetOptions { get; } =
+        new(Enum.GetValues<Unity.BuildTarget>());
+    [IgnoreDataMember]
+    public static ObservableCollection<Unity.BuildTargetGroup> BuildTargetGroupOptions { get; } =
+        new(Enum.GetValues<Unity.BuildTargetGroup>());
 
     [IgnoreDataMember]
-    public static ObservableCollection<string> BuildTargetGroupOptions { get; } =
-        new(Enum.GetNames(typeof(Unity.BuildTargetGroup)));
+    public static ObservableCollection<Unity.SubTarget> SubTargetOptions { get; } =
+        new(Enum.GetValues<Unity.SubTarget>());
 
     [IgnoreDataMember]
-    public static ObservableCollection<string> SubTargetOptions { get; } =
-        new(Enum.GetNames(typeof(Unity.SubTarget)));
-
-    [IgnoreDataMember]
-    public static ObservableCollection<string> BuildOptionOptions { get; } =
-        new(Enum.GetNames(typeof(Unity.BuildOptions)));
+    public static ObservableCollection<Unity.BuildOptions> BuildOptionOptions { get; } =
+        new(Enum.GetValues<Unity.BuildOptions>());
 
     public ObservableCollection<UnityBuildTargetTemplate> BuildTargets { get; } = [];
     public ObservableCollection<NewBuildTargetTemplate> NewTargetTemplates { get; } =

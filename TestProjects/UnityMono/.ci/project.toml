@@ -10,20 +10,31 @@ build_number_standalone = false
 build_number_iphone = false
 android_version_code = false
 [[build_targets]]
-name = "New Build Target"
-extension = ".exe"
-target = "StandaloneWindows64"
-target_group = "Standalone"
-sub_target = "Player"
-build_options = 0
-[[build_targets]]
-name = "Windows64"
+name = "Windows"
 extension = ".exe"
 product_name = "Unity Mono"
 target = "StandaloneWindows64"
 target_group = "Standalone"
 sub_target = "Player"
 build_path = "Builds/Windows"
+build_options = 0
+[[build_targets]]
+name = "Mac"
+extension = ".app"
+product_name = "Unity Mono"
+target = "StandaloneOSX"
+target_group = "Standalone"
+sub_target = "Player"
+build_path = "Builds/Mac"
+build_options = 0
+[[build_targets]]
+name = "Linux"
+extension = ".x86_64"
+product_name = "Unity Mono"
+target = "StandaloneLinux64"
+target_group = "Standalone"
+sub_target = "Player"
+build_path = "Builds/Linux"
 build_options = 0
 [deployment]
 apple_store = false
