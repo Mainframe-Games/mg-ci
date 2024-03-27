@@ -12,7 +12,7 @@ This project is a collection of tools for managing builds and deployments of Uni
 - [Deployment](Deployment/README.md): Deploys artifacts to storefronts (Steam, Itch.io, Google Play Store, Apple Store)
 - [Server](Server/README.md): Web socket server for conducting builds and deployments.
 - [DiscordBot](DiscordBot/README.md): For triggering builds from discord.
-- [Unity Package](Unity/BuildSystem/README.md): Unity Package for build script and platform configs
+- [Unity Package](UnityPackage/BuildSystem/README.md): Unity Package for build script and platform configs
 
 # Setup Guide
 
