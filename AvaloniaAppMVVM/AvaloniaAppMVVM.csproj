@@ -37,4 +37,8 @@
       <ProjectReference Include="..\ServerClientShared\ServerClientShared.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageVersion Update="Newtonsoft.Json" Version="13.0.3" />
+    </ItemGroup>
+
 </Project>
