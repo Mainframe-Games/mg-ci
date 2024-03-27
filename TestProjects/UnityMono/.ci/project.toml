@@ -1,0 +1,32 @@
+[settings]
+project_name = "Unity Mono"
+version_control = "Git"
+game_engine = "Unity"
+store_url = "https://"
+store_thumbnail_url = "https://"
+last_successful_build = "0"
+[prebuild]
+build_number_standalone = false
+build_number_iphone = false
+android_version_code = false
+[[build_targets]]
+name = "New Build Target"
+extension = ".exe"
+target = "StandaloneWindows64"
+target_group = "Standalone"
+sub_target = "Player"
+build_options = 0
+[[build_targets]]
+name = "Windows64"
+extension = ".exe"
+product_name = "Unity Mono"
+target = "StandaloneWindows64"
+target_group = "Standalone"
+sub_target = "Player"
+build_path = "Builds/Windows"
+build_options = 0
+[deployment]
+apple_store = false
+google_store = false
+clanforge = false
+aws_s3 = false

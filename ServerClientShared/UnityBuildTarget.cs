@@ -2,10 +2,10 @@
 
 public class UnityBuildTarget
 {
-    public string? Name { get; set; } = "New Build Target";
+    public string? Name { get; set; }
 
     // config
-    public string? Extension { get; set; } = ".exe";
+    public string? Extension { get; set; }
     public string? ProductName { get; set; }
     public Unity.BuildTarget Target { get; set; } = Unity.BuildTarget.StandaloneWindows64;
     public Unity.BuildTargetGroup TargetGroup { get; set; } = Unity.BuildTargetGroup.Standalone;

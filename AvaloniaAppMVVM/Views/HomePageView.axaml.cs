@@ -3,14 +3,10 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Avalonia.Threading;
 using AvaloniaAppMVVM.Data;
-using AvaloniaAppMVVM.Utils;
 using AvaloniaAppMVVM.ViewModels;
 using AvaloniaAppMVVM.WebClient;
 using LoadingIndicators.Avalonia;
-using Newtonsoft.Json.Linq;
-using ServerClientShared;
 
 namespace AvaloniaAppMVVM.Views;
 
@@ -130,8 +126,8 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
     {
         _viewModel.Project = _project;
 
-        if (!Design.IsDesignMode)
-            _clientBuild.Connect();
+        // if (!Design.IsDesignMode)
+        // _clientBuild.Connect();
 
         ServerStatus.Text = _clientBuild.Status;
     }
