@@ -63,7 +63,7 @@
             
             <!-- Settings Button -->
             <Button Grid.Column="4" Width="40" ToolTip.Tip="Settings"
-                    Click="Button_Settings_OnClick">
+                    Command="{Binding Button_Settings_OnClickCommand}">
                 <PathIcon Data="{StaticResource settings_regular}" Width="14"></PathIcon>
             </Button>
         </Grid>
@@ -115,7 +115,7 @@
 
                 </Border>
             </SplitView.Content>
-
+            
         </SplitView>
         
         <!-- Footer -->

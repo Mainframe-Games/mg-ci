@@ -6,7 +6,7 @@ store_url = "https://"
 store_thumbnail_url = "https://"
 last_successful_build = "0"
 [prebuild]
-build_number_standalone = false
+build_number_standalone = true
 build_number_iphone = false
 android_version_code = false
 [[build_targets]]

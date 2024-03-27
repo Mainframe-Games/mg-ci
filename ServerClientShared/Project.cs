@@ -106,7 +106,7 @@ public class ProjectSettings
 
 public class Prebuild
 {
-    public bool BuildNumberStandalone { get; set; }
+    public bool BuildNumberStandalone { get; set; } = true;
     public bool BuildNumberIphone { get; set; }
     public bool AndroidVersionCode { get; set; }
 }

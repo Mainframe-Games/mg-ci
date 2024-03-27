@@ -23,13 +23,10 @@ public partial class DeployView : MyUserControl<DeployViewModel>
 
     protected override void OnInit()
     {
+        _viewModel.Project = _project;
+        
         foreach (var steamVdf in _project.Deployment.SteamVdfs)
             _viewModel.SteamVdfs.Add(new StringWrap(steamVdf));
-
-        _viewModel.AppleStore = _project.Deployment.AppleStore;
-        _viewModel.GoogleStore = _project.Deployment.GoogleStore;
-        _viewModel.Clanforge = _project.Deployment.Clanforge;
-        _viewModel.AwsS3 = _project.Deployment.AwsS3;
     }
 
     protected override void OnPreSave()
@@ -37,10 +34,5 @@ public partial class DeployView : MyUserControl<DeployViewModel>
         _project.Deployment.SteamVdfs.Clear();
         foreach (var steamVdf in _viewModel.SteamVdfs)
             _project.Deployment.SteamVdfs.Add(steamVdf.Value);
-
-        _project.Deployment.AppleStore = _viewModel.AppleStore;
-        _project.Deployment.GoogleStore = _viewModel.GoogleStore;
-        _project.Deployment.Clanforge = _viewModel.Clanforge;
-        _project.Deployment.AwsS3 = _viewModel.AwsS3;
     }
 }

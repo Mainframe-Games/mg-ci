@@ -15,12 +15,22 @@
     
     <ScrollViewer>
         <StackPanel Margin="20 20" Spacing="10">
-            <TextBlock FontSize="25" FontWeight="Black">Deploy</TextBlock>
+            <TextBlock FontSize="25" FontWeight="Black">
+                Deploy
+            </TextBlock>
             
             <Grid ColumnDefinitions="*, Auto">
-            <TextBlock FontSize="18" VerticalAlignment="Center">Steam</TextBlock>
-                <Button Grid.Column="1" Command="{Binding AddSteamVdf}">Add</Button>
+            <TextBlock
+                FontSize="18"
+                VerticalAlignment="Center">
+                Steam
+            </TextBlock>
+                <Button Grid.Column="1"
+                        Command="{Binding AddSteamVdf}">
+                    Add
+                </Button>
             </Grid>
+            
             <ItemsRepeater ItemsSource="{Binding SteamVdfs}">
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate>
@@ -36,10 +46,14 @@
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
             
-            <CheckBox Content="AppleStore" IsChecked="{Binding AppleStore}"></CheckBox>
-            <CheckBox Content="GoogleStore" IsChecked="{Binding GoogleStore}"></CheckBox>
-            <CheckBox Content="Clanforge" IsChecked="{Binding Clanforge}"></CheckBox>
-            <CheckBox Content="AWS S3" IsChecked="{Binding AwsS3}"></CheckBox>
+            <CheckBox Content="AppleStore" 
+                      IsChecked="{Binding Project.Deployment.AppleStore}"/>
+            <CheckBox Content="GoogleStore" 
+                      IsChecked="{Binding Project.Deployment.GoogleStore}"/>
+            <CheckBox Content="Clanforge"
+                      IsChecked="{Binding Project.Deployment.Clanforge}"/>
+            <CheckBox Content="AWS S3"
+                      IsChecked="{Binding Project.Deployment.AwsS3}"/>
             
         </StackPanel>
     </ScrollViewer>

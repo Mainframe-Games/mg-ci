@@ -11,15 +11,10 @@ public partial class PrebuildView : MyUserControl<PrebuildViewModel>
 
     protected override void OnInit()
     {
-        _viewModel.BuildNumberStandalone = _project.Prebuild.BuildNumberStandalone;
-        _viewModel.BuildNumberIphone = _project.Prebuild.BuildNumberIphone;
-        _viewModel.AndroidVersionCode = _project.Prebuild.AndroidVersionCode;
+        _viewModel.Project = _project;
     }
 
     protected override void OnPreSave()
     {
-        _project.Prebuild.BuildNumberStandalone = _viewModel.BuildNumberStandalone;
-        _project.Prebuild.BuildNumberIphone = _viewModel.BuildNumberIphone;
-        _project.Prebuild.AndroidVersionCode = _viewModel.AndroidVersionCode;
     }
 }

@@ -126,8 +126,8 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
     {
         _viewModel.Project = _project;
 
-        // if (!Design.IsDesignMode)
-        // _clientBuild.Connect();
+        if (!Design.IsDesignMode)
+            _clientBuild.Connect();
 
         ServerStatus.Text = _clientBuild.Status;
     }
@@ -272,34 +272,6 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
             process.IsBusy = false;
             process.Logs = string.Empty;
         }
-    }
-
-    private async Task BuildProcessTask()
-    {
-        // refresh processes
-        RefreshProcesses();
-
-        // do builds
-        foreach (var process in _processes)
-        {
-            process.IsBusy = true;
-            var startTime = DateTime.Now;
-
-            // doing busy things
-            while (DateTime.Now - startTime < TimeSpan.FromSeconds(2))
-            {
-                var log = $"[{DateTime.Now:T}] Building {process.Id}...";
-                Console.WriteLine(log);
-                process.Logs += log + "\n";
-                await Task.Delay(300);
-            }
-
-            process.IsBusy = false;
-            process.Succeeded = true;
-            process.Time = $@"{DateTime.Now - startTime:hh\:mm\:ss}";
-        }
-
-        Console.WriteLine("Done");
     }
 
     #endregion

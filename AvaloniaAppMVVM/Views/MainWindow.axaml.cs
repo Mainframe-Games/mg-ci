@@ -26,8 +26,6 @@ public partial class MainWindow : AppWindow
         ViewModel.OnAppClose();
     }
 
-    public void Button_Settings_OnClick(object? sender, RoutedEventArgs e) { }
-
     private async void Button_OpenProject_OnClick(object? sender, RoutedEventArgs e)
     {
         //This can also be applied for SaveFilePicker.

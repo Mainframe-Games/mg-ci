@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using AvaloniaAppMVVM.Data;
+using AvaloniaAppMVVM.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -113,6 +114,13 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         const string url = "https://github.com/Mainframe-Games/mg-ci";
         Process.Start("explorer", url);
+    }
+    
+    [RelayCommand]
+    public void Button_Settings_OnClick()
+    {
+        var appSettings = new AppSettingsView();
+        appSettings.Show();
     }
 
     private void RefreshPage()

@@ -24,12 +24,12 @@
                 <Button Grid.Column="1" Command="{Binding NewHookCommand}">New Hook</Button>
             </Grid>
             
-            <ItemsRepeater ItemsSource="{Binding Items}">
+            <ItemsRepeater ItemsSource="{Binding Hooks}">
                 <ItemsRepeater.Layout>
                     <StackLayout Spacing="10"></StackLayout>
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
-                    <DataTemplate DataType="{x:Type data1:HookItemTemplate}">
+                    <DataTemplate>
                         <Border Background="#333" 
                                 CornerRadius="10">
                             

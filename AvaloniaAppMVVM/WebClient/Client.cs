@@ -1,3 +1,4 @@
+using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.Utils;
 using ServerClientShared;
 using Tomlyn.Model;
@@ -35,7 +36,10 @@ public class Client()
             return;
         }
 
-        _ws = new WebSocket($"ws://localhost:8080/{_path}");
+        var ip = AppSettings.Singleton.ServerIp;
+        var port = AppSettings.Singleton.ServerPort;
+        
+        _ws = new WebSocket($"ws://{ip}:{port}/{_path}");
         _ws.WaitTime = TimeSpan.FromSeconds(WAIT_TIME);
 
         _ws.OnOpen += (sender, e) =>

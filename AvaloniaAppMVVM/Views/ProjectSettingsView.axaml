@@ -17,22 +17,22 @@
             <TextBlock FontSize="25" FontWeight="Black">Project Settings</TextBlock>
             
             <TextBlock>Project Name</TextBlock>
-            <TextBox Text="{Binding ProjectName}"/>
+            <TextBox Text="{Binding Project.Settings.ProjectName}"/>
             
             <TextBlock>Location</TextBlock>
-            <TextBlock Text="{Binding Location}"
+            <TextBlock Text="{Binding Project.Location}"
                        Background="#333"/>
             
             <TextBlock>Version control</TextBlock>
             <ComboBox SelectedIndex="0"
                       ItemsSource="{Binding VersionControlOptions}"
-                      SelectedItem="{Binding VersionControl}">
+                      SelectedItem="{Binding Project.Settings.VersionControl}">
             </ComboBox>
             
             <TextBlock>Game Engine</TextBlock>
             <ComboBox SelectedIndex="0"
                       ItemsSource="{Binding GameEngineOptions}"
-                      SelectedItem="{Binding GameEngine}">
+                      SelectedItem="{Binding Project.Settings.GameEngine}">
             </ComboBox>
             
             <Line Height="20"></Line>
@@ -40,13 +40,13 @@
             <!-- Meta Data -->
             <TextBlock FontSize="18" FontWeight="Black">Meta Data</TextBlock>
             <TextBlock>Store Url</TextBlock>
-            <TextBox Text="{Binding StoreUrl}"/>
+            <TextBox Text="{Binding Project.Settings.StoreUrl}"/>
             
             <TextBlock>Thumbnail Url</TextBlock>
-            <TextBox Text="{Binding StoreThumbnailUrl}"/>
+            <TextBox Text="{Binding Project.Settings.StoreThumbnailUrl}"/>
             
             <TextBlock>Last Successful Build</TextBlock>
-            <TextBlock Text="{Binding LastSuccessfulBuild}"
+            <TextBlock Text="{Binding Project.Settings.LastSuccessfulBuild}"
                        Background="#333"/>
             
         </StackPanel>

@@ -5,6 +5,9 @@ namespace AvaloniaAppMVVM.Data;
 
 public class AppSettings
 {
+    [IgnoreDataMember]
+    public static AppSettings Singleton { get; private set; } = new();
+    
     /// <summary>
     /// Last project loaded location.
     /// </summary>
@@ -14,15 +17,16 @@ public class AppSettings
     /// All projects loaded.
     /// </summary>
     public List<string?> LoadedProjectPaths { get; set; } = [];
-
-    [IgnoreDataMember]
-    public static AppSettings Singleton { get; private set; } = new();
+    
+    public string? ServerIp { get; set; } = "localhost";
+    public ushort ServerPort { get; set; } = 8080;
 
     public void Save()
     {
         var toml = Toml.FromModel(this);
         File.WriteAllText("settings.toml", toml);
-        Console.WriteLine("Saved settings");
+        Console.WriteLine("Saved settings: settings.toml");
+        Console.WriteLine(toml);
     }
 
     public static AppSettings Load()
