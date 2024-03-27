@@ -1,38 +1,38 @@
+using LibGit2Sharp;
+using LibGit2Sharp.Handlers;
+
 namespace SharedLib;
 
 public class GitWorkspace : Workspace
 {
-    public GitWorkspace(string name, string directory) : base(name, directory)
+    private readonly Repository _repository;
+    private readonly Signature _author = new("build-bot", "email@build.bot", DateTimeOffset.Now);
+
+    public GitWorkspace(Repository repository, string name, string directory, string projectId)
+        : base(name, directory, projectId)
     {
-        
+        _repository = repository;
     }
 
     public override void Clear()
     {
-        Cmd.Run("git", "reset --hard");
+        _repository.Reset(ResetMode.Hard, _repository.Head.Tip);
         RefreshMetaData();
     }
 
     public override void Update(int changeSetId = -1)
     {
-        Cmd.Run("git", "pull");
+        Commands.Pull(_repository, _author, new PullOptions());
         RefreshMetaData();
     }
 
     public override void GetCurrent(out int changesetId, out string guid)
     {
-        var currentDir = Environment.CurrentDirectory;
-        Environment.CurrentDirectory = Directory;
-		
-        var cmdRes = Cmd.Run(
-            "git", "log --oneline -n 1",
-            logOutput: false);
-		
-        Environment.CurrentDirectory = currentDir;
-
-        var split = cmdRes.output.Split(' ');
         changesetId = 0;
-        guid = split[0];
+
+        // get repo log
+        var commits = _repository.Commits.QueryBy(new CommitFilter { FirstParentOnly = true });
+        guid = commits?.First().Sha ?? string.Empty;
     }
 
     public override int GetPreviousChangeSetId(string key)
@@ -40,22 +40,54 @@ public class GitWorkspace : Workspace
         throw new NotImplementedException();
     }
 
-    public string[] GetChangeLog(string? curSha, string? prevSha, bool print = true)
+    public string[] GetChangeLog(string? curSha, string? prevSha)
     {
-        // get all commit messages
-        var (exitCode, output) = Cmd.Run("git", $"log --pretty=format:\"%s\" {prevSha}..{curSha}", print);
-        return output.Split('\n');
+        var commits = _repository.Commits.QueryBy(new CommitFilter { FirstParentOnly = true });
+
+        var logs = new List<string>();
+
+        foreach (var commit in commits)
+        {
+            if (commit.Sha == prevSha)
+                break;
+
+            logs.Add(commit.Message);
+        }
+
+        return logs.ToArray();
     }
 
     public override void Commit(string commitMessage)
     {
-        Cmd.Run("git", "add .");
-        Cmd.Run("git", $"commit -m \"{commitMessage}\"");
-        Cmd.Run("git", $"push origin {Branch}");
+        try
+        {
+            Commands.Stage(_repository, "*");
+            _repository.Commit(commitMessage, _author, _author);
+            _repository.Network.Push(
+                _repository.Head,
+                new PushOptions { CredentialsProvider = CredentialsHandler }
+            );
+        }
+        catch (EmptyCommitException e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    private static Credentials CredentialsHandler(
+        string url,
+        string usernamefromurl,
+        SupportedCredentialTypes types
+    )
+    {
+        return new DefaultCredentials();
     }
 
     public override void SwitchBranch(string? branchPath)
     {
-        Cmd.Run("git", $"switch {branchPath}");
+        if (_repository.Head.FriendlyName == branchPath)
+            return;
+
+        Commands.Checkout(_repository, _repository.Branches[branchPath]);
     }
 }

@@ -42,6 +42,9 @@
                 <TextBlock FontWeight="Bold">Repository Url</TextBlock>
                 <TextBox Text="{Binding Project.Settings.GitRepositoryUrl}"/>
                 
+                <TextBlock FontWeight="Bold">Sub Path</TextBlock>
+                <TextBox Text="{Binding Project.Settings.GitRepositorySubPath}"/>
+                
                 <TextBlock FontWeight="Bold">Branch</TextBlock>
                 <ComboBox Name="BranchComboBox"
                     SelectedItem="{Binding Project.Settings.Branch}"/>

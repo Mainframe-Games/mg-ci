@@ -51,7 +51,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // load all projects
         foreach (var path in _appSettings.LoadedProjectPaths)
-            ProjectOptions.Add(Project.Load(path));
+        {
+            var proj = Project.Load(path);
+            if (proj is not null)
+                ProjectOptions.Add(proj);
+        }
 
         // load project
         LoadCurrentProject(_appSettings.LastProjectLocation);
@@ -70,7 +74,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public void LoadCurrentProject(string? location)
     {
-        if (string.IsNullOrEmpty(location))
+        if (string.IsNullOrEmpty(location) || !Directory.Exists(location))
             return;
 
         // return if already loaded
@@ -115,7 +119,7 @@ public partial class MainWindowViewModel : ViewModelBase
         const string url = "https://github.com/Mainframe-Games/mg-ci";
         Process.Start("explorer", url);
     }
-    
+
     [RelayCommand]
     public void Button_Settings_OnClick()
     {

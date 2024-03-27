@@ -2,11 +2,9 @@ namespace SharedLib;
 
 public class PlasticWorkspace : Workspace
 {
-    private PlasticWorkspace(string name, string directory) : base(name, directory)
-    {
-        
-    }
-    
+    private PlasticWorkspace(string name, string directory, string projectId)
+        : base(name, directory, projectId) { }
+
     public static bool TryAskWorkspace(out Workspace workspace)
     {
         var (exitCode, output) = Cmd.Run("cm", "workspace", logOutput: false);
@@ -22,12 +20,12 @@ public class PlasticWorkspace : Workspace
             workspace = null!;
             return false;
         }
-		
+
         workspace = workspaces[index];
         Logger.Log($"Chosen workspace: {workspace}");
         return true;
     }
-    
+
     public static List<Workspace> GetAvailableWorkspaces()
     {
         var (exitCode, output) = Cmd.Run("cm", "workspace", logOutput: false);
@@ -45,7 +43,7 @@ public class PlasticWorkspace : Workspace
                 var split = workspace.Split('@');
                 var name = split[0];
                 var path = split[1].Replace(Environment.MachineName, string.Empty).Trim();
-                var ws = new PlasticWorkspace(name, path);
+                var ws = new PlasticWorkspace(name, path, "[TODO]");
                 workspaces.Add(ws);
             }
             catch (Exception e)
@@ -57,11 +55,13 @@ public class PlasticWorkspace : Workspace
 
         return workspaces;
     }
-    
+
     public static Workspace? GetWorkspaceFromName(string? workspaceName)
     {
         var workspaces = GetAvailableWorkspaces();
-        return workspaces.FirstOrDefault(x => string.Equals(x.Name, workspaceName, StringComparison.OrdinalIgnoreCase));
+        return workspaces.FirstOrDefault(
+            x => string.Equals(x.Name, workspaceName, StringComparison.OrdinalIgnoreCase)
+        );
     }
 
     public override void Clear()
@@ -69,17 +69,20 @@ public class PlasticWorkspace : Workspace
         Cmd.Run("cm", $"unco -a \"{Directory}\"");
         RefreshMetaData();
     }
-    
+
     public override void Update(int changeSetId = -1)
     {
         // get all the latest updates
         Cmd.Run("cm", $"update \"{Directory}\"");
-		
+
         // set to a specific change set
         if (changeSetId > 0)
         {
-            var (exitCode, output) = Cmd.Run("cm", $"switch cs:{changeSetId} --workspace=\"{Directory}\"");
-			
+            var (exitCode, output) = Cmd.Run(
+                "cm",
+                $"switch cs:{changeSetId} --workspace=\"{Directory}\""
+            );
+
             if (exitCode != 0 || output.ToLower().Contains("does not exist"))
                 throw new Exception($"Plastic update error: {output}");
         }
@@ -91,11 +94,13 @@ public class PlasticWorkspace : Workspace
     {
         var currentDir = Environment.CurrentDirectory;
         Environment.CurrentDirectory = Directory;
-		
+
         var cmdRes = Cmd.Run(
-            "cm", $"find changeset \"where branch='{Branch}'\" \"order by date desc\" \"limit 1\" --format=\"{{changesetid}} {{guid}}\" --nototal",
-            logOutput: false);
-		
+            "cm",
+            $"find changeset \"where branch='{Branch}'\" \"order by date desc\" \"limit 1\" --format=\"{{changesetid}} {{guid}}\" --nototal",
+            logOutput: false
+        );
+
         Environment.CurrentDirectory = currentDir;
 
         var split = cmdRes.output.Split(' ');
@@ -105,16 +110,20 @@ public class PlasticWorkspace : Workspace
 
     public override int GetPreviousChangeSetId(string key)
     {
-        var req = Cmd.Run("cm",
+        var req = Cmd.Run(
+            "cm",
             $"find changeset \"where branch='{Branch}' and comment like '%{key}%'\" \"order by date desc\" \"limit 1\" --format=\"{{changesetid}}\" --nototal",
-            logOutput: false);
-		
+            logOutput: false
+        );
+
         // if empty from branch, try again in 'main'
         if (string.IsNullOrEmpty(req.output))
-            req = Cmd.Run("cm", 
+            req = Cmd.Run(
+                "cm",
                 $"find changeset \"where branch='main' and comment like '%{key}%'\" \"order by date desc\" \"limit 1\" --format=\"{{changesetid}}\" --nototal",
-                logOutput: false);
-		
+                logOutput: false
+            );
+
         return int.TryParse(req.output, out var cs) ? cs : 0;
     }
 
@@ -125,14 +134,17 @@ public class PlasticWorkspace : Workspace
     {
         var dirBefore = Environment.CurrentDirectory;
         Environment.CurrentDirectory = Directory;
-		
-        var raw = Cmd.Run("cm", $"log --from=cs:{prevId} cs:{curId} --csformat=\"{{comment}}\"").output;
+
+        var raw = Cmd.Run(
+            "cm",
+            $"log --from=cs:{prevId} cs:{curId} --csformat=\"{{comment}}\""
+        ).output;
         var changeLog = raw.Split(Environment.NewLine).Reverse().ToList();
         changeLog.RemoveAll(x => x.StartsWith("_")); // remove all ignores
-		
+
         if (print)
             Logger.Log($"___Change Logs___\n{string.Join("\n", changeLog)}");
-		
+
         Environment.CurrentDirectory = dirBefore;
         return changeLog.ToArray();
     }
@@ -146,10 +158,13 @@ public class PlasticWorkspace : Workspace
         var status = Cmd.Run("cm", "status --short").output;
         var files = status.Split(Environment.NewLine);
         var filesToCommit = files
-            .Where(x => x.Contains(".vdf")
-                        || x.Contains(PROJ_SETTINGS_ASSET)
-                        || x.Contains(APP_VERSION_TXT)
-                        || x.Contains(WORKSPACE_META_JSON))
+            .Where(
+                x =>
+                    x.Contains(".vdf")
+                    || x.Contains(PROJ_SETTINGS_ASSET)
+                    || x.Contains(APP_VERSION_TXT)
+                    || x.Contains(WORKSPACE_META_JSON)
+            )
             .ToList();
 
         // commit changes

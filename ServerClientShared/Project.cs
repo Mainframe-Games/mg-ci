@@ -34,7 +34,7 @@ public class Project
     [IgnoreDataMember]
     private static readonly Dictionary<string, Project> _projectsMap = new();
 
-    public static Project Load(string? location)
+    public static Project? Load(string? location)
     {
         if (string.IsNullOrEmpty(location))
             return null!;
@@ -46,7 +46,11 @@ public class Project
             return cachedProj;
         }
 
-        var toml = File.ReadAllText(Path.Combine(location, ".ci", "project.toml"));
+        var projectToml = Path.Combine(location, ".ci", "project.toml");
+        if (!File.Exists(projectToml))
+            return null;
+
+        var toml = File.ReadAllText(projectToml);
         var proj = Toml.ToModel<Project>(
             toml,
             options: new TomlModelOptions { IgnoreMissingProperties = true }
@@ -83,9 +87,10 @@ public class ProjectSettings
     public VersionControlType VersionControl { get; set; }
 
     public string? Branch { get; set; }
-    
+
     public string? GitRepositoryUrl { get; set; }
-    
+    public string? GitRepositorySubPath { get; set; }
+
     public string? PlasticWorkspaceName { get; set; }
 
     /// <summary>

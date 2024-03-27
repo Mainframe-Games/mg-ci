@@ -21,15 +21,21 @@ public class ReportService : ServiceBase
             case MessageType.Disconnection:
                 break;
             case MessageType.Message:
-                
+
                 var projectGuid = json.Data?.ToString() ?? throw new NullReferenceException();
                 var data = GatherPipelineState(projectGuid);
-                
+
                 if (data is not null)
                     Send(new NetworkPayload(MessageType.Message, 0, data));
                 else
-                    Send(new NetworkPayload(MessageType.Error, 0, $"Pipeline not found: {projectGuid}"));
-                
+                    Send(
+                        new NetworkPayload(
+                            MessageType.Error,
+                            0,
+                            $"Pipeline not found: {projectGuid}"
+                        )
+                    );
+
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -38,7 +44,7 @@ public class ReportService : ServiceBase
 
     private static PipelineReport? GatherPipelineState(string projectGuid)
     {
-        if (!App.PipelinesMap.TryGetValue(projectGuid, out var pipeline))
+        if (!App.Pipelines.TryGetValue(projectGuid, out var pipeline))
             return null;
 
         return pipeline.Report;

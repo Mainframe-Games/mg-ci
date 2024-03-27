@@ -6,7 +6,7 @@ using WebSocketSharp.Server;
 
 try
 {
-    Console.Title = $"Build Server - {App.Version}";
+    Console.Title = $"Build Server - {App.ServerVersion}";
 
     var config = ServerConfig.Load();
 
@@ -27,7 +27,7 @@ try
     }
 
     Console.WriteLine("\nPress Enter key to stop the server...");
-    
+
     Console.ReadLine();
     server.Stop();
 }
