@@ -60,7 +60,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // load project
         LoadCurrentProject(_appSettings.LastProjectLocation);
-        SaveAppSettings();
     }
 
     public void OnAppClose()

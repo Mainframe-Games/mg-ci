@@ -2,7 +2,6 @@
 using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.ViewModels;
 using LibGit2Sharp;
-using ServerClientShared;
 
 namespace AvaloniaAppMVVM.Views;
 
@@ -46,14 +45,13 @@ public partial class ProjectSettingsView : MyUserControl<ProjectSettingsViewMode
 
     private void SetGitBranchComboBoxItems()
     {
-        var repo = new Repository(_project.Location);
+        using var repo = new Repository(_project.Location);
         var branches = repo.Branches
             .Where(x => x.IsRemote && !x.FriendlyName.Contains("HEAD"))
             .Select(x => x.FriendlyName.Replace(x.RemoteName, string.Empty).Trim('/'))
             .ToList();
         
         // var branches = Git.GetBranchesFromRemote(_project.Settings.GitRepositoryUrl);
-        
         BranchComboBox.ItemsSource = branches;
     }
 }

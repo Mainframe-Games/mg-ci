@@ -6,51 +6,43 @@ using ErrorEventArgs = WebSocketSharp.ErrorEventArgs;
 
 namespace AvaloniaAppMVVM.WebClient;
 
-public class Client()
+public class Client
 {
     private const int WAIT_TIME = 60;
     private static ushort _nextClientId;
+    private readonly WebSocket _ws;
 
-    private WebSocket? _ws;
-
-    public bool IsAlive => _ws?.IsAlive ?? false;
-    public string Status => _ws?.ReadyState.ToString() ?? "Not connected";
+    public bool IsAlive => _ws.IsAlive;
+    public string Status => _ws.ReadyState.ToString();
 
     private readonly string? _path;
     private readonly ushort _clientId;
 
     public Client(string path)
-        : this()
     {
         _clientId = _nextClientId++;
         _path = path;
-    }
-
-    public void Connect()
-    {
-        if (IsAlive)
-        {
-            Console.WriteLine("Socket already connected.");
-            return;
-        }
-
+        
         var ip = AppSettings.Singleton.ServerIp;
         var port = AppSettings.Singleton.ServerPort;
         
         _ws = new WebSocket($"ws://{ip}:{port}/{_path}");
         _ws.WaitTime = TimeSpan.FromSeconds(WAIT_TIME);
-
+        
         _ws.OnOpen += OnOpen;
         _ws.OnMessage += OnMessage;
         _ws.OnError += OnError;
         _ws.OnClose += OnClose;
+    }
 
+    public void Connect()
+    {
         _ws.Connect();
     }
 
     public void Close()
     {
-        _ws?.Close();
+        _ws.Close();
     }
 
     private void OnOpen(object? sender, EventArgs eventArgs)
@@ -58,7 +50,7 @@ public class Client()
         Console.WriteLine($"Client connected: {_path}");
         var payload = new NetworkPayload(MessageType.Connection, _clientId, "Hello");
         var json = Json.Serialise(payload);
-        _ws?.Send(json);
+        _ws.Send(json);
     }
     
     private void OnMessage(object? sender, MessageEventArgs e)
@@ -79,7 +71,7 @@ public class Client()
 
     public void Send(object data)
     {
-        if (_ws?.ReadyState is not WebSocketState.Open)
+        if (_ws.ReadyState is not WebSocketState.Open)
         {
             Console.WriteLine("Socket is not open.");
             Connect();
@@ -87,6 +79,6 @@ public class Client()
 
         var payload = new NetworkPayload(MessageType.Message, _clientId, data);
         var json = Json.Serialise(payload);
-        _ws?.Send(json);
+        _ws.Send(json);
     }
 }
