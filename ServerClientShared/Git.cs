@@ -54,20 +54,38 @@ public class Git(string path)
     /// Returns the branches from a remote repository without cloning it.
     /// </summary>
     /// <param name="url"></param>
+    /// <param name="credentials"></param>
     /// <returns></returns>
-    public static List<string> GetBranchesFromRemote(string url)
+    public static List<string> GetBranchesFromRemote(string url, Credentials? credentials = null)
     {
-        var refs = Repository.ListRemoteReferences(url);
         var branches = new List<string>();
-
-        foreach (var reference in refs)
+        
+        try
         {
-            if (!reference.CanonicalName.Contains("refs/heads/"))
-                continue;
+            var refs = Repository.ListRemoteReferences(url,
+                (inUrl, usernameFromUrl, types) =>
+                {
+                    return types switch
+                    {
+                        SupportedCredentialTypes.UsernamePassword => credentials,
+                        SupportedCredentialTypes.Default => new DefaultCredentials(),
+                        _ => throw new ArgumentOutOfRangeException(nameof(types), types, null)
+                    };
+                });
 
-            Console.WriteLine($"Reference: {reference}");
-            var branchName = reference.CanonicalName.Split('/')[^1];
-            branches.Add(branchName);
+            foreach (var reference in refs)
+            {
+                if (!reference.CanonicalName.Contains("refs/heads/"))
+                    continue;
+
+                Console.WriteLine($"Reference: {reference}");
+                var branchName = reference.CanonicalName.Split('/')[^1];
+                branches.Add(branchName);
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
         }
 
         return branches;

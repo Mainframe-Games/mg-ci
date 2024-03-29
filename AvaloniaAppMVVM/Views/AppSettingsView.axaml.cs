@@ -12,6 +12,9 @@ public partial class AppSettingsView : AppWindow
         var setting = AppSettings.Singleton;
         ServerIp.Text = setting.ServerIp;
         ServerPort.Text = setting.ServerPort.ToString();
+
+        // GitUsername.Text = setting.GitUsername;
+        // GitPassword.Text = setting.GitPassword;
     }
 
     protected override void OnClosed(EventArgs e)
@@ -22,6 +25,9 @@ public partial class AppSettingsView : AppWindow
         
         setting.ServerIp = ServerIp.Text;
         setting.ServerPort = ushort.TryParse(ServerPort.Text, out var port) ? port: (ushort)8080;
+        
+        // setting.GitUsername = GitUsername.Text;
+        // setting.GitPassword = GitPassword.Text;
         
         AppSettings.Singleton.Save();
     }

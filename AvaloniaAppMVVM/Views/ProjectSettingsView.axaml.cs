@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.ViewModels;
+using LibGit2Sharp;
 using ServerClientShared;
 
 namespace AvaloniaAppMVVM.Views;
@@ -32,8 +33,7 @@ public partial class ProjectSettingsView : MyUserControl<ProjectSettingsViewMode
         
         if (isGit && !string.IsNullOrEmpty(_project.Settings.GitRepositoryUrl))
         {
-            var branches = Git.GetBranchesFromRemote(_project.Settings.GitRepositoryUrl);
-            BranchComboBox.ItemsSource = branches;
+            SetGitBranchComboBoxItems();
         }
         
         BranchComboBox.SelectedItem = _viewModel.Project?.Settings.Branch;
@@ -42,5 +42,18 @@ public partial class ProjectSettingsView : MyUserControl<ProjectSettingsViewMode
     private void SelectingItemsControl_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         RefreshVersionControlSettings();
+    }
+
+    private void SetGitBranchComboBoxItems()
+    {
+        var repo = new Repository(_project.Location);
+        var branches = repo.Branches
+            .Where(x => x.IsRemote && !x.FriendlyName.Contains("HEAD"))
+            .Select(x => x.FriendlyName.Replace(x.RemoteName, string.Empty).Trim('/'))
+            .ToList();
+        
+        // var branches = Git.GetBranchesFromRemote(_project.Settings.GitRepositoryUrl);
+        
+        BranchComboBox.ItemsSource = branches;
     }
 }

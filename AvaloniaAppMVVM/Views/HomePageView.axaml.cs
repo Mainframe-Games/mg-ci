@@ -129,9 +129,9 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 
         if (!Design.IsDesignMode)
         {
-            _clientBuild.Connect();
-            _clientReport.Connect();
-            _clientReport.Send(_project.Guid);
+            // _clientBuild.Connect();
+            // _clientReport.Connect();
+            // _clientReport.Send(_project.Guid);
         }
 
         ServerStatus.Text = _clientBuild.Status;

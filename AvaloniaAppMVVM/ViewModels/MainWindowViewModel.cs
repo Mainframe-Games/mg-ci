@@ -50,6 +50,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _appSettings = AppSettings.Singleton;
 
         // load all projects
+        _appSettings.LoadedProjectPaths.RemoveAll(x => !File.Exists(x));
         foreach (var path in _appSettings.LoadedProjectPaths)
         {
             var proj = Project.Load(path);
@@ -59,6 +60,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // load project
         LoadCurrentProject(_appSettings.LastProjectLocation);
+        SaveAppSettings();
     }
 
     public void OnAppClose()

@@ -20,6 +20,8 @@ public class AppSettings
     
     public string? ServerIp { get; set; } = "localhost";
     public ushort ServerPort { get; set; } = 8080;
+    // public string? GitUsername { get; set; }
+    // public string? GitPassword { get; set; }
 
     public void Save()
     {
