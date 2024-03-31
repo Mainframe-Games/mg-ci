@@ -19,6 +19,7 @@ public partial class BuildTargetsViewModel : ViewModelBase
     [IgnoreDataMember]
     public static ObservableCollection<Unity.BuildTarget> BuildTargetOptions { get; } =
         new(Enum.GetValues<Unity.BuildTarget>());
+
     [IgnoreDataMember]
     public static ObservableCollection<Unity.BuildTargetGroup> BuildTargetGroupOptions { get; } =
         new(Enum.GetValues<Unity.BuildTargetGroup>());
@@ -96,7 +97,6 @@ public partial class BuildTargetsViewModel : ViewModelBase
         {
             Name = template.Name,
             ProductName = Project.Settings.ProjectName,
-            BuildPath = $"Builds/{template.Name}",
             Target = template.Target,
             SubTarget = Unity.SubTarget.Player,
             TargetGroup = template.TargetGroup,

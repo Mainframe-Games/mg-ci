@@ -102,9 +102,6 @@
                           ItemsSource="{Binding SubTargetOptions}">
                 </ComboBox>
 
-                <TextBlock Text="Build Path" />
-                <TextBox Text="{Binding SelectedBuildTarget.Data.BuildPath}" />
-
                 <!-- Scenes -->
                 <Grid ColumnDefinitions="*, Auto">
                     <TextBlock FontSize="18" VerticalAlignment="Center">Scenes</TextBlock>

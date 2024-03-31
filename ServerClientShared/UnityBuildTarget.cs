@@ -10,7 +10,6 @@ public class UnityBuildTarget
     public Unity.BuildTarget Target { get; set; } = Unity.BuildTarget.StandaloneWindows64;
     public Unity.BuildTargetGroup TargetGroup { get; set; } = Unity.BuildTargetGroup.Standalone;
     public Unity.SubTarget? SubTarget { get; set; } = Unity.SubTarget.Player;
-    public string? BuildPath { get; set; }
     public List<string> Scenes { get; set; } = [];
     public List<string> ExtraScriptingDefines { get; set; } = [];
     public List<string> AssetBundleManifestPath { get; set; } = [];
