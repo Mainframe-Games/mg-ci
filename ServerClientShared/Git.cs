@@ -20,11 +20,7 @@ public static class Git
         );
 
         // init LFS
-        var env = Environment.CurrentDirectory;
-        Environment.CurrentDirectory = cloneToPath;
-        Cmd.Run("git", "lfs install");
-        Environment.CurrentDirectory = env;
-
+        Cmd.Run("git", "lfs install", cloneToPath);
         Console.WriteLine($"Clone: {res}");
         return res;
     }
