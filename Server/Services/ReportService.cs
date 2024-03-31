@@ -20,15 +20,6 @@ public class ReportService : ServiceBase
 
                 if (data is not null)
                     Send(new NetworkPayload(MessageType.Message, 0, data));
-                else
-                    Send(
-                        new NetworkPayload(
-                            MessageType.Error,
-                            0,
-                            $"Pipeline not found: {projectGuid}"
-                        )
-                    );
-
                 break;
             default:
                 throw new ArgumentOutOfRangeException();

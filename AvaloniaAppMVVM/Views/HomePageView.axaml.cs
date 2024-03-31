@@ -129,14 +129,7 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
     {
         _viewModel.Project = _project;
 
-        if (!Design.IsDesignMode)
-        {
-            _clientBuild.Connect();
-            _clientReport.Connect();
-            _clientReport.Send(_project.Guid);
-        }
-
-        ServerStatus.Text = _clientBuild.Status;
+        ConnectAsync();
     }
 
     protected override void OnPreSave() { }
@@ -145,6 +138,16 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
     {
         base.OnUnloaded(e);
         _clientBuild.Close();
+    }
+
+    private async void ConnectAsync()
+    {
+        ServerStatus.Text = "Connecting...";
+
+        if (!Design.IsDesignMode)
+            await Task.WhenAll(_clientBuild.Connect(), _clientReport.Connect());
+
+        ServerStatus.Text = _clientBuild.Status;
     }
 
     #region Build View

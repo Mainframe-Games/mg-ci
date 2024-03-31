@@ -27,9 +27,12 @@ public class WebClient
         _ws.OnClose += OnClose;
     }
 
-    public void Connect()
+    public async Task Connect()
     {
-        _ws.Connect();
+        await Task.Run(() =>
+        {
+            _ws.Connect();
+        });
     }
 
     public void Close()
