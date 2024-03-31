@@ -21,7 +21,7 @@ namespace BuildSystem
         {
             var settingsPath = Path.Combine(".ci", "build_options.json");
             var settingsJson = File.ReadAllText(settingsPath);
-            var settings = Json.Deserialise<BuildPlayerOptions>(settingsJson);
+            var settings = JsonConvert.DeserializeObject<BuildPlayerOptions>(settingsJson);
 
             if (settings.scenes.Length == 0)
                 settings.scenes = BuildSettings.GetEditorSettingsScenes();
@@ -150,21 +150,19 @@ namespace BuildSystem
             return true;
         }
 
-        private static void SetAndroidKeystore(BuildSettings settings)
+        private static void SetAndroidKeystore(string keyStorePath, string keyStoreAlias, string keyStorePassword)
         {
-            if (settings.Target != BuildTarget.Android)
-                return;
-
             EditorUserBuildSettings.buildAppBundle = true;
             EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
             EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
             PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARMv7 | AndroidArchitecture.ARM64;
             PlayerSettings.Android.useCustomKeystore = true;
-            PlayerSettings.Android.keystoreName = settings.KeystorePath;
-            PlayerSettings.Android.keystorePass = settings.KeystorePassword;
-            PlayerSettings.Android.keyaliasName = settings.KeystoreAlias;
-            PlayerSettings.Android.keyaliasPass = settings.KeystorePassword;
+            
+            PlayerSettings.Android.keystoreName = keyStorePath;
+            PlayerSettings.Android.keystorePass = keyStorePassword;
+            PlayerSettings.Android.keyaliasName = keyStoreAlias;
+            PlayerSettings.Android.keyaliasPass = keyStorePassword;
         }
 
         private static void DumpErrorLog(BuildReport report)

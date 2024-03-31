@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace BuildSystem.Utils
 {
+	// TODO: may not need this anymore
 	[InitializeOnLoad]
 	public static class AppVersionCreator
 	{
