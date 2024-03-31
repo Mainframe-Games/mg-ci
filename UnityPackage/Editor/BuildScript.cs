@@ -26,7 +26,6 @@ namespace BuildSystem
             if (settings.scenes.Length == 0)
                 settings.scenes = BuildSettings.GetEditorSettingsScenes();
             
-            Console.WriteLine($"settings: {JObject.FromObject(settings)}");
             return settings;
         }
 

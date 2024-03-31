@@ -32,11 +32,7 @@ public class GitWorkspace(Repository repository, string name, string directory, 
         );
 
         // lfs
-        var env = Environment.CurrentDirectory;
-        Environment.CurrentDirectory = Directory;
-        Cmd.Run("git", $"lfs pull");
-        Environment.CurrentDirectory = env;
-
+        Cmd.Run("git", "lfs pull", Directory);
         RefreshMetaData();
     }
 
@@ -107,14 +103,15 @@ public class GitWorkspace(Repository repository, string name, string directory, 
         };
     }
 
-    public override void SwitchBranch(string? branchPath)
+    public override void SwitchBranch(string? inBranchPath)
     {
-        if (repository.Head.FriendlyName == branchPath)
+        if (repository.Head.FriendlyName == inBranchPath)
         {
-            Console.WriteLine($"Already on branch '{branchPath}'");
+            Console.WriteLine($"Already on branch '{inBranchPath}'");
             return;
         }
 
-        Commands.Checkout(repository, repository.Branches[branchPath]);
+        Cmd.Run("git", $"switch {inBranchPath}", Directory);
+        Console.WriteLine($"Switched to branch '{repository.Head.FriendlyName}'");
     }
 }

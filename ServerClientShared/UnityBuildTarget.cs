@@ -21,7 +21,7 @@ public class UnityBuildTarget
         {
             target = Target,
             subtarget = (int)SubTarget,
-            locationPathName = Path.Combine(buildPath, $"{ProductName}.{Extension}"),
+            locationPathName = Path.Combine(buildPath, $"{ProductName}{Extension}"),
             targetGroup = TargetGroup,
             assetBundleManifestPath = AssetBundleManifestPath,
             scenes = Scenes.ToArray(),
