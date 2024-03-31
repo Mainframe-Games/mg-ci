@@ -20,8 +20,8 @@ public class ServerPipeline(Project project, Workspace workspace)
     private static void PrepareWorkspace(Workspace workspace, Project project)
     {
         workspace.Clear();
-        workspace.Update();
         workspace.SwitchBranch(project.Settings.Branch!);
+        workspace.Update();
     }
 
     #region Prebuild
