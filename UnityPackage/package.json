@@ -1,8 +1,8 @@
 {
 	"name": "com.mainframe-games.build-system",
-	"version": "1.4.10",
+	"version": "2.0.0-preview.1",
 	"displayName": "mg-ci",
-	"description": "Build system for Unity. Src: https://github.com/Mainframe-Games/mg-ci.git?path=Unity/UnityPackage",
+	"description": "Build system for Unity. Src: https://github.com/Mainframe-Games/mg-ci.git?path=UnityPackage",
 	"changelogUrl": "https://github.com/Mainframe-Games/mg-ci",
 	"documentationUrl": "https://github.com/Mainframe-Games/mg-ci",
 	"unity": "2021.1",
