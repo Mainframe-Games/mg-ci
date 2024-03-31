@@ -23,6 +23,7 @@ public class ServerConfig
     public ClanforgeConfig? Clanforge { get; set; }
     public XcodeConfig? AppleStore { get; set; }
     public GooglePlayConfig? GoogleStore { get; set; }
+    public GitConfig? Git { get; set; }
 
     public static ServerConfig Load()
     {

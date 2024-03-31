@@ -20,7 +20,7 @@ public class UploadBuild : Endpoint<object>
         if (!App.Pipelines.TryGetValue(projectId, out var buildPipeline))
             return new ServerResponse(
                 HttpStatusCode.NotFound,
-                $"{nameof(BuildPipeline)} not found with ID: {projectId}"
+                $"{nameof(UnityBuildPipeline)} not found with ID: {projectId}"
             );
 
         // create file

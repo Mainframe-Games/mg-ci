@@ -146,7 +146,7 @@ public class OffloadBuild : Endpoint<OffloadBuild.Payload>
         IProcessable? deployProcess = null
     )
     {
-        var builder = new LocalUnityBuild(workspace);
+        var builder = new UnityBuild(workspace);
         await SendToMasterServerAsync(buildIdGuid, asset.Name, null, BuildTaskStatus.Pending);
         var result = builder.Build(asset);
 

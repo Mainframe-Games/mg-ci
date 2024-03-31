@@ -8,13 +8,19 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedLib", "SharedLib\Shar
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{28F738C9-D1C0-45F5-82CE-FE332C683419}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Builds", "Builds\Builds.csproj", "{D2EC7D7A-8668-4776-B17B-2F8D47CF2095}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityBuilder", "UnityBuilder\UnityBuilder.csproj", "{D2EC7D7A-8668-4776-B17B-2F8D47CF2095}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DockerRunner", "DockerRunner\DockerRunner.csproj", "{29FE1BE2-79BC-4F55-A7E8-01EAB54FD5EB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvaloniaAppMVVM", "AvaloniaAppMVVM\AvaloniaAppMVVM.csproj", "{4894B33D-44D4-48CA-8C95-D8D98206C695}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerClientShared", "ServerClientShared\ServerClientShared.csproj", "{0426B01C-0288-4480-B748-FC2FDE4313BA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Builds", "Builds", "{B85BA8A1-B6C6-4EC7-8447-3A230EAC3826}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GodotBuilder", "Builds\GodotBuilder\GodotBuilder.csproj", "{59847429-1E15-4CB0-ABD3-0C8FD6880983}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildRunner", "Builds\BuildRunner\BuildRunner.csproj", "{81BF8E28-C34F-4EAD-AF58-3CBB0A4840A2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -54,5 +60,18 @@ Global
 		{0426B01C-0288-4480-B748-FC2FDE4313BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0426B01C-0288-4480-B748-FC2FDE4313BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0426B01C-0288-4480-B748-FC2FDE4313BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59847429-1E15-4CB0-ABD3-0C8FD6880983}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59847429-1E15-4CB0-ABD3-0C8FD6880983}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59847429-1E15-4CB0-ABD3-0C8FD6880983}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59847429-1E15-4CB0-ABD3-0C8FD6880983}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81BF8E28-C34F-4EAD-AF58-3CBB0A4840A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81BF8E28-C34F-4EAD-AF58-3CBB0A4840A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81BF8E28-C34F-4EAD-AF58-3CBB0A4840A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81BF8E28-C34F-4EAD-AF58-3CBB0A4840A2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D2EC7D7A-8668-4776-B17B-2F8D47CF2095} = {B85BA8A1-B6C6-4EC7-8447-3A230EAC3826}
+		{59847429-1E15-4CB0-ABD3-0C8FD6880983} = {B85BA8A1-B6C6-4EC7-8447-3A230EAC3826}
+		{81BF8E28-C34F-4EAD-AF58-3CBB0A4840A2} = {B85BA8A1-B6C6-4EC7-8447-3A230EAC3826}
 	EndGlobalSection
 EndGlobal

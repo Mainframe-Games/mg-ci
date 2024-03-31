@@ -9,9 +9,24 @@ try
     Console.Title = $"Build Server - {App.ServerVersion}";
 
     var config = ServerConfig.Load();
+    var mainServer = StartMainServer(config.IP, config.Port);
 
-    var server = new WebSocketServer($"ws://{config.IP}:{config.Port}");
-    server.AddWebSocketService<TestService>("/test");
+    Console.WriteLine("\nPress Enter key to stop the server...");
+    Console.ReadLine();
+    mainServer.Stop();
+}
+catch (Exception e)
+{
+    Logger.Log(e);
+}
+
+Console.WriteLine("---- End of program ----");
+Console.Read();
+return;
+
+static WebSocketServer StartMainServer(string ip, ushort port)
+{
+    var server = new WebSocketServer($"ws://{ip}:{port}");
     server.AddWebSocketService<BuildService>("/build");
     server.AddWebSocketService<ReportService>("/report");
     server.Start();
@@ -26,15 +41,5 @@ try
             Console.WriteLine("- {0}", path);
     }
 
-    Console.WriteLine("\nPress Enter key to stop the server...");
-
-    Console.ReadLine();
-    server.Stop();
+    return server;
 }
-catch (Exception e)
-{
-    Logger.Log(e);
-}
-
-Console.WriteLine("---- End of program ----");
-Console.Read();

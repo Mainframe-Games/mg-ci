@@ -252,6 +252,7 @@ public abstract class Workspace
     public void SaveBuildVersion(string fullVersion)
     {
         File.WriteAllText(BuildVersionPath, fullVersion);
+        Console.WriteLine($"Saved {BuildVersionPath}");
     }
 
     #region Meta

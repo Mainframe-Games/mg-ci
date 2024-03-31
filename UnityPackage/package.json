@@ -1,0 +1,17 @@
+{
+	"name": "com.mainframe-games.build-system",
+	"version": "1.4.10",
+	"displayName": "mg-ci",
+	"description": "Build system for Unity. Src: https://github.com/Mainframe-Games/mg-ci.git?path=Unity/UnityPackage",
+	"changelogUrl": "https://github.com/Mainframe-Games/mg-ci",
+	"documentationUrl": "https://github.com/Mainframe-Games/mg-ci",
+	"unity": "2021.1",
+	"dependencies": {
+		"com.unity.nuget.newtonsoft-json": "2.0.0"
+	},
+	"author": {
+		"name": "Mainframe Games",
+		"email": "brogan@mainframe.games",
+		"url": "https://mainframe.games"
+	}
+}

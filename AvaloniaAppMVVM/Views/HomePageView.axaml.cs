@@ -5,8 +5,8 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.ViewModels;
-using AvaloniaAppMVVM.WebClient;
 using LoadingIndicators.Avalonia;
+using ServerClientShared;
 
 namespace AvaloniaAppMVVM.Views;
 
@@ -106,8 +106,10 @@ public class Icons
 public partial class HomePageView : MyUserControl<HomePageViewModel>
 {
     private bool _isBuilding;
-    private readonly Client _clientBuild = new("build");
-    private readonly Client _clientReport = new("report");
+    private readonly WebClient _clientBuild =
+        new("build", AppSettings.Singleton.ServerIp, AppSettings.Singleton.ServerPort);
+    private readonly WebClient _clientReport =
+        new("report", AppSettings.Singleton.ServerIp, AppSettings.Singleton.ServerPort);
 
     private readonly List<ProcessesTemplate> _processes =
     [

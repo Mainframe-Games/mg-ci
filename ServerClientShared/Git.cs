@@ -1,15 +1,13 @@
 using LibGit2Sharp;
+using SharedLib;
 
 namespace ServerClientShared;
 
 /// <summary>
 /// src: https://github.com/libgit2/libgit2sharp/wiki
 /// </summary>
-public class Git(string path)
+public static class Git
 {
-    private readonly Repository _repository = new(path);
-    private static Signature Author => new("build-bot", "email@build.bot", DateTimeOffset.Now);
-
     public static string Clone(string url, string cloneToPath, string branch)
     {
         if (Repository.IsValid(cloneToPath))
@@ -20,34 +18,15 @@ public class Git(string path)
             cloneToPath,
             new CloneOptions { RecurseSubmodules = true, BranchName = branch }
         );
+
+        // init LFS
+        var env = Environment.CurrentDirectory;
+        Environment.CurrentDirectory = cloneToPath;
+        Cmd.Run("git", "lfs install");
+        Environment.CurrentDirectory = env;
+
         Console.WriteLine($"Clone: {res}");
         return res;
-    }
-
-    public void Pull()
-    {
-        Commands.Pull(_repository, Author, new PullOptions());
-    }
-
-    public void SwitchBranch(string branchName)
-    {
-        Commands.Checkout(_repository, _repository.Branches[branchName]);
-    }
-
-    public void Commit(string message)
-    {
-        Commands.Stage(_repository, "*");
-        _repository.Commit(message, Author, Author);
-    }
-
-    public void Push()
-    {
-        _repository.Network.Push(_repository.Head);
-    }
-
-    public void Dispose()
-    {
-        _repository.Dispose();
     }
 
     /// <summary>
@@ -59,10 +38,11 @@ public class Git(string path)
     public static List<string> GetBranchesFromRemote(string url, Credentials? credentials = null)
     {
         var branches = new List<string>();
-        
+
         try
         {
-            var refs = Repository.ListRemoteReferences(url,
+            var refs = Repository.ListRemoteReferences(
+                url,
                 (inUrl, usernameFromUrl, types) =>
                 {
                     return types switch
@@ -71,7 +51,8 @@ public class Git(string path)
                         SupportedCredentialTypes.Default => new DefaultCredentials(),
                         _ => throw new ArgumentOutOfRangeException(nameof(types), types, null)
                     };
-                });
+                }
+            );
 
             foreach (var reference in refs)
             {

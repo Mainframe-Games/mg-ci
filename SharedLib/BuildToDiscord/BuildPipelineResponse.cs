@@ -10,7 +10,6 @@ public class BuildPipelineResponse
     public string? Workspace { get; set; }
     public WorkspaceMeta? WorkspaceMeta { get; set; }
     public string? Targets { get; set; }
-    public string? Args { get; set; }
     public string? Branch { get; set; }
     public int? ChangesetId { get; set; }
     public string? ChangesetGuid { get; set; }

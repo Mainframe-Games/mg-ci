@@ -1,10 +1,8 @@
 namespace SharedLib;
 
-public class PlasticWorkspace : Workspace
+public class PlasticWorkspace(string name, string directory, string projectId)
+    : Workspace(name, directory, projectId)
 {
-    private PlasticWorkspace(string name, string directory, string projectId)
-        : base(name, directory, projectId) { }
-
     public static bool TryAskWorkspace(out Workspace workspace)
     {
         var (exitCode, output) = Cmd.Run("cm", "workspace", logOutput: false);

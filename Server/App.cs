@@ -12,14 +12,27 @@ namespace Server;
 
 public static class App
 {
+    /// <summary>
+    /// ci-cache path
+    /// </summary>
+    public static string CiCachePath
+    {
+        get
+        {
+            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var cache = Path.Combine(home, "ci-cache");
+            return cache;
+        }
+    }
+
     public static string ServerVersion =>
         Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty;
     private static string? RootDirectory { get; set; }
     private static ListenServer? Server { get; set; }
-    public static ServerConfig? Config { get; private set; }
+    public static ServerConfig? Config { get; private set; } = ServerConfig.Load();
     private static bool IsLocal { get; set; }
 
-    public static readonly Dictionary<string, BuildPipeline> Pipelines = new();
+    public static readonly Dictionary<string, UnityBuildPipeline> Pipelines = new();
 
     public static async Task RunAsync(Args args)
     {
@@ -50,7 +63,7 @@ public static class App
                 }
             }
 
-            BuildPipeline? buildPipeline = null;
+            UnityBuildPipeline? buildPipeline = null;
 
             if (isGit && !InitializeGit(args, out buildPipeline))
                 return;
@@ -74,7 +87,7 @@ public static class App
         }
     }
 
-    private static bool InitializePlastic(Args args, out BuildPipeline? buildPipeline)
+    private static bool InitializePlastic(Args args, out UnityBuildPipeline? buildPipeline)
     {
         buildPipeline = null;
 
@@ -88,7 +101,7 @@ public static class App
         return true;
     }
 
-    private static bool InitializeGit(Args args, out BuildPipeline? buildPipeline)
+    private static bool InitializeGit(Args args, out UnityBuildPipeline? buildPipeline)
     {
         if (!args.TryGetArg("-git", out var gitDirPath))
             gitDirPath = Cmd.Ask("Git directory: ", string.Empty);
@@ -135,7 +148,11 @@ public static class App
 
     #region Build Pipeline
 
-    public static BuildPipeline CreateBuildPipeline(Workspace workspace, Args args, Project project)
+    public static UnityBuildPipeline CreateBuildPipeline(
+        Workspace workspace,
+        Args args,
+        Project project
+    )
     {
         Offloader? offloader = null;
 
@@ -153,7 +170,7 @@ public static class App
             };
         }
 
-        var pipeline = new BuildPipeline(project.Guid!, workspace, args, offloader);
+        var pipeline = new UnityBuildPipeline(project.Guid!, workspace, args, offloader);
 
         // TODO: this should maybe be set in the BuildPipeline ctor but BuildConfig is not in Builds namespace
         if (offloader is not null)
@@ -164,7 +181,7 @@ public static class App
         return pipeline;
     }
 
-    public static async Task RunBuildPipe(BuildPipeline pipeline)
+    public static async Task RunBuildPipe(UnityBuildPipeline pipeline)
     {
         pipeline.GetExtraHookLogs += BuildPipelineOnGetExtraHookLog;
         pipeline.DeployEvent += BuildPipelineOnDeployEvent;
@@ -177,7 +194,7 @@ public static class App
         Pipelines.Remove(pipeline.ProjectId);
     }
 
-    private static async Task<bool> BuildPipelineOnDeployEvent(BuildPipeline pipeline)
+    private static async Task<bool> BuildPipelineOnDeployEvent(UnityBuildPipeline pipeline)
     {
         try
         {
@@ -206,7 +223,7 @@ public static class App
         }
     }
 
-    private static async Task DeployToS3Bucket(BuildPipeline pipeline)
+    private static async Task DeployToS3Bucket(UnityBuildPipeline pipeline)
     {
         if (Config?.S3 == null || pipeline.Config.Deploy?.S3 is not true)
             return;
@@ -238,7 +255,7 @@ public static class App
         Logger.Log("Unity server updated");
     }
 
-    private static async Task DeployClanforge(BuildPipeline pipeline, string buildVersionTitle)
+    private static async Task DeployClanforge(UnityBuildPipeline pipeline, string buildVersionTitle)
     {
         if (pipeline.Config.Deploy?.Clanforge is null or false)
             return;
@@ -256,7 +273,7 @@ public static class App
         await clanforge.Deploy();
     }
 
-    private static async Task DeployApple(BuildPipeline pipeline)
+    private static async Task DeployApple(UnityBuildPipeline pipeline)
     {
         if (pipeline.Config.Deploy?.AppleStore is not true || !OperatingSystem.IsMacOS())
             return;
@@ -270,7 +287,7 @@ public static class App
         await apple.ProcessAsync();
     }
 
-    private static async Task DeployGoogle(BuildPipeline pipeline, string buildVersionTitle)
+    private static async Task DeployGoogle(UnityBuildPipeline pipeline, string buildVersionTitle)
     {
         if (pipeline.Config.Deploy?.GoogleStore is not true)
             return;
@@ -301,7 +318,7 @@ public static class App
         );
     }
 
-    private static void DeploySteam(BuildPipeline pipeline, string buildVersionTitle)
+    private static void DeploySteam(UnityBuildPipeline pipeline, string buildVersionTitle)
     {
         var vdfPaths = pipeline.Config.Deploy?.Steam;
 
@@ -323,7 +340,7 @@ public static class App
         }
     }
 
-    private static string? BuildPipelineOnGetExtraHookLog(BuildPipeline pipeline)
+    private static string? BuildPipelineOnGetExtraHookLog(UnityBuildPipeline pipeline)
     {
         try
         {

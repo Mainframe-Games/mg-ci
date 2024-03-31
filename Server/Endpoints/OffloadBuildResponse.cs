@@ -31,7 +31,7 @@ public class OffloadBuildResponse : Endpoint<OffloadBuildResponse.Payload>
             return LogAndReturn(
                 new ServerResponse(
                     HttpStatusCode.BadRequest,
-                    $"{nameof(BuildPipeline)} is not active. Id: {Content.ProjectId}"
+                    $"{nameof(UnityBuildPipeline)} is not active. Id: {Content.ProjectId}"
                 )
             );
 

@@ -6,34 +6,34 @@ using ServerClientShared;
 using SharedLib;
 using SharedLib.BuildToDiscord;
 using SharedLib.Server;
-using WebSocketSharp;
 using Logger = SharedLib.Logger;
 
 namespace Server.Services;
 
 public class BuildService : ServiceBase
 {
-    protected override void OnMessage(MessageEventArgs e)
+    protected override void OnMessage(NetworkPayload payload)
     {
-        base.OnMessage(e);
-
-        Console.WriteLine($"/build: {e.Data}");
-        var json = Json.Deserialise<NetworkPayload>(e.Data) ?? throw new NullReferenceException();
-
-        switch (json.Type)
+        switch (payload.Type)
         {
             case MessageType.Connection:
                 break;
             case MessageType.Disconnection:
                 break;
+
             case MessageType.Message:
+
                 var project =
-                    Json.Deserialise<Project>(json.Data?.ToString())
+                    Json.Deserialise<Project>(payload.Data?.ToString())
                     ?? throw new NullReferenceException();
 
                 StartBuild(project);
 
                 break;
+
+            case MessageType.Error:
+                break;
+
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -49,45 +49,36 @@ public class BuildService : ServiceBase
             return;
         }
 
-        ServerResponse? response = null;
-
-        switch (project.Settings.VersionControl)
+        var response = project.Settings.VersionControl switch
         {
-            case VersionControlType.Git:
-                response = StartGitBuild(project);
+            VersionControlType.Git => StartGitBuild(project),
+            VersionControlType.Plastic => StartBuildPlastic(project),
+            _ => throw new ArgumentOutOfRangeException()
+        };
 
-                break;
-            case VersionControlType.Plastic:
-                response = StartBuildPlastic(project);
-                break;
-
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-
-        Send(new NetworkPayload(MessageType.Error, 0, response));
+        Send(new NetworkPayload(MessageType.Message, 0, response));
     }
 
-    private ServerResponse? StartGitBuild(Project project)
+    private static ServerResponse StartGitBuild(Project project)
     {
-        // clone
-        var homeFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var path = new DirectoryInfo(
-            Path.Combine(homeFolder, "ci-cache", project.Settings.ProjectName!)
+        var projectRoot = new DirectoryInfo(
+            Path.Combine(App.CiCachePath, project.Settings.ProjectName!)
         );
-        var dir = Git.Clone(
+
+        // clone
+        Git.Clone(
             project.Settings.GitRepositoryUrl!,
-            path.FullName,
+            projectRoot.FullName,
             project.Settings.Branch!
         );
 
         // get to build location
         var projWorkingPath = Path.Combine(
-            path.FullName,
+            projectRoot.FullName,
             project.Settings.GitRepositorySubPath?.TrimStart('/')?.TrimStart('\\') ?? string.Empty
         );
-        var buildLocation = new DirectoryInfo(projWorkingPath);
 
+        var buildLocation = new DirectoryInfo(projWorkingPath);
         if (!buildLocation.Exists)
         {
             return new ServerResponse(
@@ -96,16 +87,23 @@ public class BuildService : ServiceBase
             );
         }
 
-        var repo = new Repository(dir);
         var workspace = new GitWorkspace(
-            repo,
+            new Repository(projectRoot.FullName),
             project.Settings.ProjectName!,
             buildLocation.FullName,
             project.Guid!
         );
 
-        var res = StartBuildPipeline(workspace, project);
-        return res;
+        // set credentials
+        var gitUser = App.Config.Git.Username;
+        var accessToken = App.Config.Git.AccessToken;
+        workspace.SetCredentials(gitUser, accessToken);
+
+        // run build
+        var pipeline = new ServerPipeline(project, workspace);
+        pipeline.Run();
+
+        return ServerResponse.Ok;
     }
 
     private ServerResponse StartBuildPlastic(Project project)
@@ -126,11 +124,10 @@ public class BuildService : ServiceBase
 
     private ServerResponse StartBuildPipeline(Workspace workspace, Project project)
     {
-        workspace.Clear();
-        workspace.Update();
-        workspace.SwitchBranch(project.Settings.Branch!);
+        PrepareWorkspace(workspace, project);
 
         var args = new Args(""); // TODO: remove args from pipeline, everything should be done in C# classes
+
         var pipeline = App.CreateBuildPipeline(workspace, args, project);
         pipeline.Report.OnReportUpdated += OnReportUpdated;
 
@@ -144,7 +141,6 @@ public class BuildService : ServiceBase
             Workspace = workspace.Name,
             WorkspaceMeta = workspace.Meta,
             Targets = string.Join(", ", workspace.GetBuildTargets().Select(x => x.Name)),
-            Args = args.ToString(),
             UnityVersion = workspace.UnityVersion,
             ChangesetId = changeSetId,
             ChangesetGuid = guid,
@@ -152,6 +148,13 @@ public class BuildService : ServiceBase
             ChangesetCount = pipeline.ChangeLog.Length,
         };
         return new ServerResponse(HttpStatusCode.OK, data);
+    }
+
+    private static void PrepareWorkspace(Workspace workspace, Project project)
+    {
+        workspace.Clear();
+        workspace.Update();
+        workspace.SwitchBranch(project.Settings.Branch!);
     }
 
     private void OnReportUpdated(PipelineReport report)
