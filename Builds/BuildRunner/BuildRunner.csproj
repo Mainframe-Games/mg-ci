@@ -13,7 +13,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\ServerClientShared\ServerClientShared.csproj" />
-      <ProjectReference Include="..\..\UnityBuilder\UnityBuilder.csproj" />
+      <ProjectReference Include="..\UnityBuilder\UnityBuilder.csproj" />
       <ProjectReference Include="..\GodotBuilder\GodotBuilder.csproj" />
     </ItemGroup>
 

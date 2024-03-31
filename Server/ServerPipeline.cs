@@ -15,6 +15,7 @@ public class ServerPipeline(Project project, Workspace workspace)
         Logger.LogTitle("Pre Build Complete");
         RunBuild();
         Logger.LogTitle("Build Complete");
+        RunDeploy();
     }
 
     private static void PrepareWorkspace(Workspace workspace, Project project)
@@ -154,6 +155,12 @@ public class ServerPipeline(Project project, Workspace workspace)
 
         throw new NotSupportedException($"Target not supported: {target}");
     }
+
+    #endregion
+
+    #region Deploy
+
+    private void RunDeploy() { }
 
     #endregion
 }

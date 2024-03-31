@@ -6,10 +6,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Builds\UnityBuilder\UnityBuilder.csproj" />
       <ProjectReference Include="..\Deployment\Deployment.csproj" />
       <ProjectReference Include="..\ServerClientShared\ServerClientShared.csproj" />
       <ProjectReference Include="..\SharedLib\SharedLib.csproj" />
-      <ProjectReference Include="..\UnityBuilder\UnityBuilder.csproj" />
     </ItemGroup>
 
     <ItemGroup>
