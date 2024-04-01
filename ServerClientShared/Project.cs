@@ -126,6 +126,7 @@ public class Prebuild
 public class Deployment
 {
     public List<string> SteamVdfs { get; set; } = [];
+    public string? SteamSetLive { get; set; } = "beta";
     public bool AppleStore { get; set; }
     public bool GoogleStore { get; set; }
     public bool Clanforge { get; set; }

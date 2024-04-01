@@ -19,16 +19,15 @@ public static class Logger
     public static void LogTitle(string title, params (string key, string value)[] logs)
     {
         var log = new StringBuilder();
+        log.AppendLine(string.Empty);
         log.AppendLine("###########################");
-        log.AppendLine($"#      {title}      #");
+        log.AppendLine($"{title}");
         log.AppendLine("###########################");
 
         foreach (var pair in logs)
             log.AppendLine($"{pair.key}: {pair.value}");
 
-        var message = $"[{TimeStamp}]\n{log}";
-        _builder.AppendLine(message);
-        Console.WriteLine(message);
+        WriteLineInternal(log.ToString());
     }
 
     private static void WriteLineInternal(string message)

@@ -1,7 +1,7 @@
-﻿using BuildRunner.Utils;
+﻿using System.Diagnostics;
+using BuildRunner.Utils;
 using Newtonsoft.Json.Linq;
 using Server.Services;
-using SharedLib;
 using UnityBuilder;
 using WebSocketSharp;
 
@@ -91,13 +91,23 @@ public class BuildRunnerService : ServiceBase
             ?? throw new NullReferenceException();
 
         // run build
+        var sw = Stopwatch.StartNew();
         var unityRunner = new UnityBuild2(projectPath, target, buildTarget);
         unityRunner.Run();
+
+        Send(
+            new JObject
+            {
+                ["TargetName"] = targetName,
+                ["Status"] = "Complete",
+                ["Time"] = sw.ElapsedMilliseconds
+            }.ToString()
+        );
 
         // send back
         UploadDirectory(unityRunner.BuildPath, targetName);
     }
-    
+
     private async void UploadDirectory(string buildPath, string targetName)
     {
         var rootDir = new DirectoryInfo(buildPath);
@@ -107,7 +117,12 @@ public class BuildRunnerService : ServiceBase
             await SendFile(file, rootDir.FullName, targetName, totalBytes);
     }
 
-    private async Task SendFile(FileSystemInfo fileInfo, string rootPath, string targetName, int totalLength)
+    private async Task SendFile(
+        FileSystemInfo fileInfo,
+        string rootPath,
+        string targetName,
+        int totalLength
+    )
     {
         const int fragmentSize = 1024 * 10; // 10 KB
 
@@ -115,8 +130,9 @@ public class BuildRunnerService : ServiceBase
 
         // Calculate the number of fragments
         var totalFragments = (int)Math.Ceiling((double)data.Length / fragmentSize);
-        
-        var fileLocalName = fileInfo.FullName.Replace(rootPath, string.Empty)
+
+        var fileLocalName = fileInfo
+            .FullName.Replace(rootPath, string.Empty)
             .Replace('\\', '/')
             .Trim('/');
 

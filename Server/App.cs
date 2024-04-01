@@ -320,24 +320,24 @@ public static class App
 
     private static void DeploySteam(UnityBuildPipeline pipeline, string buildVersionTitle)
     {
-        var vdfPaths = pipeline.Config.Deploy?.Steam;
-
-        if (vdfPaths == null)
-            return;
-
-        if (Config?.Steam is null)
-            throw new NullReferenceException("Steam config is null");
-
-        pipeline.Args.TryGetArg("-setlive", out var setLive, Config.Steam.DefaultSetLive);
-
-        foreach (var vdfPath in vdfPaths)
-        {
-            var path = Config.Steam.Path;
-            var password = Config.Steam.Password;
-            var username = Config.Steam.Username;
-            var steam = new SteamDeploy(vdfPath, password, username, path);
-            steam.Deploy(buildVersionTitle, setLive);
-        }
+        // var vdfPaths = pipeline.Config.Deploy?.Steam;
+        //
+        // if (vdfPaths == null)
+        //     return;
+        //
+        // if (Config?.Steam is null)
+        //     throw new NullReferenceException("Steam config is null");
+        //
+        // pipeline.Args.TryGetArg("-setlive", out var setLive, Config.Steam.DefaultSetLive);
+        //
+        // foreach (var vdfPath in vdfPaths)
+        // {
+        //     var path = Config.Steam.Path;
+        //     var password = Config.Steam.Password;
+        //     var username = Config.Steam.Username;
+        //     var steam = new SteamDeploy(vdfPath, password, username, path);
+        //     steam.Deploy(buildVersionTitle, setLive);
+        // }
     }
 
     private static string? BuildPipelineOnGetExtraHookLog(UnityBuildPipeline pipeline)

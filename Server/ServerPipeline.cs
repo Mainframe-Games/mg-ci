@@ -14,13 +14,27 @@ public class ServerPipeline(Project project, Workspace workspace)
 
         var sw = Stopwatch.StartNew();
 
-        // await RunPreBuildAsync();
-        // Logger.LogTitle("Pre Build Complete", [("time", $"{sw.ElapsedMilliseconds}ms")]);
-        // sw.Restart();
+        // version bump
+        var fullVersion = await RunPreBuildAsync();
+        Logger.LogTitle(
+            "Pre Build Complete",
+            [("time", $"{sw.ElapsedMilliseconds.ToHourMinSecString()}")]
+        );
+        sw.Restart();
 
-        await RunBuildAsync();
-        Logger.LogTitle("Build Complete", [("time", $"{sw.ElapsedMilliseconds}ms")]);
-        // RunDeploy();
+        // changelog
+        var changeLog = BuildChangeLog();
+
+        // builds
+        var processes = await RunBuildAsync();
+        Logger.LogTitle(
+            "Build Complete",
+            [("time", $"{sw.ElapsedMilliseconds.ToHourMinSecString()}")]
+        );
+        sw.Restart();
+
+        // deploys
+        RunDeploy(processes, fullVersion, changeLog);
     }
 
     private static void PrepareWorkspace(Workspace workspace, Project project)
@@ -30,9 +44,24 @@ public class ServerPipeline(Project project, Workspace workspace)
         workspace.Update();
     }
 
+    private string[] BuildChangeLog()
+    {
+        switch (workspace)
+        {
+            case PlasticWorkspace plastic:
+                plastic.GetCurrent(out var cs, out var guid);
+                var prevCs = workspace.Meta.LastSuccessfulBuild.GetValueOrDefault();
+                return plastic.GetChangeLog(cs, prevCs);
+            case GitWorkspace git:
+                return git.GetChangeLog();
+        }
+
+        throw new Exception("Unknown workspace type!");
+    }
+
     #region Prebuild
 
-    private async Task RunPreBuildAsync()
+    private async Task<string> RunPreBuildAsync()
     {
         var task = new TaskCompletionSource<JObject>();
         BuildRunnerFactory.VersionBump.SendJObject(JObject.FromObject(project));
@@ -76,35 +105,32 @@ public class ServerPipeline(Project project, Workspace workspace)
                 );
                 break;
         }
+
+        return fullVersion;
     }
 
     #endregion
 
     #region Build
 
-    private readonly List<BuildRunnerProcess> _buildProcesses = [];
-
-    private void OnBuildMessageReceived(string message)
+    private async Task<List<BuildRunnerProcess>> RunBuildAsync()
     {
-        foreach (var process in _buildProcesses)
-            process.OnMessageReceived(message);
-    }
-
-    private void OnBuildDataReceived(byte[] bytes)
-    {
-        foreach (var process in _buildProcesses)
-            process.OnDataReceived(bytes);
-    }
-
-    private async Task RunBuildAsync()
-    {
+        var buildProcesses = new List<BuildRunnerProcess>();
         var tasks = new List<Task>();
 
         // assign callbacks
         foreach (var runner in BuildRunnerFactory.All)
         {
-            runner.OnStringMessage += OnBuildMessageReceived;
-            runner.OnDataMessage += OnBuildDataReceived;
+            runner.OnStringMessage += message =>
+            {
+                foreach (var process in buildProcesses)
+                    process.OnStringMessage(message);
+            };
+            runner.OnDataMessage += bytes =>
+            {
+                foreach (var process in buildProcesses)
+                    process.OnDataReceived(bytes);
+            };
         }
 
         // start processes
@@ -120,17 +146,19 @@ public class ServerPipeline(Project project, Workspace workspace)
                 }
             );
 
-            var process = new BuildRunnerProcess( buildTarget.Name);
-            _buildProcesses.Add(process);
+            var process = new BuildRunnerProcess(buildTarget.Name!);
+            buildProcesses.Add(process);
             tasks.Add(process.Task);
         }
 
         // wait for them all to finish
         await Task.WhenAll(tasks);
 
-        // assign callbacks
+        // clear callbacks
         foreach (var runner in BuildRunnerFactory.All)
             runner.ClearEvents();
+
+        return buildProcesses;
     }
 
     private static WebClient GetUnityRunner(Unity.BuildTarget target)
@@ -157,34 +185,40 @@ public class ServerPipeline(Project project, Workspace workspace)
 
     #region Deploy
 
-    private void RunDeploy() { }
+    private void RunDeploy(
+        List<BuildRunnerProcess> buildProcesses,
+        string fullVersion,
+        string[] changeLog
+    )
+    {
+        var deployRunner = new DeploymentRunner(project, workspace, fullVersion, changeLog);
+        deployRunner.Deploy();
+    }
 
     #endregion
-    
+
     private class BuildRunnerProcess
     {
         private FileStream? _currentFileStream;
         private string? _currentFilePath;
         private int _currentTotalLength;
         private readonly TaskCompletionSource _completionSource = new();
-        private readonly string _name;
+        private readonly string _buildName;
         private readonly string _rootPath;
 
         public Task Task => _completionSource.Task;
 
-        public BuildRunnerProcess(string name)
+        public long TotalBuildTime { get; private set; }
+
+        public BuildRunnerProcess(string buildName)
         {
-            _name = name;
-            
-            var rootPath = Path.Combine(App.CiCachePath, "Deploy", _name);
+            _buildName = buildName;
+
+            var rootPath = Path.Combine(App.CiCachePath, "Deploy", _buildName);
             var rootDir = new DirectoryInfo(rootPath);
             if (rootDir.Exists)
                 rootDir.Delete(true);
             _rootPath = rootDir.FullName;
-        }
-        
-        public void OnMessageReceived(string message)
-        {
         }
 
         private void CreateFileStream(string inDilePath)
@@ -201,7 +235,21 @@ public class ServerPipeline(Project project, Workspace workspace)
             _currentFileStream?.Dispose();
             _currentFileStream = new FileStream(filePath, FileMode.Create);
         }
-        
+
+        public void OnStringMessage(string message)
+        {
+            var jObj = JObject.Parse(message);
+
+            var targetName = jObj["TargetName"]?.ToString();
+            if (targetName != _buildName)
+                return;
+
+            var status = jObj["Status"]?.ToString();
+
+            if (status == "Complete")
+                TotalBuildTime = jObj["Time"]?.Value<long>() ?? 0;
+        }
+
         public void OnDataReceived(byte[] data)
         {
             using var ms = new MemoryStream(data);
@@ -213,7 +261,7 @@ public class ServerPipeline(Project project, Workspace workspace)
             var fragment = reader.ReadBytes(fragmentLength);
 
             // ignore if not for target
-            if (targetName != _name)
+            if (targetName != _buildName)
                 return;
 
             if (_currentFilePath != filePath)
@@ -225,19 +273,19 @@ public class ServerPipeline(Project project, Workspace workspace)
             // write file
             _currentFileStream?.Write(fragment, 0, fragment.Length);
             _currentTotalLength += fragment.Length;
-            
+
             // log progress
             var percent = _currentTotalLength / (double)totalLength * 100;
             // Console.WriteLine(
             //     $"File download progress [{_name}]: {_currentFilePath} | {_currentTotalLength}/{totalLength} ({percent:0}%)"
             // );
-            
+
             if (_currentTotalLength >= totalLength)
             {
-                Console.WriteLine($"Download complete [{_name}]");
+                Console.WriteLine($"Download complete [{_buildName}]");
                 if (!_completionSource.TrySetResult())
                 {
-                    Console.Write($"Result already set! [{_name}]");
+                    Console.Write($"Result already set! [{_buildName}]");
                 }
             }
         }

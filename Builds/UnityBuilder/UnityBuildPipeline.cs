@@ -1,18 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
+﻿using System.Net;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Deployment.Configs;
 using SharedLib;
 using SharedLib.Build;
 using SharedLib.BuildToDiscord;
 using SharedLib.ChangeLogBuilders;
 using SharedLib.Webhooks;
-using UnityBuilder;
 
 namespace Deployment;
 
@@ -81,12 +74,6 @@ public class UnityBuildPipeline
                 ChangeLog = plastic.GetChangeLog(
                     _currentChangeSetId,
                     Workspace.Meta.LastSuccessfulBuild.GetValueOrDefault()
-                );
-                break;
-            case GitWorkspace gitWorkspace:
-                ChangeLog = gitWorkspace.GetChangeLog(
-                    _currentGuid,
-                    Workspace.Meta.LastSuccessfulSha
                 );
                 break;
         }

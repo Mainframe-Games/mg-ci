@@ -50,18 +50,22 @@ public class GitWorkspace(Repository repository, string name, string directory, 
         throw new NotImplementedException();
     }
 
-    public string[] GetChangeLog(string? curSha, string? prevSha)
+    public string[] GetChangeLog()
     {
         var commits = repository.Commits.QueryBy(new CommitFilter { FirstParentOnly = true });
-
         var logs = new List<string>();
 
         foreach (var commit in commits)
         {
-            if (commit.Sha == prevSha)
+            var message = commit.Message;
+
+            if (message.Contains("_Build Successful."))
                 break;
 
-            logs.Add(commit.Message);
+            if (message.StartsWith('_'))
+                continue;
+
+            logs.Add(message);
         }
 
         return logs.ToArray();
