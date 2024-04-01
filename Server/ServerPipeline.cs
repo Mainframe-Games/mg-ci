@@ -14,9 +14,9 @@ public class ServerPipeline(Project project, Workspace workspace)
 
         var sw = Stopwatch.StartNew();
 
-        await RunPreBuildAsync();
-        Logger.LogTitle("Pre Build Complete", [("time", $"{sw.ElapsedMilliseconds}ms")]);
-        sw.Restart();
+        // await RunPreBuildAsync();
+        // Logger.LogTitle("Pre Build Complete", [("time", $"{sw.ElapsedMilliseconds}ms")]);
+        // sw.Restart();
 
         await RunBuildAsync();
         Logger.LogTitle("Build Complete", [("time", $"{sw.ElapsedMilliseconds}ms")]);
@@ -120,7 +120,7 @@ public class ServerPipeline(Project project, Workspace workspace)
                 }
             );
 
-            var process = new BuildRunnerProcess { Name = buildTarget.Name, };
+            var process = new BuildRunnerProcess( buildTarget.Name);
             _buildProcesses.Add(process);
             tasks.Add(process.Task);
         }
@@ -160,38 +160,36 @@ public class ServerPipeline(Project project, Workspace workspace)
     private void RunDeploy() { }
 
     #endregion
-
-
+    
     private class BuildRunnerProcess
     {
-        private FileStream? _fileStream;
+        private FileStream? _currentFileStream;
+        private string? _currentFilePath;
+        private int _currentTotalLength;
         private readonly TaskCompletionSource _completionSource = new();
+        private readonly string _name;
+        private readonly string _rootPath;
 
-        public string? Name { get; init; }
         public Task Task => _completionSource.Task;
 
+        public BuildRunnerProcess(string name)
+        {
+            _name = name;
+            
+            var rootPath = Path.Combine(App.CiCachePath, "Deploy", _name);
+            var rootDir = new DirectoryInfo(rootPath);
+            if (rootDir.Exists)
+                rootDir.Delete(true);
+            _rootPath = rootDir.FullName;
+        }
+        
         public void OnMessageReceived(string message)
         {
-            var data = JObject.Parse(message);
-            var name = data["TargetName"]?.ToString();
-            if (name != Name)
-                return;
-
-            var status = data["Status"]?.ToString();
-
-            switch (status)
-            {
-                case "Complete":
-                    _fileStream?.Close();
-                    _fileStream?.Dispose();
-                    _completionSource.SetResult();
-                    break;
-            }
         }
 
-        private void CreateFileStream()
+        private void CreateFileStream(string inDilePath)
         {
-            var filePath = Path.Combine(App.CiCachePath, "Deploy", $"{Name}.zip");
+            var filePath = Path.Combine(_rootPath, inDilePath);
             var fileInfo = new FileInfo(filePath);
 
             if (fileInfo.Exists)
@@ -200,44 +198,47 @@ public class ServerPipeline(Project project, Workspace workspace)
             if (fileInfo.Directory?.Exists is not true)
                 fileInfo.Directory?.Create();
 
-            _fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+            _currentFileStream?.Dispose();
+            _currentFileStream = new FileStream(filePath, FileMode.Create);
         }
-
+        
         public void OnDataReceived(byte[] data)
         {
             using var ms = new MemoryStream(data);
             using var reader = new BinaryReader(ms);
             var targetName = reader.ReadString();
             var totalLength = reader.ReadInt32();
+            var filePath = reader.ReadString();
             var fragmentLength = reader.ReadInt32();
             var fragment = reader.ReadBytes(fragmentLength);
 
             // ignore if not for target
-            if (targetName != Name)
+            if (targetName != _name)
                 return;
 
-            if (_fileStream is null)
+            if (_currentFilePath != filePath)
             {
-                CreateFileStream();
-                return;
+                CreateFileStream(filePath);
+                _currentFilePath = filePath;
             }
 
-            // write bytes to file
-            _fileStream.Write(fragment, 0, fragment.Length);
-
-            if (_fileStream.Length == totalLength)
+            // write file
+            _currentFileStream?.Write(fragment, 0, fragment.Length);
+            _currentTotalLength += fragment.Length;
+            
+            // log progress
+            var percent = _currentTotalLength / (double)totalLength * 100;
+            // Console.WriteLine(
+            //     $"File download progress [{_name}]: {_currentFilePath} | {_currentTotalLength}/{totalLength} ({percent:0}%)"
+            // );
+            
+            if (_currentTotalLength >= totalLength)
             {
-                Console.WriteLine("File offset set length");
-                _fileStream.Close();
-                _fileStream.Dispose();
-                _completionSource.SetResult();
-            }
-            else
-            {
-                var percent = _fileStream.Length / totalLength * 100;
-                Console.WriteLine(
-                    $"File download progress [{Name}]: {_fileStream.Length}/{totalLength} ({percent:0.0}%)"
-                );
+                Console.WriteLine($"Download complete [{_name}]");
+                if (!_completionSource.TrySetResult())
+                {
+                    Console.Write($"Result already set! [{_name}]");
+                }
             }
         }
     }

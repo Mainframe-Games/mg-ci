@@ -1,5 +1,4 @@
-﻿using System.IO.Compression;
-using BuildRunner.Utils;
+﻿using BuildRunner.Utils;
 using Newtonsoft.Json.Linq;
 using Server.Services;
 using SharedLib;
@@ -95,49 +94,33 @@ public class BuildRunnerService : ServiceBase
         var unityRunner = new UnityBuild2(projectPath, target, buildTarget);
         unityRunner.Run();
 
-        // zip build content and send back
-        ZipFileForServer(unityRunner.BuildPath, targetName);
+        // send back
+        UploadDirectory(unityRunner.BuildPath, targetName);
     }
-
-    private void ZipFileForServer(string buildPath, string targetName)
+    
+    private async void UploadDirectory(string buildPath, string targetName)
     {
-        var zipPath = $"{buildPath}.zip";
-
-        if (File.Exists(zipPath))
-            File.Delete(zipPath);
-
-        ZipFile.CreateFromDirectory(buildPath, zipPath);
-        ZipMeta(zipPath, targetName);
-        // SendZipFile(zipPath, targetName);
+        var rootDir = new DirectoryInfo(buildPath);
+        var allFiles = rootDir.GetFiles("*", SearchOption.AllDirectories);
+        var totalBytes = allFiles.Sum(x => (int)x.Length);
+        foreach (var file in allFiles)
+            await SendFile(file, rootDir.FullName, targetName, totalBytes);
     }
 
-    private void ZipMeta(string zipFilePath, string targetName)
-    {
-        using var archive = ZipFile.OpenRead(zipFilePath);
-        Console.WriteLine($"Entries in the zip file '{zipFilePath}':");
-
-        foreach (var entry in archive.Entries)
-        {
-            Console.WriteLine($"- Name: {entry.FullName}");
-            Console.WriteLine($"  Size: {entry.Length} bytes");
-
-            // TODO: upload files from here
-            SendZipFile(entry, targetName);
-        }
-    }
-
-    private async void SendZipFile(ZipArchiveEntry zipEntry, string targetName)
+    private async Task SendFile(FileSystemInfo fileInfo, string rootPath, string targetName, int totalLength)
     {
         const int fragmentSize = 1024 * 10; // 10 KB
 
-        var stream = zipEntry.Open();
-        var data = new byte[stream.Length];
-        var readAsync = await stream.ReadAsync(data);
+        var data = await File.ReadAllBytesAsync(fileInfo.FullName);
 
         // Calculate the number of fragments
         var totalFragments = (int)Math.Ceiling((double)data.Length / fragmentSize);
+        
+        var fileLocalName = fileInfo.FullName.Replace(rootPath, string.Empty)
+            .Replace('\\', '/')
+            .Trim('/');
 
-        Console.WriteLine($"Sending file [{data.Length} bytes]: {zipEntry.FullName}");
+        Console.WriteLine($"Sending file [{data.Length} bytes]: {fileInfo.FullName}");
 
         // Send each fragment
         for (int i = 0; i < totalFragments; i++)
@@ -153,59 +136,15 @@ public class BuildRunnerService : ServiceBase
             // Write the target name, total length, and fragment to a memory stream
             using var ms = new MemoryStream();
             await using var writer = new BinaryWriter(ms);
-            writer.Write(targetName);
-            writer.Write(data.Length);
-            writer.Write(fragment.Length);
-            writer.Write(fragment);
+            writer.Write(targetName); // string
+            writer.Write(totalLength); // int32
+            writer.Write(fileLocalName); // string
+            writer.Write(fragment.Length); // int32
+            writer.Write(fragment); // byte[]
 
             // Send the fragment
             Send(ms.ToArray());
-
-            // need to delay some time to give server time to process
-            await Task.Delay(1);
+            await Task.Delay(10);
         }
-
-        Console.WriteLine($"Sending file complete: {zipEntry.FullName}");
-    }
-
-    private async void SendZipFile(string filePath, string targetName)
-    {
-        const int fragmentSize = 1024 * 10; // 10 KB
-
-        var data = await File.ReadAllBytesAsync(filePath);
-
-        // Calculate the number of fragments
-        var totalFragments = (int)Math.Ceiling((double)data.Length / fragmentSize);
-
-        Console.WriteLine($"Sending file [{data.Length} bytes]: {filePath}");
-
-        // Send each fragment
-        for (int i = 0; i < totalFragments; i++)
-        {
-            // Calculate the start and end index for the current fragment
-            var startIndex = i * fragmentSize;
-            var endIndex = Math.Min((i + 1) * fragmentSize, data.Length);
-
-            // Extract the current fragment from the original data
-            var fragment = new byte[endIndex - startIndex];
-            Array.Copy(data, startIndex, fragment, 0, fragment.Length);
-
-            // Write the target name, total length, and fragment to a memory stream
-            using var ms = new MemoryStream();
-            await using var writer = new BinaryWriter(ms);
-            writer.Write(targetName);
-            writer.Write(data.Length);
-            writer.Write(fragment.Length);
-            writer.Write(fragment);
-
-            // Send the fragment
-            Send(ms.ToArray());
-
-            // need to delay some time to give server time to process
-            await Task.Delay(1);
-        }
-
-        Console.WriteLine($"Sending file complete: {filePath}");
-        Send(new JObject { ["TargetName"] = targetName, ["Status"] = "Complete" }.ToString());
     }
 }
