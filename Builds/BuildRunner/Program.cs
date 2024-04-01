@@ -1,4 +1,5 @@
 ﻿using BuildRunner;
+using BuildRunner.Utils;
 using WebSocketSharp.Server;
 
 /*
@@ -6,8 +7,12 @@ using WebSocketSharp.Server;
  * It should know which engine build to run based on in coming packet
  */
 
-var server = new WebSocketServer("ws://localhost:8081");
-server.AddWebSocketService<BuildRunnerService>("/start-build");
+var ip = Arg.GetArg("-ip") ?? "127.0.0.1";
+var port = ushort.Parse(Arg.GetArg("-port") ?? "8081");
+
+var server = new WebSocketServer($"ws://{ip}:{port}");
+server.AddWebSocketService<VersionBumpService>("/version-bump");
+server.AddWebSocketService<BuildRunnerService>("/build");
 
 server.Start();
 
