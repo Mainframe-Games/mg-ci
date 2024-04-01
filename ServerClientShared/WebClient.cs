@@ -40,10 +40,20 @@ public class WebClient
 
     public async Task Connect()
     {
-        await Task.Run(() =>
+        try
         {
-            _ws.Connect();
-        });
+            await Task.Run(
+                () =>
+                {
+                    _ws.Connect();
+                },
+                _cancellationToken
+            );
+        }
+        catch (TaskCanceledException)
+        {
+            Console.WriteLine($"Connect cancelled [{_path}]");
+        }
     }
 
     public void Close()
@@ -54,21 +64,21 @@ public class WebClient
 
     private async void PingLoop()
     {
-        // wait for connection to be established before starting the ping loop
-        while (!IsAlive)
-            await Task.Delay(10, _cancellationToken);
-
-        while (!_cancellationToken.IsCancellationRequested)
+        try
         {
-            try
+            // wait for connection to be established before starting the ping loop
+            while (!IsAlive)
+                await Task.Delay(10, _cancellationToken);
+
+            while (!_cancellationToken.IsCancellationRequested)
             {
                 _ws.Ping();
                 await Task.Delay(TimeSpan.FromSeconds(10), _cancellationToken);
             }
-            catch (TaskCanceledException)
-            {
-                Console.WriteLine($"PingLoop cancelled [{_path}]");
-            }
+        }
+        catch (TaskCanceledException)
+        {
+            Console.WriteLine($"PingLoop cancelled [{_path}]");
         }
     }
 
@@ -106,16 +116,5 @@ public class WebClient
     public void SendJObject(JObject data)
     {
         _ws.Send(data.ToString());
-    }
-
-    private async void SendInternalAsync(string data)
-    {
-        while (_ws.ReadyState != WebSocketState.Open)
-        {
-            Console.WriteLine($"Waiting for socket [{_ws.ReadyState}]: {_path}");
-            await Task.Delay(500);
-        }
-
-        _ws.Send(data);
     }
 }
