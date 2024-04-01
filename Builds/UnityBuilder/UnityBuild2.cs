@@ -20,9 +20,9 @@ public class UnityBuild2
     private readonly string _assetBundleManifestPath;
     private readonly int _buildOptions;
 
-    private readonly string _buildPath;
-
     private readonly string _buildOptionsPath;
+
+    public string BuildPath { get; }
 
     public UnityBuild2(string projectPath, JToken target, string buildTargetName)
     {
@@ -46,8 +46,8 @@ public class UnityBuild2
             target["BuildOptions"]?.ToObject<int>() ?? throw new NullReferenceException();
 
         // plant current build target settings in project
-        _buildPath = Path.Combine(projectPath, "Builds", _name);
-        var settingsJson = BuildPlayerOptions(_buildPath, this);
+        BuildPath = Path.Combine(projectPath, "Builds", _name);
+        var settingsJson = BuildPlayerOptions(BuildPath, this);
         _buildOptionsPath = Path.Combine(projectPath, ".ci", "build_options.json");
         File.WriteAllText(_buildOptionsPath, settingsJson.ToString());
     }
@@ -61,7 +61,7 @@ public class UnityBuild2
             ExecuteMethod = "BuildSystem.BuildScript.BuildPlayer",
             ProjectPath = _projectPath,
             LogPath = logPath,
-            BuildPath = _buildPath,
+            BuildPath = BuildPath,
             BuildTarget = _buildTargetFlag,
             SubTarget = _subTarget == 0 ? "Player" : "Server",
             CustomArgs = null

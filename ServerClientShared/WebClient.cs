@@ -89,12 +89,16 @@ public class WebClient
 
     private void OnMessage(object? sender, MessageEventArgs e)
     {
-        Console.WriteLine($"[WebSocket Message] {e.Data}");
-
         if (e.IsText)
+        {
+            Console.WriteLine($"[WebSocket Message] {e.Data}");
             OnStringMessage?.Invoke(e.Data);
+        }
         else if (e.IsBinary)
+        {
+            // Console.WriteLine($"[WebSocket Message] Length: {e.RawData.Length} bytes");
             OnDataMessage?.Invoke(e.RawData);
+        }
     }
 
     private void OnError(object? sender, ErrorEventArgs e)
@@ -116,5 +120,11 @@ public class WebClient
     public void SendJObject(JObject data)
     {
         _ws.Send(data.ToString());
+    }
+
+    public void ClearEvents()
+    {
+        OnStringMessage = null;
+        OnDataMessage = null;
     }
 }

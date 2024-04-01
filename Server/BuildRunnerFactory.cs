@@ -8,6 +8,8 @@ public static class BuildRunnerFactory
     private static readonly Dictionary<string, WebClient> _runners = new();
     public static readonly WebClient VersionBump = new("version-bump", "127.0.0.1", 8081);
 
+    public static IEnumerable<WebClient> All => _runners.Values;
+
     public static async void Init(List<BuildRunnerConfig>? configRunners)
     {
         await VersionBump.Connect();

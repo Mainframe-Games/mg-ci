@@ -81,21 +81,6 @@ public static class Web
         }
     }
 
-    // public static async Task<Response> SendBytesAsync(string? url, byte[] data)
-    // {
-    // 	using var client = new HttpClient();
-    // 	using var byteContent = new ByteArrayContent(data);
-    // 	Logger.Log($"Sending Data: {data.ToByteSizeString()}");
-    // 	using var res = await client.PutAsync(url, byteContent);
-    // 	var content = await res.Content.ReadAsStringAsync();
-    // 	Logger.Log($"Web Response ({res.StatusCode}): {content}");
-    // 	return new Response
-    // 	{
-    // 		StatusCode = res.StatusCode,
-    // 		Content = content
-    // 	};
-    // }
-
     public static async Task StreamToServerAsync(
         string? url,
         string buildPath,

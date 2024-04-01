@@ -1,6 +1,8 @@
-﻿using BuildRunner.Utils;
+﻿using System.IO.Compression;
+using BuildRunner.Utils;
 using Newtonsoft.Json.Linq;
 using Server.Services;
+using SharedLib;
 using UnityBuilder;
 using WebSocketSharp;
 
@@ -16,7 +18,7 @@ public class BuildRunnerService : ServiceBase
             ["linux"] = Arg.IsFlag("-linux"),
         };
 
-    private static readonly Queue<JObject> _buildQueue = new();
+    private static readonly Queue<KeyValuePair<string, JObject>> _buildQueue = new();
     private static Task? _buildRunnerTask;
 
     protected override void OnOpen()
@@ -35,7 +37,12 @@ public class BuildRunnerService : ServiceBase
         base.OnMessage(e);
 
         var payload = JObject.Parse(e.Data) ?? throw new NullReferenceException();
-        _buildQueue.Enqueue(payload);
+        var targetName = payload["TargetName"]?.ToString() ?? throw new NullReferenceException();
+
+        var item = new KeyValuePair<string, JObject>(targetName, payload);
+        _buildQueue.Enqueue(item);
+        Send(new JObject { ["TargetName"] = item.Key, ["Status"] = "Queued", }.ToString());
+
         BuildQueued();
     }
 
@@ -47,18 +54,17 @@ public class BuildRunnerService : ServiceBase
 
         while (_buildQueue.Count > 0)
         {
-            var payload = _buildQueue.Dequeue();
+            var (key, payload) = _buildQueue.Dequeue();
+
             var projectId =
                 payload.SelectToken("Project.Guid", true)?.ToString()
                 ?? throw new NullReferenceException();
+
             var workspace =
                 WorkspaceUpdater.PrepareWorkspace(projectId) ?? throw new NullReferenceException();
 
-            var buildTarget =
-                payload["BuildTarget"]?.ToString() ?? throw new NullReferenceException();
-
-            Console.WriteLine($"Queuing build: {buildTarget}");
-            Send(new JObject { ["Build"] = buildTarget, ["Status"] = "Queued", }.ToString());
+            Console.WriteLine($"Queuing build: {key}");
+            Send(new JObject { ["TargetName"] = key, ["Status"] = "Building" }.ToString());
 
             _buildRunnerTask = workspace.Engine switch
             {
@@ -75,7 +81,7 @@ public class BuildRunnerService : ServiceBase
         Console.WriteLine("Build queue empty");
     }
 
-    private static void RunUnity(string projectPath, JObject payload)
+    private void RunUnity(string projectPath, JObject payload)
     {
         var targetName = payload["TargetName"]?.ToString() ?? throw new NullReferenceException();
         var buildTarget = payload["BuildTarget"]?.ToString() ?? throw new NullReferenceException();
@@ -89,8 +95,117 @@ public class BuildRunnerService : ServiceBase
         var unityRunner = new UnityBuild2(projectPath, target, buildTarget);
         unityRunner.Run();
 
-        // todo: zip build content and send back
+        // zip build content and send back
+        ZipFileForServer(unityRunner.BuildPath, targetName);
+    }
 
-        // SendAsync();
+    private void ZipFileForServer(string buildPath, string targetName)
+    {
+        var zipPath = $"{buildPath}.zip";
+
+        if (File.Exists(zipPath))
+            File.Delete(zipPath);
+
+        ZipFile.CreateFromDirectory(buildPath, zipPath);
+        ZipMeta(zipPath, targetName);
+        // SendZipFile(zipPath, targetName);
+    }
+
+    private void ZipMeta(string zipFilePath, string targetName)
+    {
+        using var archive = ZipFile.OpenRead(zipFilePath);
+        Console.WriteLine($"Entries in the zip file '{zipFilePath}':");
+
+        foreach (var entry in archive.Entries)
+        {
+            Console.WriteLine($"- Name: {entry.FullName}");
+            Console.WriteLine($"  Size: {entry.Length} bytes");
+
+            // TODO: upload files from here
+            SendZipFile(entry, targetName);
+        }
+    }
+
+    private async void SendZipFile(ZipArchiveEntry zipEntry, string targetName)
+    {
+        const int fragmentSize = 1024 * 10; // 10 KB
+
+        var stream = zipEntry.Open();
+        var data = new byte[stream.Length];
+        var readAsync = await stream.ReadAsync(data);
+
+        // Calculate the number of fragments
+        var totalFragments = (int)Math.Ceiling((double)data.Length / fragmentSize);
+
+        Console.WriteLine($"Sending file [{data.Length} bytes]: {zipEntry.FullName}");
+
+        // Send each fragment
+        for (int i = 0; i < totalFragments; i++)
+        {
+            // Calculate the start and end index for the current fragment
+            var startIndex = i * fragmentSize;
+            var endIndex = Math.Min((i + 1) * fragmentSize, data.Length);
+
+            // Extract the current fragment from the original data
+            var fragment = new byte[endIndex - startIndex];
+            Array.Copy(data, startIndex, fragment, 0, fragment.Length);
+
+            // Write the target name, total length, and fragment to a memory stream
+            using var ms = new MemoryStream();
+            await using var writer = new BinaryWriter(ms);
+            writer.Write(targetName);
+            writer.Write(data.Length);
+            writer.Write(fragment.Length);
+            writer.Write(fragment);
+
+            // Send the fragment
+            Send(ms.ToArray());
+
+            // need to delay some time to give server time to process
+            await Task.Delay(1);
+        }
+
+        Console.WriteLine($"Sending file complete: {zipEntry.FullName}");
+    }
+
+    private async void SendZipFile(string filePath, string targetName)
+    {
+        const int fragmentSize = 1024 * 10; // 10 KB
+
+        var data = await File.ReadAllBytesAsync(filePath);
+
+        // Calculate the number of fragments
+        var totalFragments = (int)Math.Ceiling((double)data.Length / fragmentSize);
+
+        Console.WriteLine($"Sending file [{data.Length} bytes]: {filePath}");
+
+        // Send each fragment
+        for (int i = 0; i < totalFragments; i++)
+        {
+            // Calculate the start and end index for the current fragment
+            var startIndex = i * fragmentSize;
+            var endIndex = Math.Min((i + 1) * fragmentSize, data.Length);
+
+            // Extract the current fragment from the original data
+            var fragment = new byte[endIndex - startIndex];
+            Array.Copy(data, startIndex, fragment, 0, fragment.Length);
+
+            // Write the target name, total length, and fragment to a memory stream
+            using var ms = new MemoryStream();
+            await using var writer = new BinaryWriter(ms);
+            writer.Write(targetName);
+            writer.Write(data.Length);
+            writer.Write(fragment.Length);
+            writer.Write(fragment);
+
+            // Send the fragment
+            Send(ms.ToArray());
+
+            // need to delay some time to give server time to process
+            await Task.Delay(1);
+        }
+
+        Console.WriteLine($"Sending file complete: {filePath}");
+        Send(new JObject { ["TargetName"] = targetName, ["Status"] = "Complete" }.ToString());
     }
 }

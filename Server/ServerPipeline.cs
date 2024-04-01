@@ -82,14 +82,34 @@ public class ServerPipeline(Project project, Workspace workspace)
 
     #region Build
 
+    private readonly List<BuildRunnerProcess> _buildProcesses = [];
+
+    private void OnBuildMessageReceived(string message)
+    {
+        foreach (var process in _buildProcesses)
+            process.OnMessageReceived(message);
+    }
+
+    private void OnBuildDataReceived(byte[] bytes)
+    {
+        foreach (var process in _buildProcesses)
+            process.OnDataReceived(bytes);
+    }
+
     private async Task RunBuildAsync()
     {
         var tasks = new List<Task>();
 
+        // assign callbacks
+        foreach (var runner in BuildRunnerFactory.All)
+        {
+            runner.OnStringMessage += OnBuildMessageReceived;
+            runner.OnDataMessage += OnBuildDataReceived;
+        }
+
+        // start processes
         foreach (var buildTarget in project.BuildTargets)
         {
-            var task = new TaskCompletionSource<byte[]>();
-
             var runner = GetUnityRunner(buildTarget.Target);
             runner.SendJObject(
                 new JObject
@@ -100,15 +120,17 @@ public class ServerPipeline(Project project, Workspace workspace)
                 }
             );
 
-            runner.OnDataMessage += data =>
-            {
-                task.SetResult(data);
-            };
-
-            tasks.Add(task.Task);
+            var process = new BuildRunnerProcess { Name = buildTarget.Name, };
+            _buildProcesses.Add(process);
+            tasks.Add(process.Task);
         }
 
+        // wait for them all to finish
         await Task.WhenAll(tasks);
+
+        // assign callbacks
+        foreach (var runner in BuildRunnerFactory.All)
+            runner.ClearEvents();
     }
 
     private static WebClient GetUnityRunner(Unity.BuildTarget target)
@@ -138,4 +160,85 @@ public class ServerPipeline(Project project, Workspace workspace)
     private void RunDeploy() { }
 
     #endregion
+
+
+    private class BuildRunnerProcess
+    {
+        private FileStream? _fileStream;
+        private readonly TaskCompletionSource _completionSource = new();
+
+        public string? Name { get; init; }
+        public Task Task => _completionSource.Task;
+
+        public void OnMessageReceived(string message)
+        {
+            var data = JObject.Parse(message);
+            var name = data["TargetName"]?.ToString();
+            if (name != Name)
+                return;
+
+            var status = data["Status"]?.ToString();
+
+            switch (status)
+            {
+                case "Complete":
+                    _fileStream?.Close();
+                    _fileStream?.Dispose();
+                    _completionSource.SetResult();
+                    break;
+            }
+        }
+
+        private void CreateFileStream()
+        {
+            var filePath = Path.Combine(App.CiCachePath, "Deploy", $"{Name}.zip");
+            var fileInfo = new FileInfo(filePath);
+
+            if (fileInfo.Exists)
+                fileInfo.Delete();
+
+            if (fileInfo.Directory?.Exists is not true)
+                fileInfo.Directory?.Create();
+
+            _fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+        }
+
+        public void OnDataReceived(byte[] data)
+        {
+            using var ms = new MemoryStream(data);
+            using var reader = new BinaryReader(ms);
+            var targetName = reader.ReadString();
+            var totalLength = reader.ReadInt32();
+            var fragmentLength = reader.ReadInt32();
+            var fragment = reader.ReadBytes(fragmentLength);
+
+            // ignore if not for target
+            if (targetName != Name)
+                return;
+
+            if (_fileStream is null)
+            {
+                CreateFileStream();
+                return;
+            }
+
+            // write bytes to file
+            _fileStream.Write(fragment, 0, fragment.Length);
+
+            if (_fileStream.Length == totalLength)
+            {
+                Console.WriteLine("File offset set length");
+                _fileStream.Close();
+                _fileStream.Dispose();
+                _completionSource.SetResult();
+            }
+            else
+            {
+                var percent = _fileStream.Length / totalLength * 100;
+                Console.WriteLine(
+                    $"File download progress [{Name}]: {_fileStream.Length}/{totalLength} ({percent:0.0}%)"
+                );
+            }
+        }
+    }
 }
