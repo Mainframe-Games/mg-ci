@@ -14,19 +14,4 @@ public class UnityBuildTarget
     public List<string> ExtraScriptingDefines { get; set; } = [];
     public string? AssetBundleManifestPath { get; set; }
     public int BuildOptions { get; set; } = (int)Unity.BuildOptions.None;
-
-    public Unity.BuildPlayerOptions BuildPlayerOptions(string buildPath)
-    {
-        return new Unity.BuildPlayerOptions
-        {
-            target = Target,
-            subtarget = (int)SubTarget,
-            locationPathName = Path.Combine(buildPath, $"{ProductName}{Extension}"),
-            targetGroup = TargetGroup,
-            assetBundleManifestPath = AssetBundleManifestPath,
-            scenes = Scenes.ToArray(),
-            extraScriptingDefines = ExtraScriptingDefines.ToArray(),
-            options = (Unity.BuildOptions)BuildOptions
-        };
-    }
 }

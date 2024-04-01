@@ -16,7 +16,7 @@ public static class Logger
             WriteLineInternal($"[{TimeStamp}] {message}");
     }
 
-    public static void LogTitle(string title, params KeyValuePair<string, string>[] logs)
+    public static void LogTitle(string title, params (string key, string value)[] logs)
     {
         var log = new StringBuilder();
         log.AppendLine("###########################");
@@ -24,7 +24,7 @@ public static class Logger
         log.AppendLine("###########################");
 
         foreach (var pair in logs)
-            log.AppendLine($"{pair.Key}: {pair.Value}");
+            log.AppendLine($"{pair.key}: {pair.value}");
 
         var message = $"[{TimeStamp}]\n{log}";
         _builder.AppendLine(message);

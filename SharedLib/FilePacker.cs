@@ -8,111 +8,103 @@ namespace SharedLib;
 /// </summary>
 public static class FilePacker
 {
-	public static async Task<Entry[]> PackRawAsync(string? pathToDir)
-	{
-		var zipPath = $"{pathToDir}.zip";
-		Delete(zipPath);
-		Logger.Log($"Packing file... {zipPath}");
-		ZipFile.CreateFromDirectory(pathToDir, zipPath);
-		var fileBytes = await ReadLargeZipFile(zipPath);
-		Logger.Log($"Zip size: {fileBytes.ToByteSizeString()}");
-		return fileBytes;
-	}
-	
-	public static async Task UnpackRawAsync(string? zipName, Entry[] entries, string? destPathDir)
-	{
-		Delete(zipName);
-		Delete(destPathDir);
-		Logger.Log($"Unpacking file... '{zipName}' to '{destPathDir}'");
-		await WriteLargeZipFile(zipName, entries);
-		ZipFile.ExtractToDirectory(zipName, destPathDir);
-		Delete(zipName);
-		Logger.Log("Unpacking file... done");
-	}
-	
-	private static void Delete(string? path)
-	{
-		if (File.Exists(path))
-			File.Delete(path);
+    public static async Task<Entry[]> PackRawAsync(string? pathToDir)
+    {
+        var zipPath = $"{pathToDir}.zip";
+        Delete(zipPath);
+        Logger.Log($"Packing file... {zipPath}");
+        ZipFile.CreateFromDirectory(pathToDir, zipPath);
+        var fileBytes = await ReadLargeZipFile(zipPath);
+        Logger.Log($"Zip size: {fileBytes.ToByteSizeString()}");
+        return fileBytes;
+    }
 
-		if (Directory.Exists(path))
-			Directory.Delete(path, true);
-	}
+    public static async Task UnpackRawAsync(string? zipName, Entry[] entries, string? destPathDir)
+    {
+        Delete(zipName);
+        Delete(destPathDir);
+        Logger.Log($"Unpacking file... '{zipName}' to '{destPathDir}'");
+        await WriteLargeZipFile(zipName, entries);
+        ZipFile.ExtractToDirectory(zipName, destPathDir);
+        Delete(zipName);
+        Logger.Log("Unpacking file... done");
+    }
 
-	private static async Task<Entry[]> ReadLargeZipFile(string zipFilePath)
-	{
-		var frags = new List<Entry>();
-		await using var fileStream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read);
-		using var zipArchive = new ZipArchive(fileStream, ZipArchiveMode.Read);
+    private static void Delete(string? path)
+    {
+        if (File.Exists(path))
+            File.Delete(path);
 
-		var progress = new ProgressBar();
+        if (Directory.Exists(path))
+            Directory.Delete(path, true);
+    }
 
-		for (var i = 0; i < zipArchive.Entries.Count; i++)
-		{
-			var entry = zipArchive.Entries[i];
-			
-			progress.SetContext($"Reading entry... {entry.FullName}");
-			progress.Report(i / (double)zipArchive.Entries.Count);
-			
-			using var ms = new MemoryStream();
-			await using var entryStream = entry.Open();
-			await entryStream.CopyToAsync(ms);
-			frags.Add(new Entry(entry.FullName, ms.ToArray()));
-		}
+    private static async Task<Entry[]> ReadLargeZipFile(string zipFilePath)
+    {
+        var frags = new List<Entry>();
+        await using var fileStream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read);
+        using var zipArchive = new ZipArchive(fileStream, ZipArchiveMode.Read);
 
-		progress.Dispose();
-		return frags.ToArray();
-	}
+        var progress = new ProgressBar();
 
-	private static async Task WriteLargeZipFile(string zipFilePath, Entry[] entries)
-	{
-		await using var fileStream = new FileStream(zipFilePath, FileMode.Create, FileAccess.Write);
-		using var zipArchive = new ZipArchive(fileStream, ZipArchiveMode.Create);
+        for (var i = 0; i < zipArchive.Entries.Count; i++)
+        {
+            var entry = zipArchive.Entries[i];
 
-		var progress = new ProgressBar();
+            progress.SetContext($"Reading entry... {entry.FullName}");
+            progress.Report(i / (double)zipArchive.Entries.Count);
 
-		for (var i = 0; i < entries.Length; i++)
-		{
-			var entry = zipArchive.CreateEntry(entries[i].Name, CompressionLevel.Optimal);
-			await using var entryStream = entry.Open();
+            using var ms = new MemoryStream();
+            await using var entryStream = entry.Open();
+            await entryStream.CopyToAsync(ms);
+            frags.Add(new Entry(entry.FullName, ms.ToArray()));
+        }
 
-			progress.SetContext($"Reading entry... {entry.FullName}");
-			progress.Report(i / (double)entries.Length);
+        progress.Dispose();
+        return frags.ToArray();
+    }
 
-			await entryStream.WriteAsync(entries[i].Bytes);
-		}
-		
-		progress.Dispose();
-	}
-	
-	public struct Entry
-	{
-		public string Name;
-		public byte[] Bytes;
-		
-		public ulong SizeOf => (ulong)
-			(Encoding.UTF8.GetByteCount(Name)
-			 + Bytes.Length);
+    private static async Task WriteLargeZipFile(string zipFilePath, Entry[] entries)
+    {
+        await using var fileStream = new FileStream(zipFilePath, FileMode.Create, FileAccess.Write);
+        using var zipArchive = new ZipArchive(fileStream, ZipArchiveMode.Create);
 
-		public Entry(string name, byte[] bytes)
-		{
-			Name = name;
-			Bytes = bytes;
-		}
+        var progress = new ProgressBar();
 
-		public void Write(BinaryWriter writer)
-		{
-			writer.Write(Name);
-			writer.Write(Bytes.Length);
-			writer.Write(Bytes);
-		}
-	
-		public void Read(BinaryReader reader)
-		{
-			Name = reader.ReadString();
+        for (var i = 0; i < entries.Length; i++)
+        {
+            var entry = zipArchive.CreateEntry(entries[i].Name, CompressionLevel.Optimal);
+            await using var entryStream = entry.Open();
 
-			var length = reader.ReadInt32();
-			Bytes = reader.ReadBytes(length);
-		}
-	}
+            progress.SetContext($"Reading entry... {entry.FullName}");
+            progress.Report(i / (double)entries.Length);
+
+            await entryStream.WriteAsync(entries[i].Bytes);
+        }
+
+        progress.Dispose();
+    }
+
+    public struct Entry(string name, byte[] bytes)
+    {
+        public string Name = name;
+        public byte[] Bytes = bytes;
+
+        public ulong SizeOf => (ulong)(Encoding.UTF8.GetByteCount(Name) + Bytes.Length);
+
+        public void Write(BinaryWriter writer)
+        {
+            writer.Write(Name);
+            writer.Write(Bytes.Length);
+            writer.Write(Bytes);
+        }
+
+        public void Read(BinaryReader reader)
+        {
+            Name = reader.ReadString();
+
+            var length = reader.ReadInt32();
+            Bytes = reader.ReadBytes(length);
+        }
+    }
 }

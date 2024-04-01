@@ -6,46 +6,26 @@ using ServerClientShared;
 using SharedLib;
 using SharedLib.BuildToDiscord;
 using SharedLib.Server;
+using WebSocketSharp;
 using Logger = SharedLib.Logger;
 
 namespace Server.Services;
 
 public class BuildService : ServiceBase
 {
-    protected override void OnMessage(NetworkPayload payload)
+    protected override void OnMessage(MessageEventArgs e)
     {
-        switch (payload.Type)
-        {
-            case MessageType.Connection:
-                break;
-            case MessageType.Disconnection:
-                break;
+        base.OnMessage(e);
 
-            case MessageType.Message:
-
-                var project =
-                    Json.Deserialise<Project>(payload.Data?.ToString())
-                    ?? throw new NullReferenceException();
-
-                StartBuild(project);
-
-                break;
-
-            case MessageType.Error:
-                break;
-
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
+        var project = Json.Deserialise<Project>(e.Data) ?? throw new NullReferenceException();
+        StartBuild(project);
     }
 
     private void StartBuild(Project project)
     {
         if (App.Pipelines.ContainsKey(project.Guid!))
         {
-            Send(
-                new NetworkPayload(MessageType.Error, 0, $"Pipeline already exists: {project.Guid}")
-            );
+            Send(new NetworkPayload(MessageType.Error, $"Pipeline already exists: {project.Guid}"));
             return;
         }
 
@@ -56,7 +36,7 @@ public class BuildService : ServiceBase
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        Send(new NetworkPayload(MessageType.Message, 0, response));
+        Send(new NetworkPayload(MessageType.Message, response));
     }
 
     private static ServerResponse StartGitBuild(Project project)

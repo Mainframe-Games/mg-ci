@@ -1,17 +1,7 @@
 # Builds
 
-Docs for builds
+All Unity related build scripts
 
-# Arguments
+Conducted from `BuildRunner` in the root of the repository
 
-## Flags (bool)
-### Local `-local`
-### No Pre Build `-noprebuild`
-### No Build `-nobuild`
-### No Deploy `-nodeploy`
-### No Post Build `-nopostbuild`
-### No Hooks `-nohooks`
-
-## Params
-### ChangeSetId `-changesetid`
 

@@ -5,7 +5,7 @@ namespace UnityBuilder;
 /// <summary>
 /// docs: https://docs.unity3d.com/hub/manual/HubCLI.html
 /// </summary>
-public static class UnityHub
+internal static class UnityHub
 {
     private static string Path
     {

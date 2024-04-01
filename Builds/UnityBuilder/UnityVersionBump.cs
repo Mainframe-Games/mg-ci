@@ -1,37 +1,47 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using SharedLib;
-using ProjectSettings = UnityBuilder.Settings.ProjectSettings;
+﻿using UnityBuilder.Settings;
 
 namespace UnityBuilder;
 
-public class UnityPrebuild
+public class UnityVersionBump
 {
-    public BuildVersions BuildVersions { get; set; } = new();
-
-    public void RunCustom(string projectSettingsPath, bool standalone, bool android, bool ios)
+    public static void Run(
+        string projectSettingsPath,
+        bool standalone,
+        bool android,
+        bool ios,
+        out string outBundle,
+        out int outStandalone,
+        out int outAndroid,
+        out int outIos
+    )
     {
-        var projectSettings = new ProjectSettings(projectSettingsPath);
+        var projectSettings = new UnityProjectSettings(projectSettingsPath);
 
         // set bundle version to same. It should be set by user
-        BuildVersions.BundleVersion = projectSettings.GetBundleVersion();
+        outBundle = projectSettings.GetBundleVersion() ?? throw new NullReferenceException();
 
         // standalone
         if (standalone)
-            BuildVersions.Standalone = (projectSettings.GetStandaloneBuildNumber() + 1).ToString();
+            outStandalone = projectSettings.GetStandaloneBuildNumber() + 1;
+        else
+            outStandalone = projectSettings.GetStandaloneBuildNumber();
 
         // android
         if (android)
-            BuildVersions.AndroidVersionCode = (
-                projectSettings.GetAndroidBuildCode() + 1
-            ).ToString();
+            outAndroid = projectSettings.GetAndroidBuildCode() + 1;
+        else
+            outAndroid = projectSettings.GetAndroidBuildCode();
 
         // iOS
         if (ios)
-            BuildVersions.IPhone = (projectSettings.GetIphoneBuildNumber() + 1).ToString();
+            outIos = projectSettings.GetIphoneBuildNumber() + 1;
+        else
+            outIos = projectSettings.GetIphoneBuildNumber();
 
-        Logger.Log($"New BundleVersion: {BuildVersions}");
+        Console.WriteLine($"New BundleVersion: {outBundle}");
+        Console.WriteLine($"New Standalone: {outStandalone}");
+        Console.WriteLine($"New Android: {outAndroid}");
+        Console.WriteLine($"New iOS: {outIos}");
     }
 
     // TODO: get this way to work

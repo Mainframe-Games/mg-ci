@@ -150,31 +150,31 @@ public class UnityBuildPipeline
 
     private async Task Prebuild()
     {
-        Logger.Log("PreBuild process started...");
-
-        // // pre build runner
-        var preBuild = new UnityPrebuild();
-        // preBuild.RunCustom();
-        BuildVersions = preBuild.BuildVersions;
-
-        // write new versions to disk
-        Workspace.ProjectSettings.ReplaceVersions(preBuild.BuildVersions);
-        Workspace.SaveBuildVersion(preBuild.BuildVersions.FullVersion);
-
-        switch (Workspace)
-        {
-            case PlasticWorkspace:
-                Workspace.Commit(
-                    $"_Build Version: {preBuild.BuildVersions.FullVersion} | cs: {_currentChangeSetId} | guid: {_currentGuid}"
-                );
-                break;
-            case GitWorkspace:
-                Workspace.Commit(
-                    $"_Build Version: {preBuild.BuildVersions.FullVersion} | sha: {_currentGuid}"
-                );
-                break;
-        }
-
+        // Logger.Log("PreBuild process started...");
+        //
+        // // // pre build runner
+        // var preBuild = new UnityPrebuild();
+        // // preBuild.RunCustom();
+        // BuildVersions = preBuild.BuildVersions;
+        //
+        // // write new versions to disk
+        // Workspace.ProjectSettings.ReplaceVersions(preBuild.BuildVersions);
+        // Workspace.SaveBuildVersion(preBuild.BuildVersions.FullVersion);
+        //
+        // switch (Workspace)
+        // {
+        //     case PlasticWorkspace:
+        //         Workspace.Commit(
+        //             $"_Build Version: {preBuild.BuildVersions.FullVersion} | cs: {_currentChangeSetId} | guid: {_currentGuid}"
+        //         );
+        //         break;
+        //     case GitWorkspace:
+        //         Workspace.Commit(
+        //             $"_Build Version: {preBuild.BuildVersions.FullVersion} | sha: {_currentGuid}"
+        //         );
+        //         break;
+        // }
+        //
         await Task.CompletedTask;
     }
 

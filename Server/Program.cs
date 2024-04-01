@@ -11,6 +11,9 @@ try
     var config = ServerConfig.Load();
     var mainServer = StartMainServer(config.IP, config.Port);
 
+    // start runners
+    BuildRunnerFactory.Init(config.Runners);
+
     Console.WriteLine("\nPress Enter key to stop the server...");
     Console.ReadLine();
     mainServer.Stop();

@@ -1,29 +1,20 @@
 using ServerClientShared;
 using SharedLib.BuildToDiscord;
+using WebSocketSharp;
 
 namespace Server.Services;
 
 public class ReportService : ServiceBase
 {
-    protected override void OnMessage(NetworkPayload payload)
+    protected override void OnMessage(MessageEventArgs e)
     {
-        switch (payload.Type)
-        {
-            case MessageType.Connection:
-                break;
-            case MessageType.Disconnection:
-                break;
-            case MessageType.Message:
+        base.OnMessage(e);
 
-                var projectGuid = payload.Data?.ToString() ?? throw new NullReferenceException();
-                var data = GatherPipelineState(projectGuid);
-
-                if (data is not null)
-                    Send(new NetworkPayload(MessageType.Message, 0, data));
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
+        // var projectGuid = payload.Data?.ToString() ?? throw new NullReferenceException();
+        // var data = GatherPipelineState(projectGuid);
+        //
+        // if (data is not null)
+        //     Send(new NetworkPayload(MessageType.Message, data));
     }
 
     private static PipelineReport? GatherPipelineState(string projectGuid)
