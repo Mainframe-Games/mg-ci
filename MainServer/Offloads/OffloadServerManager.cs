@@ -15,7 +15,6 @@ internal static class OffloadServerManager
         foreach (var runner in configRunners)
         {
             var offloadServer = new OffloadServer(runner.Ip, runner.Port);
-            offloadServer.Connect();
             _offloadServers.Add(runner.Id, offloadServer);
         }
     }
