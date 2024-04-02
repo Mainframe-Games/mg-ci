@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 
-namespace Deployment.Server.Unity;
+namespace UnityServicesDeployment.Utils;
 
 public static class Web
 {

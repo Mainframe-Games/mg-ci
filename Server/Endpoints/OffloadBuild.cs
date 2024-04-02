@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using Deployment;
-using Deployment.Configs;
 using Deployment.RemoteBuild;
+using Server.Configs;
 using SharedLib;
 using SharedLib.Build;
 using SharedLib.BuildToDiscord;

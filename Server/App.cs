@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using AvaloniaAppMVVM.Data;
+using ClanforgeDeployment;
 using Deployment;
 using Deployment.Deployments;
 using Server.Configs;
@@ -261,14 +262,14 @@ public static class App
         pipeline.Args.TryGetArg("-setlive", out var beta, Config.Steam.DefaultSetLive);
         pipeline.Args.TryGetArg("-clanforge", out var profile, Config.Clanforge.DefaultProfile);
         var isFull = pipeline.Args.IsFlag("-full");
-        var clanforge = new ClanForgeDeploy(
-            Config.Clanforge,
-            profile,
-            buildVersionTitle,
-            beta,
-            isFull
-        );
-        await clanforge.Deploy();
+        // var clanforge = new ClanForgeDeploy(
+        //     Config.Clanforge,
+        //     profile,
+        //     buildVersionTitle,
+        //     beta,
+        //     isFull
+        // );
+        // await clanforge.Deploy();
     }
 
     private static async Task DeployApple(UnityBuildPipeline pipeline)

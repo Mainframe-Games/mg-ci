@@ -1,5 +1,4 @@
-﻿using Deployment.Configs;
-using SharedLib;
+﻿using SharedLib;
 using Tomlyn;
 
 namespace Server.Configs;

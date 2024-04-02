@@ -1,4 +1,4 @@
-namespace Deployment.Configs;
+namespace Server.Configs;
 
 /// <summary>
 /// Build config local to each Unity project

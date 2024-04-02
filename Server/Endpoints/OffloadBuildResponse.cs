@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using Deployment;
-using Deployment.Configs;
+using Server.Configs;
 using SharedLib;
 using SharedLib.BuildToDiscord;
 using SharedLib.Server;

@@ -1,4 +1,4 @@
-﻿using Deployment.Configs;
+﻿using Server.Configs;
 using Server.Endpoints;
 using SharedLib;
 using SharedLib.Build;

@@ -19,5 +19,6 @@
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="WebSocketSharp" Version="1.0.3-rc11" />
     <PackageVersion Include="LibGit2Sharp" Version="0.30.0" />
+    <PackageVersion Include="Google.Apis.AndroidPublisher.v3" Version="1.67.0.3374" />
   </ItemGroup>
 </Project>

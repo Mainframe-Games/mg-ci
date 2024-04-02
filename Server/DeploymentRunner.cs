@@ -1,4 +1,5 @@
 ﻿using AvaloniaAppMVVM.Data;
+using ClanforgeDeployment;
 using Deployment.Deployments;
 using GooglePlayDeployment;
 using Newtonsoft.Json.Linq;
@@ -90,7 +91,23 @@ public class DeploymentRunner(
         Args.Environment.TryGetArg("-setlive", out var beta, _config.Steam.DefaultSetLive);
         Args.Environment.TryGetArg("-clanforge", out var profile, _config.Clanforge.DefaultProfile);
         var isFull = Args.Environment.IsFlag("-full");
-        var clanforge = new ClanForgeDeploy(_config.Clanforge, profile, fullVersion, beta, isFull);
+
+        var clanforgeConfig = _config.Clanforge!;
+        var AuthToken =
+            $"Basic {Base64Key.Generate(clanforgeConfig.AccessKey, clanforgeConfig.SecretKey)}";
+
+        var imageId = clanforgeConfig.GetImageId(profile);
+        var url = Uri.EscapeDataString(clanforgeConfig.GetUrl(beta));
+
+        var clanforge = new ClanForgeDeploy(
+            AuthToken,
+            clanforgeConfig.Asid,
+            clanforgeConfig.MachineId,
+            imageId,
+            isFull,
+            fullVersion,
+            url
+        );
         await clanforge.Deploy();
     }
 

@@ -1,7 +1,5 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Deployment", "Deployment\Deployment.csproj", "{591CD82C-DBB8-472A-84E6-FE630F146B46}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordBot", "DiscordBot\DiscordBot.csproj", "{B58E7544-7829-44FF-A9A2-2040B0A0CB4F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedLib", "SharedLib\SharedLib.csproj", "{A64D3CD8-A12E-4855-BAF2-9BA1C6043737}"
@@ -40,16 +38,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwsDeployment", "Deployment
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityServicesDeployment", "Deployments\UnityServicesDeployment\UnityServicesDeployment.csproj", "{E345AE26-A633-4AFB-A69A-27FA164082AE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClanforgeDeployment", "Deployments\ClanforgeDeployment\ClanforgeDeployment.csproj", "{6474BFBF-E5A4-484A-8ADA-4F41C41AE1A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ItchioDeployment", "Deployments\ItchioDeployment\ItchioDeployment.csproj", "{1FE5E7E7-7270-4470-91B6-1A4EC511F29E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{591CD82C-DBB8-472A-84E6-FE630F146B46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{591CD82C-DBB8-472A-84E6-FE630F146B46}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{591CD82C-DBB8-472A-84E6-FE630F146B46}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{591CD82C-DBB8-472A-84E6-FE630F146B46}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B58E7544-7829-44FF-A9A2-2040B0A0CB4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B58E7544-7829-44FF-A9A2-2040B0A0CB4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B58E7544-7829-44FF-A9A2-2040B0A0CB4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -114,6 +112,14 @@ Global
 		{E345AE26-A633-4AFB-A69A-27FA164082AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E345AE26-A633-4AFB-A69A-27FA164082AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E345AE26-A633-4AFB-A69A-27FA164082AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6474BFBF-E5A4-484A-8ADA-4F41C41AE1A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6474BFBF-E5A4-484A-8ADA-4F41C41AE1A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6474BFBF-E5A4-484A-8ADA-4F41C41AE1A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6474BFBF-E5A4-484A-8ADA-4F41C41AE1A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FE5E7E7-7270-4470-91B6-1A4EC511F29E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FE5E7E7-7270-4470-91B6-1A4EC511F29E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1FE5E7E7-7270-4470-91B6-1A4EC511F29E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1FE5E7E7-7270-4470-91B6-1A4EC511F29E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{59847429-1E15-4CB0-ABD3-0C8FD6880983} = {B85BA8A1-B6C6-4EC7-8447-3A230EAC3826}
@@ -126,5 +132,7 @@ Global
 		{15BD2963-DC3A-4890-84E0-F071B2AA3917} = {939CF0BC-F548-411B-89C6-08D25043DB22}
 		{F607391C-E2D4-4055-8C1F-5758595B38B4} = {939CF0BC-F548-411B-89C6-08D25043DB22}
 		{E345AE26-A633-4AFB-A69A-27FA164082AE} = {939CF0BC-F548-411B-89C6-08D25043DB22}
+		{6474BFBF-E5A4-484A-8ADA-4F41C41AE1A1} = {939CF0BC-F548-411B-89C6-08D25043DB22}
+		{1FE5E7E7-7270-4470-91B6-1A4EC511F29E} = {939CF0BC-F548-411B-89C6-08D25043DB22}
 	EndGlobalSection
 EndGlobal

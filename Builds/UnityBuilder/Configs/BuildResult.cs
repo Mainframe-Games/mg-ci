@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 using SharedLib;
 using SharedLib.Server;
 
-namespace Deployment.Configs;
+namespace Server.Configs;
 
 public class BuildResult
 {
