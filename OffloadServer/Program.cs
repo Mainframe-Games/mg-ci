@@ -14,6 +14,7 @@ var ip = Arg.GetArg("-ip") ?? "127.0.0.1";
 var port = ushort.Parse(Arg.GetArg("-port") ?? "8081");
 
 var server = new WebSocketServer($"ws://{ip}:{port}");
+server.AddWebSocketService<VersionBumpService>("/connect");
 server.AddWebSocketService<VersionBumpService>("/version-bump");
 server.AddWebSocketService<BuildRunnerService>("/build");
 

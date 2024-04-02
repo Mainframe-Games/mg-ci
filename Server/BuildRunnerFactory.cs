@@ -38,10 +38,4 @@ public static class BuildRunnerFactory
 
         return _runners[id ?? string.Empty];
     }
-
-    public static void SendToRunner(string serverId, NetworkPayload payload)
-    {
-        var runner = _runners[serverId];
-        runner.Send(payload);
-    }
 }
