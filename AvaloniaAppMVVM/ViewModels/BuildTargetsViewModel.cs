@@ -14,7 +14,7 @@ public partial class BuildTargetsViewModel : ViewModelBase
 
     [IgnoreDataMember]
     public static ObservableCollection<string> ExtensionOptions { get; } =
-        [".exe", ".app", ".x86_64", ".apk", "/"];
+        [".exe", ".app", ".x86_64", ".aab", "/"];
 
     [IgnoreDataMember]
     public static ObservableCollection<Unity.BuildTarget> BuildTargetOptions { get; } =

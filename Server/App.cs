@@ -308,14 +308,15 @@ public static class App
         if (!aabFile.Exists)
             throw new FileNotFoundException($"aab file not found: {path}");
 
-        await GooglePlayDeploy.Deploy(
-            packageName,
-            aabFile.FullName,
-            Config.GoogleStore.CredentialsPath,
-            Config.GoogleStore.ServiceUsername,
-            buildVersionTitle,
-            changeLog
-        );
+        // await GooglePlayDeploy.Deploy(
+        //     packageName,
+        //     aabFile.FullName,
+        //     Config.GoogleStore.CredentialsPath,
+        //     Config.GoogleStore.ServiceUsername,
+        //     buildVersionTitle,
+        //     changeLog
+        // );
+        await Task.CompletedTask;
     }
 
     private static void DeploySteam(UnityBuildPipeline pipeline, string buildVersionTitle)

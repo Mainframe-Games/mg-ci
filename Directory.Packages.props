@@ -18,6 +18,6 @@
     <PackageVersion Include="Tomlyn" Version="0.17.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="WebSocketSharp" Version="1.0.3-rc11" />
-    <PackageVersion Include="LibGit2Sharp" Version="0.30.0"/>
+    <PackageVersion Include="LibGit2Sharp" Version="0.30.0" />
   </ItemGroup>
 </Project>

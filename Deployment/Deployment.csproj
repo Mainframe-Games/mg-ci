@@ -5,7 +5,6 @@
 
     <ItemGroup>
       <PackageReference Include="AWSSDK.S3" Version="3.7.200.1" />
-      <PackageReference Include="Google.Apis.AndroidPublisher.v3" Version="1.61.0.3106" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
 

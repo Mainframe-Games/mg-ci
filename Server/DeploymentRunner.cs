@@ -1,5 +1,6 @@
 ﻿using AvaloniaAppMVVM.Data;
 using Deployment.Deployments;
+using GooglePlayDeployment;
 using Newtonsoft.Json.Linq;
 using Server.Configs;
 using SharedLib;
@@ -136,24 +137,23 @@ public class DeploymentRunner(
             "applicationIdentifier.Android"
         );
 
-        var changeLog = string.Join("\n", changeLogArray);
-        var buildSettingsAsset = workspace.GetBuildTarget(BuildTargetFlag.Android.ToString());
-        var productName = buildSettingsAsset.GetValue<string>("ProductName");
-        var buildPath = buildSettingsAsset.GetValue<string>("BuildPath");
+        var productName = project.Settings.ProjectName;
+        var buildPath = "TODO: get build path from build settings asset";
         var path = Path.Combine(buildPath, $"{productName}.aab");
         var aabFile = new FileInfo(path);
 
         if (!aabFile.Exists)
             throw new FileNotFoundException($"aab file not found: {path}");
 
-        await GooglePlayDeploy.Deploy(
+        var googlePlayDeploy = new GooglePlayDeploy(
             packageName,
             aabFile.FullName,
             _config.GoogleStore!.CredentialsPath!,
             _config.GoogleStore.ServiceUsername!,
             fullVersion,
-            changeLog
+            string.Join("\n", changeLogArray)
         );
+        await googlePlayDeploy.Deploy();
     }
 
     private void DeploySteam()
