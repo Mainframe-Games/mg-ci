@@ -10,6 +10,7 @@
       <ProjectReference Include="..\Deployments\AwsDeployment\AwsDeployment.csproj" />
       <ProjectReference Include="..\Deployments\GooglePlayDeployment\GooglePlayDeployment.csproj" />
       <ProjectReference Include="..\Deployments\SteamDeployment\SteamDeployment.csproj" />
+      <ProjectReference Include="..\Deployments\UnityServicesDeployment\UnityServicesDeployment.csproj" />
       <ProjectReference Include="..\Deployments\XcodeDeployment\XcodeDeployment.csproj" />
       <ProjectReference Include="..\Deployment\Deployment.csproj" />
       <ProjectReference Include="..\ServerClientShared\ServerClientShared.csproj" />

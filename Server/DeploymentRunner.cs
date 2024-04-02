@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 using Server.Configs;
 using SharedLib;
 using SteamDeployment;
-using XcodeDeployment;
+using UnityServicesDeployment;
 
 namespace Server;
 
@@ -53,35 +53,33 @@ public class DeploymentRunner(
         if (_config.S3 == null || !_awsS3)
             return;
 
-        // // upload to s3
-        // var pathToBuild = pipeline
-        //     .Workspace.GetBuildTarget($"{BuildTargetFlag.Linux64}_Server")
-        //     .BuildPath;
-        // var s3 = new AmazonS3Deploy(
-        //     _config.S3.AccessKey,
-        //     _config.S3.SecretKey,
-        //     _config.S3.BucketName
-        // );
-        // await s3.DeployAsync(pathToBuild);
-        //
-        // if (_config.Ugs?.ServerHosting == null)
-        //     return;
-        //
-        // if (_config.Ugs.ServerHosting.BuildId == 0)
-        //     throw new Exception("Invalid build Id");
-        //
-        // var project = _config.Ugs.GetProjectFromName(workspace.Name);
-        // var gameServer = new UnityGameServerRequest(_config.Ugs.KeyId, _config.Ugs.SecretKey);
-        // await gameServer.CreateNewBuildVersion(
-        //     project.ProjectId,
-        //     project.EnvironmentId,
-        //     _config.Ugs.ServerHosting.BuildId,
-        //     _config.S3.Url,
-        //     _config.S3.AccessKey,
-        //     _config.S3.SecretKey
-        // );
-        //
-        // Logger.Log("Unity server updated");
+        // upload to s3
+        var pathToBuild = "TODO: path/to/build";
+        var s3 = new AmazonS3Deploy(
+            _config.S3.AccessKey,
+            _config.S3.SecretKey,
+            _config.S3.BucketName
+        );
+        await s3.DeployAsync(pathToBuild);
+
+        if (_config.Ugs?.ServerHosting == null)
+            return;
+
+        if (_config.Ugs.ServerHosting.BuildId == 0)
+            throw new Exception("Invalid build Id");
+
+        var project = _config.Ugs.GetProjectFromName(workspace.Name);
+        var gameServer = new UnityGameServerRequest(_config.Ugs.KeyId, _config.Ugs.SecretKey);
+        await gameServer.CreateNewBuildVersion(
+            project.ProjectId,
+            project.EnvironmentId,
+            _config.Ugs.ServerHosting.BuildId,
+            _config.S3.Url,
+            _config.S3.AccessKey,
+            _config.S3.SecretKey
+        );
+
+        Logger.Log("Unity server updated");
     }
 
     private async Task DeployClanforge()

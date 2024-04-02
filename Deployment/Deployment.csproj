@@ -11,6 +11,10 @@
       <ProjectReference Include="..\SharedLib\SharedLib.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="DedicatedServer\Unity\" />
+    </ItemGroup>
+
 
 
 </Project>

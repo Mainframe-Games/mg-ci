@@ -2,7 +2,6 @@
 using AvaloniaAppMVVM.Data;
 using Deployment;
 using Deployment.Deployments;
-using Deployment.Server.Unity;
 using Server.Configs;
 using SharedLib;
 using SharedLib.Server;
@@ -240,16 +239,16 @@ public static class App
         if (Config.Ugs.ServerHosting.BuildId == 0)
             throw new Exception("Invalid build Id");
 
-        var project = Config.Ugs.GetProjectFromName(pipeline.Workspace.Name);
-        var gameServer = new UnityGameServerRequest(Config.Ugs.KeyId, Config.Ugs.SecretKey);
-        await gameServer.CreateNewBuildVersion(
-            project.ProjectId,
-            project.EnvironmentId,
-            Config.Ugs.ServerHosting.BuildId,
-            Config.S3.Url,
-            Config.S3.AccessKey,
-            Config.S3.SecretKey
-        );
+        // var project = Config.Ugs.GetProjectFromName(pipeline.Workspace.Name);
+        // var gameServer = new UnityGameServerRequest(Config.Ugs.KeyId, Config.Ugs.SecretKey);
+        // await gameServer.CreateNewBuildVersion(
+        //     project.ProjectId,
+        //     project.EnvironmentId,
+        //     Config.Ugs.ServerHosting.BuildId,
+        //     Config.S3.Url,
+        //     Config.S3.AccessKey,
+        //     Config.S3.SecretKey
+        // );
 
         Logger.Log("Unity server updated");
     }
