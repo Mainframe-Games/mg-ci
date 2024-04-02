@@ -8,6 +8,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Builds\UnityBuilder\UnityBuilder.csproj" />
       <ProjectReference Include="..\Deployments\SteamDeployment\SteamDeployment.csproj" />
+      <ProjectReference Include="..\Deployments\XcodeDeployment\XcodeDeployment.csproj" />
       <ProjectReference Include="..\Deployment\Deployment.csproj" />
       <ProjectReference Include="..\ServerClientShared\ServerClientShared.csproj" />
       <ProjectReference Include="..\SharedLib\SharedLib.csproj" />

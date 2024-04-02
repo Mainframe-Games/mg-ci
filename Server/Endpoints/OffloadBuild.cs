@@ -2,7 +2,6 @@
 using Deployment;
 using Deployment.Configs;
 using Deployment.RemoteBuild;
-using Server.RemoteDeploy;
 using SharedLib;
 using SharedLib.Build;
 using SharedLib.BuildToDiscord;
@@ -128,8 +127,8 @@ public class OffloadBuild : Endpoint<OffloadBuild.Payload>
 
         var deployStr = Json.Serialise(build.Deploy);
 
-        if (asset.Target is BuildTarget.iOS)
-            return Json.Deserialise<RemoteAppleDeploy>(deployStr);
+        // if (asset.Target is BuildTarget.iOS)
+        // return Json.Deserialise<RemoteAppleDeploy>(deployStr);
 
         return null;
     }

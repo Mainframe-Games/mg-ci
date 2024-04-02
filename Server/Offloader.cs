@@ -1,6 +1,5 @@
 ﻿using Deployment.Configs;
 using Server.Endpoints;
-using Server.RemoteDeploy;
 using SharedLib;
 using SharedLib.Build;
 
@@ -109,11 +108,11 @@ public class Offloader : IOffloadable
             case BuildTargetFlag.Linux64:
                 break;
             case BuildTargetFlag.iOS when BuildConfig?.Deploy?.AppleStore is true:
-                buildConfig.Deploy = new RemoteAppleDeploy
-                {
-                    WorkspaceName = WorkspaceName,
-                    Config = XcodeConfig
-                };
+                // buildConfig.Deploy = new RemoteAppleDeploy
+                // {
+                //     WorkspaceName = WorkspaceName,
+                //     Config = XcodeConfig
+                // };
                 break;
             case BuildTargetFlag.Android:
                 break;

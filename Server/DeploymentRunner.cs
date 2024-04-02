@@ -1,10 +1,10 @@
 ﻿using AvaloniaAppMVVM.Data;
 using Deployment.Deployments;
-using Deployment.Server.Unity;
+using Newtonsoft.Json.Linq;
 using Server.Configs;
-using Server.RemoteDeploy;
 using SharedLib;
 using SteamDeployment;
+using XcodeDeployment;
 
 namespace Server;
 
@@ -97,16 +97,34 @@ public class DeploymentRunner(
 
     private async Task DeployApple()
     {
-        if (!_appleStore || !OperatingSystem.IsMacOS())
+        if (!_appleStore)
             return;
 
-        var apple = new RemoteAppleDeploy
-        {
-            WorkspaceName = workspace.Name,
-            Config = _config.AppleStore,
-        };
+        var macRunner =
+            BuildRunnerFactory.GetRunner("macos")
+            ?? throw new NullReferenceException("Mac runner is not found");
 
-        await apple.ProcessAsync();
+        macRunner.SendJObject(
+            new JObject
+            {
+                ["ProjectGuid"] = project.Guid!,
+                ["AppleId"] = _config.AppleStore?.AppleId,
+                ["AppSpecificPassword"] = _config.AppleStore?.AppSpecificPassword
+            }
+        );
+
+        var task = new TaskCompletionSource();
+        macRunner.OnStringMessage += message =>
+        {
+            var obj = JObject.Parse(message);
+            var status = obj["Status"]?.ToString();
+
+            if (status == "Completed")
+                task.SetResult();
+            else
+                throw new Exception($"Xcode deploy failed: {status}");
+        };
+        await task.Task;
     }
 
     private async Task DeployGoogle()
@@ -131,8 +149,8 @@ public class DeploymentRunner(
         await GooglePlayDeploy.Deploy(
             packageName,
             aabFile.FullName,
-            _config.GoogleStore.CredentialsPath,
-            _config.GoogleStore.ServiceUsername,
+            _config.GoogleStore!.CredentialsPath!,
+            _config.GoogleStore.ServiceUsername!,
             fullVersion,
             changeLog
         );
@@ -148,12 +166,10 @@ public class DeploymentRunner(
 
         foreach (var vdfPath in _steamVdfs)
         {
-            var password = _config.Steam.Password!;
-            var username = _config.Steam.Username!;
             var steam = new SteamDeploy(
                 vdfPath,
-                password,
-                username,
+                _config.Steam.Password!,
+                _config.Steam.Username!,
                 fullVersion,
                 project.Deployment.SteamSetLive!
             );

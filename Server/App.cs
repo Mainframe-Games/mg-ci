@@ -4,7 +4,6 @@ using Deployment;
 using Deployment.Deployments;
 using Deployment.Server.Unity;
 using Server.Configs;
-using Server.RemoteDeploy;
 using SharedLib;
 using SharedLib.Server;
 
@@ -278,13 +277,14 @@ public static class App
         if (pipeline.Config.Deploy?.AppleStore is not true || !OperatingSystem.IsMacOS())
             return;
 
-        var apple = new RemoteAppleDeploy
-        {
-            WorkspaceName = pipeline.Workspace.Name,
-            Config = Config.AppleStore,
-        };
+        // var apple = new RemoteAppleDeploy
+        // {
+        //     WorkspaceName = pipeline.Workspace.Name,
+        //     Config = Config.AppleStore,
+        // };
 
-        await apple.ProcessAsync();
+        // await apple.ProcessAsync();
+        await Task.CompletedTask;
     }
 
     private static async Task DeployGoogle(UnityBuildPipeline pipeline, string buildVersionTitle)
