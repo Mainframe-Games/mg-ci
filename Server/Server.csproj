@@ -7,6 +7,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Builds\UnityBuilder\UnityBuilder.csproj" />
+      <ProjectReference Include="..\Deployments\AwsDeployment\AwsDeployment.csproj" />
       <ProjectReference Include="..\Deployments\GooglePlayDeployment\GooglePlayDeployment.csproj" />
       <ProjectReference Include="..\Deployments\SteamDeployment\SteamDeployment.csproj" />
       <ProjectReference Include="..\Deployments\XcodeDeployment\XcodeDeployment.csproj" />
