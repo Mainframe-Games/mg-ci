@@ -1,9 +1,9 @@
 using WebSocketSharp;
 using WebSocketSharp.Server;
 
-namespace Server.Services;
+namespace OffloadServer;
 
-public abstract class ServiceBase : WebSocketBehavior
+internal abstract class ServiceBase : WebSocketBehavior
 {
     protected override void OnOpen()
     {

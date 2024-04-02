@@ -7,4 +7,15 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="LibGit2Sharp" />
+      <PackageReference Include="Newtonsoft.Json" />
+      <PackageReference Include="Tomlyn" />
+      <PackageReference Include="WebSocketSharp" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Builders\UnityBuilder\UnityBuilder.csproj" />
+    </ItemGroup>
+
 </Project>

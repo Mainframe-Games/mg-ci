@@ -2,13 +2,14 @@
 
 namespace UnityBuilder;
 
-public class UnityVersionBump
+public class UnityVersionBump(
+    string projectSettingsPath,
+    bool standalone,
+    bool android,
+    bool ios
+    )
 {
-    public static void Run(
-        string projectSettingsPath,
-        bool standalone,
-        bool android,
-        bool ios,
+    public void Run(
         out string outBundle,
         out int outStandalone,
         out int outAndroid,

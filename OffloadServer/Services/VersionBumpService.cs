@@ -1,11 +1,11 @@
 ﻿using Newtonsoft.Json.Linq;
-using Server.Services;
+using OffloadServer.Utils;
 using UnityBuilder;
 using WebSocketSharp;
 
-namespace BuildRunner;
+namespace OffloadServer;
 
-public class VersionBumpService : ServiceBase
+internal class VersionBumpService : ServiceBase
 {
     protected override void OnMessage(MessageEventArgs e)
     {
@@ -41,12 +41,14 @@ public class VersionBumpService : ServiceBase
         var ios =
             payload.SelectToken("Prebuild.BuildNumberIphone", true)?.ToObject<bool>() ?? false;
 
-        UnityVersionBump.Run(
-            projectSettingsPath,
-            standalone,
-            android,
-            ios,
-            out var bundle,
+        var unityVersionBump = new UnityVersionBump(
+                projectSettingsPath,
+                standalone,
+                android,
+                ios);
+        
+        unityVersionBump.Run(
+            out var outBundle,
             out var outStandalone,
             out var outAndroid,
             out var outIos
@@ -54,10 +56,10 @@ public class VersionBumpService : ServiceBase
 
         return new JObject
         {
-            ["bundle"] = bundle,
-            ["standalone"] = outStandalone,
-            ["android"] = outAndroid,
-            ["ios"] = outIos
+            ["Bundle"] = outBundle,
+            ["Standalone"] = outStandalone,
+            ["Android"] = outAndroid,
+            ["Ios"] = outIos
         };
     }
 }

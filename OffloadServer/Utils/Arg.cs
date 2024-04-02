@@ -1,6 +1,6 @@
-﻿namespace BuildRunner.Utils;
+﻿namespace OffloadServer.Utils;
 
-public static class Arg
+internal static class Arg
 {
     private static readonly string[] _args = Environment.GetCommandLineArgs();
 

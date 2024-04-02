@@ -1,13 +1,12 @@
 ﻿using System.Diagnostics;
-using BuildRunner.Utils;
 using Newtonsoft.Json.Linq;
-using Server.Services;
+using OffloadServer.Utils;
 using UnityBuilder;
 using WebSocketSharp;
 
-namespace BuildRunner;
+namespace OffloadServer;
 
-public class BuildRunnerService : ServiceBase
+internal class BuildRunnerService : ServiceBase
 {
     private static readonly Dictionary<string, bool> _platform =
         new()

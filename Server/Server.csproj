@@ -6,7 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Builds\UnityBuilder\UnityBuilder.csproj" />
+      <ProjectReference Include="..\Builders\UnityBuilder\UnityBuilder.csproj" />
       <ProjectReference Include="..\Deployments\AwsDeployment\AwsDeployment.csproj" />
       <ProjectReference Include="..\Deployments\ClanforgeDeployment\ClanforgeDeployment.csproj" />
       <ProjectReference Include="..\Deployments\GooglePlayDeployment\GooglePlayDeployment.csproj" />

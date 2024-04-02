@@ -63,6 +63,7 @@ public class ServerPipeline(Project project, Workspace workspace)
 
     private async Task<string> RunPreBuildAsync()
     {
+        // TODO: this could probably be done on main server
         var task = new TaskCompletionSource<JObject>();
         BuildRunnerFactory.VersionBump.SendJObject(JObject.FromObject(project));
         BuildRunnerFactory.VersionBump.OnStringMessage += message =>
@@ -71,24 +72,21 @@ public class ServerPipeline(Project project, Workspace workspace)
         };
 
         var res = await task.Task;
-        /*
-         {
-          "bundle": "0.1",
-          "standalone": 19,
-          "android": 1,
-          "ios": 0
-         }
-         */
+        
+        var bundle = res["Bundle"]?.ToString();
+        var standalone = res["Standalone"]?.ToString();
+        var android = res["Android"]?.ToString();
+        var ios = res["Ios"]?.ToString();
 
         // save files
         workspace.ProjectSettings.ReplaceVersions(
-            res["bundle"]?.ToString(),
-            res["standalone"]?.ToString(),
-            res["android"]?.ToString(),
-            res["ios"]?.ToString()
+            bundle,
+            standalone,
+            android,
+            ios
         );
 
-        var fullVersion = $"{res["bundle"]}.{res["standalone"]}";
+        var fullVersion = $"{bundle}.{standalone}";
         workspace.SaveBuildVersion(fullVersion);
 
         // commit file

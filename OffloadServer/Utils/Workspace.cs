@@ -1,11 +1,11 @@
 ﻿using LibGit2Sharp;
 using SharedLib;
 
-namespace BuildRunner;
+namespace OffloadServer.Utils;
 
-public class RunnerWorkspace(string projectPath)
+internal class Workspace(string projectPath)
 {
-    public string ProjectPath { get; init; } = projectPath;
+    public string ProjectPath => projectPath;
     public string? Engine { get; } = GetEngine(projectPath ?? throw new NullReferenceException());
     public string? VersionControl { get; } =
         GetVersionControl(projectPath ?? throw new NullReferenceException());
@@ -91,24 +91,24 @@ public class RunnerWorkspace(string projectPath)
 
     private void UpdateGit()
     {
-        if (!Repository.IsValid(ProjectPath))
+        if (!Repository.IsValid(projectPath))
         {
             Repository.Clone(
                 GitUrl,
-                ProjectPath,
+                projectPath,
                 new CloneOptions { RecurseSubmodules = true, BranchName = Branch }
             );
 
             // init LFS
-            Cmd.Run("git", "lfs install", ProjectPath);
+            Cmd.Run("git", "lfs install", projectPath);
         }
 
         // clear
-        using var repo = new Repository(ProjectPath);
+        using var repo = new Repository(projectPath);
         repo.Reset(ResetMode.Hard, repo.Head.Tip);
 
         // switch branch
-        Cmd.Run("git", $"switch {Branch}", ProjectPath);
+        Cmd.Run("git", $"switch {Branch}", projectPath);
 
         // pull
         Commands.Pull(
@@ -135,6 +135,6 @@ public class RunnerWorkspace(string projectPath)
                 }
             }
         );
-        Cmd.Run("git", "lfs pull", ProjectPath);
+        Cmd.Run("git", "lfs pull", projectPath);
     }
 }
