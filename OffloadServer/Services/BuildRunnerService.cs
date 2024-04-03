@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Newtonsoft.Json.Linq;
-using OffloadServer.Utils;
+using ServerShared;
+using Tomlyn.Model;
 using UnityBuilder;
 using WebSocketSharp;
 
@@ -8,26 +9,13 @@ namespace OffloadServer;
 
 internal class BuildRunnerService : ServiceBase
 {
-    private static readonly Dictionary<string, bool> _platform =
-        new()
-        {
-            ["windows"] = Arg.IsFlag("-windows"),
-            ["macos"] = Arg.IsFlag("-macos"),
-            ["linux"] = Arg.IsFlag("-linux"),
-        };
-
-    private static readonly Queue<KeyValuePair<string, JObject>> _buildQueue = new();
+    private static readonly Queue<KeyValuePair<string, Guid>> _buildQueue = new();
     private static Task? _buildRunnerTask;
 
     protected override void OnOpen()
     {
         base.OnOpen();
         Console.WriteLine($"Client connected [{Context.RequestUri.AbsolutePath}]: {ID}");
-
-        var keys = _platform.Where(x => x.Value).Select(x => x.Key).ToArray();
-        var platforms = string.Join(" ", keys).Trim();
-        if (platforms.Length > 0)
-            Send(platforms);
     }
 
     protected override void OnMessage(MessageEventArgs e)
@@ -36,11 +24,11 @@ internal class BuildRunnerService : ServiceBase
 
         var payload = JObject.Parse(e.Data) ?? throw new NullReferenceException();
         var targetName = payload["TargetName"]?.ToString() ?? throw new NullReferenceException();
+        var projectGuid = payload["ProjectGuid"]?.ToString() ?? throw new NullReferenceException();
 
-        var item = new KeyValuePair<string, JObject>(targetName, payload);
+        var item = new KeyValuePair<string, Guid>(targetName, new Guid(projectGuid));
         _buildQueue.Enqueue(item);
         Send(new JObject { ["TargetName"] = item.Key, ["Status"] = "Queued", }.ToString());
-
         BuildQueued();
     }
 
@@ -52,23 +40,19 @@ internal class BuildRunnerService : ServiceBase
 
         while (_buildQueue.Count > 0)
         {
-            var (key, payload) = _buildQueue.Dequeue();
-
-            var projectId =
-                payload.SelectToken("Project.Guid", true)?.ToString()
-                ?? throw new NullReferenceException();
-
+            var (targetName, projectGuid) = _buildQueue.Dequeue();
+            
             var workspace =
-                WorkspaceUpdater.PrepareWorkspace(projectId) ?? throw new NullReferenceException();
+                WorkspaceUpdater.PrepareWorkspace(projectGuid) ?? throw new NullReferenceException();
 
-            Console.WriteLine($"Queuing build: {key}");
-            Send(new JObject { ["TargetName"] = key, ["Status"] = "Building" }.ToString());
+            Console.WriteLine($"Queuing build: {targetName}");
+            Send(new JObject { ["TargetName"] = targetName, ["Status"] = "Building" }.ToString());
 
             _buildRunnerTask = workspace.Engine switch
             {
-                "Unity" => Task.Run(() => RunUnity(workspace.ProjectPath, payload)),
-                "Godot" => throw new NotImplementedException(),
-                _ => throw new ArgumentException()
+                GameEngine.Unity => Task.Run(() => RunUnity(workspace.ProjectPath, targetName, workspace)),
+                GameEngine.Godot => throw new NotImplementedException(),
+                _ => throw new ArgumentException($"Engine not supported: {workspace.Engine}")
             };
 
             // await build to be done
@@ -79,21 +63,47 @@ internal class BuildRunnerService : ServiceBase
         Console.WriteLine("Build queue empty");
     }
 
-    private void RunUnity(string projectPath, JObject payload)
+    private void RunUnity(string projectPath, string targetName, Workspace workspace)
     {
-        var targetName = payload["TargetName"]?.ToString() ?? throw new NullReferenceException();
-        var buildTarget = payload["BuildTarget"]?.ToString() ?? throw new NullReferenceException();
-        var target =
-            payload
-                .SelectToken("Project.BuildTargets", true)
-                ?.FirstOrDefault(x => x["Name"]?.ToString() == targetName)
-            ?? throw new NullReferenceException();
+        var project = workspace.GetProjectToml();
+        var isBuildTargets = project.TryGetValue("build_targets", out var buildTargets);
+        
+        if (!isBuildTargets)
+            throw new Exception("build_targets not found in toml");
 
+        if (buildTargets is not TomlTableArray array)
+            throw new Exception("buildTargets is not an array");
+
+        var target = array.FirstOrDefault(x => x["name"]?.ToString() == targetName)?? throw new NullReferenceException();
+        
         // run build
+        var extension = target["extension"]?.ToString() ?? throw new NullReferenceException();
+        var product_name = target["product_name"]?.ToString() ?? throw new NullReferenceException();
+        var buildTargetName = target["build_target"]?.ToString() ?? throw new NullReferenceException();
+        var target_group = target["target_group"]?.ToString() ?? throw new NullReferenceException();
+        var sub_target = target["sub_target"]?.ToString() ?? throw new NullReferenceException();
+        var scenes = (List<string>)(target["scenes"] ?? throw new NullReferenceException());
+        var extraScriptingDefines = (List<string>)(target["extra_scripting_defines"] ?? throw new NullReferenceException());
+        var assetBundleManifestPath = target["asset_bundle_manifest_path"]?.ToString() ?? throw new NullReferenceException();
+        var build_options = (int)(target["build_options"] ?? throw new NullReferenceException());
+        
+        var unityRunner = new UnityBuild2(
+            projectPath,
+            targetName,
+            extension,
+            product_name,
+            buildTargetName, 
+            target_group, 
+            sub_target, 
+            scenes.ToArray(),
+            extraScriptingDefines.ToArray(),
+            assetBundleManifestPath,
+            build_options
+        );
+        
         var sw = Stopwatch.StartNew();
-        var unityRunner = new UnityBuild2(projectPath, target, buildTarget);
         unityRunner.Run();
-
+        
         Send(
             new JObject
             {
@@ -102,7 +112,7 @@ internal class BuildRunnerService : ServiceBase
                 ["Time"] = sw.ElapsedMilliseconds
             }.ToString()
         );
-
+        
         // send back
         UploadDirectory(unityRunner.BuildPath, targetName);
     }

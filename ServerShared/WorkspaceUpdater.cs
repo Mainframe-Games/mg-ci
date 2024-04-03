@@ -1,11 +1,23 @@
-using Tomlyn;
+﻿using Tomlyn;
 using Tomlyn.Model;
 
-namespace OffloadServer.Utils;
+namespace ServerShared;
 
-internal static class ProjectFinder
+public static class WorkspaceUpdater
 {
-    public static (DirectoryInfo projDir, TomlTable projToml) GetProjectDirectory(string projectGuid)
+    public static Workspace? PrepareWorkspace(Guid projectGuid)
+    {
+        var (projDir, projToml) = GetProjectDirectory(projectGuid);
+        
+        var gitUrl = projToml.GetValue<string>("settings", "git_repository_url");
+        var branch = projToml.GetValue<string>("settings", "branch");
+        
+        var workspace = new Workspace(projDir.FullName) { GitUrl = gitUrl, Branch = branch };
+        workspace.Update();
+        return workspace;
+    }
+    
+    private static (DirectoryInfo projDir, TomlTable projToml) GetProjectDirectory(Guid projectGuid)
     {
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var cacheRoot = new DirectoryInfo(Path.Combine(home, "ci-cache"));
@@ -19,7 +31,8 @@ internal static class ProjectFinder
             var contents = File.ReadAllText(toml.FullName);
             var projectToml = Toml.ToModel(contents);
 
-            if (projectToml["guid"].ToString() != projectGuid)
+            var guid = new Guid(projectToml["guid"].ToString()!);
+            if (guid != projectGuid)
                 continue;
             
             // Return the parent directory of the project.toml file

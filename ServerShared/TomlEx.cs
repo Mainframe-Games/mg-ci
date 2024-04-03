@@ -1,6 +1,6 @@
 using Tomlyn.Model;
 
-namespace OffloadServer.Utils;
+namespace ServerShared;
 
 internal static class TomlEx
 {

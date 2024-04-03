@@ -10,8 +10,6 @@ public class ServerPipeline(Project project, Workspace workspace)
 {
     public async void Run()
     {
-        PrepareWorkspace(workspace, project);
-
         var sw = Stopwatch.StartNew();
 
         // version bump
@@ -35,13 +33,6 @@ public class ServerPipeline(Project project, Workspace workspace)
 
         // deploys
         RunDeploy(processes, fullVersion, changeLog);
-    }
-
-    private static void PrepareWorkspace(Workspace workspace, Project project)
-    {
-        workspace.Clear();
-        workspace.SwitchBranch(project.Settings.Branch!);
-        workspace.Update();
     }
 
     private string[] BuildChangeLog()

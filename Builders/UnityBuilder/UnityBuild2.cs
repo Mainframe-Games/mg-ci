@@ -14,7 +14,7 @@ public class UnityBuild2
     private readonly string _productName;
     private readonly int _target;
     private readonly int _targetGroup;
-    private readonly int _subTarget;
+    private readonly string _subTarget;
     private readonly string[] _scenes;
     private readonly string[] _extraScriptingDefines;
     private readonly string _assetBundleManifestPath;
@@ -24,26 +24,36 @@ public class UnityBuild2
 
     public string BuildPath { get; }
 
-    public UnityBuild2(string projectPath, JToken target, string buildTargetName)
+    public UnityBuild2(
+        string projectPath,
+        string name,
+        
+        // player build options
+        string extension,
+        string productName,
+        string buildTargetName,
+        string targetGroup,
+        string subTarget,
+        string[] scenes,
+        string[] extraScriptingDefines,
+        string assetBundleManifestPath,
+        int buildOptions
+    )
     {
         _projectPath = projectPath;
         _unityVersion = UnityVersion.Get(projectPath);
         _buildTargetFlag = GetBuildTargetFlag(buildTargetName);
 
-        _name = target["Name"]?.ToString() ?? throw new NullReferenceException();
-        _extension = target["Extension"]?.ToString() ?? throw new NullReferenceException();
-        _productName = target["ProductName"]?.ToString() ?? throw new NullReferenceException();
-        _target = target["Target"]?.Value<int>() ?? throw new NullReferenceException();
-        _targetGroup = target["TargetGroup"]?.Value<int>() ?? throw new NullReferenceException();
-        _subTarget = target["SubTarget"]?.Value<int>() ?? throw new NullReferenceException();
-        _scenes = target["Scenes"]?.ToObject<string[]>() ?? throw new NullReferenceException();
-        _extraScriptingDefines =
-            target["ExtraScriptingDefines"]?.ToObject<string[]>()
-            ?? throw new NullReferenceException();
-        _assetBundleManifestPath =
-            target["AssetBundleManifestPath"]?.ToString() ?? throw new NullReferenceException();
-        _buildOptions =
-            target["BuildOptions"]?.ToObject<int>() ?? throw new NullReferenceException();
+        _name = name;
+        _extension = extension;
+        _productName = productName;
+        _target = GetTargetEnumValue(buildTargetName);
+        _targetGroup = GetTargetGroupEnumValue(targetGroup);
+        _subTarget = subTarget;
+        _scenes = scenes;
+        _extraScriptingDefines = extraScriptingDefines;
+        _assetBundleManifestPath = assetBundleManifestPath;
+        _buildOptions = buildOptions;
 
         // plant current build target settings in project
         BuildPath = Path.Combine(projectPath, "Builds", _name);
@@ -54,7 +64,7 @@ public class UnityBuild2
 
     public void Run()
     {
-        var logPath = Path.Combine(_projectPath, "Builds", "Logs", $"build_{_name}.log");
+        var logPath = Path.Combine(_projectPath, "Builds", "Logs", _productName, $"build_{_name}.log");
 
         var args = new UnityArgs
         {
@@ -63,7 +73,7 @@ public class UnityBuild2
             LogPath = logPath,
             BuildPath = BuildPath,
             BuildTarget = _buildTargetFlag,
-            SubTarget = _subTarget == 0 ? "Player" : "Server",
+            SubTarget = _subTarget,
             CustomArgs = null
         };
 
@@ -96,6 +106,22 @@ public class UnityBuild2
             ["scenes"] = JArray.FromObject(target._scenes),
             ["extraScriptingDefines"] = JArray.FromObject(target._extraScriptingDefines),
             ["options"] = target._buildOptions
+        };
+    }
+
+    private static int GetTargetEnumValue(string buildTargetName)
+    {
+        return 0;
+    }
+    
+    private static int GetTargetGroupEnumValue(string targetGroup)
+    {
+        return targetGroup switch
+        {
+            "Standalone" => 1,
+            "iOS" => 4,
+            "Android" => 7,
+            _ => throw new NotSupportedException($"Target Group not supported: {targetGroup}")
         };
     }
 

@@ -15,6 +15,11 @@ internal class OffloadServer
     public string OperatingSystem { get; private set; } = string.Empty;
     public Dictionary<string, WebClientBase> Services { get; } = new();
     
+    public delegate void BuildCompleteDelegate(string targetName, long buildTime);
+    public event BuildCompleteDelegate? OnBuildCompleteMessage;
+
+    public event Action<byte[]>? OnDataMessage;
+    
     public OffloadServer(string ip, ushort port)
     {
         _ip = ip;
@@ -25,15 +30,16 @@ internal class OffloadServer
        
         _connector.OnOpen += (sender, args) 
             => Console.WriteLine("Connected to offload server");
-        _connector.OnClose += (sender, args) 
-            => Console.WriteLine("Disconnected from offload server");
+        _connector.OnClose += RetryConnection;
         _connector.OnMessage += OnConnectionMessage;
         
         _connector.Connect();
     }
     
-    private async void RetryConnection()
+    private async void RetryConnection(object? sender, CloseEventArgs closeEventArgs)
     {
+        Console.WriteLine("Disconnected from offload server");
+
         while (!_connector.IsAlive)
         {
             // ReSharper disable once MethodHasAsyncOverload
@@ -44,11 +50,37 @@ internal class OffloadServer
 
     private void OnConnectionMessage(object? sender, MessageEventArgs e)
     {
-        // connect to the services
+        if (e.IsBinary)
+        {
+            OnDataMessage?.Invoke(e.RawData);
+            return;
+        }
+        
         var res = JObject.Parse(e.Data);
-        OperatingSystem = res[nameof(OperatingSystem)]?.ToString() ?? throw new NullReferenceException();
-        var services = res[nameof(Services)]?.ToObject<List<string>>() ?? throw new NullReferenceException();
-        SetupServices(services);
+        var status = res["Status"]?.ToObject<string>() ?? throw new NullReferenceException();
+
+        switch (status)
+        {
+            case "Connect":
+                // connect to the services
+                OperatingSystem = res[nameof(OperatingSystem)]?.ToString() ?? throw new NullReferenceException();
+                var services = res[nameof(Services)]?.ToObject<List<string>>() ?? throw new NullReferenceException();
+                SetupServices(services);
+                break;
+            
+            case "Building":
+                break;
+            
+            case "Complete":
+                var targetName = res["TargetName"]?.ToString() ?? throw new NullReferenceException();
+                var buildTime = res["Time"]?.Value<long>() ?? 0;
+                OnBuildCompleteMessage?.Invoke(targetName, buildTime);
+                break;
+            
+            case "Error":
+                Console.WriteLine($"Error: {res["Message"]}");
+                break;
+        }
     }
     
     private async void SetupServices(List<string> inServices)
@@ -66,32 +98,10 @@ internal class OffloadServer
         await Task.WhenAll(connections);
         Console.WriteLine("Connected to offload server");
     }
-
-    // public async void Connect()
-    // {
-    //     // get the available services
-    //     var task = new TaskCompletionSource<JObject>();
-    //     _connector.OnMessage += (sender, args) 
-    //         => task.SetResult(JObject.Parse(args.Data));
-    //
-    //     // ReSharper disable once MethodHasAsyncOverload
-    //     _connector.Connect();
-    //     var res = await task.Task;
-    //     
-    //     // connect to the services
-    //     OperatingSystem = res[nameof(OperatingSystem)]?.ToString() ?? throw new NullReferenceException();
-    //     var services = res[nameof(Services)]?.ToObject<List<string>>() ?? throw new NullReferenceException();
-    //
-    //     var connections = new List<Task>();
-    //     foreach (var service in services)
-    //     {
-    //         var client = new WebClientBase(service, ip, port);
-    //         Services.Add(service, client);
-    //         var connection = client.Connect();
-    //         connections.Add(connection);
-    //     }
-    //
-    //     await Task.WhenAll(connections);
-    //     Console.WriteLine("Connected to offload server");
-    // }
+    
+    public void Send(string service, string message)
+    {
+        if (Services.TryGetValue(service, out var offloader))
+            offloader.Send(message);
+    }
 }

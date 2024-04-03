@@ -1,6 +1,5 @@
 ﻿using MainServer.Configs;
 using MainServer.Offloads;
-using MainServer.Services;
 using MainServer.Utils;
 using WebSocketSharp.Server;
 
@@ -25,7 +24,7 @@ return;
 static WebSocketServer StartMainServer(string ip, ushort port)
 {
     var server = new WebSocketServer($"ws://{ip}:{port}");
-    server.AddWebSocketService<BuildService>("/build");
+    // server.AddWebSocketService<BuildService>("/build");
     // server.AddWebSocketService<ReportService>("/report");
     server.Start();
 

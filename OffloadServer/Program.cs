@@ -1,5 +1,5 @@
 ﻿using OffloadServer;
-using OffloadServer.Utils;
+using Tomlyn;
 using WebSocketSharp.Server;
 
 /*
@@ -10,11 +10,15 @@ using WebSocketSharp.Server;
  * - Deployments for iOS
  */
 
-var ip = Arg.GetArg("-ip") ?? "127.0.0.1";
-var port = ushort.Parse(Arg.GetArg("-port") ?? "8081");
+var tomlStr = File.ReadAllText("/Users/broganking/ci-cache/Unity Test/.ci/project.toml");
+var toml = Toml.ToModel(tomlStr);
+
+var ip = GetArg("-ip", args) ?? "127.0.0.1";
+var port = ushort.Parse(GetArg("-port", args) ?? "8081");
 
 var server = new WebSocketServer($"ws://{ip}:{port}");
-server.AddWebSocketService<VersionBumpService>("/connect");
+server.AddWebSocketService<ConnectService>("/connect");
+ConnectService.Services = new[]{"version-bump", "build"};
 server.AddWebSocketService<VersionBumpService>("/version-bump");
 server.AddWebSocketService<BuildRunnerService>("/build");
 
@@ -34,3 +38,15 @@ Console.WriteLine("\nPress Enter key to stop the server...");
 
 Console.ReadLine();
 server.Stop();
+return ;
+
+static string? GetArg(string name, IReadOnlyList<string> args)
+{
+    for (int i = 0; i < args.Count; i++)
+    {
+        if (args[i] == name && args.Count > i + 1)
+            return args[i + 1];
+    }
+
+    return null;
+}

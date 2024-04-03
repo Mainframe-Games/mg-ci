@@ -17,7 +17,12 @@ internal class ConnectService : ServiceBase
             throw new NotSupportedException("Operating system not supported");
         }
     }
-    
+
+    /// <summary>
+    /// Array of services provided by offload server
+    /// </summary>
+    public static string[]? Services { get; set; }
+
     protected override void OnOpen()
     {
         base.OnOpen();
@@ -26,7 +31,7 @@ internal class ConnectService : ServiceBase
         var data = new JObject
         {
             ["OperationSystem"] = OsName,
-            ["Services"] = new JArray("version-bump", "build"),
+            ["Services"] = JArray.FromObject(Services ?? throw new NullReferenceException()),
         };
         
         Send(data.ToString());
