@@ -4,10 +4,11 @@ using ServerShared;
 using Tomlyn.Model;
 using UnityBuilder;
 using WebSocketSharp;
+using WebSocketSharp.Server;
 
 namespace OffloadServer;
 
-internal class BuildRunnerService : ServiceBase
+internal class BuildRunnerService : WebSocketBehavior
 {
     private static readonly Queue<QueuePacket> _buildQueue = new();
     private static Task? _buildRunnerTask;

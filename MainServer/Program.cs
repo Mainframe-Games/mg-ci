@@ -15,7 +15,6 @@ var mainServer = StartMainServer(config.Ip, config.Port);
 
 OffloadServerManager.Init(config.Offloaders);
 
-Console.WriteLine("\nPress Enter key to stop the server...");
 Console.ReadLine();
 mainServer.Stop();
 

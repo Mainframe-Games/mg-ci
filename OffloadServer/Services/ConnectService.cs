@@ -1,8 +1,10 @@
 using Newtonsoft.Json.Linq;
+using WebSocketSharp;
+using WebSocketSharp.Server;
 
 namespace OffloadServer;
 
-internal class ConnectService : ServiceBase
+internal class ConnectService : WebSocketBehavior
 {
     private static string OsName
     {
@@ -28,12 +30,17 @@ internal class ConnectService : ServiceBase
         base.OnOpen();
         Console.WriteLine($"Client connected [{Context.RequestUri.AbsolutePath}]: {ID}");
 
-        var data = new JObject
+        Send(new JObject
         {
-            ["OperationSystem"] = OsName,
+            ["OperatingSystem"] = OsName,
+            ["Status"] = "Connection",
             ["Services"] = JArray.FromObject(Services ?? throw new NullReferenceException()),
-        };
-        
-        Send(data.ToString());
+        }.ToString());
+    }
+
+    protected override void OnClose(CloseEventArgs e)
+    {
+        base.OnClose(e);
+        Console.WriteLine($"Client disconnected [{Context.RequestUri.AbsolutePath}]: {ID}");
     }
 }

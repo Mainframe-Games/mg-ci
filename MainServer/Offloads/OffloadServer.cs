@@ -61,7 +61,7 @@ internal class OffloadServer
 
         switch (status)
         {
-            case "Connect":
+            case "Connection":
                 // connect to the services
                 OperatingSystem = res[nameof(OperatingSystem)]?.ToString() ?? throw new NullReferenceException();
                 var services = res[nameof(Services)]?.ToObject<List<string>>() ?? throw new NullReferenceException();
@@ -96,7 +96,9 @@ internal class OffloadServer
         }
         
         await Task.WhenAll(connections);
-        Console.WriteLine("Connected to offload server");
+        Console.WriteLine("Connected to offload servers: ");
+        foreach (var inService in inServices)
+            Console.WriteLine($"- {inService}");
     }
     
     public void Send(string service, string message)
