@@ -1,5 +1,4 @@
 ﻿using OffloadServer;
-using Tomlyn;
 using WebSocketSharp.Server;
 
 /*
@@ -9,9 +8,6 @@ using WebSocketSharp.Server;
  * - Builds (Unity, Godot)
  * - Deployments for iOS
  */
-
-var tomlStr = File.ReadAllText("/Users/broganking/ci-cache/Unity Test/.ci/project.toml");
-var toml = Toml.ToModel(tomlStr);
 
 var ip = GetArg("-ip", args) ?? "127.0.0.1";
 var port = ushort.Parse(GetArg("-port", args) ?? "8081");

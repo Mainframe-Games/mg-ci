@@ -13,8 +13,4 @@
       <PackageReference Include="WebSocketSharp" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="BuildProcess\" />
-    </ItemGroup>
-
 </Project>

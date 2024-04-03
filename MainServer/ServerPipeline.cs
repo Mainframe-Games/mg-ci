@@ -5,31 +5,35 @@ using ServerShared;
 
 namespace MainServer;
 
-internal class ServerPipeline(string projectGuid, IEnumerable<string> buildTargets, Workspace workspace)
+internal class ServerPipeline(Guid projectGuid, Workspace workspace, IEnumerable<string> buildTargets)
 {
+    public static List<Guid> ActiveProjects { get; } = [];
+    
     public async void Run()
     {
-        var sw = Stopwatch.StartNew();
+        ActiveProjects.Add(projectGuid);
+        {
+            var sw = Stopwatch.StartNew();
 
-        // version bump
-        var fullVersion = workspace.VersionBump();
-        Console.WriteLine(
-            $"Pre Build Complete\ntime = {sw.ElapsedMilliseconds}ms"
-        );
-        sw.Restart();
+            // version bump
+            var fullVersion = workspace.VersionBump();
+            Console.WriteLine($"Pre Build Complete\ntime = {sw.ElapsedMilliseconds}ms");
+            sw.Restart();
 
-        // changelog
-        var changeLog = workspace.GetChangeLog();
+            // changelog
+            var changeLog = workspace.GetChangeLog();
 
-        // builds
-        var processes = await RunBuildAsync();
-        Console.WriteLine(
-            $"Build Complete\ntime= {sw.ElapsedMilliseconds}ms"
-        );
-        sw.Restart();
+            // builds
+            var processes = await RunBuildAsync();
+            Console.WriteLine($"Build Complete\ntime= {sw.ElapsedMilliseconds}ms");
+            sw.Restart();
 
-        // deploys
-        RunDeploy(processes, fullVersion, changeLog);
+            // deploys
+            RunDeploy(processes, fullVersion, changeLog);
+            Console.WriteLine($"Deploy Complete\ntime= {sw.ElapsedMilliseconds}ms");
+            sw.Restart();
+        }
+        ActiveProjects.Remove(projectGuid);
     }
 
     #region Build
