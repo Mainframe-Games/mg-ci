@@ -1,5 +1,4 @@
-﻿using LibGit2Sharp;
-using ServerShared.VersionControls;
+﻿using ServerShared.VersionControls;
 using Tomlyn;
 using Tomlyn.Model;
 

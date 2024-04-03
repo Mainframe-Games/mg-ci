@@ -65,8 +65,9 @@ internal class ServerPipeline(Guid projectGuid, Workspace workspace, IEnumerable
             runner.Send("build",
                 new JObject
                 {
-                    ["TargetName"] = buildTarget,
                     ["ProjectGuid"] = projectGuid,
+                    ["TargetName"] = buildTarget,
+                    ["Branch"] = workspace.Branch
                 }.ToString()
             );
 

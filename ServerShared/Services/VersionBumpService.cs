@@ -13,9 +13,9 @@ public class VersionBumpService : WebSocketBehavior
 
         var payload = JObject.Parse(e.Data) ?? throw new NullReferenceException();
         var projectId = payload["Guid"]?.ToString() ?? throw new NullReferenceException();
+        var branch = payload["Branch"]?.ToString() ?? throw new NullReferenceException();
         var projectGuid = new Guid(projectId);
-        var workspace =
-            WorkspaceUpdater.PrepareWorkspace(projectGuid) ?? throw new NullReferenceException();
+        var workspace = WorkspaceUpdater.PrepareWorkspace(projectGuid, branch);
 
         var response = new JObject();
         

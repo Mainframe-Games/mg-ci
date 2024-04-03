@@ -2,7 +2,7 @@ using Tomlyn.Model;
 
 namespace ServerShared;
 
-internal static class TomlEx
+public static class TomlEx
 {
     public static T? GetValue<T>(this TomlTable table, params string[] keys)
     {

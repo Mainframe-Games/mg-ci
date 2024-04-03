@@ -5,12 +5,11 @@ namespace ServerShared;
 
 public static class WorkspaceUpdater
 {
-    public static Workspace? PrepareWorkspace(Guid projectGuid)
+    public static Workspace PrepareWorkspace(Guid projectGuid, string branch)
     {
         var (projDir, projToml) = GetProjectDirectory(projectGuid);
         
         var gitUrl = projToml.GetValue<string>("settings", "git_repository_url");
-        var branch = projToml.GetValue<string>("settings", "branch");
         
         var workspace = new Workspace(projDir.FullName) { GitUrl = gitUrl, Branch = branch };
         workspace.Update();

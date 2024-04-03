@@ -1,3 +1,4 @@
+using MainServer.Utils;
 using Newtonsoft.Json.Linq;
 using ServerShared;
 using WebSocketSharp;
@@ -14,11 +15,12 @@ public class BuildService : WebSocketBehavior
         var response = JObject.Parse(e.Data);
         var projectId = response["Guid"]?.ToString() ?? throw new NullReferenceException();
         var buildTargetNames = response["BuildTargets"]?.ToObject<string[]>() ?? Array.Empty<string>();
-        var guid = new Guid(projectId);
-        StartBuild(guid, buildTargetNames);
+        var branch = response["Branch"]?.ToString() ?? throw new NullReferenceException();
+        var projectGuid = new Guid(projectId);
+        StartBuild(projectGuid, buildTargetNames, branch);
     }
 
-    private void StartBuild(Guid projectGuid, IEnumerable<string> buildTargetNames)
+    private void StartBuild(Guid projectGuid, string[] buildTargetNames, string branch)
     {
         if (ServerPipeline.ActiveProjects.Contains(projectGuid))
         {
@@ -29,76 +31,22 @@ public class BuildService : WebSocketBehavior
             return;
         }
 
-        var workspace = WorkspaceUpdater.PrepareWorkspace(projectGuid) ?? throw new NullReferenceException();
+        var workspace = WorkspaceUpdater.PrepareWorkspace(projectGuid, branch) ?? throw new NullReferenceException();
+        var project = workspace.GetProjectToml();
         var pipeline = new ServerPipeline(projectGuid, workspace, buildTargetNames);
         pipeline.Run();
         
         Send(new JObject
         {
-            // ServerVersion = App.ServerVersion,
-            // PipelineId = pipeline.ProjectId,
-            // Workspace = workspace.Name,
-            // WorkspaceMeta = workspace.Meta,
-            // Targets = string.Join(", ", workspace.GetBuildTargets().Select(x => x.Name)),
-            // UnityVersion = workspace.UnityVersion,
-            // ChangesetId = changeSetId,
-            // ChangesetGuid = guid,
-            // Branch = project.Settings.Branch,
-            // ChangesetCount = pipeline.ChangeLog.Length,
+            // ["ServerVersion"] = ServerInfo.Version,
+            // ["PipelineId"] = pipeline.ProjectId,
+            ["ProjectName"] = project.GetValue<string>("settings", "product_name"),
+            ["Targets"] = string.Join(", ", buildTargetNames),
+            // ["UnityVersion"] = workspace.UnityVersion,
+            // ["ChangesetId"] = changeSetId,
+            // ["ChangesetGuid"] = guid,
+            ["Branch"] = branch,
 
         }.ToString());
     }
-
-    // private ServerResponse StartBuildPlastic(Project project)
-    // {
-    //     var workspaceName = new WorkspaceMapping().GetRemapping(project.Settings.ProjectName);
-    //     var workspace = PlasticWorkspace.GetWorkspaceFromName(workspaceName);
-    //
-    //     if (workspace is null)
-    //         return new ServerResponse(
-    //             HttpStatusCode.BadRequest,
-    //             $"Given namespace is not valid: {project.Settings.ProjectName}"
-    //         );
-    //
-    //     Logger.Log($"Chosen workspace: {workspace}");
-    //     var res = StartBuildPipeline(workspace, project);
-    //     return res;
-    // }
-
-    // private ServerResponse StartBuildPipeline(Workspace workspace, Project project)
-    // {
-    //     var args = new Args(""); // TODO: remove args from pipeline, everything should be done in C# classes
-    //
-    //     var pipeline = App.CreateBuildPipeline(workspace, args, project);
-    //     pipeline.Report.OnReportUpdated += OnReportUpdated;
-    //
-    //     App.RunBuildPipe(pipeline).FireAndForget();
-    //     workspace.GetCurrent(out var changeSetId, out var guid);
-    //
-    //     var data = new BuildPipelineResponse
-    //     {
-    //         ServerVersion = App.ServerVersion,
-    //         PipelineId = pipeline.ProjectId,
-    //         Workspace = workspace.Name,
-    //         WorkspaceMeta = workspace.Meta,
-    //         Targets = string.Join(", ", workspace.GetBuildTargets().Select(x => x.Name)),
-    //         UnityVersion = workspace.UnityVersion,
-    //         ChangesetId = changeSetId,
-    //         ChangesetGuid = guid,
-    //         Branch = project.Settings.Branch,
-    //         ChangesetCount = pipeline.ChangeLog.Length,
-    //     };
-    //     return new ServerResponse(HttpStatusCode.OK, data);
-    // }
-    //
-    // private void OnReportUpdated(PipelineReport report)
-    // {
-    //     var body = new Dictionary<string, object>
-    //     {
-    //         // ["CommandId"] = Content.CommandId,
-    //         ["Report"] = report,
-    //     };
-    //
-    //     Sessions.Broadcast(Json.Serialise(body));
-    // }
 }

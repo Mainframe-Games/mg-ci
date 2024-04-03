@@ -9,7 +9,7 @@ namespace OffloadServer;
 
 internal class BuildRunnerService : ServiceBase
 {
-    private static readonly Queue<KeyValuePair<string, Guid>> _buildQueue = new();
+    private static readonly Queue<QueuePacket> _buildQueue = new();
     private static Task? _buildRunnerTask;
 
     protected override void OnOpen()
@@ -25,10 +25,16 @@ internal class BuildRunnerService : ServiceBase
         var payload = JObject.Parse(e.Data) ?? throw new NullReferenceException();
         var targetName = payload["TargetName"]?.ToString() ?? throw new NullReferenceException();
         var projectGuid = payload["ProjectGuid"]?.ToString() ?? throw new NullReferenceException();
+        var branch = payload["Branch"]?.ToString() ?? throw new NullReferenceException();
 
-        var item = new KeyValuePair<string, Guid>(targetName, new Guid(projectGuid));
-        _buildQueue.Enqueue(item);
-        Send(new JObject { ["TargetName"] = item.Key, ["Status"] = "Queued", }.ToString());
+        var queuePacket = new QueuePacket
+        {
+            ProjectGuid = new Guid(projectGuid),
+            TargetName = targetName,
+            Branch = branch,
+        };
+        _buildQueue.Enqueue(queuePacket);
+        Send(new JObject { ["TargetName"] = queuePacket.TargetName, ["Status"] = "Queued", }.ToString());
         BuildQueued();
     }
 
@@ -40,10 +46,13 @@ internal class BuildRunnerService : ServiceBase
 
         while (_buildQueue.Count > 0)
         {
-            var (targetName, projectGuid) = _buildQueue.Dequeue();
+            var packet = _buildQueue.Dequeue();
+            var projectGuid = packet.ProjectGuid;
+            var targetName = packet.TargetName;
+            var branch = packet.Branch;
             
             var workspace =
-                WorkspaceUpdater.PrepareWorkspace(projectGuid) ?? throw new NullReferenceException();
+                WorkspaceUpdater.PrepareWorkspace(projectGuid, branch) ?? throw new NullReferenceException();
 
             Console.WriteLine($"Queuing build: {targetName}");
             Send(new JObject { ["TargetName"] = targetName, ["Status"] = "Building" }.ToString());
@@ -171,5 +180,12 @@ internal class BuildRunnerService : ServiceBase
             Send(ms.ToArray());
             await Task.Delay(10);
         }
+    }
+
+    private class QueuePacket
+    {
+        public Guid ProjectGuid { get; set; }
+        public string TargetName { get; set; }
+        public string Branch { get; set; }
     }
 }
