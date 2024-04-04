@@ -6,11 +6,11 @@ namespace MainServer.Offloads;
 
 internal class OffloadServer
 {
-    public bool IsAlive => _connector.IsAlive;
+    public bool IsAlive => _connector?.IsAlive ?? false;
 
     private readonly string _ip;
     private readonly ushort _port;
-    private readonly WebSocket _connector;
+    private WebSocket? _connector;
     
     public string OperatingSystem { get; private set; } = string.Empty;
     public Dictionary<string, WebClientBase> Services { get; } = new();
@@ -24,8 +24,14 @@ internal class OffloadServer
     {
         _ip = ip;
         _port = port;
-        
-        _connector = new WebSocket($"ws://{ip}:{port}/connect");
+
+        CreateConnection();
+    }
+
+    private void CreateConnection()
+    {
+        _connector = null;
+        _connector = new WebSocket($"ws://{_ip}:{_port}/connect");
         _connector.WaitTime = TimeSpan.FromSeconds(60);
        
         _connector.OnOpen += (sender, args) 
@@ -36,15 +42,13 @@ internal class OffloadServer
         _connector.Connect();
     }
     
-    private async void RetryConnection(object? sender, CloseEventArgs closeEventArgs)
+    private void RetryConnection(object? sender, CloseEventArgs closeEventArgs)
     {
         Console.WriteLine("Disconnected from offload server");
 
-        while (!_connector.IsAlive)
+        while (!IsAlive)
         {
-            // ReSharper disable once MethodHasAsyncOverload
-            _connector.Connect();
-            await Task.Delay(1000);
+            CreateConnection();
         }
     }
 
