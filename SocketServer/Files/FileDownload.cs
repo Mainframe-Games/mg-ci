@@ -16,27 +16,33 @@ public static class FileDownload
         var fragmentLength = reader.ReadInt32(); // int32
         var fragment = reader.ReadBytes(fragmentLength); // byte[]
 
-        var key = dirName + filePath;
+        var key = Path.Combine(dirName, filePath);
 
         if (!_packets.ContainsKey(key))
-            _packets.Add(key, CreateNewDownloadPacket(dirName, filePath, (uint)totalBytes));
+            _packets.Add(key, CreateNewDownloadPacket(dirName, filePath, totalBytes));
 
         var packet = _packets[key];
         packet.Write(fragment);
 
         OnFileDownloadProgress?.Invoke(packet.Path, packet.Progress);
+        packet.PrintProgress();
 
         if (!packet.IsComplete)
             return;
 
-        Console.WriteLine($"Download complete [{dirName}]");
         OnFileDownloadCompleted?.Invoke(packet.Path);
+        Console.WriteLine($"Download complete [{packet.Path}]");
+        _packets.Remove(key);
     }
 
-    private static Packet CreateNewDownloadPacket(string dirName, string inFilePath, uint totalBytes)
+    private static Packet CreateNewDownloadPacket(
+        string dirName,
+        string inFilePath,
+        uint totalBytes
+    )
     {
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var filePath = Path.Combine(home, ".ci-cache", "Downloads", dirName, inFilePath);
+        var filePath = Path.Combine(home, "ci-cache", "Downloads", dirName, inFilePath);
         var fileInfo = new FileInfo(filePath);
 
         if (fileInfo.Exists)
@@ -45,29 +51,37 @@ public static class FileDownload
         if (fileInfo.Directory?.Exists is not true)
             fileInfo.Directory?.Create();
 
+        var fileStream = new FileStream(filePath, FileMode.OpenOrCreate);
+
         return new Packet
         {
             Path = filePath,
-            Steam = new FileStream(filePath, FileMode.Open),
+            FileSteam = fileStream,
             TotalBytes = totalBytes
         };
     }
-    
+
     private struct Packet
     {
         public string Path;
-        public FileStream Steam;
+        public FileStream FileSteam;
         public uint TotalBytes;
-        private uint _currentBytes;
+        private uint CurrentBytes => (uint)FileSteam.Length;
 
-        public double Progress => _currentBytes / (double)TotalBytes * 100;
+        public double Progress => CurrentBytes / (double)TotalBytes * 100;
         public bool IsComplete { get; private set; }
 
         public void Write(byte[] data)
         {
-            Steam.Write(data, 0, data.Length);
-            _currentBytes += (uint)data.Length;
-            IsComplete = _currentBytes == TotalBytes;
+            FileSteam.Write(data, 0, data.Length);
+            IsComplete = CurrentBytes == TotalBytes;
+        }
+
+        public void PrintProgress()
+        {
+            Console.WriteLine(
+                $"Downloading ({Progress:0.00}% | {CurrentBytes}/{TotalBytes}) {Path}..."
+            );
         }
     }
 }

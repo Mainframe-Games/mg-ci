@@ -57,26 +57,31 @@ public sealed class WebSocketServer
 
         while (webSocket.State is WebSocketState.Open)
         {
-            var buffer = new byte[Config.BUFFERS_SIZE]; // Initial buffer size
+            var buffer = new byte[1024]; // Initial buffer size
             WebSocketReceiveResult result;
 
             Console.WriteLine("[Server] Waiting for incoming data...");
             do
             {
-                result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                result = await webSocket.ReceiveAsync(
+                    new ArraySegment<byte>(buffer),
+                    CancellationToken.None
+                );
 
                 if (!result.EndOfMessage)
                     Array.Resize(ref buffer, buffer.Length * 2);
             } while (!result.EndOfMessage);
 
             Console.WriteLine(
-                $"[Server] Received {result.MessageType} packet size: {Print.ToByteSizeString(result.Count)}");
+                $"[Server] Received {result.MessageType} packet size: {Print.ToByteSizeString(result.Count)}"
+            );
 
             // Process the received data
             if (result.MessageType == WebSocketMessageType.Text)
             {
                 Console.WriteLine(
-                    $"[Server] Received {result.MessageType} packet size: {Print.ToByteSizeString(result.Count)}");
+                    $"[Server] Received {result.MessageType} packet size: {Print.ToByteSizeString(result.Count)}"
+                );
                 string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
                 Console.WriteLine($"[Server] Received message length: {message.Length}");
             }
@@ -95,8 +100,12 @@ public sealed class WebSocketServer
         foreach (var client in _connectedClients)
         {
             var buffer = Encoding.UTF8.GetBytes(message);
-            await client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
-                CancellationToken.None);
+            await client.SendAsync(
+                new ArraySegment<byte>(buffer),
+                WebSocketMessageType.Text,
+                true,
+                CancellationToken.None
+            );
         }
     }
 }

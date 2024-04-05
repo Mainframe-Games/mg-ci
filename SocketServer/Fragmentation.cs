@@ -2,12 +2,12 @@ namespace SocketServer;
 
 public static class Fragmentation
 {
-    private const int fragmentSize = 1024 * 1; // 1 KB
+    private const int fragmentSize = 1024 * 50; // 50 KB
 
     public static List<byte[]> Fragment(byte[] inData)
     {
         var frags = new List<byte[]>();
-        
+
         // Calculate the number of fragments
         var totalFragments = (int)Math.Ceiling((double)inData.Length / fragmentSize);
 

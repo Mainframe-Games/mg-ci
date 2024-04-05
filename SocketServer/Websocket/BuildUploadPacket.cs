@@ -45,7 +45,7 @@ internal class BuildUploadPacket
         var ms = new MemoryStream();
         using var writer = new BinaryWriter(ms);
 
-        var array = new byte[Config.MB * 500];
+        var array = new byte[1024 * 50];
         writer.Write(array.Length);
         var rand = new Random();
         for (int i = 0; i < array.Length; i++)
@@ -53,7 +53,7 @@ internal class BuildUploadPacket
             array[i] = (byte)rand.Next(0, 255);
             writer.Write(array[i]);
         }
-        
+
         Console.WriteLine($"[Client] - {array[^1]}");
 
         return ms.ToArray();
@@ -68,12 +68,12 @@ internal class BuildUploadPacket
         var str = 0;
         for (int i = 0; i < strArrayLength; i++)
         {
-            if( reader.BaseStream.Position == reader.BaseStream.Length )
+            if (reader.BaseStream.Position == reader.BaseStream.Length)
                 break;
-            
+
             str = reader.ReadByte();
         }
-        
+
         Console.WriteLine(str);
     }
 }

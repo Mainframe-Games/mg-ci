@@ -2,20 +2,15 @@ namespace SocketServer.Test;
 
 public static class UploadFile
 {
-    public static async Task Upload(DirectoryInfo rootDir, WebSocketClient client)
+    public static async Task UploadDirectory(DirectoryInfo rootDir, Client client)
     {
         var files = rootDir.GetFiles("*", SearchOption.AllDirectories);
-        var totalBytes = (uint)files.Sum(x => x.Length);
         foreach (var file in files)
         {
-            Console.WriteLine($"Uploading file: {file.FullName} ({Print.ToByteSizeString((int)file.Length)})");
-            
-            // add file data
-            var data = await File.ReadAllBytesAsync(file.FullName);
+            var data = await File.ReadAllBytesAsync(file.FullName); // TODO; could open file stream instead
             var fileFrags = Fragmentation.Fragment(data);
 
-            var fileLocalPath = file
-                .FullName.Replace(rootDir.FullName, string.Empty)
+            var fileLocalPath = file.FullName.Replace(rootDir.FullName, string.Empty)
                 .Replace('\\', '/')
                 .Trim('/');
 
@@ -27,11 +22,12 @@ public static class UploadFile
                 // add dir name
                 writer.Write(rootDir.Name); // string
                 writer.Write(fileLocalPath); // string
-                writer.Write(totalBytes); // uint32
+                writer.Write((uint)file.Length); // uint32
                 writer.Write(frag.Length); // int32
                 writer.Write(frag); // byte[]
-                
-                await client.SendMessage(ms.ToArray());
+
+                await client.SendBinary(ms.ToArray());
+                await Task.Delay(10); // need to delay to give server some time to process
             }
         }
     }
