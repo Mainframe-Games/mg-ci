@@ -1,19 +1,14 @@
 namespace SocketServer;
 
-internal enum PacketType : byte
-{
-    Server,
-    Client,
-}
-
-internal class Packet
+internal class BuildUploadPacket
 {
     private static uint NextId;
     public uint Id { get; private set; } = NextId++;
     public uint TotalBytes { get; set; }
     public uint FragmentCount { get; set; }
+    public string FileLocalPath { get; set; } = string.Empty;
     public uint FragmentIndex { get; set; }
-    public byte[] Fragments { get; set; }
+    public byte[] Fragments { get; set; } = Array.Empty<byte>();
 
     public byte[] GetBytes()
     {
@@ -22,6 +17,7 @@ internal class Packet
         writer.Write(Id); // uint32
         writer.Write(TotalBytes); // uint32
         writer.Write(FragmentCount); // uint32
+        writer.Write(FileLocalPath); // string
         writer.Write(FragmentIndex); // uint32
         writer.Write(Fragments.Length); // int32
         writer.Write(Fragments); // byte[]
@@ -37,6 +33,7 @@ internal class Packet
         Id = reader.ReadUInt32();
         TotalBytes = reader.ReadUInt32();
         FragmentCount = reader.ReadUInt32();
+        FileLocalPath = reader.ReadString();
         FragmentIndex = reader.ReadUInt32();
 
         var fragmentLength = reader.ReadInt32();

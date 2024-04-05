@@ -1,10 +1,11 @@
 using System.Net;
 using System.Net.WebSockets;
 using System.Text;
+using SocketServer.Test;
 
 namespace SocketServer;
 
-public class WebSocketServer
+public sealed class WebSocketServer
 {
     private readonly HttpListener _listener;
     private readonly List<WebSocket> _connectedClients = [];
@@ -84,10 +85,7 @@ public class WebSocketServer
                 // Handle binary data
                 var data = new byte[result.Count];
                 Array.Copy(buffer, data, result.Count);
-                Console.WriteLine($"[Server] Received binary data length: {data.Length}");
-                var packet = new Packet();
-                packet.ReadBytes(data);
-                LoadPacket(packet);
+                FileDownload.Download(data);
             }
         }
     }
@@ -100,27 +98,5 @@ public class WebSocketServer
             await client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                 CancellationToken.None);
         }
-    }
-
-    private readonly Dictionary<uint, List<byte[]>> FragmentsPackets = [];
-
-    private void LoadPacket(Packet packet)
-    {
-        if (!FragmentsPackets.ContainsKey(packet.Id))
-            FragmentsPackets[packet.Id] = [];
-
-        var frags = FragmentsPackets[packet.Id];
-        
-        // check index if correct
-        if (packet.FragmentIndex == frags.Count)
-            throw new Exception("Incorrect index");
-        
-        frags.Add(packet.Fragments);
-
-        if (frags.Count == packet.FragmentCount)
-        {
-            Console.WriteLine("Download complete");
-        }
-
     }
 }

@@ -2,7 +2,7 @@ namespace SocketServer;
 
 public static class Fragmentation
 {
-    private const int fragmentSize = 1024 * 10; // 10 KB
+    private const int fragmentSize = 1024 * 1; // 1 KB
 
     public static List<byte[]> Fragment(byte[] inData)
     {

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SocketServer;
 
-public class WebSocketClient(string url)
+public sealed class WebSocketClient(string url)
 {
     private ClientWebSocket? _clientWebSocket = new();
     public bool IsAlive => _clientWebSocket?.State is WebSocketState.Open;
@@ -16,10 +16,7 @@ public class WebSocketClient(string url)
             try
             {
                 _clientWebSocket = new ClientWebSocket();
-                await _clientWebSocket.ConnectAsync(new Uri(url), new HttpMessageInvoker(new SocketsHttpHandler()
-                {
-                    Credentials = new NetworkCredential("username", "password"),
-                }), CancellationToken.None);
+                await _clientWebSocket.ConnectAsync(new Uri(url), CancellationToken.None);
                 await Task.Delay(1000);
             }
             catch (WebSocketException)
@@ -70,22 +67,12 @@ public class WebSocketClient(string url)
 
     public async Task SendMessage(string message)
     {
-        // var rawBytes = Encoding.UTF8.GetBytes(message);
-        // var fragments = Fragmentation.Fragment(rawBytes);
-        //
-        // var packet = new Packet
-        // {
-        //     Type = MessageType.Text,
-        //     TotalBytes = (uint)fragments.Count * sizeof(byte),
-        //     FragmentCount = (uint)fragments.Count,
-        //     FragmentIndex = 0,
-        //     Fragments = fragments.ToArray(),
-        // };
-        // var buffer = packet.GetBytes();
         var buffer = Encoding.UTF8.GetBytes(message);
         Console.WriteLine(
             $"[Client] Sending {WebSocketMessageType.Text} packet size: {Print.ToByteSizeString(buffer.Length)}");
-        await _clientWebSocket!.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+        await _clientWebSocket!.SendAsync(buffer, WebSocketMessageType.Text,
+            WebSocketMessageFlags.DisableCompression | WebSocketMessageFlags.EndOfMessage,
+            CancellationToken.None);
     }
 
     public async Task SendMessage(byte[] data)
@@ -94,8 +81,58 @@ public class WebSocketClient(string url)
             $"[Client] Sending {WebSocketMessageType.Binary} packet size: {Print.ToByteSizeString(data.Length)}");
 
         await _clientWebSocket!.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary,
-            true,
+            WebSocketMessageFlags.DisableCompression | WebSocketMessageFlags.EndOfMessage,
             CancellationToken.None);
+    }
+
+    public async Task Send(DirectoryInfo dir)
+    {
+        var rootPath = dir.FullName;
+        var files = dir.GetFiles("*", SearchOption.AllDirectories);
+        foreach (var file in files)
+        {
+            var ms = new MemoryStream();
+            await using var writer = new BinaryWriter(ms);
+
+            var fileLocalPath = file
+                .FullName.Replace(rootPath, string.Empty)
+                .Replace('\\', '/')
+                .Trim('/');
+
+            // add dir name
+            writer.Write(dir.Name);
+
+            // add fileName
+            writer.Write(fileLocalPath);
+
+            // add file data
+            var data = await File.ReadAllBytesAsync(file.FullName);
+            writer.Write(data.Length);
+            writer.Write(data);
+
+            await SendMessageFragmented(ms.ToArray());
+        }
+    }
+
+    public async Task Send(FileInfo file)
+    {
+        if (!file.Exists)
+            throw new FileNotFoundException();
+
+        var ms = new MemoryStream();
+        await using var writer = new BinaryWriter(ms);
+
+        var fileName = Path.GetFileName(file.FullName);
+
+        // add fileName
+        writer.Write(fileName);
+
+        // add file data
+        var data = await File.ReadAllBytesAsync(file.FullName);
+        writer.Write(data.Length);
+        writer.Write(data);
+
+        await SendMessageFragmented(ms.ToArray());
     }
 
     public async Task SendMessageFragmented(byte[] data)
@@ -104,26 +141,22 @@ public class WebSocketClient(string url)
             $"[Client] Sending {WebSocketMessageType.Binary} packet size: {Print.ToByteSizeString(data.Length)}");
 
         var frags = Fragmentation.Fragment(data);
-        var packet = new Packet
+        var packet = new BuildUploadPacket
         {
             TotalBytes = (uint)data.Length,
             FragmentCount = (uint)frags.Count,
         };
         for (int i = 0; i < frags.Count; i++)
         {
-            // Console.WriteLine(
-                // $" - Sending {WebSocketMessageType.Binary} frag size: {Print.ToByteSizeString(frags[i].Length)}");
-
             packet.FragmentIndex = (uint)i;
             packet.Fragments = frags[i];
-            
+
             var bytes = packet.GetBytes();
             await _clientWebSocket!.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Binary,
-                true,
+                WebSocketMessageFlags.DisableCompression | WebSocketMessageFlags.EndOfMessage,
                 CancellationToken.None);
         }
     }
-
 
     public async Task Close()
     {
@@ -131,12 +164,12 @@ public class WebSocketClient(string url)
             CancellationToken.None);
     }
 
-    protected virtual void OnTextMessage(string message)
+    private void OnTextMessage(string message)
     {
         Console.WriteLine($"[Client] OnMessage: {message}");
     }
 
-    protected virtual void OnBinaryMessage(byte[] data)
+    private void OnBinaryMessage(byte[] data)
     {
     }
 }
