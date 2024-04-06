@@ -1,148 +1,134 @@
-﻿using System.Diagnostics;
-using System.Net;
-using System.Text;
-using Server.Configs;
-using SharedLib;
-using SharedLib.Server;
-using UnityBuilder;
+﻿using UnityBuilder.Settings;
 
-namespace Deployment;
+namespace UnityBuilder;
 
-public class UnityBuild
+public class UnityBuild2
 {
-    private const string DEFAULT_EXECUTE_METHOD = "BuildSystem.BuildScript.BuildPlayer";
-
-    private readonly Workspace _workspace;
     private readonly string _projectPath;
     private readonly string _unityVersion;
+    private readonly string _buildTargetFlag;
 
-    public UnityBuild(Workspace workspace)
-    {
-        _workspace = workspace;
-        _projectPath = workspace.Directory ?? string.Empty;
-        _unityVersion = workspace.UnityVersion ?? string.Empty;
+    private readonly string _name;
+    private readonly string _extension;
+    private readonly string _productName;
+    private readonly int _target;
+    private readonly int _targetGroup;
+    private readonly string _subTarget;
+    private readonly string[]? _scenes;
+    private readonly string[]? _extraScriptingDefines;
+    private readonly string? _assetBundleManifestPath;
+    private readonly int _buildOptions;
 
-        if (string.IsNullOrEmpty(_projectPath))
-            throw new NullReferenceException($"{nameof(_projectPath)} can not be null or empty");
-        if (string.IsNullOrEmpty(_unityVersion))
-            throw new NullReferenceException($"{nameof(_unityVersion)} can not be null or empty");
-    }
+    public string BuildPath { get; }
 
-    /// <summary>
-    /// Builds the player
-    /// </summary>
-    /// <param name="asset"></param>
-    /// <returns>Directory of build</returns>
-    public BuildResult Build(BuildSettingsAsset asset)
-    {
-        var buildPath = asset.BuildPath;
-        var logPath = $"{buildPath}.log";
-        var errorPath = $"{buildPath}_errors.log";
-        var buildReport = $"{buildPath}_build_report.log";
-        var sw = Stopwatch.StartNew();
-
-        // delete error logs file
-        if (File.Exists(errorPath))
-            File.Delete(errorPath);
-
-        var useIntel =
-            asset.GetBuildTargetFlag() is BuildTargetFlag.Linux64
-            && _workspace.IsIL2CPP(asset.TargetGroup);
-
-        var exePath = UnityPath.GetDefaultUnityPath(_unityVersion, useIntel);
-
-        Logger.Log($"Started Build: {asset.Name}");
-
-        var cliparams = BuildCliParams(asset, _projectPath, DEFAULT_EXECUTE_METHOD, logPath);
-        var (exitCode, output) = Cmd.Run(exePath, cliparams);
-
-        sw.Stop();
-
-        if (exitCode == 0)
-        {
-            Logger.LogTimeStamp($"Build Success! {asset.Name}, Build Time: ", sw);
-            WriteBuildReport(logPath, buildReport);
-
-            return new BuildResult
-            {
-                BuildName = asset.Name,
-                BuildSize = new DirectoryInfo(asset.BuildPath).GetByteSize(),
-                BuildTime = TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds),
-            };
-        }
-
-        // collect errors
-        var errorMessage = new StringBuilder(output);
-        if (File.Exists(errorPath))
-            errorMessage.AppendLine(File.ReadAllText(errorPath));
-
-        var verboseLogPath =
-            $"Verbose log file: {Path.Combine(Environment.CurrentDirectory, logPath)}";
-        Logger.Log($"Build Failed with code '{exitCode}'\n{verboseLogPath}");
-
-        errorMessage.AppendLine(verboseLogPath);
-
-        return new BuildResult
-        {
-            BuildName = asset.Name,
-            BuildTime = TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds),
-            Errors = new ErrorResponse
-            {
-                Code = HttpStatusCode.InternalServerError,
-                Exception = $"Unity Build Error. exitCode: {exitCode}",
-                Message = errorMessage.ToString(),
-                StackTrace = ErrorResponse.ParseStackTrace(Environment.StackTrace)
-            }
-        };
-    }
-
-    /// <summary>
-    /// </summary>
-    /// <param name="asset"></param>
-    /// <param name="projectPath"></param>
-    /// <param name="executeMethod"></param>
-    /// <param name="logPath"></param>
-    /// <returns></returns>
-    private static string BuildCliParams(
-        BuildSettingsAsset asset,
+    public UnityBuild2(
         string projectPath,
-        string executeMethod,
-        string logPath
+        string name,
+        // player build options
+        string extension,
+        string productName,
+        string buildTargetName,
+        string targetGroup,
+        string subTarget,
+        string[] scenes,
+        string[] extraScriptingDefines,
+        string assetBundleManifestPath,
+        int buildOptions
     )
     {
-        var cliparams = new[]
-        {
-            "-quit",
-            "-batchmode",
-            $"-buildTarget {asset.GetBuildTargetFlag()}",
-            $"-projectPath \"{projectPath}\"",
-            $"-executeMethod \"{executeMethod}\"",
-            $"-logFile \"{logPath}\"",
-            $"-settings \"{asset.FileName}\"",
-            $"-buildPath \"{asset.BuildPath}\"",
-            $"-standaloneBuildSubtarget \"{asset.SubTarget}\""
-        };
+        _projectPath = projectPath;
+        _unityVersion = UnityVersion.Get(projectPath);
+        _buildTargetFlag = GetBuildTargetFlag(buildTargetName);
 
-        return string.Join(" ", cliparams);
+        _name = name;
+        _extension = extension;
+        _productName = productName;
+        // _target = GetTargetEnumValue(buildTargetName);
+        // _targetGroup = GetTargetGroupEnumValue(targetGroup);
+        _subTarget = subTarget;
+        _scenes = scenes;
+        _extraScriptingDefines = extraScriptingDefines;
+        _assetBundleManifestPath = assetBundleManifestPath;
+        _buildOptions = buildOptions;
+
+        // plant current build target settings in project
+        BuildPath = Path.Combine(projectPath, "Builds", _name);
     }
 
-    private static void WriteBuildReport(string filePath, string outputPath)
+    public void Run()
     {
-        var lines = File.ReadAllLines(filePath);
-        var started = false;
-        var report = new StringBuilder();
+        var logPath = Path.Combine(_projectPath, "Builds", "Logs", $"build_{_name}.log");
 
-        foreach (var line in lines)
+        var args = new UnityArgs
         {
-            if (!started && line == "Build Report")
-                started = true;
-            else if (started && line.Contains("----"))
-                break;
+            ExecuteMethod = "BuildSystem.BuildScript.BuildPlayer",
+            ProjectPath = _projectPath,
+            LogPath = logPath,
+            BuildPath = BuildPath,
+            BuildTarget = _buildTargetFlag,
+            SubTarget = _subTarget,
+            CustomArgs = BuildPlayerOptions(BuildPath, this),
+        };
 
-            if (started)
-                report.AppendLine(line);
+        var path = UnityPath.GetDefaultUnityPath(_unityVersion);
+        var unity = new UnityRunner(path);
+        unity.Run(args);
+
+        if (unity.ExitCode == 0)
+            return;
+
+        Console.WriteLine($"Unity build failed. Code: {unity.ExitCode}: {unity.Message}");
+        Environment.Exit(1);
+    }
+
+    private static string[] BuildPlayerOptions(string buildPath, UnityBuild2 target)
+    {
+        var args = new List<string>();
+
+        var locationPathName = Path.Combine(buildPath, $"{target._productName}{target._extension}");
+        args.Add($"-locationPathName \"{locationPathName}\"");
+
+        if (target._extraScriptingDefines is not null && target._extraScriptingDefines.Length > 0)
+        {
+            args.Add("-extraScriptingDefines");
+            foreach (var define in target._extraScriptingDefines ?? [])
+                args.Add($",\"{define}\"");
         }
 
-        File.WriteAllText(outputPath, report.ToString());
+        if (target._scenes is not null && target._scenes.Length > 0)
+        {
+            args.Add("-scenes");
+            foreach (var scene in target._scenes ?? [])
+                args.Add($",\"{scene}\"");
+        }
+
+        if (!string.IsNullOrEmpty(target._assetBundleManifestPath))
+            args.Add($"-assetBundleManifestPath \"{target._assetBundleManifestPath}\"");
+
+        if (target._buildOptions != 0)
+            args.Add($"-options {target._buildOptions}");
+
+        return args.ToArray();
+    }
+
+    /// <summary>
+    /// Src: https://docs.unity3d.com/Manual/EditorCommandLineArguments.html
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="NotSupportedException"></exception>
+    private static string GetBuildTargetFlag(string buildTargetName)
+    {
+        if (buildTargetName.Contains("OSX"))
+            return "OSXUniversal";
+        if (buildTargetName.Contains("Windows"))
+            return "Win64";
+        if (buildTargetName.Contains("Linux"))
+            return "Linux64";
+        if (buildTargetName.Contains("iOS"))
+            return "iOS";
+        if (buildTargetName.Contains("Android"))
+            return "Android";
+
+        throw new NotSupportedException($"Target not supported: {buildTargetName}");
     }
 }

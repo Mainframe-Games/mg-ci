@@ -9,6 +9,7 @@ using SharedLib.Webhooks;
 
 namespace Deployment;
 
+[Obsolete()]
 public class UnityBuildPipeline
 {
     public delegate string? ExtraHookLogs(UnityBuildPipeline pipeline);
@@ -205,17 +206,17 @@ public class UnityBuildPipeline
         // we'll just be idling doing nothing while offload builds could be running
         foreach (var localBuild in localBuilds)
         {
-            var unity = new UnityBuild(Workspace);
-            Report.UpdateBuildTarget(localBuild.Name, BuildTaskStatus.Pending);
-            var buildResult = unity.Build(localBuild);
-            _buildResults.Add(buildResult);
-            Report.UpdateBuildTarget(
-                localBuild.Name,
-                buildResult.IsErrors ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed
-            );
+            // var unity = new UnityBuild(Workspace);
+            // Report.UpdateBuildTarget(localBuild.Name, BuildTaskStatus.Pending);
+            // var buildResult = unity.Build(localBuild);
+            // _buildResults.Add(buildResult);
+            // Report.UpdateBuildTarget(
+            //     localBuild.Name,
+            //     buildResult.IsErrors ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed
+            // );
 
-            if (buildResult.IsErrors)
-                throw new Exception($"Build failed: {buildResult.Errors}");
+            // if (buildResult.IsErrors)
+            // throw new Exception($"Build failed: {buildResult.Errors}");
         }
 
         // wait for offload builds to complete

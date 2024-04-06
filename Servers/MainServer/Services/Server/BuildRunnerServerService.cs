@@ -87,7 +87,7 @@ internal sealed class BuildRunnerServerService(
             target.GetValue<string>("asset_bundle_manifest_path") ?? string.Empty;
         var build_options = (int)target.GetValue<long>("build_options");
 
-        var unityRunner = new UnityBuild2(
+        var unityRunner = new UnityBuild(
             projectPath,
             targetName,
             extension,

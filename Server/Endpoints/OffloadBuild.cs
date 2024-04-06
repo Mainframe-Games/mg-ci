@@ -145,34 +145,34 @@ public class OffloadBuild : Endpoint<OffloadBuild.Payload>
         IProcessable? deployProcess = null
     )
     {
-        var builder = new UnityBuild(workspace);
-        await SendToMasterServerAsync(buildIdGuid, asset.Name, null, BuildTaskStatus.Pending);
-        var result = builder.Build(asset);
+        // var builder = new UnityBuild(workspace);
+        // await SendToMasterServerAsync(buildIdGuid, asset.Name, null, BuildTaskStatus.Pending);
+        // var result = builder.Build(asset);
 
-        if (result.IsErrors)
-        {
-            await SendToMasterServerAsync(buildIdGuid, asset.Name, result, BuildTaskStatus.Failed);
-            return;
-        }
-
-        // if no deploy then master server does deploy, need to upload this build
-        if (deployProcess is null)
-            await Web.StreamToServerAsync(
-                $"{Content.SendBackUrl}/upload",
-                asset.BuildPath,
-                projectId,
-                buildIdGuid
-            );
-        else
-            await deployProcess.ProcessAsync();
-
-        // tell master server build is completed
-        await SendToMasterServerAsync(
-            buildIdGuid,
-            asset.Name,
-            result,
-            result.IsErrors ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed
-        );
+        // if (result.IsErrors)
+        // {
+        //     await SendToMasterServerAsync(buildIdGuid, asset.Name, result, BuildTaskStatus.Failed);
+        //     return;
+        // }
+        //
+        // // if no deploy then master server does deploy, need to upload this build
+        // if (deployProcess is null)
+        //     await Web.StreamToServerAsync(
+        //         $"{Content.SendBackUrl}/upload",
+        //         asset.BuildPath,
+        //         projectId,
+        //         buildIdGuid
+        //     );
+        // else
+        //     await deployProcess.ProcessAsync();
+        //
+        // // tell master server build is completed
+        // await SendToMasterServerAsync(
+        //     buildIdGuid,
+        //     asset.Name,
+        //     result,
+        //     result.IsErrors ? BuildTaskStatus.Failed : BuildTaskStatus.Succeed
+        // );
     }
 
     private async Task SendToMasterServerAsync(

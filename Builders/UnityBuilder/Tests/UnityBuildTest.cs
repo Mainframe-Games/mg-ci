@@ -1,13 +1,13 @@
 ﻿namespace UnityBuilder.Tests;
 
-public class UnityBuildTest
+internal class UnityBuildTest
 {
     public static void TestUnityBuild()
     {
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var projectPath = Path.Combine(home, "ci-cache", "Unity Test");
 
-        var unityRunner = new UnityBuild2(
+        var unityRunner = new UnityBuild(
             projectPath,
             "Windows",
             ".exe",

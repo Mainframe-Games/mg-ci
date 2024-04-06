@@ -3,7 +3,7 @@
 internal static class UnityPath
 {
     /// <summary>
-    ///
+    /// Helper to get the default unity path based on the operating system
     /// </summary>
     /// <param name="unityVersion"></param>
     /// <param name="useIntel">(Mac Server Only) Needs to be true for linux server builds on a mac</param>
