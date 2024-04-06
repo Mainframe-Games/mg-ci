@@ -3,10 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
@@ -15,54 +11,14 @@ namespace BuildSystem
 {
     public static class BuildScript
     {
-        private static readonly string Eol = Environment.NewLine;
-        private static readonly StringBuilder _builder = new();
-
-        private static BuildTargetGroup GetActiveBuildTargetGroup()
-        {
-            var prop = typeof(EditorUserBuildSettings)
-                .GetProperty("activeBuildTargetGroup", BindingFlags.Static | BindingFlags.NonPublic)
-                ?.GetValue(null);
-
-            var targetGroup = (BuildTargetGroup)(prop ?? BuildTargetGroup.Standalone);
-            return targetGroup;
-        }
-
-        private static BuildPlayerOptions GetBuildOptions()
-        {
-            var optionsPath = Path.Combine(".ci", "build_options.json");
-            var optionsJson = File.ReadAllText(optionsPath);
-            var json = JObject.Parse(optionsJson);
-            Console.WriteLine($"Build options: {json}");
-
-            var scenes = json["scenes"]?.ToObject<string[]>() ?? BuildSettings.GetEditorSettingsScenes();
-            var locationPathName = json["locationPathName"]?.Value<string>() ?? "Builds/Build";
-            var extraScriptingDefines = json["extraScriptingDefines"]?.ToObject<string[]>() ?? Array.Empty<string>();
-            var assetBundleManifestPath = json["assetBundleManifestPath"]?.Value<string>() ?? string.Empty;
-            var options = json["options"]?.Value<int>() ?? 0;
-
-            var buildOptions = new BuildPlayerOptions
-            {
-                target = EditorUserBuildSettings.activeBuildTarget,
-                subtarget = (int)EditorUserBuildSettings.standaloneBuildSubtarget,
-                options = (BuildOptions)options,
-                targetGroup = GetActiveBuildTargetGroup(),
-                scenes = scenes,
-                locationPathName = locationPathName,
-                extraScriptingDefines = extraScriptingDefines,
-                assetBundleManifestPath = assetBundleManifestPath,
-            };
-
-            return buildOptions;
-        }
+        private static readonly string[] _args = Environment.GetCommandLineArgs();
 
         /// <summary>
         /// Called from build server
         /// </summary>
         public static void BuildPlayer()
         {
-            var args = Environment.GetCommandLineArgs();
-            Console.WriteLine("BuildPlayer called with args: " + string.Join(", ", args));
+            Console.WriteLine($"BuildPlayer called with args: {string.Join(", ", _args)}");
 
             var options = GetBuildOptions();
             BuildPlayer(options);
@@ -79,14 +35,74 @@ namespace BuildSystem
                 return;
             }
 
-            Application.logMessageReceived += OnLogReceived;
             PrintBuildOptions(options);
             var report = BuildPipeline.BuildPlayer(options);
-            Application.logMessageReceived -= OnLogReceived;
 
             PrintReportSummary(report.summary);
-            DumpErrorLog(report);
             ExitWithResult(report.summary.result, report);
+        }
+
+        private static BuildPlayerOptions GetBuildOptions()
+        {
+            var scenes = GetScenePaths();
+
+            var extraScriptingDefines = TryGetArg("-extraScriptingDefines", out var outExtraScriptingDefines)
+                ? outExtraScriptingDefines.Split(',')
+                : null;
+
+            TryGetArg("-locationPathName", out var locationPathName);
+            TryGetArg("-assetBundleManifestPath", out var assetBundleManifestPath);
+
+            var options = TryGetArg("-options", out var optionsStr)
+                          && int.TryParse(optionsStr, out var optionsInt)
+                ? optionsInt
+                : 0;
+
+            var buildOptions = new BuildPlayerOptions
+            {
+                target = EditorUserBuildSettings.activeBuildTarget,
+                subtarget = (int)EditorUserBuildSettings.standaloneBuildSubtarget,
+                options = (BuildOptions)options,
+                targetGroup = GetActiveBuildTargetGroup(),
+                scenes = scenes,
+                locationPathName = locationPathName,
+                extraScriptingDefines = extraScriptingDefines,
+                assetBundleManifestPath = assetBundleManifestPath,
+            };
+
+            return buildOptions;
+        }
+
+        private static BuildTargetGroup GetActiveBuildTargetGroup()
+        {
+            var prop = typeof(EditorUserBuildSettings)
+                .GetProperty("activeBuildTargetGroup", BindingFlags.Static | BindingFlags.NonPublic)
+                ?.GetValue(null);
+
+            var targetGroup = (BuildTargetGroup)(prop ?? BuildTargetGroup.Standalone);
+            return targetGroup;
+        }
+
+        private static string[] GetScenePaths()
+        {
+            string[] scenePaths = null;
+            
+            if (TryGetArg("-scenes", out var scenesArg))
+            {
+                var sceneNames = scenesArg.Split(',');
+                scenePaths = AssetDatabase.FindAssets("t:Scene", sceneNames)
+                    .Select(AssetDatabase.AssetPathToGUID)
+                    .Select(AssetDatabase.GUIDToAssetPath)
+                    .ToArray();
+            }
+
+            if (scenePaths?.Length > 0)
+                return scenePaths;
+
+            return EditorBuildSettings.scenes
+                .Where(scene => scene.enabled)
+                .Select(s => s.path)
+                .ToArray();
         }
 
         private static void ExitWithResult(BuildResult result, BuildReport report = null)
@@ -130,36 +146,43 @@ namespace BuildSystem
 
         private static void PrintReportSummary(BuildSummary summary)
         {
-            Console.WriteLine(
-                $"###########################{Eol}" +
-                $"#      Build results      #{Eol}" +
-                $"###########################{Eol}" +
-                $"{Eol}" +
-                $"Duration: {summary.totalTime.ToString()}{Eol}" +
-                $"Warnings: {summary.totalWarnings.ToString()}{Eol}" +
-                $"Errors: {summary.totalErrors.ToString()}{Eol}" +
-                $"Size: {summary.totalSize.ToString()} bytes{Eol}" +
-                $"{Eol}"
-            );
+            var report = new StringBuilder();
+            report.AppendLine("###########################");
+            report.AppendLine("#      Build results      #");
+            report.AppendLine("###########################");
+            report.AppendLine($"Duration: {summary.totalTime.ToString()}");
+            report.AppendLine($"Warnings: {summary.totalWarnings.ToString()}");
+            report.AppendLine($"Errors: {summary.totalErrors.ToString()}");
+            report.AppendLine($"Size: {summary.totalSize.ToString()} bytes");
+            report.AppendLine("###########################");
+            Console.WriteLine(report.ToString());
         }
 
         private static void PrintBuildOptions(BuildPlayerOptions buildOptions)
         {
-            var jsonSettings = new JsonSerializerSettings
-            {
-                Formatting = Formatting.Indented,
-                Converters = { new StringEnumConverter() }
-            };
+            var opts = new StringBuilder();
 
-            Console.WriteLine(
-                $"{Eol}" +
-                $"###########################{Eol}" +
-                $"#   Build Player Options  #{Eol}" +
-                $"###########################{Eol}" +
-                $"{Eol}" +
-                $"{JsonConvert.SerializeObject(buildOptions, jsonSettings)}" +
-                $"{Eol}"
-            );
+            opts.AppendLine("###########################");
+            opts.AppendLine("#   Build Player Options  #");
+            opts.AppendLine("###########################");
+            opts.AppendLine($"target: {buildOptions.target}");
+            opts.AppendLine($"targetGroup: {buildOptions.targetGroup}");
+            opts.AppendLine($"subtarget: {buildOptions.subtarget}");
+            opts.AppendLine($"location path: {buildOptions.locationPathName}");
+            opts.AppendLine($"scenes: {string.Join(", ", buildOptions.scenes)}");
+
+            if (buildOptions.options != 0)
+                opts.AppendLine($"options: {buildOptions.options}");
+
+            if (!string.IsNullOrEmpty(buildOptions.assetBundleManifestPath))
+                opts.AppendLine($"assetBundleManifestPath: {buildOptions.assetBundleManifestPath}");
+
+            if (buildOptions.extraScriptingDefines is not null)
+                opts.AppendLine(
+                    $"extraScriptingDefines: {string.Join(", ", buildOptions.extraScriptingDefines)}");
+
+            opts.AppendLine("###########################");
+            Console.WriteLine(opts.ToString());
         }
 
         private static bool EnsureBuildDirectoryExists(BuildPlayerOptions options)
@@ -191,43 +214,24 @@ namespace BuildSystem
             PlayerSettings.Android.keyaliasPass = keyStorePassword;
         }
 
-        private static void DumpErrorLog(BuildReport report)
+        private static bool TryGetArg(string arg, out string value)
         {
-            if (report.summary.totalErrors == 0)
-                return;
+            value = null;
 
-            Console.WriteLine($"Build Failed is {report.summary.totalErrors} errors...\n{_builder}");
+            var index = Array.IndexOf(_args, arg);
+            if (index == -1 || index + 1 >= _args.Length)
+                return false;
 
-            var logFile = GetArgValue("-logFile");
-
-            if (string.IsNullOrEmpty(logFile))
-                return;
-
-            var errorFileName = logFile.Replace(".log", "_errors.log");
-            File.WriteAllText(errorFileName, _builder.ToString());
+            value = _args[index + 1];
+            return true;
         }
 
-        private static void OnLogReceived(string condition, string stacktrace, LogType type)
+        private static string GetArg(string arg)
         {
-            if (type is LogType.Log or LogType.Warning)
-                return;
-
-            _builder.AppendLine($"[{type.ToString().ToUpper()}] {condition}");
-
-            if (!string.IsNullOrEmpty(stacktrace))
-                _builder.AppendLine(stacktrace);
-        }
-
-        private static string GetArgValue(string arg)
-        {
-            var args = Environment.GetCommandLineArgs();
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (args[i] == arg)
-                    return args[i + 1];
-            }
-
-            return null;
+            var index = Array.IndexOf(_args, arg);
+            if (index == -1 || index + 1 >= _args.Length)
+                return null;
+            return _args[index + 1];
         }
     }
 }

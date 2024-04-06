@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using UnityBuilder.Settings;
+﻿using UnityBuilder.Settings;
 
 namespace UnityBuilder;
 
@@ -15,12 +14,10 @@ public class UnityBuild2
     private readonly int _target;
     private readonly int _targetGroup;
     private readonly string _subTarget;
-    private readonly string[] _scenes;
-    private readonly string[] _extraScriptingDefines;
-    private readonly string _assetBundleManifestPath;
+    private readonly string[]? _scenes;
+    private readonly string[]? _extraScriptingDefines;
+    private readonly string? _assetBundleManifestPath;
     private readonly int _buildOptions;
-
-    private readonly string _buildOptionsPath;
 
     public string BuildPath { get; }
 
@@ -46,8 +43,8 @@ public class UnityBuild2
         _name = name;
         _extension = extension;
         _productName = productName;
-        _target = GetTargetEnumValue(buildTargetName);
-        _targetGroup = GetTargetGroupEnumValue(targetGroup);
+        // _target = GetTargetEnumValue(buildTargetName);
+        // _targetGroup = GetTargetGroupEnumValue(targetGroup);
         _subTarget = subTarget;
         _scenes = scenes;
         _extraScriptingDefines = extraScriptingDefines;
@@ -56,9 +53,6 @@ public class UnityBuild2
 
         // plant current build target settings in project
         BuildPath = Path.Combine(projectPath, "Builds", _name);
-        var settingsJson = BuildPlayerOptions(BuildPath, this);
-        _buildOptionsPath = Path.Combine(projectPath, ".ci", "build_options.json");
-        File.WriteAllText(_buildOptionsPath, settingsJson.ToString());
     }
 
     public void Run()
@@ -73,15 +67,12 @@ public class UnityBuild2
             BuildPath = BuildPath,
             BuildTarget = _buildTargetFlag,
             SubTarget = _subTarget,
-            CustomArgs = null
+            CustomArgs = BuildPlayerOptions(BuildPath, this),
         };
 
         var path = UnityPath.GetDefaultUnityPath(_unityVersion);
         var unity = new UnityRunner(path);
         unity.Run(args);
-
-        // clear build settings
-        File.Delete(_buildOptionsPath);
 
         if (unity.ExitCode == 0)
             return;
@@ -90,68 +81,38 @@ public class UnityBuild2
         Environment.Exit(1);
     }
 
-    private static JObject BuildPlayerOptions(string buildPath, UnityBuild2 target)
+    private static string[] BuildPlayerOptions(string buildPath, UnityBuild2 target)
     {
-        return new JObject
-        {
-            ["target"] = target._target,
-            ["subtarget"] = GetSubTargetEnumValue(target._subTarget),
-            ["locationPathName"] = Path.Combine(
-                buildPath,
-                $"{target._productName}{target._extension}"
-            ),
-            ["targetGroup"] = target._targetGroup,
-            ["assetBundleManifestPath"] = target._assetBundleManifestPath,
-            ["scenes"] = JArray.FromObject(target._scenes),
-            ["extraScriptingDefines"] = JArray.FromObject(target._extraScriptingDefines),
-            ["options"] = target._buildOptions
-        };
-    }
+        var args = new List<string>();
 
-    private static int GetTargetEnumValue(string buildTargetName)
-    {
-        return 0;
+        var locationPathName = Path.Combine(buildPath, $"{target._productName}{target._extension}");
+        args.Add($"-locationPathName \"{locationPathName}\"");
+
+        if (target._extraScriptingDefines is not null && target._extraScriptingDefines.Length > 0)
+        {
+            args.Add("-extraScriptingDefines");
+            foreach (var define in target._extraScriptingDefines ?? [])
+                args.Add($",\"{define}\"");
+        }
+
+        if (target._scenes is not null && target._scenes.Length > 0)
+        {
+            args.Add("-scenes");
+            foreach (var scene in target._scenes ?? [])
+                args.Add($",\"{scene}\"");
+        }
+
+        if (!string.IsNullOrEmpty(target._assetBundleManifestPath))
+            args.Add($"-assetBundleManifestPath \"{target._assetBundleManifestPath}\"");
+
+        if (target._buildOptions != 0)
+            args.Add($"-options {target._buildOptions}");
+
+        return args.ToArray();
     }
 
     /// <summary>
-    /// docs: https://docs.unity3d.com/ScriptReference/BuildTarget.html
-    /// </summary>
-    /// <param name="subTarget"></param>
-    /// <returns></returns>
-    /// <exception cref="NotSupportedException"></exception>
-    private static int GetSubTargetEnumValue(string subTarget)
-    {
-        return subTarget switch
-        {
-            "StandaloneWindows" => 5,
-            "StandaloneWindows64" => 14,
-
-            "StandaloneLinux64" => 24,
-
-            "StandaloneOSX" => 2,
-
-            "iOS" => 9,
-            "Android" => 13,
-
-            "WebGL" => 20,
-
-            _ => throw new NotSupportedException($"Target Group not supported: {subTarget}")
-        };
-    }
-
-    private static int GetTargetGroupEnumValue(string targetGroup)
-    {
-        return targetGroup switch
-        {
-            "Standalone" => 1,
-            "iOS" => 4,
-            "Android" => 7,
-            _ => throw new NotSupportedException($"Target Group not supported: {targetGroup}")
-        };
-    }
-
-    /// <summary>
-    /// Src: https://docs.unity3d.com/Manual/EditorCommandLineArguments.html Build Arguments
+    /// Src: https://docs.unity3d.com/Manual/EditorCommandLineArguments.html
     /// </summary>
     /// <returns></returns>
     /// <exception cref="NotSupportedException"></exception>
