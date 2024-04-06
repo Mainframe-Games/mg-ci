@@ -2,10 +2,9 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using BuildSystem.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
@@ -16,17 +15,27 @@ namespace BuildSystem
     {
         private static readonly string Eol = Environment.NewLine;
         private static readonly StringBuilder _builder = new();
+        
+        private static readonly JsonSerializerSettings _settings =
+            new()
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                Formatting = Formatting.Indented,
+                NullValueHandling = NullValueHandling.Ignore,
+                Converters = { new StringEnumConverter(), }
+            };
 
         private static BuildPlayerOptions GetBuildOptions()
         {
-            var settingsPath = Path.Combine(".ci", "build_options.json");
-            var settingsJson = File.ReadAllText(settingsPath);
-            var settings = JsonConvert.DeserializeObject<BuildPlayerOptions>(settingsJson);
+            var optionsPath = Path.Combine(".ci", "build_options.json");
+            var optionsJson = File.ReadAllText(optionsPath);
+            var playerBuildOptions = JsonConvert.DeserializeObject<BuildPlayerOptions>(optionsJson, _settings);
+            Console.WriteLine($"Build options: {playerBuildOptions}");
 
-            if (settings.scenes.Length == 0)
-                settings.scenes = BuildSettings.GetEditorSettingsScenes();
+            if (playerBuildOptions.scenes.Length == 0)
+                playerBuildOptions.scenes = BuildSettings.GetEditorSettingsScenes();
             
-            return settings;
+            return playerBuildOptions;
         }
 
         /// <summary>
