@@ -10,6 +10,8 @@ public abstract class ClientService(Client client) : IService
     public abstract void OnDataMessage(byte[] data);
     public abstract void OnJsonMessage(JObject payload);
 
+    public bool IsConnected => client.IsConnected;
+
     public async Task SendString(string message)
     {
         var packet = Encoding.UTF8.GetBytes(message);

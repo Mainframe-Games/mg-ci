@@ -44,7 +44,7 @@ public sealed class Client
         var json = Encoding.UTF8.GetString(data, 0, data.Length);
         var message = ServerConnectionMessage.Parse(json);
         Id = message.ClientId;
-        Console.WriteLine($"[Client_{Id}] Received connection from server: {Id}");
+        Console.WriteLine($"[Client_{Id}] Received connection from server: {message}");
     }
 
     private async void ListenForPackets()

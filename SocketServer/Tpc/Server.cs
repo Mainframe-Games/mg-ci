@@ -34,8 +34,9 @@ public class Server(int port)
     {
         listener.Start();
         Console.WriteLine($"[Server] Started on port {port}...");
+        Console.WriteLine("Services:");
         foreach (var service in _services)
-            Console.WriteLine($"- {service.Key}");
+            Console.WriteLine($"  - {service.Key}");
 
         // PingClients();
 

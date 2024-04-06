@@ -6,6 +6,7 @@ using Avalonia.Media;
 using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.ViewModels;
 using LoadingIndicators.Avalonia;
+using Newtonsoft.Json.Linq;
 using SocketServer;
 
 namespace AvaloniaAppMVVM.Views;
@@ -107,9 +108,6 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 {
     private bool _isBuilding;
 
-    private readonly Client _client =
-        new(AppSettings.Singleton.ServerIp!, AppSettings.Singleton.ServerPort);
-
     private readonly List<ProcessesTemplate> _processes =
     [
         new ProcessesTemplate(new CiProcess { Id = "PreBuild" }),
@@ -142,11 +140,9 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
     private async void ConnectAsync()
     {
         ServerStatus.Text = "Connecting...";
-
-        // if (!Design.IsDesignMode)
-        // await Task.WhenAll(_clientBuild.Connect(), _clientReport.Connect());
-
-        // ServerStatus.Text = _clientBuild.Status;
+        while (!App.BuildClient.IsConnected)
+            await Task.Delay(10);
+        ServerStatus.Text = "Connected";
     }
 
     #region Build View
@@ -257,7 +253,7 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 
     #region Build Process
 
-    private void Button_StartBuild_OnClick(object? sender, RoutedEventArgs e)
+    private async void Button_StartBuild_OnClick(object? sender, RoutedEventArgs e)
     {
         if (_isBuilding)
         {
@@ -267,8 +263,9 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 
         _isBuilding = true;
         RefreshProcesses();
-        throw new NotImplementedException();
-        // _clientBuild.Send(_project);
+
+        // TODO: send project to server with new project structure from MainServer.csproj
+        await App.BuildClient.SendJson(new JObject(_project));
     }
 
     private void RefreshProcesses()

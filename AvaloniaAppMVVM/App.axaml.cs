@@ -3,16 +3,23 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using AvaloniaAppMVVM.Data;
+using AvaloniaAppMVVM.Services;
 using AvaloniaAppMVVM.ViewModels;
 using AvaloniaAppMVVM.Views;
 using CommunityToolkit.Extensions.DependencyInjection;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
+using SocketServer;
 
 namespace AvaloniaAppMVVM;
 
 public partial class App : Application
 {
+    private static readonly Client _client =
+        new(AppSettings.Singleton.ServerIp!, AppSettings.Singleton.ServerPort);
+
+    public static readonly BuildClientService BuildClient = new(_client);
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
