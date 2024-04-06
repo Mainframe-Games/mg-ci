@@ -35,7 +35,15 @@ public class ServerConnectionMessage
 
     public static ServerConnectionMessage Parse(string json)
     {
-        return JsonConvert.DeserializeObject<ServerConnectionMessage>(json, _settings)
-            ?? throw new NullReferenceException();
+        try
+        {
+            return JsonConvert.DeserializeObject<ServerConnectionMessage>(json, _settings)
+                ?? throw new NullReferenceException();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }

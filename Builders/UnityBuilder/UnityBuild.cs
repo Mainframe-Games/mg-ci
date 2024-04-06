@@ -2,7 +2,7 @@
 
 namespace UnityBuilder;
 
-public class UnityBuild2
+public class UnityBuild
 {
     private readonly string _projectPath;
     private readonly string _unityVersion;
@@ -21,7 +21,7 @@ public class UnityBuild2
 
     public string BuildPath { get; }
 
-    public UnityBuild2(
+    public UnityBuild(
         string projectPath,
         string name,
         // player build options
@@ -81,7 +81,7 @@ public class UnityBuild2
         Environment.Exit(1);
     }
 
-    private static string[] BuildPlayerOptions(string buildPath, UnityBuild2 target)
+    private static string[] BuildPlayerOptions(string buildPath, UnityBuild target)
     {
         var args = new List<string>();
 

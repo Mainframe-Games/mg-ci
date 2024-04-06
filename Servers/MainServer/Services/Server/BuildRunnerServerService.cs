@@ -114,7 +114,7 @@ internal sealed class BuildRunnerServerService(
         );
 
         // send back
-        await FileUploader.UploadDirectory(new DirectoryInfo(unityRunner.BuildPath), this);
+        FileUploader.UploadDirectory(new DirectoryInfo(unityRunner.BuildPath), this);
     }
 
     private class QueuePacket

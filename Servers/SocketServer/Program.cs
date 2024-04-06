@@ -1,15 +1,12 @@
 ﻿using SocketServer;
+using SocketServer.Tests;
 
 var server = new Server(8080);
+server.AddService(new TestServerService(server));
 server.Start();
 
-var name = Environment.MachineName;
-
-// var client = new Client("127.0.0.1", 8080);
-// var service = client.AddService("UploadService");
-// await FileUploader.UploadDirectory(
-//     new DirectoryInfo("C:/Users/Brogan/ci-cache/Unity Test/Builds/Windows"),
-//     client
-// );
+var client = new Client("127.0.0.1", 8080);
+var clientService = new TestClientService(client);
+client.AddService(clientService);
 
 Console.Read();

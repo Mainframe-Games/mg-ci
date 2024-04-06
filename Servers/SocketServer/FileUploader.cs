@@ -2,32 +2,65 @@ namespace SocketServer;
 
 public static class FileUploader
 {
-    public static async Task UploadDirectory(DirectoryInfo rootDir, IService service)
+    private static readonly Queue<(DirectoryInfo dir, IService service)> _uploadQueue = new();
+    private static Task? _dispatchTask;
+
+    public static void UploadDirectory(DirectoryInfo rootDir, IService service)
     {
-        var files = rootDir.GetFiles("*", SearchOption.AllDirectories);
-        foreach (var file in files)
+        _uploadQueue.Enqueue((rootDir, service));
+        Upload();
+    }
+
+    private static async void Upload()
+    {
+        if (_dispatchTask is not null && !_dispatchTask.IsCompleted)
+            return;
+
+        _dispatchTask = UploadDirectoryDispatch();
+        await _dispatchTask;
+        _dispatchTask = null;
+    }
+
+    private static async Task UploadDirectoryDispatch()
+    {
+        while (_uploadQueue.Count > 0)
         {
-            var data = await File.ReadAllBytesAsync(file.FullName); // TODO; could open file stream instead
-            var fileFrags = Fragmentation.Fragment(data);
-
-            var fileLocalPath = file.FullName.Replace(rootDir.FullName, string.Empty)
-                .Replace('\\', '/')
-                .Trim('/');
-
-            foreach (var frag in fileFrags)
+            try
             {
-                var ms = new MemoryStream();
-                await using var writer = new BinaryWriter(ms);
+                var (rootDir, service) = _uploadQueue.Dequeue();
+                var files = rootDir.GetFiles("*", SearchOption.AllDirectories);
+                foreach (var file in files)
+                {
+                    var data = await File.ReadAllBytesAsync(file.FullName); // TODO; could open file stream instead
+                    var fileFrags = Fragmentation.Fragment(data);
 
-                // add dir name
-                writer.Write(rootDir.Name); // string
-                writer.Write(fileLocalPath); // string
-                writer.Write((uint)file.Length); // uint32
-                writer.Write(frag.Length); // int32
-                writer.Write(frag); // byte[]
+                    var fileLocalPath = file.FullName.Replace(rootDir.FullName, string.Empty)
+                        .Replace('\\', '/')
+                        .Trim('/');
 
-                await service.SendBinary(ms.ToArray());
-                await Task.Delay(10); // need to delay to give server some time to process
+                    foreach (var frag in fileFrags)
+                    {
+                        var ms = new MemoryStream();
+                        await using var writer = new BinaryWriter(ms);
+
+                        // add dir name
+                        writer.Write(rootDir.Name); // string
+                        writer.Write(fileLocalPath); // string
+                        writer.Write((uint)file.Length); // uint32
+                        writer.Write(frag.Length); // int32
+                        writer.Write(frag); // byte[]
+
+                        await service.SendBinary(ms.ToArray());
+                        await Task.Delay(10); // need to delay to give server some time to process
+                    }
+                }
+
+                Console.WriteLine($"Upload complete: {rootDir.FullName}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"ERROR: {e}");
+                Environment.Exit(1);
             }
         }
     }

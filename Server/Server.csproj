@@ -21,12 +21,4 @@
       <PackageReference Include="Tomlyn" />
     </ItemGroup>
 
-    <!-- Copies Steam SDK to build location -->
-    <ItemGroup>
-        <Content Include="$(SolutionDir)Deployments\SteamDeployment\ContentBuilder\**" 
-                 CopyToPublishDirectory="PreserveNewest"
-                 CopyToOutputDirectory="PreserveNewest"
-                 Link="ContentBuilder\%(RecursiveDir)\%(Filename)%(Extension)"/>
-    </ItemGroup>
-
 </Project>

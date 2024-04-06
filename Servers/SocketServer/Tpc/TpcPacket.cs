@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace SocketServer;
 
 internal enum MessageType : byte
@@ -12,9 +14,14 @@ internal enum MessageType : byte
 internal class TpcPacket
 {
     /// <summary>
+    /// Unique ID for packet
+    /// </summary>
+    public Guid Id { get; private set; } = Guid.NewGuid();
+
+    /// <summary>
     /// Empty service name will send to all services
     /// </summary>
-    public string ServiceName { get; set; } = string.Empty;
+    public string ServiceName { get; private set; } = string.Empty;
     public MessageType Type { get; private set; }
     public byte[] Data { get; private set; } = Array.Empty<byte>();
 
@@ -38,6 +45,7 @@ internal class TpcPacket
         var ms = new MemoryStream();
         var writer = new BinaryWriter(ms);
         {
+            writer.Write(Id.ToString()); // string
             writer.Write(ServiceName); // string
             writer.Write((byte)Type); // byte
             writer.Write(Data.Length); // int32
@@ -58,6 +66,7 @@ internal class TpcPacket
         var ms = new MemoryStream(bytes);
         var reader = new BinaryReader(ms);
         {
+            Id = Guid.Parse(reader.ReadString()); // string
             ServiceName = reader.ReadString(); // string
             Type = (MessageType)reader.ReadByte(); // byte
             var dataLength = reader.ReadInt32(); // int32
@@ -72,6 +81,12 @@ internal class TpcPacket
 
     public override string ToString()
     {
-        return $"\n- ServiceName: {ServiceName}\n" + $"  Type: {Type}\n" + $"  Data: {Data.Length}";
+        var str = new StringBuilder();
+        str.AppendLine();
+        str.AppendLine($"- Id: {Id}");
+        str.AppendLine($"  ServiceName: {ServiceName}");
+        str.AppendLine($"  Type: {Type}");
+        str.AppendLine($"  Data: {Data.Length}");
+        return str.ToString();
     }
 }

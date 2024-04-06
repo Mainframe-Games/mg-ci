@@ -76,54 +76,66 @@ public class Server(int port)
 
         while (client.Connected)
         {
-            while (!stream.DataAvailable) { }
-
-            var buffer = new byte[client.ReceiveBufferSize];
-            var bytesRead = await stream.ReadAsync(buffer);
-
-            if (bytesRead == 0)
-                continue;
-
-            var data = new byte[bytesRead];
-            Array.Copy(buffer, data, bytesRead);
-
-            var packet = new TpcPacket();
-            packet.Read(data);
-
-            Console.WriteLine($"[Server] Packet Received: {packet}");
-
-            var packetType = packet.Type;
-
-            switch (packetType)
+            try
             {
-                case MessageType.Connection:
-                    Console.WriteLine("Server should never receive a connection message.");
-                    break;
-                case MessageType.Close:
-                {
-                    client.Close();
-                    Console.WriteLine(
-                        $"[Server] Client disconnected. ConnectedClients: {_connectedClients.Count}"
-                    );
-                    break;
-                }
+                while (!stream.DataAvailable) { }
 
-                case MessageType.String:
-                    var str = Encoding.UTF8.GetString(packet.Data, 0, packet.Data.Length);
-                    ReceiveString(client, packet.ServiceName, str);
-                    break;
-                case MessageType.Binary:
-                    ReceiveBinary(client, packet.ServiceName, packet.Data);
-                    break;
-                case MessageType.Json:
-                    var json = Encoding.UTF8.GetString(packet.Data, 0, packet.Data.Length);
-                    var jObject = JObject.Parse(json) ?? throw new NullReferenceException();
-                    ReceiveJson(client, packet.ServiceName, jObject);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(
-                        $"Packet type not recognized. {packetType}"
-                    );
+                var buffer = new byte[client.ReceiveBufferSize];
+                var bytesRead = await stream.ReadAsync(buffer);
+
+                if (bytesRead == 0)
+                    continue;
+
+                var data = new byte[bytesRead];
+                Array.Copy(buffer, data, bytesRead);
+
+                var packet = new TpcPacket();
+                packet.Read(data);
+
+                Console.WriteLine($"[Server] Packet Received: {packet}");
+
+                var packetType = packet.Type;
+
+                switch (packetType)
+                {
+                    case MessageType.Connection:
+                        Console.WriteLine("Server should never receive a connection message.");
+                        break;
+                    case MessageType.Close:
+                    {
+                        client.Close();
+                        Console.WriteLine(
+                            $"[Server] Client disconnected. ConnectedClients: {_connectedClients.Count}"
+                        );
+                        break;
+                    }
+
+                    case MessageType.String:
+                        var str = Encoding.UTF8.GetString(packet.Data, 0, packet.Data.Length);
+                        ReceiveString(client, packet.ServiceName, str);
+                        break;
+                    case MessageType.Binary:
+                        ReceiveBinary(client, packet.ServiceName, packet.Data);
+                        break;
+                    case MessageType.Json:
+                        var json = Encoding.UTF8.GetString(packet.Data, 0, packet.Data.Length);
+                        var jObject = JObject.Parse(json) ?? throw new NullReferenceException();
+                        ReceiveJson(client, packet.ServiceName, jObject);
+                        break;
+                    default:
+                    {
+                        Console.WriteLine(
+                            $"[Server] Unknown packet type: {packet.Type}, packetId: {packet.Id}"
+                        );
+                        Kill();
+                        break;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                Kill();
             }
         }
 
@@ -142,36 +154,19 @@ public class Server(int port)
 
     private void ReceiveBinary(TcpClient client, string serviceName, byte[] data)
     {
-        Console.WriteLine($"[Server] Received byte[]: {data.Length}");
+        Console.WriteLine($"[Server/{serviceName}] Received byte[]: {data.Length}");
         GetService(serviceName).OnDataMessage(data);
     }
 
     private void ReceiveJson(TcpClient client, string serviceName, JObject json)
     {
-        Console.WriteLine($"[Server] Received json: {json}");
+        Console.WriteLine($"[Server/{serviceName}] Received json: {json}");
         GetService(serviceName).OnJsonMessage(json);
-    }
-
-    private IService GetService(string serviceName)
-    {
-        if (!_services.TryGetValue(serviceName, out var service))
-            throw new Exception($"[Server] Service not found '{serviceName}'");
-
-        return service;
     }
 
     #endregion
 
     #region Sends
-
-    private async void PingClients()
-    {
-        while (true)
-        {
-            await Task.Delay(1000);
-            await SendToClients(new TpcPacket(MessageType.String, "Ping"u8.ToArray()));
-        }
-    }
 
     internal async Task SendToClients(TpcPacket packet)
     {
@@ -200,7 +195,28 @@ public class Server(int port)
         _services.Remove(name);
     }
 
+    private IService GetService(string serviceName)
+    {
+        if (!_services.TryGetValue(serviceName, out var service))
+            throw new Exception($"[Server] Service not found '{serviceName}'");
+
+        return service;
+    }
+
     #endregion
+
+    private void Kill()
+    {
+        Console.WriteLine("[Server] Killing server...");
+        Close();
+        Environment.Exit(1);
+    }
+
+    public void Close()
+    {
+        listener.Stop();
+        listener.Dispose();
+    }
 
     private class Client(TcpClient tcpClient)
     {

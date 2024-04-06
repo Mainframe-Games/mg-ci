@@ -2,6 +2,7 @@ using System.Net.Sockets;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using SocketServer.Messages;
+using SocketServer.Tests;
 
 namespace SocketServer;
 
@@ -24,6 +25,8 @@ public sealed class Client
 
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
+    private readonly Dictionary<string, IService> _services = [];
+
     public Client(string serverIp, int serverPort)
     {
         // client = new TcpClient(serverIp, serverPort);
@@ -41,8 +44,7 @@ public sealed class Client
             {
                 client = new TcpClient(serverIp, serverPort);
                 stream = client.GetStream();
-                var thread = new Thread(ListenForPackets);
-                thread.Start();
+                _ = Task.Run(ListenForPackets);
             }
             catch (SocketException)
             {
@@ -73,12 +75,26 @@ public sealed class Client
 
     private void ReceiveConnectionHandshake(byte[] data)
     {
-        var json = Encoding.UTF8.GetString(data, 0, data.Length);
-        var message = ServerConnectionMessage.Parse(json);
-        Id = message.ClientId;
-        ServerOperationSystem = message.OperatingSystem;
-        ServerMachineName = message.MachineName ?? string.Empty;
-        Console.WriteLine($"[Client_{Id}] Received connection from server: {message}");
+        try
+        {
+            var json = Encoding.UTF8.GetString(data, 0, data.Length);
+            var message = ServerConnectionMessage.Parse(json);
+            Id = message.ClientId;
+            ServerOperationSystem = message.OperatingSystem;
+            ServerMachineName = message.MachineName ?? string.Empty;
+            Console.WriteLine($"[Client_{Id}] Received connection from server: {message}");
+
+            foreach (var service in _services)
+            {
+                if (service.Value is ClientService clientService)
+                    clientService.OnConnected();
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            Kill();
+        }
     }
 
     private async void ListenForPackets()
@@ -125,7 +141,13 @@ public sealed class Client
                         break;
 
                     default:
-                        throw new ArgumentOutOfRangeException();
+                    {
+                        Console.WriteLine(
+                            $"[Client_{Id}] Unknown packet type: {packet.Type}, packetId: {packet.Id}"
+                        );
+                        Kill();
+                        break;
+                    }
                 }
             }
             catch (OperationCanceledException e)
@@ -136,6 +158,7 @@ public sealed class Client
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                Kill();
             }
         }
     }
@@ -143,19 +166,51 @@ public sealed class Client
     private void ReceiveString(TcpClient tcpClient, string serviceName, string str)
     {
         Console.WriteLine($"[Client_{Id}/{serviceName}] Received string: {str}");
+        GetService(serviceName).OnStringMessage(str);
     }
 
     private void ReceiveBinary(TcpClient tcpClient, string serviceName, byte[] data)
     {
-        Console.Write($"[Client_{Id}/{serviceName}] Received byte[]: {data.Length}");
+        Console.WriteLine($"[Client_{Id}/{serviceName}] Received byte[]: {data.Length}");
+        GetService(serviceName).OnDataMessage(data);
     }
 
     private void ReceiveJson(TcpClient tcpClient, string serviceName, JObject jObject)
     {
         Console.WriteLine($"[Client_{Id}/{serviceName}] Received json: {jObject}");
+        GetService(serviceName).OnJsonMessage(jObject);
     }
 
     #endregion
+
+    #region Services
+
+    public void AddService(IService service)
+    {
+        _services.Add(service.Name, service);
+    }
+
+    public void RemoveService(string serviceName)
+    {
+        _services.Remove(serviceName);
+    }
+
+    private IService GetService(string serviceName)
+    {
+        if (!_services.TryGetValue(serviceName, out var service))
+            throw new Exception($"[Server] Service not found '{serviceName}'");
+
+        return service;
+    }
+
+    #endregion
+
+    private void Kill()
+    {
+        Console.WriteLine("[Client] Killing client...");
+        Close();
+        Environment.Exit(1);
+    }
 
     public void Close()
     {

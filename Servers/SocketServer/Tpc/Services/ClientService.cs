@@ -7,6 +7,9 @@ namespace SocketServer;
 public abstract class ClientService(Client client) : IService
 {
     public abstract string Name { get; }
+
+    internal virtual void OnConnected() { }
+
     public abstract void OnStringMessage(string message);
     public abstract void OnDataMessage(byte[] data);
     public abstract void OnJsonMessage(JObject payload);

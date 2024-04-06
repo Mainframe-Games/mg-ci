@@ -47,8 +47,8 @@ static ServerConfig LoadConfig(string path = "config-server.toml")
 
     var configStr = File.ReadAllText(path);
     Console.WriteLine($"Loading Config: {new FileInfo(path).FullName}");
-    Console.WriteLine("#### Server Config Start ####");
-    Console.WriteLine(configStr);
-    Console.WriteLine("#### Server Config End ####");
+    // Console.WriteLine("#### Server Config Start ####");
+    // Console.WriteLine(configStr);
+    // Console.WriteLine("#### Server Config End ####");
     return Toml.ToModel<ServerConfig>(configStr);
 }
