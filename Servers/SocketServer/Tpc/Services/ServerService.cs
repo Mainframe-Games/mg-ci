@@ -10,20 +10,20 @@ public abstract class ServerService(Server server) : IService
     public abstract void OnDataMessage(byte[] data);
     public abstract void OnJsonMessage(JObject payload);
 
-    public async Task SendString(string message)
+    public void SendString(string message)
     {
         var packet = Encoding.UTF8.GetBytes(message);
-        await server.SendToClients(new TpcPacket(Name, MessageType.String, packet));
+        server.SendToClients(new TpcPacket(Name, MessageType.String, packet));
     }
 
-    public async Task SendBinary(byte[] data)
+    public void SendBinary(byte[] data)
     {
-        await server.SendToClients(new TpcPacket(Name, MessageType.Binary, data));
+        server.SendToClients(new TpcPacket(Name, MessageType.Binary, data));
     }
 
-    public async Task SendJson(JObject payload)
+    public void SendJson(JObject payload)
     {
         var data = Encoding.UTF8.GetBytes(payload.ToString());
-        await server.SendToClients(new TpcPacket(Name, MessageType.Json, data));
+        server.SendToClients(new TpcPacket(Name, MessageType.Json, data));
     }
 }

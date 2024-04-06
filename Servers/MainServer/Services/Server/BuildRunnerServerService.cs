@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using MainServer.Configs;
+using MainServer.Services.Packets;
 using MainServer.Utils;
 using MainServer.Workspaces;
 using Newtonsoft.Json.Linq;
@@ -16,16 +17,11 @@ internal sealed class BuildRunnerServerService(
 ) : ServerService(server)
 {
     public override string Name => "build-runner";
+    private static readonly Queue<BuildRunnerPacket> _buildQueue = new();
+    private Task? _buildTask;
 
-    private static readonly Queue<QueuePacket> _buildQueue = new();
-    private static Task? _buildRunnerTask;
-
-    private async void BuildQueued()
+    private void BuildQueued()
     {
-        // prevent multiple build runners
-        if (_buildRunnerTask is not null)
-            return;
-
         while (_buildQueue.Count > 0)
         {
             var packet = _buildQueue.Dequeue();
@@ -38,25 +34,24 @@ internal sealed class BuildRunnerServerService(
                 ?? throw new NullReferenceException();
 
             Console.WriteLine($"Queuing build: {targetName}");
-            await SendJson(new JObject { ["TargetName"] = targetName, ["Status"] = "Building" });
+            SendJson(new JObject { ["TargetName"] = targetName, ["Status"] = "Building" });
 
-            _buildRunnerTask = workspace.Engine switch
+            switch (workspace.Engine)
             {
-                GameEngine.Unity
-                    => Task.Run(() => RunUnity(workspace.ProjectPath, targetName, workspace)),
-                GameEngine.Godot => throw new NotImplementedException(),
-                _ => throw new ArgumentException($"Engine not supported: {workspace.Engine}")
-            };
-
-            // await build to be done
-            await _buildRunnerTask;
-            _buildRunnerTask = null;
+                case GameEngine.Unity:
+                    RunUnity(workspace.ProjectPath, targetName, workspace);
+                    break;
+                case GameEngine.Godot:
+                    throw new NotImplementedException();
+                default:
+                    throw new ArgumentException($"Engine not supported: {workspace.Engine}");
+            }
         }
 
         Console.WriteLine("Build queue empty");
     }
 
-    private async void RunUnity(string projectPath, string targetName, Workspace workspace)
+    private void RunUnity(string projectPath, string targetName, Workspace workspace)
     {
         var project = workspace.GetProjectToml();
         var isBuildTargets = project.TryGetValue("build_targets", out var buildTargets);
@@ -104,7 +99,7 @@ internal sealed class BuildRunnerServerService(
         var sw = Stopwatch.StartNew();
         unityRunner.Run();
 
-        await SendJson(
+        SendJson(
             new JObject
             {
                 ["TargetName"] = targetName,
@@ -117,13 +112,6 @@ internal sealed class BuildRunnerServerService(
         FileUploader.UploadDirectory(new DirectoryInfo(unityRunner.BuildPath), this);
     }
 
-    private class QueuePacket
-    {
-        public Guid ProjectGuid { get; set; }
-        public string TargetName { get; set; }
-        public string Branch { get; set; }
-    }
-
     public override void OnStringMessage(string message)
     {
         throw new NotImplementedException();
@@ -134,22 +122,13 @@ internal sealed class BuildRunnerServerService(
         throw new NotImplementedException();
     }
 
-    public override async void OnJsonMessage(JObject payload)
+    public override void OnJsonMessage(JObject payload)
     {
-        var targetName = payload["TargetName"]?.ToString() ?? throw new NullReferenceException();
-        var projectGuid = payload["ProjectGuid"]?.ToString() ?? throw new NullReferenceException();
-        var branch = payload["Branch"]?.ToString() ?? throw new NullReferenceException();
+        var packet = payload.ToObject<BuildRunnerPacket>() ?? throw new NullReferenceException();
+        _buildQueue.Enqueue(packet);
+        SendJson(new JObject { ["TargetName"] = packet.TargetName, ["Status"] = "Queued", });
 
-        var queuePacket = new QueuePacket
-        {
-            ProjectGuid = new Guid(projectGuid),
-            TargetName = targetName,
-            Branch = branch,
-        };
-        _buildQueue.Enqueue(queuePacket);
-        await SendJson(
-            new JObject { ["TargetName"] = queuePacket.TargetName, ["Status"] = "Queued", }
-        );
-        BuildQueued();
+        if (_buildTask is null || _buildTask.IsCompleted)
+            _buildTask = Task.Run(BuildQueued);
     }
 }

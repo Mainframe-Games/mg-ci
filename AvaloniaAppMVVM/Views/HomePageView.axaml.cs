@@ -253,7 +253,7 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 
     #region Build Process
 
-    private async void Button_StartBuild_OnClick(object? sender, RoutedEventArgs e)
+    private void Button_StartBuild_OnClick(object? sender, RoutedEventArgs e)
     {
         RefreshProcesses();
 
@@ -264,7 +264,7 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
             ["BuildTargets"] = JArray.FromObject(_project.BuildTargets.Select(x => x.Name)),
             ["Branch"] = _project.Settings.Branch,
         };
-        await App.BuildClient.SendJson(project);
+        App.BuildClient.SendJson(project);
     }
 
     private void RefreshProcesses()

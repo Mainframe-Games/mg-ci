@@ -18,7 +18,10 @@ internal static class BuildRunnerManager
         foreach (var runner in configRunners)
         {
             var client = new Client(runner.Ip!, runner.Port);
-            _buildRunners.Add(runner.Id!, new BuildRunnerClientService(client));
+            client.AddService(new BuildClientService(client));
+            var runnerService = new BuildRunnerClientService(client);
+            client.AddService(runnerService);
+            _buildRunners.Add(runner.Id!, runnerService);
         }
     }
 

@@ -2,7 +2,6 @@ using System.Net.Sockets;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using SocketServer.Messages;
-using SocketServer.Tests;
 
 namespace SocketServer;
 
@@ -57,7 +56,10 @@ public sealed class Client
 
     #region Sends
 
-    internal async Task Send(TpcPacket packet)
+    private readonly Queue<TpcPacket> _sendQueue = new();
+    private Task? _sendTask;
+
+    internal void Send(TpcPacket packet)
     {
         if (!IsConnected)
         {
@@ -65,8 +67,24 @@ public sealed class Client
             return;
         }
 
-        var data = packet.GetBytes();
-        await stream.WriteAsync(data);
+        _sendQueue.Enqueue(packet);
+
+        if (_sendTask is null || _sendTask.IsCompleted)
+            _sendTask = Task.Run(SendInternal);
+    }
+
+    private async Task SendInternal()
+    {
+        while (_sendQueue.Count > 0)
+        {
+            var packet = _sendQueue.Dequeue();
+            var data = packet.GetBytes();
+            await stream.WriteAsync(data);
+            await Task.Delay(10); // delay to prevent spamming
+        }
+
+        Console.WriteLine($"[Client_{Id}] Send queue empty");
+        _sendTask = null;
     }
 
     #endregion
@@ -84,11 +102,8 @@ public sealed class Client
             ServerMachineName = message.MachineName ?? string.Empty;
             Console.WriteLine($"[Client_{Id}] Received connection from server: {message}");
 
-            foreach (var service in _services)
-            {
-                if (service.Value is ClientService clientService)
-                    clientService.OnConnected();
-            }
+            foreach (var serviceName in message.Services ?? [])
+                ((ClientService)GetService(serviceName)).OnConnected();
         }
         catch (Exception e)
         {
@@ -171,7 +186,7 @@ public sealed class Client
 
     private void ReceiveBinary(TcpClient tcpClient, string serviceName, byte[] data)
     {
-        Console.WriteLine($"[Client_{Id}/{serviceName}] Received byte[]: {data.Length}");
+        // Console.WriteLine($"[Client_{Id}/{serviceName}] Received byte[]: {data.Length}");
         GetService(serviceName).OnDataMessage(data);
     }
 
@@ -198,7 +213,7 @@ public sealed class Client
     private IService GetService(string serviceName)
     {
         if (!_services.TryGetValue(serviceName, out var service))
-            throw new Exception($"[Server] Service not found '{serviceName}'");
+            throw new Exception($"[Client] Service not found '{serviceName}'");
 
         return service;
     }
@@ -207,7 +222,7 @@ public sealed class Client
 
     private void Kill()
     {
-        Console.WriteLine("[Client] Killing client...");
+        Console.WriteLine($"[Client_{Id}] Killing client...");
         Close();
         Environment.Exit(1);
     }

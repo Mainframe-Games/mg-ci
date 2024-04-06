@@ -8,8 +8,6 @@ internal sealed class BuildRunnerClientService(SocketServer.Client client) : Cli
     public delegate void BuildCompleteDelegate(string targetName, long buildTime);
     public event BuildCompleteDelegate? OnBuildCompleteMessage;
 
-    public event Action<byte[]>? OnDataMessageReceived;
-
     public override string Name => "build-runner";
 
     public override void OnStringMessage(string message)
@@ -19,7 +17,7 @@ internal sealed class BuildRunnerClientService(SocketServer.Client client) : Cli
 
     public override void OnDataMessage(byte[] data)
     {
-        OnDataMessageReceived?.Invoke(data);
+        FileDownloader.Download(data);
     }
 
     public override void OnJsonMessage(JObject payload)

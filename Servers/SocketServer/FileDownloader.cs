@@ -25,13 +25,13 @@ public static class FileDownloader
         packet.Write(fragment);
 
         OnFileDownloadProgress?.Invoke(packet.Path, packet.Progress);
-        packet.PrintProgress();
+        // packet.PrintProgress();
 
         if (!packet.IsComplete)
             return;
 
         OnFileDownloadCompleted?.Invoke(packet.Path);
-        Console.WriteLine($"Download complete [{packet.Path}]");
+        // Console.WriteLine($"Download complete [{packet.Path}]");
         _packets.Remove(key);
     }
 

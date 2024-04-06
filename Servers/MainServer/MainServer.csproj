@@ -21,8 +21,5 @@
                  CopyToOutputDirectory="PreserveNewest"
                  Link="ContentBuilder\%(RecursiveDir)\%(Filename)%(Extension)"/>
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Tests\" />
-    </ItemGroup>
 
 </Project>

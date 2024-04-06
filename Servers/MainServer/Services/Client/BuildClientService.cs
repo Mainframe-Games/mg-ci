@@ -1,9 +1,9 @@
 ﻿using Newtonsoft.Json.Linq;
 using SocketServer;
 
-namespace AvaloniaAppMVVM.Services;
+namespace MainServer.Services.Client;
 
-public class BuildClientService(Client client) : ClientService(client)
+internal sealed class BuildClientService(SocketServer.Client client) : ClientService(client)
 {
     public override string Name => "build";
 

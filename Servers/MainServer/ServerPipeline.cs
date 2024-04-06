@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using MainServer.Services.Client;
+using MainServer.Services.Packets;
 using MainServer.Workspaces;
-using Newtonsoft.Json.Linq;
 using SocketServer.Messages;
 
 namespace MainServer;
@@ -56,25 +56,19 @@ internal class ServerPipeline(
                 foreach (var process in buildProcesses)
                     process.OnStringMessage(targetName, buildTime);
             };
-            runner.OnDataMessageReceived += bytes =>
-            {
-                foreach (var process in buildProcesses)
-                    process.OnDataReceived(bytes);
-            };
         }
 
         // start processes
         foreach (var buildTarget in buildTargets)
         {
             var runner = GetUnityRunner(buildTarget, false);
-            await runner.SendJson(
-                new JObject
-                {
-                    ["ProjectGuid"] = projectGuid,
-                    ["TargetName"] = buildTarget,
-                    ["Branch"] = workspace.Branch
-                }
-            );
+            var packet = new BuildRunnerPacket
+            {
+                ProjectGuid = projectGuid,
+                TargetName = buildTarget,
+                Branch = workspace.Branch,
+            };
+            runner.SendJson(packet.ToJson());
 
             var process = new BuildRunnerProcess(buildTarget);
             buildProcesses.Add(process);
@@ -123,12 +117,8 @@ internal class ServerPipeline(
 
     private class BuildRunnerProcess
     {
-        private FileStream? _currentFileStream;
-        private string? _currentFilePath;
-        private int _currentTotalLength;
         private readonly TaskCompletionSource _completionSource = new();
         private readonly string _buildName;
-        private readonly string _rootPath;
 
         public Task Task => _completionSource.Task;
 
@@ -144,68 +134,15 @@ internal class ServerPipeline(
             var rootDir = new DirectoryInfo(rootPath);
             if (rootDir.Exists)
                 rootDir.Delete(true);
-            _rootPath = rootDir.FullName;
-        }
-
-        private void CreateFileStream(string inDilePath)
-        {
-            var filePath = Path.Combine(_rootPath, inDilePath);
-            var fileInfo = new FileInfo(filePath);
-
-            if (fileInfo.Exists)
-                fileInfo.Delete();
-
-            if (fileInfo.Directory?.Exists is not true)
-                fileInfo.Directory?.Create();
-
-            _currentFileStream?.Dispose();
-            _currentFileStream = new FileStream(filePath, FileMode.Create);
         }
 
         public void OnStringMessage(string targetName, long buildTime)
         {
-            if (targetName == _buildName)
-                TotalBuildTime = buildTime;
-        }
-
-        public void OnDataReceived(byte[] data)
-        {
-            using var ms = new MemoryStream(data);
-            using var reader = new BinaryReader(ms);
-            var targetName = reader.ReadString();
-            var totalLength = reader.ReadInt32();
-            var filePath = reader.ReadString();
-            var fragmentLength = reader.ReadInt32();
-            var fragment = reader.ReadBytes(fragmentLength);
-
-            // ignore if not for target
             if (targetName != _buildName)
                 return;
 
-            if (_currentFilePath != filePath)
-            {
-                CreateFileStream(filePath);
-                _currentFilePath = filePath;
-            }
-
-            // write file
-            _currentFileStream?.Write(fragment, 0, fragment.Length);
-            _currentTotalLength += fragment.Length;
-
-            // log progress
-            var percent = _currentTotalLength / (double)totalLength * 100;
-            // Console.WriteLine(
-            //     $"File download progress [{_name}]: {_currentFilePath} | {_currentTotalLength}/{totalLength} ({percent:0}%)"
-            // );
-
-            if (_currentTotalLength >= totalLength)
-            {
-                Console.WriteLine($"Download complete [{_buildName}]");
-                if (!_completionSource.TrySetResult())
-                {
-                    Console.Write($"Result already set! [{_buildName}]");
-                }
-            }
+            TotalBuildTime = buildTime;
+            _completionSource.SetResult();
         }
     }
 }

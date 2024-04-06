@@ -29,6 +29,7 @@ public static class FileUploader
             {
                 var (rootDir, service) = _uploadQueue.Dequeue();
                 var files = rootDir.GetFiles("*", SearchOption.AllDirectories);
+                Console.WriteLine($"Upload started: {rootDir.FullName}");
                 foreach (var file in files)
                 {
                     var data = await File.ReadAllBytesAsync(file.FullName); // TODO; could open file stream instead
@@ -50,8 +51,7 @@ public static class FileUploader
                         writer.Write(frag.Length); // int32
                         writer.Write(frag); // byte[]
 
-                        await service.SendBinary(ms.ToArray());
-                        await Task.Delay(10); // need to delay to give server some time to process
+                        service.SendBinary(ms.ToArray());
                     }
                 }
 

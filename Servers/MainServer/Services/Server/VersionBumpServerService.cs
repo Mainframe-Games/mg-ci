@@ -49,7 +49,7 @@ internal sealed class VersionBumpServerService(
         throw new NotImplementedException();
     }
 
-    public override async void OnJsonMessage(JObject payload)
+    public override void OnJsonMessage(JObject payload)
     {
         var projectId = payload["Guid"]?.ToString() ?? throw new NullReferenceException();
         var branch = payload["Branch"]?.ToString() ?? throw new NullReferenceException();
@@ -72,6 +72,6 @@ internal sealed class VersionBumpServerService(
                 throw new ArgumentOutOfRangeException();
         }
 
-        await SendJson(response);
+        SendJson(response);
     }
 }

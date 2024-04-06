@@ -9,11 +9,11 @@ namespace MainServer.Services.Server;
 internal sealed class BuildServerService(SocketServer.Server server, ServerConfig serverConfig)
     : ServerService(server)
 {
-    private async void StartBuild(Guid projectGuid, string[] buildTargetNames, string branch)
+    private void StartBuild(Guid projectGuid, string[] buildTargetNames, string branch)
     {
         if (ServerPipeline.ActiveProjects.Contains(projectGuid))
         {
-            await SendJson(new JObject { ["Error"] = $"Pipeline already exists: {projectGuid}" });
+            SendJson(new JObject { ["Error"] = $"Pipeline already exists: {projectGuid}" });
             return;
         }
 
@@ -24,12 +24,12 @@ internal sealed class BuildServerService(SocketServer.Server server, ServerConfi
         var pipeline = new ServerPipeline(projectGuid, workspace, buildTargetNames);
         pipeline.Run();
 
-        await SendJson(
+        SendJson(
             new JObject
             {
                 // ["ServerVersion"] = ServerInfo.Version,
                 // ["PipelineId"] = pipeline.ProjectId,
-                ["ProjectName"] = project.GetValue<string>("settings", "product_name"),
+                ["ProjectName"] = project.GetValue<string>("settings", "project_name"),
                 ["Targets"] = string.Join(", ", buildTargetNames),
                 // ["UnityVersion"] = workspace.UnityVersion,
                 // ["ChangesetId"] = changeSetId,

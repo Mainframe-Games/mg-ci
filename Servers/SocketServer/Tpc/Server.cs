@@ -38,8 +38,6 @@ public class Server(int port)
         foreach (var service in _services)
             Console.WriteLine($"  - {service.Key}");
 
-        // PingClients();
-
         while (true)
         {
             var tpcClient = await listener.AcceptTcpClientAsync();
@@ -49,12 +47,12 @@ public class Server(int port)
                 $"[Server] Client connected: {client.Id}, ConnectedClients: {_connectedClients.Count}"
             );
 
-            await SendConnectionHandshake(client);
-            HandleClient(client);
+            SendConnectionHandshake(client);
+            _ = Task.Run(() => HandleClient(client));
         }
     }
 
-    private async Task SendConnectionHandshake(Client client)
+    private void SendConnectionHandshake(Client client)
     {
         var services = _services.Keys.ToArray();
         var message = new ServerConnectionMessage
@@ -65,12 +63,11 @@ public class Server(int port)
             Services = services
         };
         var data = Encoding.UTF8.GetBytes(message.ToString());
-        await SendToClient(client, new TpcPacket(MessageType.Connection, data));
+        SendToClient(client, new TpcPacket(MessageType.Connection, data));
     }
 
-    private async void HandleClient(object context)
+    private async void HandleClient(Client inClient)
     {
-        var inClient = (Client)context;
         var client = inClient.TcpClient;
         var stream = client.GetStream();
 
@@ -168,17 +165,34 @@ public class Server(int port)
 
     #region Sends
 
-    internal async Task SendToClients(TpcPacket packet)
+    private readonly Queue<(Client, TpcPacket)> _sendQueue = [];
+    private Task? _sendTask;
+
+    internal void SendToClients(TpcPacket packet)
     {
-        var tasks = _connectedClients.Select(client => SendToClient(client.Value, packet));
-        await Task.WhenAll(tasks);
+        foreach (var client in _connectedClients)
+            SendToClient(client.Value, packet);
     }
 
-    private static async Task SendToClient(Client client, TpcPacket packet)
+    private void SendToClient(Client client, TpcPacket packet)
     {
-        var stream = client.TcpClient.GetStream();
-        var data = packet.GetBytes();
-        await stream.WriteAsync(data);
+        _sendQueue.Enqueue((client, packet));
+        if (_sendTask is null || _sendTask.IsCompleted)
+            _sendTask = Task.Run(SendInternal);
+    }
+
+    private async Task SendInternal()
+    {
+        while (_sendQueue.Count > 0)
+        {
+            var (client, packet) = _sendQueue.Dequeue();
+            var stream = client.TcpClient.GetStream();
+            var data = packet.GetBytes();
+            await stream.WriteAsync(data);
+            await Task.Delay(10);
+        }
+
+        _sendTask = null;
     }
 
     #endregion
