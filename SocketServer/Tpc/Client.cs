@@ -9,8 +9,8 @@ using System.Text;
 
 public sealed class Client
 {
-    private readonly TcpClient client;
-    private readonly NetworkStream stream;
+    private TcpClient client;
+    private NetworkStream stream;
     public uint Id { get; private set; }
     public bool IsConnected => Id > 0 && client.Connected;
 
@@ -18,10 +18,31 @@ public sealed class Client
 
     public Client(string serverIp, int serverPort)
     {
-        client = new TcpClient(serverIp, serverPort);
-        stream = client.GetStream();
-        var thread = new Thread(ListenForPackets);
-        thread.Start();
+        // client = new TcpClient(serverIp, serverPort);
+        // stream = client.GetStream();
+        // var thread = new Thread(ListenForPackets);
+        // thread.Start();
+        Task.Run(() => Connect(serverIp, serverPort));
+    }
+
+    private async void Connect(string serverIp, int serverPort)
+    {
+        while (client?.Connected is not true)
+        {
+            try
+            {
+                client = new TcpClient(serverIp, serverPort);
+                stream = client.GetStream();
+                var thread = new Thread(ListenForPackets);
+                thread.Start();
+            }
+            catch (SocketException)
+            {
+                // ignore as connection probably failed we should keep trying forever
+            }
+
+            await Task.Delay(1000);
+        }
     }
 
     #region Sends
