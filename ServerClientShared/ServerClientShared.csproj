@@ -9,7 +9,6 @@
     <ItemGroup>
       <PackageReference Include="LibGit2Sharp" />
       <PackageReference Include="Tomlyn" />
-      <PackageReference Include="WebSocketSharp" />
     </ItemGroup>
 
     <ItemGroup>

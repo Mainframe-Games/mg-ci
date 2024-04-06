@@ -1,18 +1,10 @@
-﻿namespace ServerShared;
+﻿namespace MainServer.VersionBumping;
 
-public class UnityVersionBump(
-    string projectPath,
-    bool standalone,
-    bool android,
-    bool ios
-    )
+internal class UnityVersionBump(string projectPath, bool standalone, bool android, bool ios)
 {
-    public string ProjectSettingsPath { get; } =Path.Combine(
-        projectPath,
-        "ProjectSettings",
-        "ProjectSettings.asset"
-    );
-    
+    public string ProjectSettingsPath { get; } =
+        Path.Combine(projectPath, "ProjectSettings", "ProjectSettings.asset");
+
     /// <summary>
     /// Returns full version {bundle}.{standalone}
     /// </summary>
@@ -50,11 +42,11 @@ public class UnityVersionBump(
             Console.WriteLine($"New iOS: {outIos}");
             projectSettings.WritePlatformBuildNumber("iPhone", outIos);
         }
-        
+
         projectSettings.SaveFile();
         return $"{outBundle}.{standalone}";
     }
-    
+
     private class UnityProjectSettings
     {
         private readonly string _path;
@@ -71,7 +63,7 @@ public class UnityVersionBump(
 
         public int GetStandaloneBuildNumber()
         {
-            var value = GetValue("buildNumber","Standalone");
+            var value = GetValue("buildNumber", "Standalone");
             return int.Parse(value);
         }
 
@@ -146,18 +138,20 @@ public class UnityVersionBump(
 
             throw new Exception("Failed to find path: " + string.Join(", ", path));
         }
-        
+
         private string ReplaceText(int lineIndex, string? newValue)
         {
             var oldValue = _lines[lineIndex].Split(":")[^1].Trim();
 
             if (string.IsNullOrEmpty(oldValue))
-                throw new NullReferenceException($"{nameof(oldValue)} is null on line '{_lines[lineIndex]}'");
+                throw new NullReferenceException(
+                    $"{nameof(oldValue)} is null on line '{_lines[lineIndex]}'"
+                );
 
             var replacement = _lines[lineIndex].Replace(oldValue, newValue);
             return replacement;
         }
-        
+
         #endregion
     }
 }

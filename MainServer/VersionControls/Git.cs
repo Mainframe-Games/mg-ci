@@ -1,16 +1,19 @@
 using System.Diagnostics;
 using LibGit2Sharp;
 
-namespace ServerShared.VersionControls;
+namespace MainServer.VersionControls;
 
-public class Git(string projectPath, string url, string branch, string username, string accessToken)
+internal class Git(
+    string projectPath,
+    string url,
+    string branch,
+    string username,
+    string accessToken
+)
 {
     private readonly Signature _author = new("build-bot", "email@build.bot", DateTimeOffset.Now);
-    private readonly UsernamePasswordCredentials _usernamePasswordCredentials = new()
-    {
-        Username = username,
-        Password = accessToken
-    };
+    private readonly UsernamePasswordCredentials _usernamePasswordCredentials =
+        new() { Username = username, Password = accessToken };
 
     public void Update()
     {
@@ -39,13 +42,10 @@ public class Git(string projectPath, string url, string branch, string username,
             _author,
             new PullOptions
             {
-                FetchOptions = new FetchOptions
-                {
-                    CredentialsProvider = CredentialsHandler
-                }
+                FetchOptions = new FetchOptions { CredentialsProvider = CredentialsHandler }
             }
         );
-        
+
         RunProcess("lfs pull");
     }
 
@@ -85,13 +85,13 @@ public class Git(string projectPath, string url, string branch, string username,
 
         return logs.ToArray();
     }
-    
+
     public string GetLatestCommitHash()
     {
         using var repo = new Repository(projectPath);
         return repo.Head.Tip.Sha;
     }
-    
+
     public void Commit(string commitMessage, string[] filesToCommit)
     {
         using var repository = new Repository(projectPath);
@@ -102,7 +102,7 @@ public class Git(string projectPath, string url, string branch, string username,
             new PushOptions { CredentialsProvider = CredentialsHandler }
         );
     }
-    
+
     private Credentials CredentialsHandler(
         string url,
         string usernamefromurl,

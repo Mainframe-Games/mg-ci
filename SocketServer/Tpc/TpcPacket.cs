@@ -11,6 +11,10 @@ internal enum MessageType : byte
 
 internal class TpcPacket
 {
+    /// <summary>
+    /// Empty service name will send to all services
+    /// </summary>
+    public string ServiceName { get; set; } = string.Empty;
     public MessageType Type { get; private set; }
     public byte[] Data { get; private set; } = Array.Empty<byte>();
 
@@ -18,6 +22,13 @@ internal class TpcPacket
 
     public TpcPacket(MessageType type, byte[] data)
     {
+        Type = type;
+        Data = data;
+    }
+
+    public TpcPacket(string serviceName, MessageType type, byte[] data)
+    {
+        ServiceName = serviceName;
         Type = type;
         Data = data;
     }

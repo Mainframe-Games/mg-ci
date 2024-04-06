@@ -1,4 +1,5 @@
 using Newtonsoft.Json.Linq;
+using SocketServer.Messages;
 
 namespace SocketServer;
 
@@ -6,11 +7,10 @@ using System;
 using System.Net.Sockets;
 using System.Text;
 
-public class Client
+public sealed class Client
 {
     private readonly TcpClient client;
     private readonly NetworkStream stream;
-
     public uint Id { get; private set; }
     public bool IsConnected => Id > 0 && client.Connected;
 
@@ -26,28 +26,7 @@ public class Client
 
     #region Sends
 
-    public async Task SendString(string message)
-    {
-        var packet = new TpcPacket(MessageType.String, Encoding.UTF8.GetBytes(message));
-        await SendInternal(packet);
-        Console.WriteLine($"[Client_{Id}] Sent string: {message}");
-    }
-
-    public async Task SendBinary(byte[] bytes)
-    {
-        var packet = new TpcPacket(MessageType.Binary, bytes);
-        await SendInternal(packet);
-        Console.WriteLine($"[Client_{Id}] Sent byte[]: {bytes.Length}");
-    }
-
-    public async Task SendJson(JObject jObject)
-    {
-        var packet = new TpcPacket(MessageType.Json, Encoding.UTF8.GetBytes(jObject.ToString()));
-        await SendInternal(packet);
-        Console.WriteLine($"[Client_{Id}] Sent json: {jObject}");
-    }
-
-    private async Task SendInternal(TpcPacket packet)
+    internal async Task Send(TpcPacket packet)
     {
         if (!IsConnected)
             throw new Exception("Client is not connected");
@@ -59,6 +38,14 @@ public class Client
     #endregion
 
     #region Receives
+
+    private void ReceiveConnectionHandshake(byte[] data)
+    {
+        var json = Encoding.UTF8.GetString(data, 0, data.Length);
+        var message = ServerConnectionMessage.Parse(json);
+        Id = message.ClientId;
+        Console.WriteLine($"[Client_{Id}] Received connection from server: {Id}");
+    }
 
     private async void ListenForPackets()
     {
@@ -83,8 +70,7 @@ public class Client
                 switch (packet.Type)
                 {
                     case MessageType.Connection:
-                        Id = BitConverter.ToUInt32(packet.Data, 0);
-                        Console.WriteLine($"[Client_{Id}] Received connection from server: {Id}");
+                        ReceiveConnectionHandshake(packet.Data);
                         break;
 
                     case MessageType.Close:

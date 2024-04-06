@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.WebSockets;
 using System.Text;
-using SocketServer.Test;
 
 namespace SocketServer;
 
@@ -90,7 +89,7 @@ public sealed class WebSocketServer
                 // Handle binary data
                 var data = new byte[result.Count];
                 Array.Copy(buffer, data, result.Count);
-                FileDownload.Download(data);
+                FileDownloader.Download(data);
             }
         }
     }

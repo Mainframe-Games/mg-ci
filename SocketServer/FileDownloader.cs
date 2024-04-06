@@ -1,6 +1,6 @@
-namespace SocketServer.Test;
+namespace SocketServer;
 
-public static class FileDownload
+public static class FileDownloader
 {
     private static readonly Dictionary<string, Packet> _packets = [];
     public static event Action<string>? OnFileDownloadCompleted;

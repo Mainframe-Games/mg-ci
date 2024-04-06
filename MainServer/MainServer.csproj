@@ -7,11 +7,11 @@
     <ItemGroup>
       <PackageReference Include="Newtonsoft.Json" />
       <PackageReference Include="Tomlyn" />
-      <PackageReference Include="WebSocketSharp" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ServerShared\ServerShared.csproj" />
+      <ProjectReference Include="..\Builders\UnityBuilder\UnityBuilder.csproj" />
+      <ProjectReference Include="..\SocketServer\SocketServer.csproj" />
     </ItemGroup>
 
 </Project>

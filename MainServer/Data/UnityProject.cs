@@ -1,6 +1,3 @@
 namespace MainServer.Data;
 
-public class UnityProject
-{
-    
-}
+internal class UnityProject { }

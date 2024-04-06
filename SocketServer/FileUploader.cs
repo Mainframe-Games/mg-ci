@@ -1,8 +1,8 @@
-namespace SocketServer.Test;
+namespace SocketServer;
 
-public static class UploadFile
+public static class FileUploader
 {
-    public static async Task UploadDirectory(DirectoryInfo rootDir, Client client)
+    public static async Task UploadDirectory(DirectoryInfo rootDir, IService service)
     {
         var files = rootDir.GetFiles("*", SearchOption.AllDirectories);
         foreach (var file in files)
@@ -26,7 +26,7 @@ public static class UploadFile
                 writer.Write(frag.Length); // int32
                 writer.Write(frag); // byte[]
 
-                await client.SendBinary(ms.ToArray());
+                await service.SendBinary(ms.ToArray());
                 await Task.Delay(10); // need to delay to give server some time to process
             }
         }

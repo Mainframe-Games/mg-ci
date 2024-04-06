@@ -1,14 +1,18 @@
 ﻿using System.Diagnostics;
-using MainServer.Offloads;
+using MainServer.Services.Client;
+using MainServer.Workspaces;
 using Newtonsoft.Json.Linq;
-using ServerShared;
 
 namespace MainServer;
 
-internal class ServerPipeline(Guid projectGuid, Workspace workspace, IEnumerable<string> buildTargets)
+internal class ServerPipeline(
+    Guid projectGuid,
+    Workspace workspace,
+    IEnumerable<string> buildTargets
+)
 {
     public static List<Guid> ActiveProjects { get; } = [];
-    
+
     public async void Run()
     {
         ActiveProjects.Add(projectGuid);
@@ -44,14 +48,14 @@ internal class ServerPipeline(Guid projectGuid, Workspace workspace, IEnumerable
         var tasks = new List<Task>();
 
         // assign callbacks
-        foreach (var runner in OffloadServerManager.All)
+        foreach (var runner in BuildRunnerManager.All)
         {
             runner.OnBuildCompleteMessage += (targetName, buildTime) =>
             {
                 foreach (var process in buildProcesses)
                     process.OnStringMessage(targetName, buildTime);
             };
-            runner.OnDataMessage += bytes =>
+            runner.OnDataMessageReceived += bytes =>
             {
                 foreach (var process in buildProcesses)
                     process.OnDataReceived(bytes);
@@ -62,13 +66,13 @@ internal class ServerPipeline(Guid projectGuid, Workspace workspace, IEnumerable
         foreach (var buildTarget in buildTargets)
         {
             var runner = GetUnityRunner(buildTarget);
-            runner.Send("build",
+            await runner.SendJson(
                 new JObject
                 {
                     ["ProjectGuid"] = projectGuid,
                     ["TargetName"] = buildTarget,
                     ["Branch"] = workspace.Branch
-                }.ToString()
+                }
             );
 
             var process = new BuildRunnerProcess(buildTarget);
@@ -86,14 +90,14 @@ internal class ServerPipeline(Guid projectGuid, Workspace workspace, IEnumerable
         return buildProcesses;
     }
 
-    private static Offloads.OffloadServer GetUnityRunner(string targetName)
+    private static BuildRunnerClientService GetUnityRunner(string targetName)
     {
         if (targetName.Contains("Windows"))
-            return OffloadServerManager.GetOffloadServer("windows");
+            return BuildRunnerManager.GetOffloadServer("windows");
         if (targetName.Contains("OSX"))
-            return OffloadServerManager.GetOffloadServer("macos");
+            return BuildRunnerManager.GetOffloadServer("macos");
         if (targetName.Contains("Linux"))
-            return OffloadServerManager.GetOffloadServer("linux");
+            return BuildRunnerManager.GetOffloadServer("linux");
 
         throw new NotSupportedException($"Target not supported: {targetName}");
     }

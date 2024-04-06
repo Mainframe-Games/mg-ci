@@ -1,24 +1,27 @@
-﻿using ServerShared.VersionControls;
+﻿using MainServer.VersionBumping;
+using MainServer.VersionControls;
 using Tomlyn;
 using Tomlyn.Model;
 
-namespace ServerShared;
+namespace MainServer.Workspaces;
 
-public enum GameEngine
+internal enum GameEngine
 {
     Unity,
     Godot
 }
 
-public enum VersionControlType
+internal enum VersionControlType
 {
-    Git, Plastic
+    Git,
+    Plastic
 }
 
-public class Workspace(string projectPath)
+internal class Workspace(string projectPath)
 {
     public string ProjectPath => projectPath;
-    public GameEngine Engine { get; } = GetEngine(projectPath ?? throw new NullReferenceException());
+    public GameEngine Engine { get; } =
+        GetEngine(projectPath ?? throw new NullReferenceException());
     public VersionControlType VersionControl { get; } =
         GetVersionControl(projectPath ?? throw new NullReferenceException());
     public string? Branch { get; init; } = "main";
@@ -66,7 +69,7 @@ public class Workspace(string projectPath)
     {
         if (IsGit(projectPath))
             return VersionControlType.Git;
-        
+
         if (IsPlastic(projectPath))
             return VersionControlType.Plastic;
 
@@ -100,7 +103,7 @@ public class Workspace(string projectPath)
             case VersionControlType.Git:
                 UpdateGit();
                 break;
-            
+
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -124,7 +127,7 @@ public class Workspace(string projectPath)
             case VersionControlType.Git:
                 var git = new Git(projectPath, GitUrl!, Branch!, "", "");
                 return git.GetChangeLog();
-                
+
             case VersionControlType.Plastic:
                 throw new NotImplementedException();
             default:
@@ -151,15 +154,11 @@ public class Workspace(string projectPath)
         var standalone = true;
         var android = true;
         var ios = true;
-        
-        var unityVersionBump = new UnityVersionBump(
-            ProjectPath,
-            standalone,
-            android,
-            ios);
-        
+
+        var unityVersionBump = new UnityVersionBump(ProjectPath, standalone, android, ios);
+
         var fullVersion = unityVersionBump.Run();
-        
+
         // workspace.SaveBuildVersion(fullVersion);
 
         // commit file
@@ -169,7 +168,7 @@ public class Workspace(string projectPath)
             $"_Build Version: {fullVersion} | sha: {sha}",
             [unityVersionBump.ProjectSettingsPath]
         );
-        
+
         return fullVersion;
     }
 }

@@ -56,26 +56,21 @@ public class ServerPipeline(Project project, Workspace workspace)
     {
         // TODO: this could probably be done on main server
         var task = new TaskCompletionSource<JObject>();
-        BuildRunnerFactory.VersionBump.SendJObject(JObject.FromObject(project));
-        BuildRunnerFactory.VersionBump.OnStringMessage += message =>
-        {
-            task.SetResult(JObject.Parse(message));
-        };
+        // BuildRunnerFactory.VersionBump.SendJObject(JObject.FromObject(project));
+        // BuildRunnerFactory.VersionBump.OnStringMessage += message =>
+        // {
+        //     task.SetResult(JObject.Parse(message));
+        // };
 
         var res = await task.Task;
-        
+
         var bundle = res["Bundle"]?.ToString();
         var standalone = res["Standalone"]?.ToString();
         var android = res["Android"]?.ToString();
         var ios = res["Ios"]?.ToString();
 
         // save files
-        workspace.ProjectSettings.ReplaceVersions(
-            bundle,
-            standalone,
-            android,
-            ios
-        );
+        workspace.ProjectSettings.ReplaceVersions(bundle, standalone, android, ios);
 
         var fullVersion = $"{bundle}.{standalone}";
         workspace.SaveBuildVersion(fullVersion);
@@ -108,67 +103,67 @@ public class ServerPipeline(Project project, Workspace workspace)
         var tasks = new List<Task>();
 
         // assign callbacks
-        foreach (var runner in BuildRunnerFactory.All)
-        {
-            runner.OnStringMessage += message =>
-            {
-                foreach (var process in buildProcesses)
-                    process.OnStringMessage(message);
-            };
-            runner.OnDataMessage += bytes =>
-            {
-                foreach (var process in buildProcesses)
-                    process.OnDataReceived(bytes);
-            };
-        }
+        // foreach (var runner in BuildRunnerFactory.All)
+        // {
+        //     runner.OnStringMessage += message =>
+        //     {
+        //         foreach (var process in buildProcesses)
+        //             process.OnStringMessage(message);
+        //     };
+        //     runner.OnDataMessage += bytes =>
+        //     {
+        //         foreach (var process in buildProcesses)
+        //             process.OnDataReceived(bytes);
+        //     };
+        // }
 
         // start processes
         foreach (var buildTarget in project.BuildTargets)
         {
-            var runner = GetUnityRunner(buildTarget.Target);
-            runner.SendJObject(
-                new JObject
-                {
-                    ["TargetName"] = buildTarget.Name,
-                    ["BuildTarget"] = buildTarget.Target.ToString(),
-                    ["Project"] = JObject.FromObject(project),
-                }
-            );
-
-            var process = new BuildRunnerProcess(buildTarget.Name!);
-            buildProcesses.Add(process);
-            tasks.Add(process.Task);
+            // var runner = GetUnityRunner(buildTarget.Target);
+            // runner.SendJObject(
+            //     new JObject
+            //     {
+            //         ["TargetName"] = buildTarget.Name,
+            //         ["BuildTarget"] = buildTarget.Target.ToString(),
+            //         ["Project"] = JObject.FromObject(project),
+            //     }
+            // );
+            //
+            // var process = new BuildRunnerProcess(buildTarget.Name!);
+            // buildProcesses.Add(process);
+            // tasks.Add(process.Task);
         }
 
         // wait for them all to finish
         await Task.WhenAll(tasks);
 
-        // clear callbacks
-        foreach (var runner in BuildRunnerFactory.All)
-            runner.ClearEvents();
+        // // clear callbacks
+        // foreach (var runner in BuildRunnerFactory.All)
+        //     runner.ClearEvents();
 
         return buildProcesses;
     }
 
-    private static WebClient GetUnityRunner(Unity.BuildTarget target)
-    {
-        switch (target)
-        {
-            case Unity.BuildTarget.StandaloneWindows64:
-            case Unity.BuildTarget.StandaloneWindows:
-                return BuildRunnerFactory.GetRunner("windows");
-
-            case Unity.BuildTarget.iOS:
-            case Unity.BuildTarget.StandaloneOSX:
-                return BuildRunnerFactory.GetRunner("macos");
-
-            case Unity.BuildTarget.StandaloneLinux64:
-                return BuildRunnerFactory.GetRunner("linux");
-
-            default:
-                throw new NotSupportedException($"Target not supported: {target}");
-        }
-    }
+    // private static WebClient GetUnityRunner(Unity.BuildTarget target)
+    // {
+    //     switch (target)
+    //     {
+    //         case Unity.BuildTarget.StandaloneWindows64:
+    //         case Unity.BuildTarget.StandaloneWindows:
+    //             return BuildRunnerFactory.GetRunner("windows");
+    //
+    //         case Unity.BuildTarget.iOS:
+    //         case Unity.BuildTarget.StandaloneOSX:
+    //             return BuildRunnerFactory.GetRunner("macos");
+    //
+    //         case Unity.BuildTarget.StandaloneLinux64:
+    //             return BuildRunnerFactory.GetRunner("linux");
+    //
+    //         default:
+    //             throw new NotSupportedException($"Target not supported: {target}");
+    //     }
+    // }
 
     #endregion
 

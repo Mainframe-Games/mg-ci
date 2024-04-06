@@ -116,31 +116,31 @@ public class DeploymentRunner(
         if (!_appleStore)
             return;
 
-        var macRunner =
-            BuildRunnerFactory.GetRunner("macos")
-            ?? throw new NullReferenceException("Mac runner is not found");
-
-        macRunner.SendJObject(
-            new JObject
-            {
-                ["ProjectGuid"] = project.Guid!,
-                ["AppleId"] = _config.AppleStore?.AppleId,
-                ["AppSpecificPassword"] = _config.AppleStore?.AppSpecificPassword
-            }
-        );
-
-        var task = new TaskCompletionSource();
-        macRunner.OnStringMessage += message =>
-        {
-            var obj = JObject.Parse(message);
-            var status = obj["Status"]?.ToString();
-
-            if (status == "Completed")
-                task.SetResult();
-            else
-                throw new Exception($"Xcode deploy failed: {status}");
-        };
-        await task.Task;
+        // var macRunner =
+        //     BuildRunnerFactory.GetRunner("macos")
+        //     ?? throw new NullReferenceException("Mac runner is not found");
+        //
+        // macRunner.SendJObject(
+        //     new JObject
+        //     {
+        //         ["ProjectGuid"] = project.Guid!,
+        //         ["AppleId"] = _config.AppleStore?.AppleId,
+        //         ["AppSpecificPassword"] = _config.AppleStore?.AppSpecificPassword
+        //     }
+        // );
+        //
+        // var task = new TaskCompletionSource();
+        // macRunner.OnStringMessage += message =>
+        // {
+        //     var obj = JObject.Parse(message);
+        //     var status = obj["Status"]?.ToString();
+        //
+        //     if (status == "Completed")
+        //         task.SetResult();
+        //     else
+        //         throw new Exception($"Xcode deploy failed: {status}");
+        // };
+        // await task.Task;
     }
 
     private async Task DeployGoogle()

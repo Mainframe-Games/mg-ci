@@ -6,7 +6,7 @@ using Avalonia.Media;
 using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.ViewModels;
 using LoadingIndicators.Avalonia;
-using ServerClientShared;
+using SocketServer;
 
 namespace AvaloniaAppMVVM.Views;
 
@@ -106,10 +106,9 @@ public class Icons
 public partial class HomePageView : MyUserControl<HomePageViewModel>
 {
     private bool _isBuilding;
-    private readonly WebClient _clientBuild =
-        new("build", AppSettings.Singleton.ServerIp, AppSettings.Singleton.ServerPort);
-    private readonly WebClient _clientReport =
-        new("report", AppSettings.Singleton.ServerIp, AppSettings.Singleton.ServerPort);
+
+    private readonly Client _client =
+        new(AppSettings.Singleton.ServerIp!, AppSettings.Singleton.ServerPort);
 
     private readonly List<ProcessesTemplate> _processes =
     [
@@ -137,17 +136,17 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
     protected override void OnUnloaded(RoutedEventArgs e)
     {
         base.OnUnloaded(e);
-        _clientBuild.Close();
+        // _clientBuild.Close();
     }
 
     private async void ConnectAsync()
     {
         ServerStatus.Text = "Connecting...";
 
-        if (!Design.IsDesignMode)
-            await Task.WhenAll(_clientBuild.Connect(), _clientReport.Connect());
+        // if (!Design.IsDesignMode)
+        // await Task.WhenAll(_clientBuild.Connect(), _clientReport.Connect());
 
-        ServerStatus.Text = _clientBuild.Status;
+        // ServerStatus.Text = _clientBuild.Status;
     }
 
     #region Build View
@@ -268,7 +267,8 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 
         _isBuilding = true;
         RefreshProcesses();
-        _clientBuild.Send(_project);
+        throw new NotImplementedException();
+        // _clientBuild.Send(_project);
     }
 
     private void RefreshProcesses()

@@ -1,6 +1,6 @@
 namespace SocketServer;
 
-public static class Fragmentation
+internal static class Fragmentation
 {
     private const int fragmentSize = 1024 * 50; // 50 KB
 

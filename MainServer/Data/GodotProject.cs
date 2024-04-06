@@ -1,6 +1,3 @@
 namespace MainServer.Data;
 
-public class GodotProject
-{
-    
-}
+internal class GodotProject { }

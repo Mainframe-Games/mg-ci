@@ -14,8 +14,8 @@ public class ServerConfig
     public XcodeConfig? AppleStore { get; set; }
     public GooglePlayConfig? GoogleStore { get; set; }
     public GitConfig? Git { get; set; }
-    
-    public List<OffloadServerConfig>? Offloaders { get; set; }
+
+    public List<BuildRunnerConfig>? Runners { get; set; }
 
     public static ServerConfig Load(string path = "config-server.toml")
     {
@@ -33,10 +33,9 @@ public class ServerConfig
     }
 }
 
-public class OffloadServerConfig
+public class BuildRunnerConfig
 {
     public string? Id { get; set; }
     public string? Ip { get; set; }
     public ushort Port { get; set; }
-    public string? Path { get; }
 }

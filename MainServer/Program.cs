@@ -1,53 +1,42 @@
-﻿using MainServer.Configs;
-using MainServer.Offloads;
-using MainServer.Services;
+﻿using MainServer;
+using MainServer.Configs;
+using MainServer.Services.Server;
 using MainServer.Utils;
-using WebSocketSharp.Server;
 
 Console.Title = $"Main Server - {ServerInfo.Version}";
 
-var configPath = GetArg("-config", args);
-var config = !string.IsNullOrEmpty(configPath) 
-    ? ServerConfig.Load(configPath)
-    : ServerConfig.Load();
-
-var mainServer = StartMainServer(config.Ip, config.Port);
-
-OffloadServerManager.Init(config.Offloaders);
-
-Console.ReadLine();
-mainServer.Stop();
-
-Console.WriteLine("---- End of program ----");
-return;
-
-static WebSocketServer StartMainServer(string ip, ushort port)
+if (args.Contains("-runner"))
 {
-    var server = new WebSocketServer($"ws://{ip}:{port}");
-    server.AddWebSocketService<BuildService>("/build");
-    // server.AddWebSocketService<ReportService>("/report");
+    // start build runner server
+    var portStr = GetArg("-runner", args) ?? "8081";
+    var server = new SocketServer.Server(ushort.Parse(portStr));
+    server.AddService(new BuildRunnerServerService(server));
+    server.Start();
+}
+else
+{
+    // start main server
+    var configPath = GetArg("-config", args);
+    var config = !string.IsNullOrEmpty(configPath)
+        ? ServerConfig.Load(configPath)
+        : ServerConfig.Load();
+
+    // start server
+    var server = new SocketServer.Server(config.Port);
+    server.AddService(new BuildServerService(server));
     server.Start();
 
-    Console.WriteLine($"Server started on {server.Address}:{server.Port}");
-
-    if (server.IsListening)
-    {
-        Console.WriteLine("Listening on port {0}, and providing WebSocket services:", server.Port);
-
-        foreach (var path in server.WebSocketServices.Paths)
-            Console.WriteLine("- {0}", path);
-    }
-
-    return server;
+    BuildRunnerManager.Init(config.Runners);
 }
+
+Console.ReadLine();
+Console.WriteLine("---- End of program ----");
+return;
 
 static string? GetArg(string arg, string[] args)
 {
     var index = Array.IndexOf(args, arg);
     if (index == -1 || index + 1 >= args.Length)
-    {
         return null;
-    }
-
     return args[index + 1];
 }

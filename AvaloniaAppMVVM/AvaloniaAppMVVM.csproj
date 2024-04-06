@@ -26,7 +26,6 @@
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
         <PackageReference Include="Newtonsoft.Json" />
         <PackageReference Include="Tomlyn" />
-        <PackageReference Include="WebSocketSharp" />
     </ItemGroup>
 
     <ItemGroup>
@@ -35,6 +34,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ServerClientShared\ServerClientShared.csproj" />
+      <ProjectReference Include="..\SocketServer\SocketServer.csproj" />
     </ItemGroup>
 
 </Project>

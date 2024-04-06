@@ -1,8 +1,8 @@
 using Tomlyn.Model;
 
-namespace ServerShared;
+namespace MainServer.Utils;
 
-public static class TomlEx
+internal static class TomlEx
 {
     public static T? GetValue<T>(this TomlTable table, params string[] keys)
     {
