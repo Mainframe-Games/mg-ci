@@ -26,7 +26,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XcodeDeployment", "Deployme
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Servers", "Servers", "{4175A38E-1657-4D76-A4E8-D15FEA90A8BE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MainServer", "MainServer\MainServer.csproj", "{A4C7B2BD-D766-4B65-932B-45F7F3096C9F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MainServer", "Servers\MainServer\MainServer.csproj", "{A4C7B2BD-D766-4B65-932B-45F7F3096C9F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GooglePlayDeployment", "Deployments\GooglePlayDeployment\GooglePlayDeployment.csproj", "{15BD2963-DC3A-4890-84E0-F071B2AA3917}"
 EndProject
@@ -38,7 +38,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClanforgeDeployment", "Depl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ItchioDeployment", "Deployments\ItchioDeployment\ItchioDeployment.csproj", "{1FE5E7E7-7270-4470-91B6-1A4EC511F29E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketServer", "SocketServer\SocketServer.csproj", "{73E975D4-B83F-4567-B479-7F95962D359C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketServer", "Servers\SocketServer\SocketServer.csproj", "{73E975D4-B83F-4567-B479-7F95962D359C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

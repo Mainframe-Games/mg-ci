@@ -1,3 +1,4 @@
+using MainServer.Configs;
 using MainServer.Utils;
 using Newtonsoft.Json.Linq;
 using ServerShared;
@@ -5,7 +6,8 @@ using SocketServer;
 
 namespace MainServer.Services.Server;
 
-internal sealed class BuildServerService(SocketServer.Server server) : ServerService(server)
+internal sealed class BuildServerService(SocketServer.Server server, ServerConfig serverConfig)
+    : ServerService(server)
 {
     private async void StartBuild(Guid projectGuid, string[] buildTargetNames, string branch)
     {
@@ -16,7 +18,7 @@ internal sealed class BuildServerService(SocketServer.Server server) : ServerSer
         }
 
         var workspace =
-            WorkspaceUpdater.PrepareWorkspace(projectGuid, branch)
+            WorkspaceUpdater.PrepareWorkspace(projectGuid, branch, serverConfig)
             ?? throw new NullReferenceException();
         var project = workspace.GetProjectToml();
         var pipeline = new ServerPipeline(projectGuid, workspace, buildTargetNames);
@@ -51,7 +53,7 @@ internal sealed class BuildServerService(SocketServer.Server server) : ServerSer
 
     public override void OnJsonMessage(JObject payload)
     {
-        var projectId = payload["Guid"]?.ToString() ?? throw new NullReferenceException();
+        var projectId = payload["ProjectGuid"]?.ToString() ?? throw new NullReferenceException();
         var buildTargetNames =
             payload["BuildTargets"]?.ToObject<string[]>() ?? Array.Empty<string>();
         var branch = payload["Branch"]?.ToString() ?? throw new NullReferenceException();

@@ -255,17 +255,16 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 
     private async void Button_StartBuild_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (_isBuilding)
-        {
-            Console.WriteLine("Build already in progress");
-            return;
-        }
-
-        _isBuilding = true;
         RefreshProcesses();
 
-        // TODO: send project to server with new project structure from MainServer.csproj
-        await App.BuildClient.SendJson(new JObject(_project));
+        var project = new JObject
+        {
+            ["ProjectGuid"] = _project.Guid,
+            // TODO: get these from a form in home screen rather than project settings
+            ["BuildTargets"] = JArray.FromObject(_project.BuildTargets.Select(x => x.Name)),
+            ["Branch"] = _project.Settings.Branch,
+        };
+        await App.BuildClient.SendJson(project);
     }
 
     private void RefreshProcesses()

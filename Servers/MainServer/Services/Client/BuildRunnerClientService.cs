@@ -5,8 +5,6 @@ namespace MainServer.Services.Client;
 
 internal sealed class BuildRunnerClientService(SocketServer.Client client) : ClientService(client)
 {
-    public string OperatingSystem { get; private set; } = string.Empty;
-
     public delegate void BuildCompleteDelegate(string targetName, long buildTime);
     public event BuildCompleteDelegate? OnBuildCompleteMessage;
 

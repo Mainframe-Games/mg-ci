@@ -1,11 +1,15 @@
-﻿using MainServer.Workspaces;
+﻿using MainServer.Configs;
+using MainServer.Workspaces;
 using Newtonsoft.Json.Linq;
 using ServerShared;
 using SocketServer;
 
 namespace MainServer.Services.Server;
 
-internal sealed class VersionBumpServerService(SocketServer.Server server) : ServerService(server)
+internal sealed class VersionBumpServerService(
+    SocketServer.Server server,
+    ServerConfig serverConfig
+) : ServerService(server)
 {
     private static JObject RunUnity(string projectPath, bool standalone, bool android, bool ios)
     {
@@ -50,7 +54,7 @@ internal sealed class VersionBumpServerService(SocketServer.Server server) : Ser
         var projectId = payload["Guid"]?.ToString() ?? throw new NullReferenceException();
         var branch = payload["Branch"]?.ToString() ?? throw new NullReferenceException();
         var projectGuid = new Guid(projectId);
-        var workspace = WorkspaceUpdater.PrepareWorkspace(projectGuid, branch);
+        var workspace = WorkspaceUpdater.PrepareWorkspace(projectGuid, branch, serverConfig);
 
         var response = new JObject();
 
@@ -60,7 +64,7 @@ internal sealed class VersionBumpServerService(SocketServer.Server server) : Ser
                 var standalone = payload.SelectToken("Standalone", true)?.ToObject<bool>() ?? false;
                 var android = payload.SelectToken("Android", true)?.ToObject<bool>() ?? false;
                 var ios = payload.SelectToken("Ios", true)?.ToObject<bool>() ?? false;
-                RunUnity(workspace.ProjectPath, standalone, android, ios);
+                response = RunUnity(workspace.ProjectPath, standalone, android, ios);
                 break;
             case GameEngine.Godot:
                 throw new NotImplementedException();

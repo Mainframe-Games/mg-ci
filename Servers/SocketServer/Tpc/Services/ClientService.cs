@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Newtonsoft.Json.Linq;
+using SocketServer.Messages;
 
 namespace SocketServer;
 
@@ -11,6 +12,7 @@ public abstract class ClientService(Client client) : IService
     public abstract void OnJsonMessage(JObject payload);
 
     public bool IsConnected => client.IsConnected;
+    public OperationSystemType ServerOperationSystem => client.ServerOperationSystem;
 
     public async Task SendString(string message)
     {

@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using MainServer.Configs;
+using MainServer.Utils;
 using MainServer.Workspaces;
 using Newtonsoft.Json.Linq;
 using ServerShared;
@@ -8,7 +10,10 @@ using UnityBuilder;
 
 namespace MainServer.Services.Server;
 
-internal sealed class BuildRunnerServerService(SocketServer.Server server) : ServerService(server)
+internal sealed class BuildRunnerServerService(
+    SocketServer.Server server,
+    ServerConfig serverConfig
+) : ServerService(server)
 {
     public override string Name => "build-runner";
 
@@ -29,7 +34,7 @@ internal sealed class BuildRunnerServerService(SocketServer.Server server) : Ser
             var branch = packet.Branch;
 
             var workspace =
-                WorkspaceUpdater.PrepareWorkspace(projectGuid, branch)
+                WorkspaceUpdater.PrepareWorkspace(projectGuid, branch, serverConfig)
                 ?? throw new NullReferenceException();
 
             Console.WriteLine($"Queuing build: {targetName}");
@@ -67,18 +72,20 @@ internal sealed class BuildRunnerServerService(SocketServer.Server server) : Ser
             ?? throw new NullReferenceException();
 
         // run build
-        var extension = target["extension"]?.ToString() ?? throw new NullReferenceException();
-        var product_name = target["product_name"]?.ToString() ?? throw new NullReferenceException();
+        var extension = target.GetValue<string>("extension") ?? throw new NullReferenceException();
+        var product_name =
+            target.GetValue<string>("product_name") ?? throw new NullReferenceException();
         var buildTargetName =
-            target["build_target"]?.ToString() ?? throw new NullReferenceException();
-        var target_group = target["target_group"]?.ToString() ?? throw new NullReferenceException();
-        var sub_target = target["sub_target"]?.ToString() ?? throw new NullReferenceException();
-        var scenes = (List<string>)(target["scenes"] ?? throw new NullReferenceException());
-        var extraScriptingDefines =
-            (List<string>)(target["extra_scripting_defines"] ?? throw new NullReferenceException());
+            target.GetValue<string>("target") ?? throw new NullReferenceException();
+        var target_group =
+            target.GetValue<string>("target_group") ?? throw new NullReferenceException();
+        var sub_target =
+            target.GetValue<string>("sub_target") ?? throw new NullReferenceException();
+        var scenes = target.GetValue<List<string>>("scenes") ?? [];
+        var extraScriptingDefines = target.GetValue<List<string>>("extra_scripting_defines") ?? [];
         var assetBundleManifestPath =
-            target["asset_bundle_manifest_path"]?.ToString() ?? throw new NullReferenceException();
-        var build_options = (int)(target["build_options"] ?? throw new NullReferenceException());
+            target.GetValue<string>("asset_bundle_manifest_path") ?? string.Empty;
+        var build_options = (int)target.GetValue<long>("build_options");
 
         var unityRunner = new UnityBuild2(
             projectPath,

@@ -2,6 +2,7 @@
 using MainServer.Services.Client;
 using MainServer.Workspaces;
 using Newtonsoft.Json.Linq;
+using SocketServer.Messages;
 
 namespace MainServer;
 
@@ -65,7 +66,7 @@ internal class ServerPipeline(
         // start processes
         foreach (var buildTarget in buildTargets)
         {
-            var runner = GetUnityRunner(buildTarget);
+            var runner = GetUnityRunner(buildTarget, false);
             await runner.SendJson(
                 new JObject
                 {
@@ -90,14 +91,16 @@ internal class ServerPipeline(
         return buildProcesses;
     }
 
-    private static BuildRunnerClientService GetUnityRunner(string targetName)
+    private static BuildRunnerClientService GetUnityRunner(string targetName, bool isIL2CPP)
     {
+        if (!isIL2CPP)
+            return BuildRunnerManager.GetDefaultRunner();
         if (targetName.Contains("Windows"))
-            return BuildRunnerManager.GetOffloadServer("windows");
+            return BuildRunnerManager.GetRunner(OperationSystemType.Windows);
         if (targetName.Contains("OSX"))
-            return BuildRunnerManager.GetOffloadServer("macos");
+            return BuildRunnerManager.GetRunner(OperationSystemType.MacOS);
         if (targetName.Contains("Linux"))
-            return BuildRunnerManager.GetOffloadServer("linux");
+            return BuildRunnerManager.GetRunner(OperationSystemType.Linux);
 
         throw new NotSupportedException($"Target not supported: {targetName}");
     }

@@ -38,6 +38,7 @@ internal class TpcPacket
         var ms = new MemoryStream();
         var writer = new BinaryWriter(ms);
         {
+            writer.Write(ServiceName); // string
             writer.Write((byte)Type); // byte
             writer.Write(Data.Length); // int32
 
@@ -57,6 +58,7 @@ internal class TpcPacket
         var ms = new MemoryStream(bytes);
         var reader = new BinaryReader(ms);
         {
+            ServiceName = reader.ReadString(); // string
             Type = (MessageType)reader.ReadByte(); // byte
             var dataLength = reader.ReadInt32(); // int32
 
@@ -66,5 +68,10 @@ internal class TpcPacket
 
         reader.Dispose();
         ms.Dispose();
+    }
+
+    public override string ToString()
+    {
+        return $"\n- ServiceName: {ServiceName}\n" + $"  Type: {Type}\n" + $"  Data: {Data.Length}";
     }
 }

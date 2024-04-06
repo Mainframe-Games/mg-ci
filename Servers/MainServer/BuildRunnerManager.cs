@@ -1,6 +1,7 @@
 using MainServer.Configs;
 using MainServer.Services.Client;
 using SocketServer;
+using SocketServer.Messages;
 
 namespace MainServer;
 
@@ -21,9 +22,14 @@ internal static class BuildRunnerManager
         }
     }
 
-    public static BuildRunnerClientService GetOffloadServer(string operatingSystem)
+    public static BuildRunnerClientService GetDefaultRunner()
     {
-        return _buildRunners.Values.FirstOrDefault(x => x.OperatingSystem == operatingSystem)
+        return _buildRunners.Values.First();
+    }
+
+    public static BuildRunnerClientService GetRunner(OperationSystemType operatingSystem)
+    {
+        return _buildRunners.Values.FirstOrDefault(x => x.ServerOperationSystem == operatingSystem)
             ?? throw new NullReferenceException(
                 $"Server not found with operating system: {operatingSystem}"
             );

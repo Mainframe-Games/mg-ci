@@ -27,7 +27,6 @@ public class UnityBuild2
     public UnityBuild2(
         string projectPath,
         string name,
-        
         // player build options
         string extension,
         string productName,
@@ -64,7 +63,7 @@ public class UnityBuild2
 
     public void Run()
     {
-        var logPath = Path.Combine(_projectPath, "Builds", "Logs", _productName, $"build_{_name}.log");
+        var logPath = Path.Combine(_projectPath, "Builds", "Logs", $"build_{_name}.log");
 
         var args = new UnityArgs
         {
@@ -113,7 +112,7 @@ public class UnityBuild2
     {
         return 0;
     }
-    
+
     private static int GetTargetGroupEnumValue(string targetGroup)
     {
         return targetGroup switch

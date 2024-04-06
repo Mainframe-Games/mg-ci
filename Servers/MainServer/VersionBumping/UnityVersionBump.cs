@@ -19,10 +19,12 @@ internal class UnityVersionBump(string projectPath, bool standalone, bool androi
         Console.WriteLine($"New BundleVersion: {outBundle}");
         projectSettings.WriteBundleVersion(outBundle);
 
+        int outStandalone = 0;
+
         // standalone
         if (standalone)
         {
-            var outStandalone = projectSettings.GetStandaloneBuildNumber() + 1;
+            outStandalone = projectSettings.GetStandaloneBuildNumber() + 1;
             Console.WriteLine($"New Standalone: {outStandalone}");
             projectSettings.WritePlatformBuildNumber("Standalone", outStandalone);
         }
@@ -44,7 +46,7 @@ internal class UnityVersionBump(string projectPath, bool standalone, bool androi
         }
 
         projectSettings.SaveFile();
-        return $"{outBundle}.{standalone}";
+        return $"{outBundle}.{outStandalone}";
     }
 
     private class UnityProjectSettings
@@ -59,6 +61,16 @@ internal class UnityVersionBump(string projectPath, bool standalone, bool androi
                 throw new FileNotFoundException(path);
 
             _lines = File.ReadAllLines(path);
+        }
+
+        public bool IsIL2CPP_Standalone()
+        {
+            return GetValue("scriptingBackend", "Standalone") == "1";
+        }
+
+        public bool IsIL2CPP_Server()
+        {
+            return GetValue("scriptingBackend", "Server") == "1";
         }
 
         public int GetStandaloneBuildNumber()

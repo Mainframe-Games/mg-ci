@@ -90,6 +90,8 @@ public class Server(int port)
             var packet = new TpcPacket();
             packet.Read(data);
 
+            Console.WriteLine($"[Server] Packet Received: {packet}");
+
             var packetType = packet.Type;
 
             switch (packetType)
@@ -134,38 +136,28 @@ public class Server(int port)
 
     private void ReceiveString(TcpClient client, string serviceName, string str)
     {
-        if (!_services.TryGetValue(serviceName, out var service))
-        {
-            Console.WriteLine($"[Server] Service not found '{serviceName}'");
-            return;
-        }
-
         Console.WriteLine($"[Server/{serviceName}] Received string: {str}");
-        service.OnStringMessage(str);
+        GetService(serviceName).OnStringMessage(str);
     }
 
     private void ReceiveBinary(TcpClient client, string serviceName, byte[] data)
     {
-        if (!_services.TryGetValue(serviceName, out var service))
-        {
-            Console.WriteLine($"[Server] Service not found '{serviceName}'");
-            return;
-        }
-
         Console.WriteLine($"[Server] Received byte[]: {data.Length}");
-        service.OnDataMessage(data);
+        GetService(serviceName).OnDataMessage(data);
     }
 
     private void ReceiveJson(TcpClient client, string serviceName, JObject json)
     {
-        if (!_services.TryGetValue(serviceName, out var service))
-        {
-            Console.WriteLine($"[Server] Service not found '{serviceName}'");
-            return;
-        }
-
         Console.WriteLine($"[Server] Received json: {json}");
-        service.OnJsonMessage(json);
+        GetService(serviceName).OnJsonMessage(json);
+    }
+
+    private IService GetService(string serviceName)
+    {
+        if (!_services.TryGetValue(serviceName, out var service))
+            throw new Exception($"[Server] Service not found '{serviceName}'");
+
+        return service;
     }
 
     #endregion
@@ -206,11 +198,6 @@ public class Server(int port)
     public void RemoveService(string name)
     {
         _services.Remove(name);
-    }
-
-    public IService GetService(string name)
-    {
-        return _services[name];
     }
 
     #endregion

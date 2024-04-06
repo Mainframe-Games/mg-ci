@@ -21,4 +21,11 @@ internal static class TomlEx
 
         return default;
     }
+
+    public static T? GetValue<T>(this TomlTable table, string key)
+    {
+        if (table.TryGetValue(key, out var value))
+            return (T)value;
+        return default;
+    }
 }

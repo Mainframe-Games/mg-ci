@@ -10,7 +10,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Builders\UnityBuilder\UnityBuilder.csproj" />
+      <ProjectReference Include="..\..\Builders\UnityBuilder\UnityBuilder.csproj" />
       <ProjectReference Include="..\SocketServer\SocketServer.csproj" />
     </ItemGroup>
 

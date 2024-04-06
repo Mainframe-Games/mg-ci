@@ -92,10 +92,10 @@ internal class Git(
         return repo.Head.Tip.Sha;
     }
 
-    public void Commit(string commitMessage, string[] filesToCommit)
+    public void Commit(string commitMessage, IEnumerable<string> filesToCommit)
     {
         using var repository = new Repository(projectPath);
-        Commands.Stage(repository, ".");
+        Commands.Stage(repository, filesToCommit);
         repository.Commit(commitMessage, _author, _author);
         repository.Network.Push(
             repository.Head,

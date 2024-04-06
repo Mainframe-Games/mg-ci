@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json.Linq;
-using Tomlyn;
 
 namespace MainServer.Configs;
 
@@ -16,16 +15,6 @@ public class ServerConfig
     public GitConfig? Git { get; set; }
 
     public List<BuildRunnerConfig>? Runners { get; set; }
-
-    public static ServerConfig Load(string path = "config-server.toml")
-    {
-        if (!File.Exists(path))
-            File.WriteAllText(path, Toml.FromModel(new ServerConfig()));
-
-        Console.WriteLine($"Loading Config: {new FileInfo(path).FullName}");
-        var configStr = File.ReadAllText(path);
-        return Toml.ToModel<ServerConfig>(configStr);
-    }
 
     public override string ToString()
     {

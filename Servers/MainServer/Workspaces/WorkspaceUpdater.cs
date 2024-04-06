@@ -1,4 +1,5 @@
-﻿using MainServer.Utils;
+﻿using MainServer.Configs;
+using MainServer.Utils;
 using MainServer.Workspaces;
 using Tomlyn;
 using Tomlyn.Model;
@@ -7,13 +8,21 @@ namespace ServerShared;
 
 internal static class WorkspaceUpdater
 {
-    public static Workspace PrepareWorkspace(Guid projectGuid, string branch)
+    public static Workspace PrepareWorkspace(
+        Guid projectGuid,
+        string branch,
+        ServerConfig serverConfig
+    )
     {
         var (projDir, projToml) = GetProjectDirectory(projectGuid);
 
         var gitUrl = projToml.GetValue<string>("settings", "git_repository_url");
 
-        var workspace = new Workspace(projDir.FullName) { GitUrl = gitUrl, Branch = branch };
+        var workspace = new Workspace(projDir.FullName, serverConfig)
+        {
+            GitUrl = gitUrl,
+            Branch = branch
+        };
         workspace.Update();
         return workspace;
     }

@@ -1,4 +1,5 @@
-﻿using MainServer.VersionBumping;
+﻿using MainServer.Configs;
+using MainServer.VersionBumping;
 using MainServer.VersionControls;
 using Tomlyn;
 using Tomlyn.Model;
@@ -17,7 +18,7 @@ internal enum VersionControlType
     Plastic
 }
 
-internal class Workspace(string projectPath)
+internal class Workspace(string projectPath, ServerConfig serverConfig)
 {
     public string ProjectPath => projectPath;
     public GameEngine Engine { get; } =
@@ -26,6 +27,21 @@ internal class Workspace(string projectPath)
         GetVersionControl(projectPath ?? throw new NullReferenceException());
     public string? Branch { get; init; } = "main";
     public string? GitUrl { get; init; }
+
+    private Git GitProcess
+    {
+        get
+        {
+            var gitConfig = serverConfig.Git ?? throw new NullReferenceException();
+            return new Git(
+                projectPath,
+                GitUrl!,
+                Branch!,
+                gitConfig.Username!,
+                gitConfig.AccessToken!
+            );
+        }
+    }
 
     public TomlTable GetProjectToml()
     {
@@ -116,8 +132,7 @@ internal class Workspace(string projectPath)
 
     private void UpdateGit()
     {
-        var git = new Git(projectPath, GitUrl!, Branch!, "", "");
-        git.Update();
+        GitProcess.Update();
     }
 
     public string[] GetChangeLog()
@@ -125,8 +140,7 @@ internal class Workspace(string projectPath)
         switch (VersionControl)
         {
             case VersionControlType.Git:
-                var git = new Git(projectPath, GitUrl!, Branch!, "", "");
-                return git.GetChangeLog();
+                return GitProcess.GetChangeLog();
 
             case VersionControlType.Plastic:
                 throw new NotImplementedException();
@@ -162,7 +176,7 @@ internal class Workspace(string projectPath)
         // workspace.SaveBuildVersion(fullVersion);
 
         // commit file
-        var git = new Git(projectPath, GitUrl!, Branch!, "", "");
+        var git = GitProcess;
         var sha = git.GetLatestCommitHash();
         git.Commit(
             $"_Build Version: {fullVersion} | sha: {sha}",
