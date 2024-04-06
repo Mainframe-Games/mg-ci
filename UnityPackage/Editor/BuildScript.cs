@@ -1,9 +1,11 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
@@ -15,27 +17,43 @@ namespace BuildSystem
     {
         private static readonly string Eol = Environment.NewLine;
         private static readonly StringBuilder _builder = new();
-        
-        private static readonly JsonSerializerSettings _settings =
-            new()
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                Formatting = Formatting.Indented,
-                NullValueHandling = NullValueHandling.Ignore,
-                Converters = { new StringEnumConverter(), }
-            };
+
+        private static BuildTargetGroup GetActiveBuildTargetGroup()
+        {
+            var prop = typeof(EditorUserBuildSettings)
+                .GetProperty("activeBuildTargetGroup", BindingFlags.Static | BindingFlags.NonPublic)
+                ?.GetValue(null);
+
+            var targetGroup = (BuildTargetGroup)(prop ?? BuildTargetGroup.Standalone);
+            return targetGroup;
+        }
 
         private static BuildPlayerOptions GetBuildOptions()
         {
             var optionsPath = Path.Combine(".ci", "build_options.json");
             var optionsJson = File.ReadAllText(optionsPath);
-            var playerBuildOptions = JsonConvert.DeserializeObject<BuildPlayerOptions>(optionsJson, _settings);
-            Console.WriteLine($"Build options: {playerBuildOptions}");
+            var json = JObject.Parse(optionsJson);
+            Console.WriteLine($"Build options: {json}");
 
-            if (playerBuildOptions.scenes.Length == 0)
-                playerBuildOptions.scenes = BuildSettings.GetEditorSettingsScenes();
-            
-            return playerBuildOptions;
+            var scenes = json["scenes"]?.ToObject<string[]>() ?? BuildSettings.GetEditorSettingsScenes();
+            var locationPathName = json["locationPathName"]?.Value<string>() ?? "Builds/Build";
+            var extraScriptingDefines = json["extraScriptingDefines"]?.ToObject<string[]>() ?? Array.Empty<string>();
+            var assetBundleManifestPath = json["assetBundleManifestPath"]?.Value<string>() ?? string.Empty;
+            var options = json["options"]?.Value<int>() ?? 0;
+
+            var buildOptions = new BuildPlayerOptions
+            {
+                target = EditorUserBuildSettings.activeBuildTarget,
+                subtarget = (int)EditorUserBuildSettings.standaloneBuildSubtarget,
+                options = (BuildOptions)options,
+                targetGroup = GetActiveBuildTargetGroup(),
+                scenes = scenes,
+                locationPathName = locationPathName,
+                extraScriptingDefines = extraScriptingDefines,
+                assetBundleManifestPath = assetBundleManifestPath,
+            };
+
+            return buildOptions;
         }
 
         /// <summary>
@@ -166,7 +184,7 @@ namespace BuildSystem
             PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARMv7 | AndroidArchitecture.ARM64;
             PlayerSettings.Android.useCustomKeystore = true;
-            
+
             PlayerSettings.Android.keystoreName = keyStorePath;
             PlayerSettings.Android.keystorePass = keyStorePassword;
             PlayerSettings.Android.keyaliasName = keyStoreAlias;

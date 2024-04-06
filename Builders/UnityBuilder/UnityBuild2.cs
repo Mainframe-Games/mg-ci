@@ -95,7 +95,7 @@ public class UnityBuild2
         return new JObject
         {
             ["target"] = target._target,
-            ["subtarget"] = target._subTarget,
+            ["subtarget"] = GetSubTargetEnumValue(target._subTarget),
             ["locationPathName"] = Path.Combine(
                 buildPath,
                 $"{target._productName}{target._extension}"
@@ -111,6 +111,32 @@ public class UnityBuild2
     private static int GetTargetEnumValue(string buildTargetName)
     {
         return 0;
+    }
+
+    /// <summary>
+    /// docs: https://docs.unity3d.com/ScriptReference/BuildTarget.html
+    /// </summary>
+    /// <param name="subTarget"></param>
+    /// <returns></returns>
+    /// <exception cref="NotSupportedException"></exception>
+    private static int GetSubTargetEnumValue(string subTarget)
+    {
+        return subTarget switch
+        {
+            "StandaloneWindows" => 5,
+            "StandaloneWindows64" => 14,
+
+            "StandaloneLinux64" => 24,
+
+            "StandaloneOSX" => 2,
+
+            "iOS" => 9,
+            "Android" => 13,
+
+            "WebGL" => 20,
+
+            _ => throw new NotSupportedException($"Target Group not supported: {subTarget}")
+        };
     }
 
     private static int GetTargetGroupEnumValue(string targetGroup)
