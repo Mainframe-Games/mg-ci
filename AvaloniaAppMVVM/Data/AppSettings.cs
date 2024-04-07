@@ -7,7 +7,7 @@ public class AppSettings
 {
     [IgnoreDataMember]
     public static AppSettings Singleton { get; private set; } = new();
-    
+
     /// <summary>
     /// Last project loaded location.
     /// </summary>
@@ -17,11 +17,9 @@ public class AppSettings
     /// All projects loaded.
     /// </summary>
     public List<string?> LoadedProjectPaths { get; set; } = [];
-    
+
     public string? ServerIp { get; set; } = "localhost";
     public ushort ServerPort { get; set; } = 8080;
-    // public string? GitUsername { get; set; }
-    // public string? GitPassword { get; set; }
 
     public void Save()
     {

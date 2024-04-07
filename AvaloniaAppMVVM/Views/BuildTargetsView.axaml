@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:AvaloniaAppMVVM.ViewModels"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AvaloniaAppMVVM.Views.BuildTargetsView"
              x:DataType="vm:BuildTargetsViewModel">
@@ -28,34 +29,42 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                
+
                 <Button Grid.Column="1">
                     New Target
                     <Button.Flyout>
                         <MenuFlyout ItemsSource="{Binding NewTargetTemplates}">
+                            <!-- <MenuFlyout.ItemTemplate> -->
+                            <!--     <DataTemplate DataType="{x:Type vm:NewBuildTargetTemplate}"> -->
+                            <!--         <MenuItem Header="{Binding Name}" -->
+                            <!--                   Click="Button_AddNewTarget_OnClick" /> -->
+                            <!--     </DataTemplate> -->
+                            <!-- </MenuFlyout.ItemTemplate> -->
+
                             <MenuItem Header="Windows"
-                                      Command="{Binding NewTargetCommand}" 
+                                      Command="{Binding NewTargetCommand}"
                                       CommandParameter="Windows" />
                             <MenuItem Header="Mac"
                                       Command="{Binding NewTargetCommand}"
-                                      CommandParameter="Mac"/>
+                                      CommandParameter="Mac" />
                             <MenuItem Header="Linux"
                                       Command="{Binding NewTargetCommand}"
-                                      CommandParameter="Linux"/>
+                                      CommandParameter="Linux" />
                             <MenuItem Header="Android"
                                       Command="{Binding NewTargetCommand}"
-                                      CommandParameter="Android"/>
+                                      CommandParameter="Android" />
                             <MenuItem Header="iOS"
                                       Command="{Binding NewTargetCommand}"
-                                      CommandParameter="iOS"/>
+                                      CommandParameter="iOS" />
+
                         </MenuFlyout>
                     </Button.Flyout>
                 </Button>
-                
+
             </Grid>
-            
+
             <Separator></Separator>
-            
+
             <Label HorizontalAlignment="Center"
                    Foreground="Red"
                    IsVisible="{Binding ShowError}">
@@ -107,17 +116,18 @@
                     <TextBlock FontSize="18" VerticalAlignment="Center">Scenes</TextBlock>
                     <Button Grid.Column="1" Click="Button_AddScene_OnClick">Add</Button>
                 </Grid>
-                <ItemsRepeater ItemsSource="{Binding SelectedBuildTarget.Data.Scenes}">
+                <ItemsRepeater
+                    Margin="10 0 0 0"
+                    ItemsSource="{Binding SelectedBuildTarget.Data.Scenes}">
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate>
                             <Grid ColumnDefinitions="*, Auto">
-                                <TextBox Text="" Margin="2" />
+                                <TextBlock Grid.Column="0" Text="{Binding}"/>
                                 <Button Grid.Column="1"
+                                        Content="Delete"
                                         Background="Firebrick"
-                                        Click="Button_DeleteScene_OnClick">
-                                    Delete
-                                </Button>
-                            </Grid>
+                                        Click="Button_DeleteScene_OnClick"/>
+                                </Grid>
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
                 </ItemsRepeater>
@@ -172,19 +182,19 @@
                           SelectedValue="{Binding SelectedBuildTarget.Data.BuildOptions}"
                           ItemsSource="{Binding BuildOptionOptions}">
                 </ComboBox>
-                
+
                 <Border CornerRadius="10" Background="#333">
                     <StackPanel>
                         <Label HorizontalAlignment="Center" FontSize="25" FontWeight="Heavy">DANGER ZONE</Label>
                         <Label HorizontalAlignment="Right" FontSize="20" FontWeight="Heavy"
                                Margin="0 0 10 0"
-                               Content="{Binding SelectedBuildTarget.Data.Name}"/>
+                               Content="{Binding SelectedBuildTarget.Data.Name}" />
                         <Grid ColumnDefinitions="* Auto">
                             <Button Grid.Column="1"
                                     Background="Firebrick"
                                     Margin="10"
                                     Content="Delete"
-                                    Command="{Binding DeleteTargetCommand}" 
+                                    Command="{Binding DeleteTargetCommand}"
                                     CommandParameter="{Binding SelectedBuildTarget.Data.Name}">
                             </Button>
                         </Grid>
