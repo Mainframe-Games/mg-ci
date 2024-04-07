@@ -33,7 +33,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ServerClientShared\ServerClientShared.csproj" />
       <ProjectReference Include="..\Servers\SocketServer\SocketServer.csproj" />
     </ItemGroup>
 

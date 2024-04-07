@@ -1,5 +1,5 @@
 ﻿using System.Runtime.Serialization;
-using ServerClientShared;
+using AvaloniaAppMVVM.Utils;
 using Tomlyn;
 
 namespace AvaloniaAppMVVM.Data;

@@ -2,9 +2,9 @@
 using System.Runtime.Serialization;
 using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.Data.Shared;
+using AvaloniaAppMVVM.Utils;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ServerClientShared;
 
 namespace AvaloniaAppMVVM.ViewModels;
 

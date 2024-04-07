@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace ServerClientShared;
+namespace AvaloniaAppMVVM.Utils;
 
 public static class Unity
 {
@@ -523,51 +523,5 @@ public static class Unity
         ///   <para>Enable Shader Livelink support.</para>
         /// </summary>
         ShaderLivelinkSupport = 1073741824, // 0x40000000
-    }
-
-    /// <summary>
-    ///   <para>Provide various options to control the behavior of BuildPipeline.BuildPlayer.</para>
-    /// </summary>
-    public struct BuildPlayerOptions
-    {
-        /// <summary>
-        ///   <para>The Scenes to be included in the build.</para>
-        /// </summary>
-        public string[] scenes { get; set; }
-
-        /// <summary>
-        ///   <para>The path where the application will be built.</para>
-        /// </summary>
-        public string locationPathName { get; set; }
-
-        /// <summary>
-        ///   <para>The path to an manifest file describing all of the asset bundles used in the build (optional).</para>
-        /// </summary>
-        public string assetBundleManifestPath { get; set; }
-
-        /// <summary>
-        ///   <para>The BuildTargetGroup to build.</para>
-        /// </summary>
-        public BuildTargetGroup targetGroup { get; set; }
-
-        /// <summary>
-        ///   <para>The BuildTarget to build.</para>
-        /// </summary>
-        public BuildTarget target { get; set; }
-
-        /// <summary>
-        ///   <para>The Subtarget to build.</para>
-        /// </summary>
-        public int subtarget { get; set; }
-
-        /// <summary>
-        ///   <para>Additional BuildOptions, like whether to run the built player.</para>
-        /// </summary>
-        public BuildOptions options { get; set; }
-
-        /// <summary>
-        ///   <para>User-specified preprocessor defines used while compiling assemblies for the player.</para>
-        /// </summary>
-        public string[] extraScriptingDefines { get; set; }
     }
 }

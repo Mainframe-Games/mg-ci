@@ -3,7 +3,7 @@
         xmlns:vm="using:AvaloniaAppMVVM.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:data1="clr-namespace:AvaloniaAppMVVM.Data;assembly=ServerClientShared"
+        xmlns:data="clr-namespace:AvaloniaAppMVVM.Data"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         Width="1000" Height="600"
         x:Class="AvaloniaAppMVVM.Views.MainWindow"
@@ -33,7 +33,7 @@
                       ItemsSource="{Binding ProjectOptions}"
                       SelectedItem="{Binding CurrentProject}">
                 <ComboBox.ItemTemplate>
-                    <DataTemplate DataType="{x:Type data1:Project}">
+                    <DataTemplate DataType="{x:Type data:Project}">
                         <StackPanel Spacing="17" Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Settings.ProjectName}" VerticalAlignment="Center"></TextBlock>
                         </StackPanel>
