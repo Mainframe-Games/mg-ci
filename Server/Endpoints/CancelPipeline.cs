@@ -6,24 +6,27 @@ namespace Server.Endpoints;
 
 public class CancelPipeline : Endpoint<CancelPipeline.Payload>
 {
-	public class Payload
-	{
-		public ulong PipelineId { get; set; }
-	}
-	
-	public override string Path => "/cancel";
+    public class Payload
+    {
+        public string? ProjectId { get; set; }
+    }
 
-	protected override async Task<ServerResponse> DELETE()
-	{
-		await Task.CompletedTask;
+    public override string Path => "/cancel";
 
-		if (!App.Pipelines.TryGetValue(Content.PipelineId, out var pipeline))
-			return new ServerResponse(HttpStatusCode.NotFound, $"Pipeline not found with Id: {Content.PipelineId}");
-	
-		Cmd.KillAll();
-		pipeline.Cancel();
-		App.Pipelines.Remove(Content.PipelineId);
-	
-		return new ServerResponse(HttpStatusCode.OK, "Build cancelled");
-	}
+    protected override async Task<ServerResponse> DELETE()
+    {
+        await Task.CompletedTask;
+
+        if (!App.Pipelines.TryGetValue(Content.ProjectId, out var pipeline))
+            return new ServerResponse(
+                HttpStatusCode.NotFound,
+                $"Pipeline not found with Id: {Content.ProjectId}"
+            );
+
+        Cmd.KillAll();
+        pipeline.Cancel();
+        App.Pipelines.Remove(Content.ProjectId);
+
+        return new ServerResponse(HttpStatusCode.OK, "Build cancelled");
+    }
 }

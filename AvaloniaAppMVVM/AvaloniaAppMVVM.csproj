@@ -24,11 +24,17 @@
         <PackageReference Include="FluentAvaloniaUI" />
         <PackageReference Include="LoadingIndicators.Avalonia" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+        <PackageReference Include="Newtonsoft.Json" />
         <PackageReference Include="Tomlyn" />
     </ItemGroup>
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\github.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\ServerClientShared\ServerClientShared.csproj" />
+      <ProjectReference Include="..\Servers\SocketServer\SocketServer.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "Main": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    },
+    "Runner": {
+      "commandName": "Project",
+      "nativeDebugging": true,
+      "commandLineArgs": "-runner"
+    }
+  }
+}

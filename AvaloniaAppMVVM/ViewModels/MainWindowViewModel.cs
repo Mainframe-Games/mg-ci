@@ -4,9 +4,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using AvaloniaAppMVVM.Data;
+using AvaloniaAppMVVM.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Tomlyn;
 
 namespace AvaloniaAppMVVM.ViewModels;
 
@@ -19,13 +19,14 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _isPaneOpen = true;
 
     [ObservableProperty]
-    private ViewModelBase _currentPage = new HomePageViewModel();
+    private ViewModelBase? _currentPage;
 
     [ObservableProperty]
     private ListItemTemplate? _selectedListItem;
 
     [ObservableProperty]
     private Project? _currentProject = new();
+    public ObservableCollection<Project> ProjectOptions { get; } = [];
 
     /// <summary>
     /// Get icons from: https://avaloniaui.github.io/icons.html
@@ -44,19 +45,18 @@ public partial class MainWindowViewModel : ViewModelBase
             new ListItemTemplate(typeof(HooksViewModel), "Hooks", "share_android_regular"),
         ];
 
-    public ObservableCollection<Project> ProjectOptions { get; } = [];
-
     public MainWindowViewModel()
     {
-        // load settings
-        var file = new FileInfo("settings.toml");
-        _appSettings = file.Exists
-            ? Toml.ToModel<AppSettings>(File.ReadAllText("settings.toml"))
-            : new AppSettings();
+        _appSettings = AppSettings.Singleton;
 
         // load all projects
+        _appSettings.LoadedProjectPaths.RemoveAll(x => !Directory.Exists(x));
         foreach (var path in _appSettings.LoadedProjectPaths)
-            ProjectOptions.Add(Project.Load(path));
+        {
+            var proj = Project.Load(path);
+            if (proj is not null)
+                ProjectOptions.Add(proj);
+        }
 
         // load project
         LoadCurrentProject(_appSettings.LastProjectLocation);
@@ -64,20 +64,18 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public void OnAppClose()
     {
-        _appSettings.LastProjectLocation = CurrentProject?.Location;
+        AppSettings.LastProjectLocation = CurrentProject?.Location;
         SaveAppSettings();
     }
 
     private void SaveAppSettings()
     {
-        var toml = Toml.FromModel(_appSettings);
-        File.WriteAllText("settings.toml", toml);
-        Console.WriteLine("Saved settings");
+        AppSettings.Save();
     }
 
     public void LoadCurrentProject(string? location)
     {
-        if (string.IsNullOrEmpty(location))
+        if (string.IsNullOrEmpty(location) || !Directory.Exists(location))
             return;
 
         // return if already loaded
@@ -105,9 +103,15 @@ public partial class MainWindowViewModel : ViewModelBase
 
     partial void OnSelectedListItemChanged(ListItemTemplate? value)
     {
-        CurrentPage = ViewLocator.GetViewModel(
-            value?.ModelType ?? throw new NullReferenceException()
-        );
+        if (value is null)
+            throw new NullReferenceException();
+
+        CurrentPage = ViewLocator.GetViewModel(value.ModelType);
+    }
+
+    partial void OnCurrentProjectChanged(Project? value)
+    {
+        RefreshPage();
     }
 
     [RelayCommand]
@@ -115,6 +119,19 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         const string url = "https://github.com/Mainframe-Games/mg-ci";
         Process.Start("explorer", url);
+    }
+
+    [RelayCommand]
+    public void Button_Settings_OnClick()
+    {
+        var appSettings = new AppSettingsView();
+        appSettings.Show();
+    }
+
+    private void RefreshPage()
+    {
+        if (CurrentPage is not null)
+            CurrentPage = ViewLocator.GetViewModel(CurrentPage.GetType());
     }
 }
 

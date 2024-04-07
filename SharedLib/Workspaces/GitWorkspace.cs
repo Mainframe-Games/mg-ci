@@ -1,38 +1,48 @@
+using LibGit2Sharp;
+
 namespace SharedLib;
 
-public class GitWorkspace : Workspace
+public class GitWorkspace(Repository repository, string name, string directory, string projectId)
+    : Workspace(name, directory, projectId)
 {
-    public GitWorkspace(string name, string directory) : base(name, directory)
+    private readonly Signature _author = new("build-bot", "email@build.bot", DateTimeOffset.Now);
+    private readonly UsernamePasswordCredentials _userCredentials = new();
+
+    public void SetCredentials(string? username, string? password)
     {
-        
+        _userCredentials.Username = username;
+        _userCredentials.Password = password;
     }
 
     public override void Clear()
     {
-        Cmd.Run("git", "reset --hard");
+        repository.Reset(ResetMode.Hard, repository.Head.Tip);
         RefreshMetaData();
     }
 
     public override void Update(int changeSetId = -1)
     {
-        Cmd.Run("git", "pull");
+        Commands.Pull(
+            repository,
+            _author,
+            new PullOptions
+            {
+                FetchOptions = new FetchOptions { CredentialsProvider = CredentialsHandler }
+            }
+        );
+
+        // lfs
+        Cmd.Run("git", "lfs pull", Directory);
         RefreshMetaData();
     }
 
     public override void GetCurrent(out int changesetId, out string guid)
     {
-        var currentDir = Environment.CurrentDirectory;
-        Environment.CurrentDirectory = Directory;
-		
-        var cmdRes = Cmd.Run(
-            "git", "log --oneline -n 1",
-            logOutput: false);
-		
-        Environment.CurrentDirectory = currentDir;
-
-        var split = cmdRes.output.Split(' ');
         changesetId = 0;
-        guid = split[0];
+
+        // get repo log
+        var commits = repository.Commits.QueryBy(new CommitFilter { FirstParentOnly = true });
+        guid = commits?.First().Sha ?? string.Empty;
     }
 
     public override int GetPreviousChangeSetId(string key)
@@ -40,22 +50,72 @@ public class GitWorkspace : Workspace
         throw new NotImplementedException();
     }
 
-    public string[] GetChangeLog(string? curSha, string? prevSha, bool print = true)
+    public string[] GetChangeLog()
     {
-        // get all commit messages
-        var (exitCode, output) = Cmd.Run("git", $"log --pretty=format:\"%s\" {prevSha}..{curSha}", print);
-        return output.Split('\n');
+        var commits = repository.Commits.QueryBy(new CommitFilter { FirstParentOnly = true });
+        var logs = new List<string>();
+
+        foreach (var commit in commits)
+        {
+            var message = commit.Message;
+
+            if (message.Contains("_Build Successful."))
+                break;
+
+            if (message.StartsWith('_'))
+                continue;
+
+            logs.Add(message);
+        }
+
+        return logs.ToArray();
     }
 
     public override void Commit(string commitMessage)
     {
-        Cmd.Run("git", "add .");
-        Cmd.Run("git", $"commit -m \"{commitMessage}\"");
-        Cmd.Run("git", $"push origin {Branch}");
+        Commands.Stage(repository, ".");
+        repository.Commit(commitMessage, _author, _author);
+        repository.Network.Push(
+            repository.Head,
+            new PushOptions { CredentialsProvider = CredentialsHandler }
+        );
     }
 
-    public override void SwitchBranch(string? branchPath)
+    public void Commit(string commitMessage, IEnumerable<string> files)
     {
-        Cmd.Run("git", $"switch {branchPath}");
+        foreach (var file in files)
+            Commands.Stage(repository, file);
+
+        repository.Commit(commitMessage, _author, _author);
+        repository.Network.Push(
+            repository.Head,
+            new PushOptions { CredentialsProvider = CredentialsHandler }
+        );
+    }
+
+    private Credentials CredentialsHandler(
+        string url,
+        string usernamefromurl,
+        SupportedCredentialTypes types
+    )
+    {
+        return types switch
+        {
+            SupportedCredentialTypes.UsernamePassword => _userCredentials,
+            SupportedCredentialTypes.Default => new DefaultCredentials(),
+            _ => throw new ArgumentOutOfRangeException(nameof(types), types, null)
+        };
+    }
+
+    public override void SwitchBranch(string? inBranchPath)
+    {
+        if (repository.Head.FriendlyName == inBranchPath)
+        {
+            Console.WriteLine($"Already on branch '{inBranchPath}'");
+            return;
+        }
+
+        Cmd.Run("git", $"switch {inBranchPath}", Directory);
+        Console.WriteLine($"Switched to branch '{repository.Head.FriendlyName}'");
     }
 }

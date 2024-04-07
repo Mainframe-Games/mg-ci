@@ -1,29 +1,26 @@
-# Server
+# Info
 
-This is the main entry point for the build pipeline. 
+### Prebuild
 
-# Endpoints 
+Ran on the server before the build starts. This is where the game project version bumping is done and committed back to repo
 
-This list will change often so wont be accurate, however at any time you can use `/info` to see the current list of endpoints.
 
-## /info
+### Build
 
-```json
-{
-    "version": "1.6.0.0",
-    "startTime": "2023-10-04 12:08:17Z",
-    "runTime": "0d 0h 0m 3s",
-    "endPoints": [
-        "UploadBuild: PUT /upload",
-        "BuildWorkspace: POST /build",
-        "GameServerUpdate: POST /game-server-update",
-        "OffloadBuild: POST /offload-build",
-        "OffloadBuildResponse: POST /offload-response",
-        "ProductionRequest: POST /production",
-        "Commits: GET /commits",
-        "ServerInfo: GET /info",
-        "Workspaces: GET /workspaces",
-        "CancelPipeline: DELETE /cancel"
-    ]
-}
-```
+Ran on the build runners. This can be on the same machine as the main server but can also be offloaded to other machines. 
+
+Uses port `8081`
+
+This is where the game is built, the build is then uploaded to the main server.
+
+
+### Deploy
+
+Ran on the main server after all the builds are completed. 
+
+This is where the build is deployed to the game servers.
+
+
+### Hooks
+
+There are hooks for each of the stages. These are ran before and after each stage.

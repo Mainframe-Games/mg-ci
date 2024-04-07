@@ -1,5 +1,7 @@
-﻿using AvaloniaAppMVVM.Data;
+﻿using Avalonia.Controls;
+using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.ViewModels;
+using LibGit2Sharp;
 
 namespace AvaloniaAppMVVM.Views;
 
@@ -12,24 +14,44 @@ public partial class ProjectSettingsView : MyUserControl<ProjectSettingsViewMode
 
     protected override void OnInit()
     {
-        _viewModel.ProjectName = _project.Settings.ProjectName;
-        _viewModel.Location = _project.Location;
-        _viewModel.VersionControl = _project.Settings.VersionControl.ToString();
-        _viewModel.GameEngine = _project.Settings.GameEngine.ToString();
-        _viewModel.StoreUrl = _project.Settings.StoreUrl;
-        _viewModel.StoreThumbnailUrl = _project.Settings.StoreThumbnailUrl;
-        _viewModel.LastSuccessfulBuild = _project.Settings.LastSuccessfulBuild;
+        _viewModel.Project = _project;
+
+        RefreshVersionControlSettings();
     }
 
     protected override void OnPreSave()
     {
-        _project.Settings.ProjectName = _viewModel.ProjectName;
-        _project.Settings.StoreUrl = _viewModel.StoreUrl;
-        _project.Settings.VersionControl = Enum.Parse<VersionControlType>(
-            _viewModel.VersionControl
-        );
-        _project.Settings.GameEngine = Enum.Parse<GameEngineType>(_viewModel.GameEngine);
-        _project.Settings.StoreThumbnailUrl = _viewModel.StoreThumbnailUrl;
-        _project.Settings.LastSuccessfulBuild = _viewModel.LastSuccessfulBuild;
+    }
+
+    private void RefreshVersionControlSettings()
+    {
+        var isGit = _viewModel.Project?.Settings.VersionControl == VersionControlType.Git;
+        
+        GitSettingsStackPanel.IsVisible = isGit;
+        PlasticSettingsStackPanel.IsVisible = _viewModel.Project?.Settings.VersionControl == VersionControlType.Plastic;  
+        
+        if (isGit && !string.IsNullOrEmpty(_project.Settings.GitRepositoryUrl))
+        {
+            SetGitBranchComboBoxItems();
+        }
+        
+        BranchComboBox.SelectedItem = _viewModel.Project?.Settings.Branch;
+    }
+
+    private void SelectingItemsControl_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        RefreshVersionControlSettings();
+    }
+
+    private void SetGitBranchComboBoxItems()
+    {
+        using var repo = new Repository(_project.Location);
+        var branches = repo.Branches
+            .Where(x => x.IsRemote && !x.FriendlyName.Contains("HEAD"))
+            .Select(x => x.FriendlyName.Replace(x.RemoteName, string.Empty).Trim('/'))
+            .ToList();
+        
+        // var branches = Git.GetBranchesFromRemote(_project.Settings.GitRepositoryUrl);
+        BranchComboBox.ItemsSource = branches;
     }
 }

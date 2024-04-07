@@ -4,6 +4,7 @@ using AvaloniaAppMVVM.ViewModels;
 using AvaloniaAppMVVM.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using FluentAvalonia.UI.Windowing;
 
 namespace AvaloniaAppMVVM;
 

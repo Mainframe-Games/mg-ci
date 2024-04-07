@@ -20,34 +20,13 @@ public partial class HooksView : MyUserControl<HooksViewModel>
 
     protected override void OnInit()
     {
-        var hooks = _project.Hooks;
-
-        foreach (var hook in hooks)
-        {
-            _viewModel.Items.Add(
-                new HookItemTemplate
-                {
-                    Title = hook.Title,
-                    Url = hook.Url,
-                    IsErrorChannel = hook.IsErrorChannel
-                }
-            );
-        }
+        _viewModel.Project = _project;
+        foreach (var hook in _project.Hooks)
+            _viewModel.Hooks.Add(hook);
     }
 
     protected override void OnPreSave()
     {
-        _project.Hooks.Clear();
-        foreach (var item in _viewModel.Items)
-        {
-            _project.Hooks.Add(
-                new HookItemTemplate
-                {
-                    Title = item.Title,
-                    Url = item.Url,
-                    IsErrorChannel = item.IsErrorChannel
-                }
-            );
-        }
+        _project.Hooks = new List<HookItemTemplate>(_viewModel.Hooks);
     }
 }

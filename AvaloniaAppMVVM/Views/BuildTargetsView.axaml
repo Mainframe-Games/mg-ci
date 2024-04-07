@@ -3,161 +3,194 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:AvaloniaAppMVVM.ViewModels"
-             xmlns:data="clr-namespace:AvaloniaAppMVVM.Data"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AvaloniaAppMVVM.Views.BuildTargetsView"
              x:DataType="vm:BuildTargetsViewModel">
-    
+
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:BuildTargetsViewModel />
     </Design.DataContext>
-    
+
     <ScrollViewer>
         <StackPanel Margin="20 20" Spacing="10">
             <TextBlock FontSize="25" FontWeight="Black">Build Targets</TextBlock>
-            
-            <Grid ColumnDefinitions="*, Auto">
-                <Button Grid.Column="1"
-                        Click="Button_NewTarget_OnClick">
+
+            <Grid ColumnDefinitions="* Auto">
+                <ComboBox Grid.Column="0"
+                          SelectedIndex="0"
+                          ItemsSource="{Binding BuildTargets}"
+                          SelectedItem="{Binding SelectedBuildTarget}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Data.Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                
+                <Button Grid.Column="1">
                     New Target
+                    <Button.Flyout>
+                        <MenuFlyout ItemsSource="{Binding NewTargetTemplates}">
+                            <MenuItem Header="Windows"
+                                      Command="{Binding NewTargetCommand}" 
+                                      CommandParameter="Windows" />
+                            <MenuItem Header="Mac"
+                                      Command="{Binding NewTargetCommand}"
+                                      CommandParameter="Mac"/>
+                            <MenuItem Header="Linux"
+                                      Command="{Binding NewTargetCommand}"
+                                      CommandParameter="Linux"/>
+                            <MenuItem Header="Android"
+                                      Command="{Binding NewTargetCommand}"
+                                      CommandParameter="Android"/>
+                            <MenuItem Header="iOS"
+                                      Command="{Binding NewTargetCommand}"
+                                      CommandParameter="iOS"/>
+                        </MenuFlyout>
+                    </Button.Flyout>
                 </Button>
+                
             </Grid>
             
-            <TabControl 
-                ItemsSource="{Binding BuildTargets}"
-                SelectedItem="{Binding SelectedBuildTarget}">
-                <TabControl.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Name}" />
-                    </DataTemplate>
-                </TabControl.ItemTemplate>
+            <Separator></Separator>
+            
+            <Label HorizontalAlignment="Center"
+                   Foreground="Red"
+                   IsVisible="{Binding ShowError}">
+                No Build Targets
+            </Label>
+
+            <!-- Form -->
+            <StackPanel
+                Margin="0 0 0 0"
+                Spacing="5"
+                IsVisible="{Binding ShowContent}">
+
+                <TextBlock Text="Name" />
+                <TextBox Text="{Binding SelectedBuildTarget.Data.Name}" />
+
+                <Line Height="30"></Line>
+
+                <TextBlock Text="Build Config" FontSize="25" />
+
+                <TextBlock Text="Product Name" />
+                <TextBox Text="{Binding SelectedBuildTarget.Data.ProductName}" />
+
+                <TextBlock Text="Extension" />
+                <ComboBox SelectedIndex="0"
+                          SelectedValue="{Binding SelectedBuildTarget.Data.Extension}"
+                          ItemsSource="{Binding ExtensionOptions}">
+                </ComboBox>
+
+                <TextBlock Text="Target" />
+                <ComboBox SelectedIndex="0"
+                          SelectedValue="{Binding SelectedBuildTarget.Data.Target}"
+                          ItemsSource="{Binding BuildTargetOptions}">
+                </ComboBox>
+
+                <TextBlock Text="Target Group" />
+                <ComboBox SelectedIndex="0"
+                          SelectedValue="{Binding SelectedBuildTarget.Data.TargetGroup}"
+                          ItemsSource="{Binding BuildTargetGroupOptions}">
+                </ComboBox>
+
+                <TextBlock Text="Sub Target" />
+                <ComboBox SelectedIndex="0"
+                          SelectedValue="{Binding SelectedBuildTarget.Data.SubTarget}"
+                          ItemsSource="{Binding SubTargetOptions}">
+                </ComboBox>
+
+                <!-- Scenes -->
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBlock FontSize="18" VerticalAlignment="Center">Scenes</TextBlock>
+                    <Button Grid.Column="1" Click="Button_AddScene_OnClick">Add</Button>
+                </Grid>
+                <ItemsRepeater ItemsSource="{Binding SelectedBuildTarget.Data.Scenes}">
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBox Text="" Margin="2" />
+                                <Button Grid.Column="1"
+                                        Background="Firebrick"
+                                        Click="Button_DeleteScene_OnClick">
+                                    Delete
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+
+                <!-- Extra Scripting Defines -->
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBlock FontSize="18" VerticalAlignment="Center">
+                        Extra Scripting Defines
+                    </TextBlock>
+                    <Button Grid.Column="1" Click="Button_AddExtraScriptingDefine_OnClick">Add</Button>
+                </Grid>
+                <ItemsRepeater ItemsSource="{Binding SelectedBuildTarget.Data.ExtraScriptingDefines}">
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBox Text="" Margin="2" />
+                                <Button Grid.Column="1"
+                                        Background="Firebrick"
+                                        Click="Button_DeleteExtraScriptingDefine_OnClick">
+                                    Delete
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+
+                <!-- AssetBundle Manifest Path -->
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBlock FontSize="18" VerticalAlignment="Center">
+                        AssetBundle Manifest Path
+                    </TextBlock>
+                    <Button Grid.Column="1" Click="Button_AddExtraScriptingDefine_OnClick">Add</Button>
+                </Grid>
+                <ItemsRepeater ItemsSource="{Binding SelectedBuildTarget.Data.AssetBundleManifestPath}">
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBox Text="" Margin="2" />
+                                <Button Grid.Column="1"
+                                        Background="Firebrick"
+                                        Click="Button_DeleteExtraScriptingDefine_OnClick">
+                                    Delete
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+
+                <!-- Build Options -->
+                <TextBlock Text="Build Options" />
+                <ComboBox SelectedIndex="0"
+                          SelectedValue="{Binding SelectedBuildTarget.Data.BuildOptions}"
+                          ItemsSource="{Binding BuildOptionOptions}">
+                </ComboBox>
                 
-                <TabControl.ContentTemplate>
-                    <DataTemplate DataType="{x:Type data:UnityBuildTarget}">
-                    <!-- <DataTemplate> -->
-                        <ScrollViewer>
-                            <StackPanel 
-                                Margin="10"
-                                Spacing="5">
-                            
-                                <TextBlock Text="File" FontSize="25" />
-                            
-                                <TextBlock Text="Name" />
-                                <TextBox Text="{Binding Name}" />
-                            
-                                <Line Height="30"></Line>
-                            
-                                <TextBlock Text="Build Config" FontSize="25" />
-                            
-                                <TextBlock Text="Product Name" />
-                                <TextBox Text="{Binding ProductName}" />
-                                
-                                <TextBlock Text="Extension" />
-                                <ComboBox SelectedIndex="0"
-                                          SelectedValue="{Binding Extension}"
-                                          ItemsSource="{Binding ExtensionOptions}">
-                                </ComboBox>
-
-                                <TextBlock Text="Target" />
-                                <ComboBox SelectedIndex="0"
-                                          SelectedValue="{Binding Target}"
-                                          ItemsSource="{Binding BuildTargetOptions}">
-                                </ComboBox>
-                                
-                                <TextBlock Text="Target Group" />
-                                <ComboBox SelectedIndex="0"
-                                          SelectedValue="{Binding TargetGroup}"
-                                          ItemsSource="{Binding BuildTargetGroupOptions}">
-                                </ComboBox>
-                                
-                                <TextBlock Text="Sub Target" />
-                                <ComboBox SelectedIndex="0"
-                                          SelectedValue="{Binding SubTarget}"
-                                          ItemsSource="{Binding SubTargetOptions}">
-                                </ComboBox>
-                                
-                                <TextBlock Text="Build Path" />
-                                <TextBox Text="{Binding BuildPath}" />
-                                
-                                <!-- Scenes -->
-                                <Grid ColumnDefinitions="*, Auto">
-                                    <TextBlock FontSize="18" VerticalAlignment="Center">Scenes</TextBlock>
-                                    <Button Grid.Column="1" Click="Button_AddScene_OnClick">Add</Button>
-                                </Grid>
-                                <ItemsRepeater ItemsSource="{Binding Scenes}">
-                                    <ItemsRepeater.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid ColumnDefinitions="*, Auto">
-                                                <TextBox Text="" Margin="2"/>
-                                                <Button Grid.Column="1"
-                                                        Background="Firebrick"
-                                                        Click="Button_DeleteScene_OnClick">
-                                                    Delete
-                                                </Button>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsRepeater.ItemTemplate>
-                                </ItemsRepeater>
-                            
-                                <!-- Extra Scripting Defines -->
-                                <Grid ColumnDefinitions="*, Auto">
-                                    <TextBlock FontSize="18" VerticalAlignment="Center">
-                                        Extra Scripting Defines
-                                    </TextBlock>
-                                    <Button Grid.Column="1" Click="Button_AddExtraScriptingDefine_OnClick">Add</Button>
-                                </Grid>
-                                <ItemsRepeater ItemsSource="{Binding ExtraScriptingDefines}">
-                                    <ItemsRepeater.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid ColumnDefinitions="*, Auto">
-                                                <TextBox Text="" Margin="2"/>
-                                                <Button Grid.Column="1"
-                                                        Background="Firebrick"
-                                                        Click="Button_DeleteExtraScriptingDefine_OnClick">
-                                                    Delete
-                                                </Button>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsRepeater.ItemTemplate>
-                                </ItemsRepeater>
-                                
-                                <!-- AssetBundle Manifest Path -->
-                                <Grid ColumnDefinitions="*, Auto">
-                                    <TextBlock FontSize="18" VerticalAlignment="Center">
-                                        AssetBundle Manifest Path
-                                    </TextBlock>
-                                    <Button Grid.Column="1" Click="Button_AddExtraScriptingDefine_OnClick">Add</Button>
-                                </Grid>
-                                <ItemsRepeater ItemsSource="{Binding AssetBundleManifestPath}">
-                                    <ItemsRepeater.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid ColumnDefinitions="*, Auto">
-                                                <TextBox Text="" Margin="2"/>
-                                                <Button Grid.Column="1"
-                                                        Background="Firebrick"
-                                                        Click="Button_DeleteExtraScriptingDefine_OnClick">
-                                                    Delete
-                                                </Button>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsRepeater.ItemTemplate>
-                                </ItemsRepeater>
-                                
-                                <!-- Build Options -->
-                                <TextBlock Text="Build Options" />
-                                <ComboBox SelectedIndex="0"
-                                          SelectedValue="{Binding BuildOptions}"
-                                          ItemsSource="{Binding BuildOptionOptions}">
-                                </ComboBox>
-                                
-                            </StackPanel>
-                        </ScrollViewer>
-
-                    </DataTemplate>
-                </TabControl.ContentTemplate>
-            </TabControl>
+                <Border CornerRadius="10" Background="#333">
+                    <StackPanel>
+                        <Label HorizontalAlignment="Center" FontSize="25" FontWeight="Heavy">DANGER ZONE</Label>
+                        <Label HorizontalAlignment="Right" FontSize="20" FontWeight="Heavy"
+                               Margin="0 0 10 0"
+                               Content="{Binding SelectedBuildTarget.Data.Name}"/>
+                        <Grid ColumnDefinitions="* Auto">
+                            <Button Grid.Column="1"
+                                    Background="Firebrick"
+                                    Margin="10"
+                                    Content="Delete"
+                                    Command="{Binding DeleteTargetCommand}" 
+                                    CommandParameter="{Binding SelectedBuildTarget.Data.Name}">
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
         </StackPanel>
     </ScrollViewer>
 </UserControl>
