@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using MainServer.Configs;
 using MainServer.Services.Client;
 using MainServer.Services.Packets;
 using MainServer.Workspaces;
@@ -9,7 +10,8 @@ namespace MainServer;
 internal class ServerPipeline(
     Guid projectGuid,
     Workspace workspace,
-    IEnumerable<string> buildTargets
+    IEnumerable<string> buildTargets,
+    ServerConfig serverConfig
 )
 {
     public static List<Guid> ActiveProjects { get; } = [];
@@ -103,8 +105,8 @@ internal class ServerPipeline(
         string[] changeLog
     )
     {
-        // var deployRunner = new DeploymentRunner(project, workspace, fullVersion, changeLog);
-        // deployRunner.Deploy();
+        var deployRunner = new DeploymentRunner(workspace, fullVersion, changeLog, serverConfig);
+        deployRunner.Deploy();
     }
 
     #endregion

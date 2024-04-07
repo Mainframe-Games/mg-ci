@@ -43,7 +43,7 @@ internal sealed class BuildServerService(SocketServer.Server server, ServerConfi
             WorkspaceUpdater.PrepareWorkspace(projectGuid, branch, serverConfig)
             ?? throw new NullReferenceException();
         var project = workspace.GetProjectToml();
-        var pipeline = new ServerPipeline(projectGuid, workspace, buildTargetNames);
+        var pipeline = new ServerPipeline(projectGuid, workspace, buildTargetNames, serverConfig);
         pipeline.Run();
 
         SendJson(

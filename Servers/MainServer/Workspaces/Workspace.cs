@@ -27,6 +27,7 @@ internal class Workspace(string projectPath, ServerConfig serverConfig)
         GetVersionControl(projectPath ?? throw new NullReferenceException());
     public string? Branch { get; init; } = "main";
     public string? GitUrl { get; init; }
+    public string? SetLive { get; set; } = "beta";
 
     private Git GitProcess
     {
