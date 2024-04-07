@@ -8,10 +8,7 @@ public partial class ProjectSettingsViewModel : ViewModelBase
 {
     [ObservableProperty]
     private Project? _project;
-    
+
     public ObservableCollection<VersionControlType> VersionControlOptions { get; } =
         new(Enum.GetValues<VersionControlType>());
-
-    public ObservableCollection<GameEngineType> GameEngineOptions { get; } =
-        new(Enum.GetValues<GameEngineType>());
 }

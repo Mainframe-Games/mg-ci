@@ -39,7 +39,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 "Project Settings",
                 "edit_settings_regular"
             ),
-            new ListItemTemplate(typeof(PrebuildViewModel), "Pre Build", "app_generic_regular"),
+            new ListItemTemplate(typeof(PrebuildViewModel), "Versioning", "tag_regular"),
             new ListItemTemplate(typeof(BuildTargetsViewModel), "Build Targets", "target_regular"),
             new ListItemTemplate(typeof(DeployViewModel), "Deploy", "rocket_regular"),
             new ListItemTemplate(typeof(HooksViewModel), "Hooks", "share_android_regular"),

@@ -56,13 +56,6 @@
                 <TextBox Text="{Binding Project.Settings.PlasticWorkspaceName}"/>
             </StackPanel>
             
-            <!-- Game engine -->
-            <TextBlock FontWeight="Bold">Game Engine</TextBlock>
-            <ComboBox SelectedIndex="0"
-                      ItemsSource="{Binding GameEngineOptions}"
-                      SelectedItem="{Binding Project.Settings.GameEngine}">
-            </ComboBox>
-            
             <Line Height="10"></Line>
             <Separator></Separator>
             <Line Height="10"></Line>
@@ -74,9 +67,6 @@
             
             <TextBlock FontWeight="Bold">Thumbnail Url</TextBlock>
             <TextBox Text="{Binding Project.Settings.StoreThumbnailUrl}"/>
-            
-            <TextBlock FontWeight="Bold">Last Successful Build</TextBlock>
-            <TextBlock Text="{Binding Project.Settings.LastSuccessfulBuild}"/>
             
         </StackPanel>
     </ScrollViewer>

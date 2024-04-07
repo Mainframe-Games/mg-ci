@@ -10,12 +10,6 @@ public enum VersionControlType
     Plastic,
 }
 
-public enum GameEngineType
-{
-    Unity,
-    Godot,
-}
-
 /// <summary>
 /// A container for each workspace
 /// </summary>
@@ -92,11 +86,6 @@ public class ProjectSettings
     public string? PlasticWorkspaceName { get; set; }
 
     /// <summary>
-    /// The game engine used for the project
-    /// </summary>
-    public GameEngineType GameEngine { get; set; }
-
-    /// <summary>
     /// URL to game page
     /// </summary>
     public string? StoreUrl { get; set; } = "https://";
@@ -105,13 +94,6 @@ public class ProjectSettings
     /// Thumbnail image for page
     /// </summary>
     public string? StoreThumbnailUrl { get; set; } = "https://";
-
-    /// <summary>
-    /// Plastic: Changeset ID of last successful build
-    /// <para></para>
-    /// Git: Sha of last successful build
-    /// </summary>
-    public string? LastSuccessfulBuild { get; set; } = "0";
 }
 
 public class Prebuild
