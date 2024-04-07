@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using MainServer.Configs;
 using MainServer.Deployment;
+using MainServer.Hooks;
 using MainServer.Services.Client;
 using MainServer.Services.Packets;
 using MainServer.Workspaces;
@@ -42,6 +43,22 @@ internal class ServerPipeline(
             await RunDeploy(fullVersion, changeLog);
             Console.WriteLine($"Deploy Complete\n  time: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
+
+            // hooks
+            var buildResults = buildProcesses
+                .Select(p => (p.BuildName, TimeSpan.FromMilliseconds(p.TotalBuildTime)))
+                .ToList();
+            var hookRunner = new HooksRunner(
+                workspace,
+                TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds),
+                buildResults,
+                changeLog,
+                fullVersion
+            );
+            hookRunner.Run();
+
+            // apply tag
+            workspace.Tag(fullVersion);
         }
         ActiveProjects.Remove(projectGuid);
         BuildRunnerClientService.OnBuildCompleteMessage -= OnBuildCompleted;
@@ -106,30 +123,18 @@ internal class ServerPipeline(
 
     #endregion
 
-    private class BuildRunnerProcess
+    private class BuildRunnerProcess(string buildName)
     {
         private readonly TaskCompletionSource _completionSource = new();
-        private readonly string _buildName;
+        public readonly string BuildName = buildName;
 
         public Task Task => _completionSource.Task;
 
         public long TotalBuildTime { get; private set; }
 
-        public BuildRunnerProcess(string buildName)
-        {
-            _buildName = buildName;
-
-            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            var cacheRoot = new DirectoryInfo(Path.Combine(home, "ci-cache"));
-            var rootPath = Path.Combine(cacheRoot.FullName, "Deploy", _buildName);
-            var rootDir = new DirectoryInfo(rootPath);
-            if (rootDir.Exists)
-                rootDir.Delete(true);
-        }
-
         public void OnStringMessage(string targetName, long buildTime)
         {
-            if (targetName != _buildName)
+            if (targetName != BuildName)
                 return;
 
             TotalBuildTime = buildTime;

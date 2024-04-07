@@ -186,4 +186,18 @@ internal class Workspace(string projectPath, ServerConfig serverConfig)
 
         return fullVersion;
     }
+
+    public void Tag(string tag)
+    {
+        switch (VersionControl)
+        {
+            case VersionControlType.Git:
+                GitProcess.Tag(tag);
+                break;
+            case VersionControlType.Plastic:
+                throw new NotImplementedException();
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
 }
