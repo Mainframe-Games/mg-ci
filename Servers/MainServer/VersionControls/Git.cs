@@ -103,6 +103,16 @@ internal class Git(
         );
     }
 
+    public void Tag(string tag)
+    {
+        using var repository = new Repository(projectPath);
+        repository.ApplyTag(tag, _author, tag);
+        repository.Network.Push(
+            repository.Head,
+            new PushOptions { CredentialsProvider = CredentialsHandler }
+        );
+    }
+
     private Credentials CredentialsHandler(
         string url,
         string usernamefromurl,
