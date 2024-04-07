@@ -44,11 +44,6 @@
                 
                 <TextBlock FontWeight="Bold">Sub Path</TextBlock>
                 <TextBox Text="{Binding Project.Settings.GitRepositorySubPath}"/>
-                
-                <TextBlock FontWeight="Bold">Branch</TextBlock>
-                <ComboBox Name="BranchComboBox"
-                    SelectedItem="{Binding Project.Settings.Branch}"/>
-                
             </StackPanel>
             
             <!-- Plastic settings -->
@@ -59,9 +54,6 @@
                 
                 <TextBlock FontWeight="Bold">Workspace Name</TextBlock>
                 <TextBox Text="{Binding Project.Settings.PlasticWorkspaceName}"/>
-                
-                <TextBlock FontWeight="Bold">Branch</TextBlock>
-                <TextBox Text="{Binding Project.Settings.Branch}"/>
             </StackPanel>
             
             <!-- Game engine -->

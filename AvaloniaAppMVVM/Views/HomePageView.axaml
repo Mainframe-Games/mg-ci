@@ -41,6 +41,10 @@
                     FontStretch="ExtraCondensed"
                     VerticalAlignment="Center"/>
                 
+                <TextBlock FontWeight="Bold">Branch</TextBlock>
+                <ComboBox Name="BranchComboBox"/>
+                          <!-- SelectedItem="{Binding Project.Settings.Branch}"/> -->
+                
             </StackPanel>
             
             <ItemsRepeater>

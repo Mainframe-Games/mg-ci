@@ -5,6 +5,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.ViewModels;
+using LibGit2Sharp;
 using LoadingIndicators.Avalonia;
 using Newtonsoft.Json.Linq;
 using SocketServer;
@@ -106,8 +107,6 @@ public class Icons
 
 public partial class HomePageView : MyUserControl<HomePageViewModel>
 {
-    private bool _isBuilding;
-
     private readonly List<ProcessesTemplate> _processes =
     [
         new ProcessesTemplate(new CiProcess { Id = "PreBuild" }),
@@ -127,15 +126,10 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
         _viewModel.Project = _project;
 
         ConnectAsync();
+        SetGitBranchComboBoxItems();
     }
 
     protected override void OnPreSave() { }
-
-    protected override void OnUnloaded(RoutedEventArgs e)
-    {
-        base.OnUnloaded(e);
-        // _clientBuild.Close();
-    }
 
     private async void ConnectAsync()
     {
@@ -262,7 +256,7 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
             ["ProjectGuid"] = _project.Guid,
             // TODO: get these from a form in home screen rather than project settings
             ["BuildTargets"] = JArray.FromObject(_project.BuildTargets.Select(x => x.Name)),
-            ["Branch"] = _project.Settings.Branch,
+            ["Branch"] = BranchComboBox.SelectedItem?.ToString(),
         };
         App.BuildClient.SendJson(project);
     }
@@ -278,6 +272,17 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
             process.IsBusy = false;
             process.Logs = string.Empty;
         }
+    }
+
+    private void SetGitBranchComboBoxItems()
+    {
+        using var repo = new Repository(_project.Location);
+        var branches = repo.Branches.Where(x => x.IsRemote && !x.FriendlyName.Contains("HEAD"))
+            .Select(x => x.FriendlyName.Replace(x.RemoteName, string.Empty).Trim('/'))
+            .ToList();
+
+        BranchComboBox.ItemsSource = branches;
+        BranchComboBox.SelectedIndex = 0;
     }
 
     #endregion

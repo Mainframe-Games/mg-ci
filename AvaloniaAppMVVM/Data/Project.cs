@@ -86,8 +86,6 @@ public class ProjectSettings
     /// </summary>
     public VersionControlType VersionControl { get; set; }
 
-    public string? Branch { get; set; }
-
     public string? GitRepositoryUrl { get; set; }
     public string? GitRepositorySubPath { get; set; }
 
