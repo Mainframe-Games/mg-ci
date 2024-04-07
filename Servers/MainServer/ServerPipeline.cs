@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using MainServer.Configs;
+using MainServer.Deployment;
 using MainServer.Services.Client;
 using MainServer.Services.Packets;
 using MainServer.Workspaces;
@@ -33,12 +34,12 @@ internal class ServerPipeline(
             var changeLog = workspace.GetChangeLog();
 
             // builds
-            var processes = await RunBuildAsync();
+            await RunBuildAsync();
             Console.WriteLine($"Build Complete\n  time: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
 
             // deploys
-            RunDeploy(processes, fullVersion, changeLog);
+            await RunDeploy(fullVersion, changeLog);
             Console.WriteLine($"Deploy Complete\n  time: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
         }
@@ -48,7 +49,7 @@ internal class ServerPipeline(
 
     #region Build
 
-    private async Task<List<BuildRunnerProcess>> RunBuildAsync()
+    private async Task RunBuildAsync()
     {
         var tasks = new List<Task>();
 
@@ -71,8 +72,6 @@ internal class ServerPipeline(
 
         // wait for them all to finish
         await Task.WhenAll(tasks);
-
-        return buildProcesses;
     }
 
     private void OnBuildCompleted(string targetName, long buildTime)
@@ -84,13 +83,13 @@ internal class ServerPipeline(
     private static BuildRunnerClientService GetUnityRunner(string targetName, bool isIL2CPP)
     {
         if (!isIL2CPP)
-            return BuildRunnerManager.GetDefaultRunner();
+            return ClientServicesManager.GetDefaultRunner();
         if (targetName.Contains("Windows"))
-            return BuildRunnerManager.GetRunner(OperationSystemType.Windows);
+            return ClientServicesManager.GetRunner(OperationSystemType.Windows);
         if (targetName.Contains("OSX"))
-            return BuildRunnerManager.GetRunner(OperationSystemType.MacOS);
+            return ClientServicesManager.GetRunner(OperationSystemType.MacOS);
         if (targetName.Contains("Linux"))
-            return BuildRunnerManager.GetRunner(OperationSystemType.Linux);
+            return ClientServicesManager.GetRunner(OperationSystemType.Linux);
 
         throw new NotSupportedException($"Target not supported: {targetName}");
     }
@@ -99,14 +98,10 @@ internal class ServerPipeline(
 
     #region Deploy
 
-    private void RunDeploy(
-        List<BuildRunnerProcess> buildProcesses,
-        string fullVersion,
-        string[] changeLog
-    )
+    private async Task RunDeploy(string fullVersion, string[] changeLog)
     {
         var deployRunner = new DeploymentRunner(workspace, fullVersion, changeLog, serverConfig);
-        deployRunner.Deploy();
+        await deployRunner.Deploy();
     }
 
     #endregion

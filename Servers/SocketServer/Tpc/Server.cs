@@ -217,6 +217,15 @@ public class Server(int port)
         return service;
     }
 
+    public T GetService<T>(string serviceName)
+        where T : IService
+    {
+        if (!_services.TryGetValue(serviceName, out var service))
+            throw new Exception($"[Server] Service not found '{serviceName}'");
+
+        return (T)service;
+    }
+
     #endregion
 
     private void Kill()

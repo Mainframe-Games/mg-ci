@@ -11,22 +11,26 @@ var serverConfig = !string.IsNullOrEmpty(serverConfigPath)
     ? LoadConfig(serverConfigPath)
     : LoadConfig();
 
+SocketServer.Server server;
+
 if (args.Contains("-runner"))
 {
     // start build runner server
-    var server = new SocketServer.Server(serverConfig.Port + 1);
-    server.AddService(new BuildRunnerServerService(server, serverConfig));
-    server.Start();
+    server = new SocketServer.Server(serverConfig.Port + 1);
 }
 else
 {
     // start main server
-    var server = new SocketServer.Server(serverConfig.Port);
-    server.AddService(new BuildServerService(server, serverConfig));
-    server.Start();
-
-    BuildRunnerManager.Init(serverConfig.Runners);
+    server = new SocketServer.Server(serverConfig.Port);
+    ClientServicesManager.Init(serverConfig.Runners);
 }
+
+server.AddService(new BuildRunnerServerService(server, serverConfig));
+
+if (OperatingSystem.IsMacOS())
+    server.AddService(new XcodeServerService(server));
+
+server.Start();
 
 Console.ReadLine();
 Console.WriteLine("---- End of program ----");

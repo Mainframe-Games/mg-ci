@@ -3,13 +3,12 @@ namespace SocketServer;
 public static class FileDownloader
 {
     private static readonly Dictionary<string, Packet> _packets = [];
-    public static event Action<string>? OnFileDownloadCompleted;
-    public static event Action<string, double>? OnFileDownloadProgress;
 
     public static void Download(byte[] data)
     {
         using var ms = new MemoryStream(data);
         using var reader = new BinaryReader(ms);
+        var productName = reader.ReadString(); // string
         var dirName = reader.ReadString(); // string
         var filePath = reader.ReadString(); // string
         var totalBytes = reader.ReadUInt32(); // uint32
@@ -19,30 +18,38 @@ public static class FileDownloader
         var key = Path.Combine(dirName, filePath);
 
         if (!_packets.ContainsKey(key))
-            _packets.Add(key, CreateNewDownloadPacket(dirName, filePath, totalBytes));
+            _packets.Add(key, CreateNewDownloadPacket(productName, dirName, filePath, totalBytes));
 
         var packet = _packets[key];
         packet.Write(fragment);
 
-        OnFileDownloadProgress?.Invoke(packet.Path, packet.Progress);
+        // OnFileDownloadProgress?.Invoke(packet.Path, packet.Progress);
         // packet.PrintProgress();
 
         if (!packet.IsComplete)
             return;
 
-        OnFileDownloadCompleted?.Invoke(packet.Path);
+        // OnFileDownloadCompleted?.Invoke(packet.Path);
         // Console.WriteLine($"Download complete [{packet.Path}]");
         _packets.Remove(key);
     }
 
     private static Packet CreateNewDownloadPacket(
+        string productName,
         string dirName,
         string inFilePath,
         uint totalBytes
     )
     {
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var filePath = Path.Combine(home, "ci-cache", "Downloads", dirName, inFilePath);
+        var filePath = Path.Combine(
+            home,
+            "ci-cache",
+            "Downloads",
+            productName,
+            dirName,
+            inFilePath
+        );
         var fileInfo = new FileInfo(filePath);
 
         if (fileInfo.Exists)

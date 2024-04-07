@@ -2,12 +2,25 @@ namespace SocketServer;
 
 public static class FileUploader
 {
-    private static readonly Queue<(DirectoryInfo dir, IService service)> _uploadQueue = new();
+    private class UploadQueueData
+    {
+        public string? ProductName { get; set; }
+        public DirectoryInfo? Directory { get; set; }
+        public IService? Service { get; set; }
+    }
+
+    private static readonly Queue<UploadQueueData> _uploadQueue = new();
     private static Task? _dispatchTask;
 
-    public static void UploadDirectory(DirectoryInfo rootDir, IService service)
+    public static void UploadDirectory(string productName, DirectoryInfo rootDir, IService service)
     {
-        _uploadQueue.Enqueue((rootDir, service));
+        var data = new UploadQueueData
+        {
+            ProductName = productName,
+            Directory = rootDir,
+            Service = service
+        };
+        _uploadQueue.Enqueue(data);
         Upload();
     }
 
@@ -27,7 +40,11 @@ public static class FileUploader
         {
             try
             {
-                var (rootDir, service) = _uploadQueue.Dequeue();
+                var queueData = _uploadQueue.Dequeue();
+                var productName = queueData.ProductName ?? string.Empty;
+                var rootDir = queueData.Directory ?? throw new NullReferenceException();
+                var service = queueData.Service ?? throw new NullReferenceException();
+
                 var files = rootDir.GetFiles("*", SearchOption.AllDirectories);
                 Console.WriteLine($"Upload started: {rootDir.FullName}");
                 foreach (var file in files)
@@ -45,6 +62,7 @@ public static class FileUploader
                         await using var writer = new BinaryWriter(ms);
 
                         // add dir name
+                        writer.Write(productName); // string
                         writer.Write(rootDir.Name); // string
                         writer.Write(fileLocalPath); // string
                         writer.Write((uint)file.Length); // uint32

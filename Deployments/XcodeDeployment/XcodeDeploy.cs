@@ -2,38 +2,32 @@ using System.Diagnostics;
 
 namespace XcodeDeployment;
 
-public class XcodeDeploy(string projectId, string appleId, string appSpecificPassword)
+public class XcodeDeploy
 {
     private const string PROJECT = "Unity-iPhone.xcodeproj";
     private const string SCHEME = "Unity-iPhone";
     private const string CONFIG = "Release";
 
+    private const string PROJECT_NAME = "AppArchive";
+    private const string EXPORT_PATH = "IpaBuild";
+
+    private readonly string _appleId;
+    private readonly string _appSpecificPassword;
+
+    private readonly string _workingDir;
+
+    public XcodeDeploy(Guid projectGuid, string appleId, string appSpecificPassword)
+    {
+        _appleId = appleId;
+        _appSpecificPassword = appSpecificPassword;
+        var (workingDir, _) = ProjectFinder.GetProjectDirectory(projectGuid);
+        _workingDir = workingDir.FullName;
+    }
+
     public void Deploy()
     {
         if (!OperatingSystem.IsMacOS())
             throw new Exception("XcodeDeploy can only be run on macOS");
-
-        var env = Environment.GetEnvironmentVariable("XCODE_DEPLOY");
-        var proj = Environment.GetEnvironmentVariable("XCODE_PROJECT");
-        var scheme = Environment.GetEnvironmentVariable("XCODE_SCHEME");
-        var config = Environment.GetEnvironmentVariable("XCODE_CONFIG");
-
-        // TODO: find project in ci-cache with projectId
-
-        // TODO: find path to exportOptions.plist
-        var exportOptionsPlist = "TODO:path/to/exportOptions.plist";
-
-        if (!File.Exists(exportOptionsPlist))
-            throw new FileNotFoundException(exportOptionsPlist);
-
-        // TODO: find path to working directory
-        var workingDir = "TODO:path/to/workingDir";
-
-        var originalDir = Environment.CurrentDirectory;
-        Environment.CurrentDirectory = workingDir;
-
-        const string projectName = "AppArchive";
-        const string exportPath = "IpaBuild";
 
         // clean
         Xcodebuild(
@@ -43,69 +37,65 @@ public class XcodeDeploy(string projectId, string appleId, string appSpecificPas
         // archive
         Xcodebuild(
             $"-project {PROJECT} -scheme {SCHEME} -sdk iphoneos archive -configuration {CONFIG} "
-                + $"-archivePath \"XCodeArchives/{projectName}.xcarchive\""
+                + $"-archivePath \"XCodeArchives/{PROJECT_NAME}.xcarchive\""
         );
 
         // copy exportOptions to folder
-        File.Copy(exportOptionsPlist, "exportOptions.plist", true);
+        var exportOptionsPlist = Path.Combine(_workingDir, ".ci", "exportOptions.plist");
+        if (File.Exists(exportOptionsPlist))
+            File.Copy(exportOptionsPlist, "exportOptions.plist", true);
 
         // export ipa file
         Xcodebuild(
-            $"-exportArchive -archivePath \"XCodeArchives/{projectName}.xcarchive\" "
-                + $"-exportOptionsPlist exportOptions.plist -exportPath \"{exportPath}\" -allowProvisioningUpdates"
+            $"-exportArchive -archivePath \"XCodeArchives/{PROJECT_NAME}.xcarchive\" "
+                + $"-exportOptionsPlist exportOptions.plist -exportPath \"{EXPORT_PATH}\" -allowProvisioningUpdates"
         );
 
         // upload
-        var ipaName = new DirectoryInfo(exportPath).GetFiles("*.ipa").First().Name;
+        var ipaName = new DirectoryInfo(EXPORT_PATH).GetFiles("*.ipa").First().Name;
         XcRun(
-            $"altool --upload-app -f \"{exportPath}/{ipaName}\" -t ios -u {appleId} -p {appSpecificPassword}"
+            $"altool --upload-app -f \"{EXPORT_PATH}/{ipaName}\" -t ios -u {_appleId} -p {_appSpecificPassword}"
         );
-
-        Environment.CurrentDirectory = originalDir;
 
         Console.WriteLine("Xcode Deploy COMPLETED");
     }
 
     private void Xcodebuild(string args)
     {
-        var (code, output) = Cmd.Run("xcodebuild", args);
-
+        var (code, output) = Run("xcodebuild", args);
         if (code != 0)
             throw new Exception(output);
     }
 
     private void XcRun(string args)
     {
-        var (code, output) = Cmd.Run("xcrun", args);
-
+        var (code, output) = Run("xcrun", args);
         if (code != 0)
             throw new Exception(output);
     }
 
-    private static class Cmd
+    private (int, string) Run(string command, string args)
     {
-        public static (int, string) Run(string command, string args)
+        var process = new Process
         {
-            var process = new Process
+            StartInfo = new ProcessStartInfo
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = command,
-                    Arguments = args,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
-            };
+                FileName = command,
+                Arguments = args,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WorkingDirectory = _workingDir
+            }
+        };
 
-            process.Start();
-            process.WaitForExit();
+        process.Start();
+        process.WaitForExit();
 
-            var output = process.StandardOutput.ReadToEnd();
-            var error = process.StandardError.ReadToEnd();
+        var output = process.StandardOutput.ReadToEnd();
+        var error = process.StandardError.ReadToEnd();
 
-            return (process.ExitCode, output + error);
-        }
+        return (process.ExitCode, output + error);
     }
 }

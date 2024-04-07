@@ -129,6 +129,6 @@ internal sealed class BuildRunnerServerService(
         );
 
         // send back
-        FileUploader.UploadDirectory(new DirectoryInfo(unityRunner.BuildPath), this);
+        FileUploader.UploadDirectory(product_name, new DirectoryInfo(unityRunner.BuildPath), this);
     }
 }

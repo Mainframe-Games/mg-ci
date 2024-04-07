@@ -24,7 +24,7 @@ public sealed class Client
 
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
-    private readonly Dictionary<string, IService> _services = [];
+    public readonly Dictionary<string, ClientService> Services = [];
 
     public Client(string serverIp, int serverPort)
     {
@@ -103,7 +103,7 @@ public sealed class Client
             Console.WriteLine($"[Client_{Id}] Received connection from server: {message}");
 
             foreach (var serviceName in message.Services ?? [])
-                ((ClientService)GetService(serviceName)).OnConnected();
+                GetService(serviceName).OnConnected();
         }
         catch (Exception e)
         {
@@ -200,22 +200,22 @@ public sealed class Client
 
     #region Services
 
-    public void AddService(IService service)
+    public void AddService(ClientService service)
     {
-        _services.Add(service.Name, service);
+        Services.Add(service.Name, service);
     }
 
-    public void RemoveService(string serviceName)
+    private ClientService GetService(string serviceName)
     {
-        _services.Remove(serviceName);
-    }
-
-    private IService GetService(string serviceName)
-    {
-        if (!_services.TryGetValue(serviceName, out var service))
+        if (!Services.TryGetValue(serviceName, out var service))
             throw new Exception($"[Client] Service not found '{serviceName}'");
 
         return service;
+    }
+
+    public bool TryGetService(string serviceName, out ClientService? service)
+    {
+        return Services.TryGetValue(serviceName, out service);
     }
 
     #endregion

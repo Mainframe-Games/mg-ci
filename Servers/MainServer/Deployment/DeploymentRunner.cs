@@ -1,14 +1,17 @@
 ﻿using System.Text;
 using ClanforgeDeployment;
 using Deployment.Deployments;
+using GooglePlayDeployment;
 using MainServer.Configs;
+using MainServer.Services.Packets;
 using MainServer.Utils;
 using SharedLib;
 using SteamDeployment;
 using UnityServicesDeployment;
+using Utils.Unity;
 using Workspace = MainServer.Workspaces.Workspace;
 
-namespace MainServer;
+namespace MainServer.Deployment;
 
 internal class DeploymentRunner
 {
@@ -18,12 +21,16 @@ internal class DeploymentRunner
     private readonly bool _googleStore;
     private readonly bool _awsS3;
 
+    private readonly Guid _projectGuid;
     private readonly Workspace _workspace;
     private readonly string _fullVersion;
     private readonly string[] _changeLogArray;
     private readonly ServerConfig _serverConfig;
 
     private readonly string _workspaceName;
+    private readonly string _productName;
+
+    private readonly string _downloadsPath;
 
     public DeploymentRunner(
         Workspace workspace,
@@ -39,7 +46,18 @@ internal class DeploymentRunner
 
         _workspaceName = new DirectoryInfo(workspace.ProjectPath).Name;
 
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        _downloadsPath = Path.Combine(home, "ci-cache", "Downloads");
+
         var projectToml = workspace.GetProjectToml();
+        _projectGuid = new Guid(
+            projectToml.GetValue<string>("guid") ?? throw new NullReferenceException()
+        );
+
+        _productName =
+            projectToml.GetValue<string>("settings", "product_name")
+            ?? throw new NullReferenceException();
+
         _steamVdfs = projectToml.GetValue<List<string>>("deployment", "steam_vdfs");
         _clanforge = projectToml.GetValue<bool>("deployment", "clanforge");
         _appleStore = projectToml.GetValue<bool>("deployment", "apple_store");
@@ -47,12 +65,12 @@ internal class DeploymentRunner
         _awsS3 = projectToml.GetValue<bool>("deployment", "aws_s3");
     }
 
-    public async void Deploy()
+    public async Task Deploy()
     {
         try
         {
             // client deploys
-            await DeployApple(); // apple first as apple takes longer to process on appstore connect
+            DeployApple(); // apple first as apple takes longer to process on appstore connect
             await DeployGoogle();
             DeploySteam();
 
@@ -93,8 +111,8 @@ internal class DeploymentRunner
 
         var project = _serverConfig.Ugs.GetProjectFromName(_workspaceName);
         var gameServer = new UnityGameServerRequest(
-            _serverConfig.Ugs.KeyId,
-            _serverConfig.Ugs.SecretKey
+            _serverConfig.Ugs.KeyId!,
+            _serverConfig.Ugs.SecretKey!
         );
         await gameServer.CreateNewBuildVersion(
             project.ProjectId,
@@ -113,17 +131,17 @@ internal class DeploymentRunner
         if (!_clanforge)
             return;
 
-        Args.Environment.TryGetArg("-setlive", out var beta, _serverConfig.Steam.DefaultSetLive);
+        Args.Environment.TryGetArg("-setlive", out var beta, _serverConfig.Steam!.DefaultSetLive!);
         Args.Environment.TryGetArg(
             "-clanforge",
             out var profile,
-            _serverConfig.Clanforge.DefaultProfile
+            _serverConfig.Clanforge!.DefaultProfile!
         );
         var isFull = Args.Environment.IsFlag("-full");
 
         var clanforgeConfig = _serverConfig.Clanforge!;
         var AuthToken =
-            $"Basic {Base64Key.Generate(clanforgeConfig.AccessKey, clanforgeConfig.SecretKey)}";
+            $"Basic {Base64Key.Generate(clanforgeConfig.AccessKey!, clanforgeConfig.SecretKey!)}";
 
         var imageId = clanforgeConfig.GetImageId(profile);
         var url = Uri.EscapeDataString(clanforgeConfig.GetUrl(beta));
@@ -140,36 +158,20 @@ internal class DeploymentRunner
         await clanforge.Deploy();
     }
 
-    private async Task DeployApple()
+    private void DeployApple()
     {
         if (!_appleStore)
             return;
 
-        // var macRunner =
-        //     BuildRunnerFactory.GetRunner("macos")
-        //     ?? throw new NullReferenceException("Mac runner is not found");
-        //
-        // macRunner.SendJObject(
-        //     new JObject
-        //     {
-        //         ["ProjectGuid"] = project.Guid!,
-        //         ["AppleId"] = _config.AppleStore?.AppleId,
-        //         ["AppSpecificPassword"] = _config.AppleStore?.AppSpecificPassword
-        //     }
-        // );
-        //
-        // var task = new TaskCompletionSource();
-        // macRunner.OnStringMessage += message =>
-        // {
-        //     var obj = JObject.Parse(message);
-        //     var status = obj["Status"]?.ToString();
-        //
-        //     if (status == "Completed")
-        //         task.SetResult();
-        //     else
-        //         throw new Exception($"Xcode deploy failed: {status}");
-        // };
-        // await task.Task;
+        var xcodeService = ClientServicesManager.GetXcodeService();
+
+        var data = new XcodeDeployPacket
+        {
+            ProjectGuid = _projectGuid,
+            AppleId = _serverConfig.AppleStore?.AppleId,
+            AppSpecificPassword = _serverConfig.AppleStore?.AppSpecificPassword
+        };
+        xcodeService.SendJson(data.ToJson());
     }
 
     private async Task DeployGoogle()
@@ -177,27 +179,24 @@ internal class DeploymentRunner
         if (!_googleStore)
             return;
 
-        // var packageName = _workspace.ProjectSettings.GetValue<string>(
-        //     "applicationIdentifier.Android"
-        // );
-        //
-        // var productName = project.Settings.ProjectName;
-        // var buildPath = "TODO: get build path from build settings asset";
-        // var path = Path.Combine(buildPath, $"{productName}.aab");
-        // var aabFile = new FileInfo(path);
-        //
-        // if (!aabFile.Exists)
-        //     throw new FileNotFoundException($"aab file not found: {path}");
-        //
-        // var googlePlayDeploy = new GooglePlayDeploy(
-        //     packageName,
-        //     aabFile.FullName,
-        //     _serverConfig.GoogleStore!.CredentialsPath!,
-        //     _serverConfig.GoogleStore.ServiceUsername!,
-        //     _fullVersion,
-        //     string.Join("\n", _changeLogArray)
-        // );
-        // await googlePlayDeploy.Deploy();
+        var unityProjectSettings = new UnityProjectSettings(_workspace.ProjectPath);
+        var packageName = unityProjectSettings.GetValue("applicationIdentifier", "Android");
+
+        var aabPath = Path.Combine(_downloadsPath, _productName, "Android", $"{_productName}.aab");
+        var aabFile = new FileInfo(aabPath);
+
+        if (!aabFile.Exists)
+            throw new FileNotFoundException($".aab file not found: {aabPath}");
+
+        var googlePlayDeploy = new GooglePlayDeploy(
+            packageName,
+            aabFile.FullName,
+            _serverConfig.GoogleStore!.CredentialsPath!,
+            _serverConfig.GoogleStore.ServiceUsername!,
+            _fullVersion,
+            string.Join("\n", _changeLogArray)
+        );
+        await googlePlayDeploy.Deploy();
     }
 
     private void DeploySteam()
@@ -219,28 +218,6 @@ internal class DeploymentRunner
             );
             steam.Deploy();
         }
-    }
-
-    private string? BuildPipelineOnGetExtraHookLog()
-    {
-        try
-        {
-            // if (_config?.Clanforge != null)
-            // {
-            //     pipeline.Args.TryGetArg(
-            //         "-clanforge",
-            //         out var profile,
-            //         _config.Clanforge.DefaultProfile
-            //     );
-            //     return _config.Clanforge.BuildHookMessage(profile, "Updated");
-            // }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
-
-        return null;
     }
 
     private static class Base64Key
