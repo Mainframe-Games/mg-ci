@@ -1,13 +1,7 @@
 ﻿namespace SharedLib.ChangeLogBuilders;
 
-public struct Markup
+public struct Markup(string start, string end)
 {
-	public readonly string Start;
-	public readonly string End;
-
-	public Markup(string start, string end)
-	{
-		Start = start;
-		End = end;
-	}
+    public readonly string Start = start;
+    public readonly string End = end;
 }

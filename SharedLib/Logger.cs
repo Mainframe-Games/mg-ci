@@ -36,11 +36,6 @@ public static class Logger
         Console.WriteLine(message);
     }
 
-    public static void LogTimeStamp(string message, DateTime startTime)
-    {
-        Log($"{message} {(DateTime.Now - startTime).ToHourMinSecString()}");
-    }
-
     public static void LogTimeStamp(
         string message,
         Stopwatch stopwatch,

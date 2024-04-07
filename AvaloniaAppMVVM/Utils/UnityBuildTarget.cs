@@ -1,4 +1,4 @@
-﻿namespace ServerClientShared;
+﻿namespace AvaloniaAppMVVM.Utils;
 
 public class UnityBuildTarget
 {
