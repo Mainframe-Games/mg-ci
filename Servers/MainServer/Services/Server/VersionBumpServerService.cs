@@ -11,32 +11,6 @@ internal sealed class VersionBumpServerService(
     ServerConfig serverConfig
 ) : ServerService(server)
 {
-    private static JObject RunUnity(string projectPath, bool standalone, bool android, bool ios)
-    {
-        throw new NotImplementedException();
-
-        // var unityVersionBump = new UnityVersionBump(
-        //     projectPath,
-        //         standalone,
-        //         android,
-        //         ios);
-        //
-        // unityVersionBump.Run(
-        //     out var outBundle,
-        //     out var outStandalone,
-        //     out var outAndroid,
-        //     out var outIos
-        // );
-        //
-        // return new JObject
-        // {
-        //     ["Bundle"] = outBundle,
-        //     ["Standalone"] = outStandalone,
-        //     ["Android"] = outAndroid,
-        //     ["Ios"] = outIos
-        // };
-    }
-
     public override string Name => "version-bump";
 
     public override void OnStringMessage(string message)
@@ -73,5 +47,31 @@ internal sealed class VersionBumpServerService(
         }
 
         SendJson(response);
+    }
+
+    private static JObject RunUnity(string projectPath, bool standalone, bool android, bool ios)
+    {
+        throw new NotImplementedException();
+
+        // var unityVersionBump = new UnityVersionBump(
+        //     projectPath,
+        //         standalone,
+        //         android,
+        //         ios);
+        //
+        // unityVersionBump.Run(
+        //     out var outBundle,
+        //     out var outStandalone,
+        //     out var outAndroid,
+        //     out var outIos
+        // );
+        //
+        // return new JObject
+        // {
+        //     ["Bundle"] = outBundle,
+        //     ["Standalone"] = outStandalone,
+        //     ["Android"] = outAndroid,
+        //     ["Ios"] = outIos
+        // };
     }
 }

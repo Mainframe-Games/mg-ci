@@ -20,6 +20,26 @@ internal sealed class BuildRunnerServerService(
     private static readonly Queue<BuildRunnerPacket> _buildQueue = new();
     private Task? _buildTask;
 
+    public override void OnStringMessage(string message)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void OnDataMessage(byte[] data)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void OnJsonMessage(JObject payload)
+    {
+        var packet = payload.ToObject<BuildRunnerPacket>() ?? throw new NullReferenceException();
+        _buildQueue.Enqueue(packet);
+        SendJson(new JObject { ["TargetName"] = packet.TargetName, ["Status"] = "Queued", });
+
+        if (_buildTask is null || _buildTask.IsCompleted)
+            _buildTask = Task.Run(BuildQueued);
+    }
+
     private void BuildQueued()
     {
         while (_buildQueue.Count > 0)
@@ -110,25 +130,5 @@ internal sealed class BuildRunnerServerService(
 
         // send back
         FileUploader.UploadDirectory(new DirectoryInfo(unityRunner.BuildPath), this);
-    }
-
-    public override void OnStringMessage(string message)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override void OnDataMessage(byte[] data)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override void OnJsonMessage(JObject payload)
-    {
-        var packet = payload.ToObject<BuildRunnerPacket>() ?? throw new NullReferenceException();
-        _buildQueue.Enqueue(packet);
-        SendJson(new JObject { ["TargetName"] = packet.TargetName, ["Status"] = "Queued", });
-
-        if (_buildTask is null || _buildTask.IsCompleted)
-            _buildTask = Task.Run(BuildQueued);
     }
 }

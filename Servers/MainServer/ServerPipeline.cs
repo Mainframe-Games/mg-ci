@@ -13,16 +13,18 @@ internal class ServerPipeline(
 )
 {
     public static List<Guid> ActiveProjects { get; } = [];
+    private readonly List<BuildRunnerProcess> buildProcesses = [];
 
     public async void Run()
     {
+        BuildRunnerClientService.OnBuildCompleteMessage += OnBuildCompleted;
         ActiveProjects.Add(projectGuid);
         {
             var sw = Stopwatch.StartNew();
 
             // version bump
             var fullVersion = workspace.VersionBump();
-            Console.WriteLine($"Pre Build Complete\ntime = {sw.ElapsedMilliseconds}ms");
+            Console.WriteLine($"Pre Build Complete\n  time: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
 
             // changelog
@@ -30,33 +32,23 @@ internal class ServerPipeline(
 
             // builds
             var processes = await RunBuildAsync();
-            Console.WriteLine($"Build Complete\ntime= {sw.ElapsedMilliseconds}ms");
+            Console.WriteLine($"Build Complete\n  time: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
 
             // deploys
             RunDeploy(processes, fullVersion, changeLog);
-            Console.WriteLine($"Deploy Complete\ntime= {sw.ElapsedMilliseconds}ms");
+            Console.WriteLine($"Deploy Complete\n  time: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
         }
         ActiveProjects.Remove(projectGuid);
+        BuildRunnerClientService.OnBuildCompleteMessage -= OnBuildCompleted;
     }
 
     #region Build
 
     private async Task<List<BuildRunnerProcess>> RunBuildAsync()
     {
-        var buildProcesses = new List<BuildRunnerProcess>();
         var tasks = new List<Task>();
-
-        // assign callbacks
-        foreach (var runner in BuildRunnerManager.All)
-        {
-            runner.OnBuildCompleteMessage += (targetName, buildTime) =>
-            {
-                foreach (var process in buildProcesses)
-                    process.OnStringMessage(targetName, buildTime);
-            };
-        }
 
         // start processes
         foreach (var buildTarget in buildTargets)
@@ -78,11 +70,13 @@ internal class ServerPipeline(
         // wait for them all to finish
         await Task.WhenAll(tasks);
 
-        // clear callbacks
-        // foreach (var runner in BuildRunnerFactory.All)
-        //     runner.ClearEvents();
-
         return buildProcesses;
+    }
+
+    private void OnBuildCompleted(string targetName, long buildTime)
+    {
+        foreach (var process in buildProcesses)
+            process.OnStringMessage(targetName, buildTime);
     }
 
     private static BuildRunnerClientService GetUnityRunner(string targetName, bool isIL2CPP)
