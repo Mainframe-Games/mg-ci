@@ -72,6 +72,8 @@ public partial class BuildTargetsView : MyUserControl<BuildTargetsViewModel>
                 string.Empty
             );
 
+            sceneName = sceneName.Replace("\\", "/");
+
             if (!buildTarget.Scenes.Contains(sceneName))
                 buildTarget.Scenes.Add(sceneName);
         }
