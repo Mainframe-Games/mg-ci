@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Runtime.Serialization;
 using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.Data.Shared;
 using AvaloniaAppMVVM.Utils;
@@ -12,23 +11,18 @@ public partial class BuildTargetsViewModel : ViewModelBase
 {
     public Project Project { get; set; }
 
-    [IgnoreDataMember]
     public static ObservableCollection<string> ExtensionOptions { get; } =
         [".exe", ".app", ".x86_64", ".aab", "/"];
 
-    [IgnoreDataMember]
     public static ObservableCollection<Unity.BuildTarget> BuildTargetOptions { get; } =
         new(Enum.GetValues<Unity.BuildTarget>());
 
-    [IgnoreDataMember]
     public static ObservableCollection<Unity.BuildTargetGroup> BuildTargetGroupOptions { get; } =
         new(Enum.GetValues<Unity.BuildTargetGroup>());
 
-    [IgnoreDataMember]
     public static ObservableCollection<Unity.SubTarget> SubTargetOptions { get; } =
         new(Enum.GetValues<Unity.SubTarget>());
 
-    [IgnoreDataMember]
     public static ObservableCollection<Unity.BuildOptions> BuildOptionOptions { get; } =
         new(Enum.GetValues<Unity.BuildOptions>());
 

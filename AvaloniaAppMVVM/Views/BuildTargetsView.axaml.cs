@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using AvaloniaAppMVVM.Data;
 using AvaloniaAppMVVM.Data.Shared;
 using AvaloniaAppMVVM.ViewModels;
 
@@ -80,23 +81,28 @@ public partial class BuildTargetsView : MyUserControl<BuildTargetsViewModel>
 
     private void Button_DeleteScene_OnClick(object? sender, RoutedEventArgs e)
     {
-        var value =
-            (e.Source as Button)?.DataContext?.ToString() ?? throw new NullReferenceException();
+        if (e.Source is not Button { DataContext: string str })
+            return;
 
         var buildTarget = _viewModel.SelectedBuildTarget!.Data;
 
-        if (buildTarget.Scenes.Remove(value))
+        if (buildTarget.Scenes.Remove(str))
             _project.Save();
     }
 
     private void Button_AddExtraScriptingDefine_OnClick(object? sender, RoutedEventArgs e)
     {
-        // _viewModel.SelectedBuildTarget?.ExtraScriptingDefines.Add(new StringWrap(string.Empty));
+        _viewModel.SelectedBuildTarget?.Data.ExtraScriptingDefines.Add(string.Empty);
+        _project.Save();
     }
 
     private void Button_DeleteExtraScriptingDefine_OnClick(object? sender, RoutedEventArgs e)
     {
-        // _viewModel.SelectedBuildTarget?.ExtraScriptingDefines.Remove(new StringWrap(string.Empty));
+        if (e.Source is not Button { DataContext: string str })
+            return;
+
+        _viewModel.SelectedBuildTarget?.Data.ExtraScriptingDefines.Remove(str);
+        _project.Save();
     }
 
     private void Button_AddNewTarget_OnClick(object? sender, RoutedEventArgs e)

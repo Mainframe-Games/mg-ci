@@ -141,14 +141,14 @@
                 </Grid>
                 <ItemsRepeater ItemsSource="{Binding SelectedBuildTarget.Data.ExtraScriptingDefines}">
                     <ItemsRepeater.ItemTemplate>
-                        <DataTemplate>
+                        <DataTemplate DataType="{x:Type system:String}">
                             <Grid ColumnDefinitions="*, Auto">
-                                <TextBox Text="" Margin="2" />
+                                <TextBox Text="{Binding }" Margin="2"  />
                                 <Button Grid.Column="1"
+                                        Content="Delete"
                                         Background="Firebrick"
-                                        Click="Button_DeleteExtraScriptingDefine_OnClick">
-                                    Delete
-                                </Button>
+                                        Click="Button_DeleteExtraScriptingDefine_OnClick"/>
+                                
                             </Grid>
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>

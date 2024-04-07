@@ -1,11 +1,6 @@
 namespace AvaloniaAppMVVM.Data;
 
-public class StringWrap
+public class StringWrap(string value)
 {
-    public string Value { get; set; }
-
-    public StringWrap(string value)
-    {
-        Value = value;
-    }
+    public string Value { get; set; } = value;
 }
