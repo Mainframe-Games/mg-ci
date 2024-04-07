@@ -2,13 +2,12 @@
   "profiles": {
     "Main": {
       "commandName": "Project",
-      "nativeDebugging": true,
-      "commandLineArgs": "-config \"C:\\Users\\Brogan\\OneDrive\\MG_BuildServer\\config-server.toml\""
+      "nativeDebugging": true
     },
     "Runner": {
       "commandName": "Project",
       "nativeDebugging": true,
-      "commandLineArgs": "-runner -config \"C:\\Users\\Brogan\\OneDrive\\MG_BuildServer\\config-server.toml\""
+      "commandLineArgs": "-runner"
     }
   }
 }
