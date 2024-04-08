@@ -58,7 +58,7 @@ internal class ServerPipeline(
             hookRunner.Run();
 
             // apply tag
-            workspace.Tag(fullVersion);
+            workspace.Tag($"v{fullVersion}");
         }
         ActiveProjects.Remove(projectGuid);
         BuildRunnerClientService.OnBuildCompleteMessage -= OnBuildCompleted;

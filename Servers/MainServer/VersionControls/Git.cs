@@ -47,7 +47,11 @@ internal class Git(
             _author,
             new PullOptions
             {
-                FetchOptions = new FetchOptions { CredentialsProvider = CredentialsHandler }
+                FetchOptions = new FetchOptions
+                {
+                    CredentialsProvider = CredentialsHandler,
+                    TagFetchMode = TagFetchMode.All
+                },
             }
         );
 
@@ -96,15 +100,15 @@ internal class Git(
     public string[] GetChangeLog()
     {
         using var repo = new Repository(projectPath);
-        var commits = repo.Commits.QueryBy(new CommitFilter { FirstParentOnly = true });
+        var tag = repo.Tags.LastOrDefault(x => x.FriendlyName.StartsWith('v'));
+        var commits = repo.Commits.QueryBy(
+            new CommitFilter { FirstParentOnly = true, ExcludeReachableFrom = tag }
+        );
         var logs = new List<string>();
 
         foreach (var commit in commits)
         {
             var message = commit.Message;
-
-            if (message.Contains("_Build Successful."))
-                break;
 
             if (message.StartsWith('_'))
                 continue;
