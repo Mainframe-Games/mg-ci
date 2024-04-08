@@ -9,7 +9,7 @@ namespace SocketServer;
 public class Server(int port)
 {
     private readonly TcpListener listener = new(IPAddress.Any, port);
-    private readonly Dictionary<uint, Client> _connectedClients = [];
+    private readonly Dictionary<uint, ConnectedClient> _connectedClients = [];
     private static uint NextClientId;
 
     private readonly Dictionary<string, IService> _services = [];
@@ -41,7 +41,7 @@ public class Server(int port)
         while (true)
         {
             var tpcClient = await listener.AcceptTcpClientAsync();
-            var client = new Client(tpcClient);
+            var client = new ConnectedClient(tpcClient);
             _connectedClients.Add(client.Id, client);
             Console.WriteLine(
                 $"[Server] Client connected: {client.Id}, ConnectedClients: {_connectedClients.Count}"
@@ -52,7 +52,7 @@ public class Server(int port)
         }
     }
 
-    private void SendConnectionHandshake(Client client)
+    private void SendConnectionHandshake(ConnectedClient client)
     {
         var services = _services.Keys.ToArray();
         var message = new ServerConnectionMessage
@@ -66,7 +66,7 @@ public class Server(int port)
         SendToClient(client, new TpcPacket(MessageType.Connection, data));
     }
 
-    private async void HandleClient(Client inClient)
+    private async void HandleClient(ConnectedClient inClient)
     {
         var client = inClient.TcpClient;
         var stream = client.GetStream();
@@ -165,7 +165,7 @@ public class Server(int port)
 
     #region Sends
 
-    private readonly Queue<(Client, TpcPacket)> _sendQueue = [];
+    private readonly Queue<(ConnectedClient, TpcPacket)> _sendQueue = [];
     private Task? _sendTask;
 
     internal void SendToClients(TpcPacket packet)
@@ -174,7 +174,7 @@ public class Server(int port)
             SendToClient(client.Value, packet);
     }
 
-    private void SendToClient(Client client, TpcPacket packet)
+    private void SendToClient(ConnectedClient client, TpcPacket packet)
     {
         _sendQueue.Enqueue((client, packet));
         if (_sendTask is null || _sendTask.IsCompleted)
@@ -241,7 +241,7 @@ public class Server(int port)
         listener.Dispose();
     }
 
-    private class Client(TcpClient tcpClient)
+    private class ConnectedClient(TcpClient tcpClient)
     {
         public uint Id { get; } = ++NextClientId;
         public TcpClient TcpClient { get; } = tcpClient;

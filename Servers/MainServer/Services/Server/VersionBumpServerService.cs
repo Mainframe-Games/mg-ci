@@ -25,28 +25,28 @@ internal sealed class VersionBumpServerService(
 
     public override void OnJsonMessage(JObject payload)
     {
-        var projectId = payload["Guid"]?.ToString() ?? throw new NullReferenceException();
-        var branch = payload["Branch"]?.ToString() ?? throw new NullReferenceException();
-        var projectGuid = new Guid(projectId);
-        var workspace = WorkspaceUpdater.PrepareWorkspace(projectGuid, branch, serverConfig);
-
-        var response = new JObject();
-
-        switch (workspace.Engine)
-        {
-            case GameEngine.Unity:
-                var standalone = payload.SelectToken("Standalone", true)?.ToObject<bool>() ?? false;
-                var android = payload.SelectToken("Android", true)?.ToObject<bool>() ?? false;
-                var ios = payload.SelectToken("Ios", true)?.ToObject<bool>() ?? false;
-                response = RunUnity(workspace.ProjectPath, standalone, android, ios);
-                break;
-            case GameEngine.Godot:
-                throw new NotImplementedException();
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-
-        SendJson(response);
+        // var projectId = payload["Guid"]?.ToString() ?? throw new NullReferenceException();
+        // var branch = payload["Branch"]?.ToString() ?? throw new NullReferenceException();
+        // var projectGuid = new Guid(projectId);
+        // var workspace = WorkspaceUpdater.PrepareWorkspace(projectGuid, branch, serverConfig);
+        //
+        // var response = new JObject();
+        //
+        // switch (workspace.Engine)
+        // {
+        //     case GameEngine.Unity:
+        //         var standalone = payload.SelectToken("Standalone", true)?.ToObject<bool>() ?? false;
+        //         var android = payload.SelectToken("Android", true)?.ToObject<bool>() ?? false;
+        //         var ios = payload.SelectToken("Ios", true)?.ToObject<bool>() ?? false;
+        //         response = RunUnity(workspace.ProjectPath, standalone, android, ios);
+        //         break;
+        //     case GameEngine.Godot:
+        //         throw new NotImplementedException();
+        //     default:
+        //         throw new ArgumentOutOfRangeException();
+        // }
+        //
+        // SendJson(response);
     }
 
     private static JObject RunUnity(string projectPath, bool standalone, bool android, bool ios)

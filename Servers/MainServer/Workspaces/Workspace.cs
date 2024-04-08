@@ -21,10 +21,8 @@ internal enum VersionControlType
 internal class Workspace(string projectPath, ServerConfig serverConfig)
 {
     public string ProjectPath => projectPath;
-    public GameEngine Engine { get; } =
-        GetEngine(projectPath ?? throw new NullReferenceException());
-    public VersionControlType VersionControl { get; } =
-        GetVersionControl(projectPath ?? throw new NullReferenceException());
+    public GameEngine Engine { get; private set; }
+    public VersionControlType VersionControl { get; private set; }
     public string? Branch { get; init; } = "main";
     public string? GitUrl { get; init; }
     public string? SetLive { get; set; } = "beta";
@@ -124,6 +122,9 @@ internal class Workspace(string projectPath, ServerConfig serverConfig)
             default:
                 throw new ArgumentOutOfRangeException();
         }
+
+        Engine = GetEngine(projectPath);
+        VersionControl = GetVersionControl(projectPath);
     }
 
     private void UpdatePlastic()

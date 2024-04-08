@@ -257,6 +257,7 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
             // TODO: get these from a form in home screen rather than project settings
             ["BuildTargets"] = JArray.FromObject(_project.BuildTargets.Select(x => x.Name)),
             ["Branch"] = BranchComboBox.SelectedItem?.ToString(),
+            ["GitUrl"] = _project.Settings.GitRepositoryUrl
         };
         App.BuildClient.SendJson(project);
     }
@@ -276,6 +277,9 @@ public partial class HomePageView : MyUserControl<HomePageViewModel>
 
     private void SetGitBranchComboBoxItems()
     {
+        if (string.IsNullOrEmpty(_project.Location))
+            return;
+
         using var repo = new Repository(_project.Location);
         var branches = repo.Branches.Where(x => x.IsRemote && !x.FriendlyName.Contains("HEAD"))
             .Select(x => x.FriendlyName.Replace(x.RemoteName, string.Empty).Trim('/'))

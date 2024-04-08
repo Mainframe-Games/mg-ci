@@ -68,27 +68,36 @@ internal class ServerPipeline(
 
     private async Task RunBuildAsync()
     {
-        var tasks = new List<Task>();
+        var runnerMap = new Dictionary<BuildRunnerClientService, BuildRunnerPacket>();
 
         // start processes
         foreach (var buildTarget in buildTargets)
         {
             var runner = GetUnityRunner(buildTarget, false);
-            var packet = new BuildRunnerPacket
-            {
-                ProjectGuid = projectGuid,
-                TargetName = buildTarget,
-                Branch = workspace.Branch,
-            };
-            runner.SendJson(packet.ToJson());
 
+            if (!runnerMap.TryGetValue(runner, out var value))
+            {
+                value = new BuildRunnerPacket
+                {
+                    ProjectGuid = projectGuid,
+                    BuildTargets = [],
+                    GitUrl = workspace.GitUrl!,
+                    Branch = workspace.Branch!,
+                };
+                runnerMap[runner] = value;
+            }
+
+            value.BuildTargets.Add(buildTarget);
             var process = new BuildRunnerProcess(buildTarget);
             buildProcesses.Add(process);
-            tasks.Add(process.Task);
         }
 
+        foreach (var runner in runnerMap)
+            runner.Key.SendJson(runner.Value.ToJson());
+
         // wait for them all to finish
-        await Task.WhenAll(tasks);
+        while (buildProcesses.Any(p => !p.IsComplete))
+            await Task.Delay(1000);
     }
 
     private void OnBuildCompleted(string targetName, long buildTime)
@@ -125,11 +134,8 @@ internal class ServerPipeline(
 
     private class BuildRunnerProcess(string buildName)
     {
-        private readonly TaskCompletionSource _completionSource = new();
         public readonly string BuildName = buildName;
-
-        public Task Task => _completionSource.Task;
-
+        public bool IsComplete { get; private set; }
         public long TotalBuildTime { get; private set; }
 
         public void OnStringMessage(string targetName, long buildTime)
@@ -138,7 +144,7 @@ internal class ServerPipeline(
                 return;
 
             TotalBuildTime = buildTime;
-            _completionSource.SetResult();
+            IsComplete = true;
         }
     }
 }

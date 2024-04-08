@@ -22,9 +22,14 @@ internal class Git(
             Repository.Clone(
                 url,
                 projectPath,
-                new CloneOptions { RecurseSubmodules = true, BranchName = branch }
+                new CloneOptions
+                {
+                    RecurseSubmodules = true,
+                    BranchName = branch,
+                    FetchOptions = { CredentialsProvider = CredentialsHandler },
+                    OnCheckoutProgress = CheckoutProgress
+                }
             );
-
             // init LFS
             RunProcess("lfs install");
         }
@@ -49,6 +54,13 @@ internal class Git(
         RunProcess("lfs pull");
     }
 
+    private static void CheckoutProgress(string path, int completedsteps, int totalsteps)
+    {
+        Console.WriteLine(
+            $"Git Checkout ({completedsteps}/{totalsteps} {completedsteps / (double)totalsteps * 100:0}%): {path}"
+        );
+    }
+
     private void RunProcess(string args)
     {
         var info = new ProcessStartInfo
@@ -61,7 +73,24 @@ internal class Git(
             UseShellExecute = false,
             CreateNoWindow = true
         };
-        Process.Start(info)!.WaitForExit();
+        Console.WriteLine($"Running: git {args}");
+        var process = Process.Start(info) ?? throw new NullReferenceException();
+
+        process.OutputDataReceived += (sender, eventArgs) =>
+        {
+            if (!string.IsNullOrEmpty(eventArgs.Data))
+                Console.WriteLine($"Git {args}: {eventArgs.Data}");
+        };
+        process.BeginOutputReadLine();
+
+        process.ErrorDataReceived += (sender, eventArgs) =>
+        {
+            if (!string.IsNullOrEmpty(eventArgs.Data))
+                Console.WriteLine($"[ERROR] Git {args}: {eventArgs.Data}");
+        };
+        process.BeginErrorReadLine();
+
+        process.WaitForExit();
     }
 
     public string[] GetChangeLog()

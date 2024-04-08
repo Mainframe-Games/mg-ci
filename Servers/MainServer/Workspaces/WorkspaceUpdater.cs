@@ -1,5 +1,4 @@
 ﻿using MainServer.Configs;
-using MainServer.Utils;
 using MainServer.Workspaces;
 using Tomlyn;
 using Tomlyn.Model;
@@ -10,24 +9,29 @@ internal static class WorkspaceUpdater
 {
     public static Workspace PrepareWorkspace(
         Guid projectGuid,
+        string gitUrl,
         string branch,
         ServerConfig serverConfig
     )
     {
-        var (projDir, projToml) = GetProjectDirectory(projectGuid);
-
-        var gitUrl = projToml.GetValue<string>("settings", "git_repository_url");
-
-        var workspace = new Workspace(projDir.FullName, serverConfig)
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var cacheRoot = new DirectoryInfo(Path.Combine(home, "ci-cache"));
+        var projectPath = Path.Combine(cacheRoot.FullName, projectGuid.ToString());
+        var workspace = new Workspace(projectPath, serverConfig)
         {
             GitUrl = gitUrl,
             Branch = branch
         };
+
         workspace.Update();
         return workspace;
     }
 
-    private static (DirectoryInfo projDir, TomlTable projToml) GetProjectDirectory(Guid projectGuid)
+    private static bool TryGetProjectDirectory(
+        Guid projectGuid,
+        out DirectoryInfo? projDir,
+        out TomlTable? projToml
+    )
     {
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var cacheRoot = new DirectoryInfo(Path.Combine(home, "ci-cache"));
@@ -47,9 +51,13 @@ internal static class WorkspaceUpdater
 
             // Return the parent directory of the project.toml file
             var dir = toml.Directory?.Parent ?? throw new NullReferenceException();
-            return (dir, projectToml);
+            projDir = dir;
+            projToml = projectToml;
+            return true;
         }
 
-        throw new Exception($"Project not found in cache: {projectGuid}");
+        projDir = null;
+        projToml = null;
+        return false;
     }
 }

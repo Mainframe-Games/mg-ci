@@ -1,4 +1,5 @@
 using MainServer.Configs;
+using MainServer.Services.Packets;
 using MainServer.Utils;
 using Newtonsoft.Json.Linq;
 using ServerShared;
@@ -23,16 +24,13 @@ internal sealed class BuildServerService(SocketServer.Server server, ServerConfi
 
     public override void OnJsonMessage(JObject payload)
     {
-        var projectId = payload["ProjectGuid"]?.ToString() ?? throw new NullReferenceException();
-        var buildTargetNames =
-            payload["BuildTargets"]?.ToObject<string[]>() ?? Array.Empty<string>();
-        var branch = payload["Branch"]?.ToString() ?? throw new NullReferenceException();
-        var projectGuid = new Guid(projectId);
-        StartBuild(projectGuid, buildTargetNames, branch);
-    }
+        var data = payload.ToObject<BuildRunnerPacket>() ?? throw new NullReferenceException();
 
-    private void StartBuild(Guid projectGuid, string[] buildTargetNames, string branch)
-    {
+        var projectGuid = data.ProjectGuid;
+        var buildTargetNames = data.BuildTargets;
+        var branch = data.Branch;
+        var gitUrl = data.GitUrl;
+
         if (ServerPipeline.ActiveProjects.Contains(projectGuid))
         {
             SendJson(new JObject { ["Error"] = $"Pipeline already exists: {projectGuid}" });
@@ -40,7 +38,7 @@ internal sealed class BuildServerService(SocketServer.Server server, ServerConfi
         }
 
         var workspace =
-            WorkspaceUpdater.PrepareWorkspace(projectGuid, branch, serverConfig)
+            WorkspaceUpdater.PrepareWorkspace(projectGuid, gitUrl, branch, serverConfig)
             ?? throw new NullReferenceException();
         var project = workspace.GetProjectToml();
         var pipeline = new ServerPipeline(projectGuid, workspace, buildTargetNames, serverConfig);

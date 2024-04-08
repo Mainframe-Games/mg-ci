@@ -17,15 +17,16 @@ if (args.Contains("-runner"))
 {
     // start build runner server
     server = new SocketServer.Server(serverConfig.Port + 1);
+    server.AddService(new BuildRunnerServerService(server, serverConfig));
 }
 else
 {
     // start main server
     server = new SocketServer.Server(serverConfig.Port);
+    server.AddService(new BuildServerService(server, serverConfig));
+
     ClientServicesManager.Init(serverConfig.Runners);
 }
-
-server.AddService(new BuildRunnerServerService(server, serverConfig));
 
 if (OperatingSystem.IsMacOS())
     server.AddService(new XcodeServerService(server));

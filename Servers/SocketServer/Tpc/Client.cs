@@ -7,10 +7,10 @@ namespace SocketServer;
 
 public sealed class Client
 {
-    private TcpClient client;
-    private NetworkStream stream;
+    private TcpClient _client;
+    private NetworkStream _stream;
     public uint Id { get; private set; }
-    public bool IsConnected => Id > 0 && client.Connected;
+    public bool IsConnected => Id > 0 && _client.Connected;
 
     /// <summary>
     /// The servers operating system we are connected to
@@ -28,21 +28,17 @@ public sealed class Client
 
     public Client(string serverIp, int serverPort)
     {
-        // client = new TcpClient(serverIp, serverPort);
-        // stream = client.GetStream();
-        // var thread = new Thread(ListenForPackets);
-        // thread.Start();
         Task.Run(() => Connect(serverIp, serverPort));
     }
 
     private async void Connect(string serverIp, int serverPort)
     {
-        while (client?.Connected is not true)
+        while (_client?.Connected is not true)
         {
             try
             {
-                client = new TcpClient(serverIp, serverPort);
-                stream = client.GetStream();
+                _client = new TcpClient(serverIp, serverPort);
+                _stream = _client.GetStream();
                 _ = Task.Run(ListenForPackets);
             }
             catch (SocketException)
@@ -79,7 +75,7 @@ public sealed class Client
         {
             var packet = _sendQueue.Dequeue();
             var data = packet.GetBytes();
-            await stream.WriteAsync(data);
+            await _stream.WriteAsync(data);
             await Task.Delay(10); // delay to prevent spamming
         }
 
@@ -103,7 +99,10 @@ public sealed class Client
             Console.WriteLine($"[Client_{Id}] Received connection from server: {message}");
 
             foreach (var serviceName in message.Services ?? [])
-                GetService(serviceName).OnConnected();
+            {
+                if (TryGetService(serviceName, out var service))
+                    service?.OnConnected();
+            }
         }
         catch (Exception e)
         {
@@ -114,14 +113,14 @@ public sealed class Client
 
     private async void ListenForPackets()
     {
-        while (client.Connected)
+        while (_client.Connected)
         {
             try
             {
-                while (!stream.DataAvailable) { }
+                while (!_stream.DataAvailable) { }
 
-                var buffer = new byte[client.ReceiveBufferSize];
-                var bytesRead = await stream.ReadAsync(buffer, _cancellationTokenSource.Token);
+                var buffer = new byte[_client.ReceiveBufferSize];
+                var bytesRead = await _stream.ReadAsync(buffer, _cancellationTokenSource.Token);
 
                 if (bytesRead == 0)
                     continue;
@@ -144,15 +143,15 @@ public sealed class Client
 
                     case MessageType.String:
                         var str = Encoding.UTF8.GetString(packet.Data, 0, packet.Data.Length);
-                        ReceiveString(client, packet.ServiceName, str);
+                        ReceiveString(_client, packet.ServiceName, str);
                         break;
                     case MessageType.Binary:
-                        ReceiveBinary(client, packet.ServiceName, packet.Data);
+                        ReceiveBinary(_client, packet.ServiceName, packet.Data);
                         break;
                     case MessageType.Json:
                         var json = Encoding.UTF8.GetString(packet.Data, 0, packet.Data.Length);
                         var jObject = JObject.Parse(json) ?? throw new NullReferenceException();
-                        ReceiveJson(client, packet.ServiceName, jObject);
+                        ReceiveJson(_client, packet.ServiceName, jObject);
                         break;
 
                     default:
@@ -231,14 +230,14 @@ public sealed class Client
     {
         var packet = new TpcPacket(MessageType.Close, Array.Empty<byte>());
         var data = packet.GetBytes();
-        stream.Write(data);
+        _stream.Write(data);
 
         _cancellationTokenSource.Cancel();
 
-        stream.Close();
-        client.Close();
+        _stream.Close();
+        _client.Close();
 
-        stream.Dispose();
-        client.Dispose();
+        _stream.Dispose();
+        _client.Dispose();
     }
 }

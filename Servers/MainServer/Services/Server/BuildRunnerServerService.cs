@@ -17,7 +17,7 @@ internal sealed class BuildRunnerServerService(
 ) : ServerService(server)
 {
     public override string Name => "build-runner";
-    private static readonly Queue<BuildRunnerPacket> _buildQueue = new();
+    private static readonly Queue<BuildQueueItem> _buildQueue = new();
     private Task? _buildTask;
 
     public override void OnStringMessage(string message)
@@ -33,8 +33,21 @@ internal sealed class BuildRunnerServerService(
     public override void OnJsonMessage(JObject payload)
     {
         var packet = payload.ToObject<BuildRunnerPacket>() ?? throw new NullReferenceException();
-        _buildQueue.Enqueue(packet);
-        SendJson(new JObject { ["TargetName"] = packet.TargetName, ["Status"] = "Queued", });
+
+        foreach (var buildTarget in packet.BuildTargets)
+        {
+            _buildQueue.Enqueue(
+                new BuildQueueItem
+                {
+                    ProjectGuid = packet.ProjectGuid,
+                    GitUrl = packet.GitUrl,
+                    Branch = packet.Branch,
+                    BuildTarget = buildTarget
+                }
+            );
+
+            SendJson(new JObject { ["TargetName"] = buildTarget, ["Status"] = "Queued", });
+        }
 
         if (_buildTask is null || _buildTask.IsCompleted)
             _buildTask = Task.Run(BuildQueued);
@@ -46,11 +59,12 @@ internal sealed class BuildRunnerServerService(
         {
             var packet = _buildQueue.Dequeue();
             var projectGuid = packet.ProjectGuid;
-            var targetName = packet.TargetName;
+            var targetName = packet.BuildTarget;
+            var gitUrl = packet.GitUrl;
             var branch = packet.Branch;
 
             var workspace =
-                WorkspaceUpdater.PrepareWorkspace(projectGuid, branch, serverConfig)
+                WorkspaceUpdater.PrepareWorkspace(projectGuid, gitUrl, branch, serverConfig)
                 ?? throw new NullReferenceException();
 
             Console.WriteLine($"Queuing build: {targetName}");
@@ -130,5 +144,13 @@ internal sealed class BuildRunnerServerService(
 
         // send back
         FileUploader.UploadDirectory(product_name, new DirectoryInfo(unityRunner.BuildPath), this);
+    }
+
+    private class BuildQueueItem
+    {
+        public Guid ProjectGuid { get; set; }
+        public string BuildTarget { get; set; } = string.Empty;
+        public string GitUrl { get; set; } = string.Empty;
+        public string Branch { get; set; } = string.Empty;
     }
 }
