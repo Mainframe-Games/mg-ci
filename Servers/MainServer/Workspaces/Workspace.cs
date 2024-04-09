@@ -139,16 +139,18 @@ internal class Workspace(string projectPath, ServerConfig serverConfig)
 
     public string[] GetChangeLog()
     {
-        switch (VersionControl)
+        var changelog = VersionControl switch
         {
-            case VersionControlType.Git:
-                return GitProcess.GetChangeLog();
+            VersionControlType.Git => GitProcess.GetChangeLog(),
+            VersionControlType.Plastic => throw new NotImplementedException(),
+            _ => throw new ArgumentOutOfRangeException()
+        };
 
-            case VersionControlType.Plastic:
-                throw new NotImplementedException();
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
+        Console.WriteLine("Changelog:");
+        foreach (var log in changelog)
+            Console.WriteLine($"  {log}");
+
+        return changelog;
     }
 
     /// <summary>
