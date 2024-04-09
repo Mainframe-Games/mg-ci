@@ -21,8 +21,23 @@ namespace Mainframe.CI.Editor
         {
             Console.WriteLine($"BuildPlayer called with args: {string.Join(", ", _args)}");
 
+            WriteAppVersion();
+
             var options = GetBuildOptions();
             BuildPlayer(options);
+        }
+
+        private static void WriteAppVersion()
+        {
+            try
+            {
+                var fullVersion = $"{Application.version}.{PlayerSettings.macOS.buildNumber}";
+                File.WriteAllText(AppVersion.FilePath, fullVersion);
+            }
+            catch (Exception)
+            {
+                ExitWithResult(BuildResult.Failed);
+            }
         }
 
         private static void BuildPlayer(BuildPlayerOptions options)
@@ -39,14 +54,9 @@ namespace Mainframe.CI.Editor
             PrintBuildOptions(options);
             var report = BuildPipeline.BuildPlayer(options);
 
-            var fullVersion = $"{Application.version}.{PlayerSettings.macOS.buildNumber}";
-            var outDir = new FileInfo(report.summary.outputPath).Directory;
-            var outDataPath = Path.Combine(outDir!.FullName, AppVersion.FilePath);
-            File.WriteAllText(outDataPath, fullVersion);
-
             PrintReportSummary(report.summary);
             if (IsFlag("-quit"))
-                ExitWithResult(report.summary.result, report);
+                ExitWithResult(report.summary.result);
         }
 
         private static BuildPlayerOptions GetBuildOptions()
@@ -139,7 +149,7 @@ namespace Mainframe.CI.Editor
                 .ToArray();
         }
 
-        private static void ExitWithResult(BuildResult result, BuildReport report = null)
+        private static void ExitWithResult(BuildResult result)
         {
             switch (result)
             {
@@ -148,22 +158,7 @@ namespace Mainframe.CI.Editor
                     EditorApplication.Exit(0);
                     break;
                 case BuildResult.Failed:
-                    if (report != null)
-                    {
-                        var errors = report.steps
-                            .SelectMany(x => x.messages)
-                            .Where(x => x.type is LogType.Error or LogType.Exception or LogType.Assert)
-                            .Select(x => $"[{x.type.ToString().ToUpper()}] {x.content}")
-                            .Reverse()
-                            .ToArray();
-
-                        Console.WriteLine(string.Join("\n", errors), LogType.Error);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Build failed!");
-                    }
-
+                    Console.WriteLine("Build failed!");
                     EditorApplication.Exit(101);
                     break;
                 case BuildResult.Cancelled:

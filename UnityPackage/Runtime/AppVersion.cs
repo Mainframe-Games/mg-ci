@@ -12,7 +12,7 @@ namespace Mainframe.CI.Runtime
 	public readonly struct AppVersion : IEquatable<AppVersion>, IComparable<AppVersion>, IComparable
 	{
 		public static string FILE_NAME => "app_version.txt";
-		public static string FilePath => Path.Combine($"{Application.productName}_Data", FILE_NAME); 
+		public static string FilePath => Path.Combine(Application.streamingAssetsPath, FILE_NAME); 
 		
 		private static AppVersion _instance;
 		public static AppVersion Instance
