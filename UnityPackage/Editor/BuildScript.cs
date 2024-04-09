@@ -57,9 +57,7 @@ namespace Mainframe.CI.Editor
                 ? outExtraScriptingDefines.Split(',')
                 : null;
 
-            var locationPathName = TryGetArg("-locationPathName", out var outLocationPathName)
-                ? outLocationPathName
-                : GetDefaultBuildPath();
+            var locationPathName = GetDefaultBuildPath();
 
             TryGetArg("-assetBundleManifestPath", out var assetBundleManifestPath);
 
@@ -85,8 +83,10 @@ namespace Mainframe.CI.Editor
 
         private static string GetDefaultBuildPath()
         {
-            var path = Path.Combine("Builds", EditorUserBuildSettings.activeBuildTarget.ToString(),
-                Application.productName + GetExtension());
+            var extension = GetExtension();
+            var path = Path.Combine("Builds",
+                $"{Application.productName}_{EditorUserBuildSettings.activeBuildTarget}",
+                Application.productName + extension);
             return path;
         }
 

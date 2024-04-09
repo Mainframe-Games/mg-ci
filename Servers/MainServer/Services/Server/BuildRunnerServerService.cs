@@ -106,7 +106,6 @@ internal sealed class BuildRunnerServerService(
             ?? throw new NullReferenceException();
 
         // run build
-        var extension = target.GetValue<string>("extension") ?? throw new NullReferenceException();
         var product_name =
             target.GetValue<string>("product_name") ?? throw new NullReferenceException();
         var buildTargetName =
@@ -124,7 +123,6 @@ internal sealed class BuildRunnerServerService(
         var unityRunner = new UnityBuild(
             projectPath,
             targetName,
-            extension,
             product_name,
             buildTargetName,
             target_group,

@@ -1,6 +1,6 @@
-﻿namespace Utils.Unity;
+﻿namespace UnityBuilder;
 
-internal class UnityProjectSettings
+public class UnityProjectSettings
 {
     private readonly string _path;
     private readonly string[] _lines;
@@ -119,4 +119,10 @@ internal class UnityProjectSettings
     }
 
     #endregion
+
+    public void SetProductName(string productName)
+    {
+        var index = GetLineIndex("productName");
+        _lines[index] = ReplaceText(index, productName);
+    }
 }

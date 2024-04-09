@@ -9,7 +9,6 @@ public class UnityBuild
     private readonly string _buildTargetFlag;
 
     private readonly string _name;
-    private readonly string _extension;
     private readonly string _productName;
     private readonly int _target;
     private readonly int _targetGroup;
@@ -25,7 +24,6 @@ public class UnityBuild
         string projectPath,
         string name,
         // player build options
-        string extension,
         string productName,
         string buildTargetName,
         string targetGroup,
@@ -41,7 +39,6 @@ public class UnityBuild
         _buildTargetFlag = GetBuildTargetFlag(buildTargetName);
 
         _name = name;
-        _extension = extension;
         _productName = productName;
         // _target = GetTargetEnumValue(buildTargetName);
         // _targetGroup = GetTargetGroupEnumValue(targetGroup);
@@ -67,8 +64,13 @@ public class UnityBuild
             BuildPath = BuildPath,
             BuildTarget = _buildTargetFlag,
             SubTarget = _subTarget,
-            CustomArgs = BuildPlayerOptions(BuildPath, this),
+            CustomArgs = BuildPlayerOptions(),
         };
+
+        // set product name
+        var projectSettings = new UnityProjectSettings(_projectPath);
+        projectSettings.SetProductName(_productName);
+        projectSettings.SaveFile();
 
         var path = UnityPath.GetDefaultUnityPath(_unityVersion);
         var unity = new UnityRunner(path);
@@ -81,32 +83,31 @@ public class UnityBuild
         Environment.Exit(1);
     }
 
-    private static string[] BuildPlayerOptions(string buildPath, UnityBuild target)
+    private string[] BuildPlayerOptions()
     {
         var args = new List<string>();
 
-        var locationPathName = Path.Combine(buildPath, $"{target._productName}{target._extension}");
-        args.Add($"-locationPathName \"{locationPathName}\"");
+        args.Add($"-productName {_productName}");
 
-        if (target._extraScriptingDefines is not null && target._extraScriptingDefines.Length > 0)
+        if (_extraScriptingDefines is not null && _extraScriptingDefines.Length > 0)
         {
             args.Add("-extraScriptingDefines");
-            foreach (var define in target._extraScriptingDefines ?? [])
+            foreach (var define in _extraScriptingDefines ?? [])
                 args.Add($",\"{define}\"");
         }
 
-        if (target._scenes is not null && target._scenes.Length > 0)
+        if (_scenes is not null && _scenes.Length > 0)
         {
             args.Add("-scenes");
-            foreach (var scene in target._scenes ?? [])
+            foreach (var scene in _scenes ?? [])
                 args.Add($",\"{scene}\"");
         }
 
-        if (!string.IsNullOrEmpty(target._assetBundleManifestPath))
-            args.Add($"-assetBundleManifestPath \"{target._assetBundleManifestPath}\"");
+        if (!string.IsNullOrEmpty(_assetBundleManifestPath))
+            args.Add($"-assetBundleManifestPath \"{_assetBundleManifestPath}\"");
 
-        if (target._buildOptions != 0)
-            args.Add($"-options {target._buildOptions}");
+        if (_buildOptions != 0)
+            args.Add($"-options {_buildOptions}");
 
         return args.ToArray();
     }

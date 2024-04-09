@@ -10,7 +10,6 @@ internal class UnityBuildTest
         var unityRunner = new UnityBuild(
             projectPath,
             "Windows",
-            ".exe",
             "Unity Test",
             "WindowsStandalone64",
             "Standalone",

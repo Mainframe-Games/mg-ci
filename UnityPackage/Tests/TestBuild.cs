@@ -9,7 +9,7 @@ namespace Mainframe.CI.Tests
         [Test]
         public void TestBuildPlayer()
         {
-            BuildScript.BuildPlayer(); 
+            BuildScript.BuildPlayer();
         }
 
         // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
