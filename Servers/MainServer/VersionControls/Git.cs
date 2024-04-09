@@ -140,11 +140,11 @@ internal class Git(
     {
         using var repository = new Repository(projectPath);
         repository.ApplyTag(inTag, _author, inTag);
-        // repository.Network.Push(
-        //     repository.Head,
-        //     new PushOptions { CredentialsProvider = CredentialsHandler }
-        // );
-        RunProcess("git push");
+        repository.Network.Push(
+            repository.Head,
+            new PushOptions { CredentialsProvider = CredentialsHandler }
+        );
+        RunProcess("push --tags");
     }
 
     private Credentials CredentialsHandler(

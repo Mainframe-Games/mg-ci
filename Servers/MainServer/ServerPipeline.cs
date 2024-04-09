@@ -25,14 +25,15 @@ internal class ServerPipeline(
         ActiveProjects.Add(projectGuid);
         {
             var sw = Stopwatch.StartNew();
+            var startTime = DateTime.Now;
+
+            // changelog
+            var changeLog = workspace.GetChangeLog();
 
             // version bump
             var fullVersion = workspace.VersionBump();
             Console.WriteLine($"Pre Build Complete\n  time: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
-
-            // changelog
-            var changeLog = workspace.GetChangeLog();
 
             // builds
             await RunBuildAsync();
@@ -64,8 +65,9 @@ internal class ServerPipeline(
             workspace.Tag($"v{fullVersion}");
 
             Console.WriteLine("############################################");
-            Console.WriteLine("# Project build completed                  #");
-            Console.WriteLine($"# {projectGuid} #");
+            Console.WriteLine("# Project build completed");
+            Console.WriteLine($"# {projectGuid}");
+            Console.WriteLine($@"# TotalTime: {DateTime.Now - startTime:h\:mm\:ss}");
             Console.WriteLine("############################################");
             sw.Restart();
         }
