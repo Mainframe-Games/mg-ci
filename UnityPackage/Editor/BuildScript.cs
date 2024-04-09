@@ -32,7 +32,9 @@ namespace Mainframe.CI.Editor
             try
             {
                 var fullVersion = $"{Application.version}.{PlayerSettings.macOS.buildNumber}";
-                File.WriteAllText(AppVersion.FilePath, fullVersion);
+                var file = new FileInfo(AppVersion.FilePath);
+                file.Directory?.Create();
+                File.WriteAllText(file.FullName, fullVersion);
             }
             catch (Exception)
             {
