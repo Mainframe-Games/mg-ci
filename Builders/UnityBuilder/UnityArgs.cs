@@ -8,7 +8,8 @@ internal readonly struct UnityArgs
     public string? ProjectPath { get; init; }
     public string? ExecuteMethod { get; init; }
     public string? LogPath { get; init; }
-    public string? BuildPath { get; init; }
+
+    // public string? BuildPath { get; init; }
     public string? SubTarget { get; init; }
 
     /// <summary>
@@ -32,8 +33,8 @@ internal readonly struct UnityArgs
         if (!string.IsNullOrEmpty(LogPath))
             args.Append($" -logFile \"{LogPath}\"");
 
-        if (!string.IsNullOrEmpty(BuildPath))
-            args.Append($" -buildPath \"{BuildPath}\"");
+        // if (!string.IsNullOrEmpty(BuildPath))
+        // args.Append($" -buildPath \"{BuildPath}\"");
 
         if (!string.IsNullOrEmpty(SubTarget))
             args.Append($" -standaloneBuildSubtarget \"{SubTarget}\"");

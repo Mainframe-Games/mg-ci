@@ -108,8 +108,7 @@ internal sealed class BuildRunnerServerService(
         // run build
         var product_name =
             target.GetValue<string>("product_name") ?? throw new NullReferenceException();
-        var buildTargetName =
-            target.GetValue<string>("target") ?? throw new NullReferenceException();
+        var buildTarget = target.GetValue<string>("target") ?? throw new NullReferenceException();
         var target_group =
             target.GetValue<string>("target_group") ?? throw new NullReferenceException();
         var sub_target =
@@ -124,7 +123,7 @@ internal sealed class BuildRunnerServerService(
             projectPath,
             targetName,
             product_name,
-            buildTargetName,
+            buildTarget,
             target_group,
             sub_target,
             scenes.ToArray(),
@@ -146,7 +145,8 @@ internal sealed class BuildRunnerServerService(
         );
 
         // send back
-        FileUploader.UploadDirectory(projectGuid, new DirectoryInfo(unityRunner.BuildPath), this);
+        var path = Path.Combine(projectPath, "Builds", $"{product_name}_{buildTarget}");
+        FileUploader.UploadDirectory(projectGuid, new DirectoryInfo(path), this);
     }
 
     private class BuildQueueItem

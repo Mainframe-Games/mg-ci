@@ -18,8 +18,6 @@ public class UnityBuild
     private readonly string? _assetBundleManifestPath;
     private readonly int _buildOptions;
 
-    public string BuildPath { get; }
-
     public UnityBuild(
         string projectPath,
         string name,
@@ -47,9 +45,6 @@ public class UnityBuild
         _extraScriptingDefines = extraScriptingDefines;
         _assetBundleManifestPath = assetBundleManifestPath;
         _buildOptions = buildOptions;
-
-        // plant current build target settings in project
-        BuildPath = Path.Combine(projectPath, "Builds", _name);
     }
 
     public void Run()
@@ -61,7 +56,7 @@ public class UnityBuild
             ExecuteMethod = "Mainframe.CI.Editor.BuildScript.BuildPlayer",
             ProjectPath = _projectPath,
             LogPath = logPath,
-            BuildPath = BuildPath,
+            // BuildPath = BuildPath,
             BuildTarget = _buildTargetFlag,
             SubTarget = _subTarget,
             CustomArgs = BuildPlayerOptions(),
