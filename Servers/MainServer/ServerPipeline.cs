@@ -12,7 +12,7 @@ namespace MainServer;
 internal class ServerPipeline(
     Guid projectGuid,
     Workspace workspace,
-    IEnumerable<string> buildTargets,
+    List<string> buildTargets,
     ServerConfig serverConfig
 )
 {
@@ -31,7 +31,7 @@ internal class ServerPipeline(
             var changeLog = workspace.GetChangeLog();
 
             // version bump
-            var fullVersion = workspace.VersionBump();
+            var fullVersion = RunVersionBump();
             Console.WriteLine($"Pre Build Complete\n  time: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
 
@@ -73,6 +73,20 @@ internal class ServerPipeline(
         }
         ActiveProjects.Remove(projectGuid);
         BuildRunnerClientService.OnBuildCompleteMessage -= OnBuildCompleted;
+    }
+
+    private string RunVersionBump()
+    {
+        var standalone = buildTargets.Any(
+            x =>
+                x.Contains("Windows", StringComparison.OrdinalIgnoreCase)
+                || x.Contains("Linux", StringComparison.OrdinalIgnoreCase)
+                || x.Contains("OSX", StringComparison.OrdinalIgnoreCase)
+        );
+        var android = buildTargets.Any(x => x.Contains("Android"));
+        var ios = buildTargets.Any(x => x.Contains("iOS"));
+        var fullVersion = workspace.VersionBump(standalone, android, ios);
+        return fullVersion;
     }
 
     #region Build

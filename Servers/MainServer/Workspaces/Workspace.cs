@@ -155,24 +155,19 @@ internal class Workspace(string projectPath, ServerConfig serverConfig)
     /// </summary>
     /// <returns>New Version</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public string VersionBump()
+    public string VersionBump(bool standalone, bool android, bool ios)
     {
         return Engine switch
         {
-            GameEngine.Unity => UnityVersionBump(),
+            GameEngine.Unity => UnityVersionBump(standalone, android, ios),
             GameEngine.Godot => throw new NotImplementedException(),
             _ => throw new ArgumentOutOfRangeException()
         };
     }
 
-    private string UnityVersionBump()
+    private string UnityVersionBump(bool standalone, bool android, bool ios)
     {
-        var standalone = true;
-        var android = true;
-        var ios = true;
-
         var unityVersionBump = new UnityVersionBump(ProjectPath, standalone, android, ios);
-
         var fullVersion = unityVersionBump.Run();
 
         // workspace.SaveBuildVersion(fullVersion);
