@@ -28,7 +28,7 @@ internal class DeploymentRunner
     private readonly ServerConfig _serverConfig;
 
     private readonly string _workspaceName;
-    private readonly string _productName;
+    private readonly string _projectName;
 
     private readonly string _downloadsPath;
 
@@ -54,8 +54,8 @@ internal class DeploymentRunner
             projectToml.GetValue<string>("guid") ?? throw new NullReferenceException()
         );
 
-        _productName =
-            projectToml.GetValue<string>("settings", "product_name")
+        _projectName =
+            projectToml.GetValue<string>("settings", "project_name")
             ?? throw new NullReferenceException();
 
         _steamVdfs = projectToml.GetValue<List<string>>("deployment", "steam_vdfs");
@@ -186,7 +186,7 @@ internal class DeploymentRunner
             _downloadsPath,
             _projectGuid.ToString(),
             "Android",
-            $"{_productName}.aab"
+            $"{_projectName}.aab"
         );
         var aabFile = new FileInfo(aabPath);
 

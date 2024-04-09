@@ -57,8 +57,17 @@ internal class ServerPipeline(
             );
             hookRunner.Run();
 
+            Console.WriteLine($"hooks Complete\n  time: {sw.ElapsedMilliseconds}ms");
+            sw.Restart();
+
             // apply tag
             workspace.Tag($"v{fullVersion}");
+
+            Console.WriteLine("############################################");
+            Console.WriteLine("# Project build completed                  #");
+            Console.WriteLine($"# {projectGuid} #");
+            Console.WriteLine("############################################");
+            sw.Restart();
         }
         ActiveProjects.Remove(projectGuid);
         BuildRunnerClientService.OnBuildCompleteMessage -= OnBuildCompleted;

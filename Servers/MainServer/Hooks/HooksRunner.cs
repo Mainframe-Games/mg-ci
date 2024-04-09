@@ -29,7 +29,7 @@ internal class HooksRunner
     private readonly List<(string targetName, TimeSpan buildTime)> _buildResults;
 
     private readonly string[] _changeLog;
-    private readonly string _productName;
+    private readonly string _projectName;
     private readonly string _fullVersion;
 
     private readonly string _storeUrl;
@@ -59,8 +59,8 @@ internal class HooksRunner
             _projectToml.GetValue<string>("settings", "store_thumbnail_url")
             ?? throw new NullReferenceException();
 
-        _productName =
-            _projectToml.GetValue<string>("settings", "product_name")
+        _projectName =
+            _projectToml.GetValue<string>("settings", "project_name")
             ?? throw new NullReferenceException();
 
         if (
@@ -99,7 +99,7 @@ internal class HooksRunner
         discord.BuildLog(_changeLog);
         hookMessage.AppendLine(discord.ToString());
 
-        var title = $"{_productName} | {_fullVersion}";
+        var title = $"{_projectName} | {_fullVersion}";
 
         // send hooks
         foreach (var hook in _hooks)
