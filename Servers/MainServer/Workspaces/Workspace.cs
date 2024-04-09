@@ -170,8 +170,6 @@ internal class Workspace(string projectPath, ServerConfig serverConfig)
         var unityVersionBump = new UnityVersionBump(ProjectPath, standalone, android, ios);
         var fullVersion = unityVersionBump.Run();
 
-        // workspace.SaveBuildVersion(fullVersion);
-
         // commit file
         var git = GitProcess;
         var sha = git.GetLatestCommitHash();

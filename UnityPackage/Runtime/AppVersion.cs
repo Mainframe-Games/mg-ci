@@ -1,13 +1,18 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using UnityEngine;
+using UnityEditor;
 
-namespace BuildSystem
+#if UNITY_EDITOR
+using UnityEngine;
+#endif
+
+namespace Mainframe.CI.Runtime
 {
 	public readonly struct AppVersion : IEquatable<AppVersion>, IComparable<AppVersion>, IComparable
 	{
 		public static string FILE_NAME => "app_version.txt";
+		public static string FilePath => Path.Combine($"{Application.productName}_Data", FILE_NAME); 
 		
 		private static AppVersion _instance;
 		public static AppVersion Instance
@@ -17,8 +22,13 @@ namespace BuildSystem
 				if (_instance.IsValid)
 					return _instance;
 
-				var path = Path.Combine(Application.streamingAssetsPath, FILE_NAME);
-				var versionText = File.ReadAllText(path);
+#if UNITY_EDITOR
+				var fullVersion = $"{Application.version}.{PlayerSettings.macOS.buildNumber}";
+				_instance = new AppVersion(fullVersion);
+				return _instance;
+#endif
+				
+				var versionText = File.ReadAllText(FilePath);
 				_instance = new AppVersion(versionText);
 				return _instance;
 			}

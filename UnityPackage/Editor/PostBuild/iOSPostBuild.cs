@@ -1,10 +1,10 @@
 using System;
-using BuildSystem.Utils;
+using Mainframe.CI.Editor.Utils;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 
-namespace BuildSystem.PostBuild
+namespace Mainframe.CI.Editor.PostBuild
 {
 	public class iOSPostBuild : IPostprocessBuildWithReport
 	{

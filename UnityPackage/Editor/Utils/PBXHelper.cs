@@ -2,7 +2,7 @@
 using UnityEditor.iOS.Xcode;
 #endif
 
-namespace BuildSystem.Utils
+namespace Mainframe.CI.Editor.Utils
 {
 	public class PBXHelper
 	{

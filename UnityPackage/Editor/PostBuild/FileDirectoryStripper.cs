@@ -3,7 +3,7 @@ using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-namespace BuildSystem.PostBuild
+namespace Mainframe.CI.Editor.PostBuild
 {
 	public class FileDirectoryStripper : IPostprocessBuildWithReport
 	{

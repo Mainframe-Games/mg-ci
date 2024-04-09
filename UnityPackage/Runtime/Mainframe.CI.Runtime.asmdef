@@ -1,12 +1,8 @@
 {
-    "name": "Mainframe.CI.Editor",
-    "rootNamespace": "Mainframe.CI.Editor",
-    "references": [
-        "GUID:f476f95e969c25b41b9b8b1d706c3ec2"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "name": "Mainframe.CI.Runtime",
+    "rootNamespace": "Mainframe.CI.Runtime",
+    "references": [],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

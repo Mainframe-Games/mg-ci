@@ -1,9 +1,9 @@
 using System.Linq;
-using BuildSystem.PostProcessors.PList;
+using Mainframe.CI.Editor.PostProcessors.PList;
 using UnityEditor;
 using UnityEngine;
 
-namespace BuildSystem
+namespace Mainframe.CI.Editor
 {
 	public class BuildSettings
 	{

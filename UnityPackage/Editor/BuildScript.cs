@@ -3,11 +3,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Mainframe.CI.Runtime;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-namespace BuildSystem
+namespace Mainframe.CI.Editor
 {
     public static class BuildScript
     {
@@ -38,8 +39,14 @@ namespace BuildSystem
             PrintBuildOptions(options);
             var report = BuildPipeline.BuildPlayer(options);
 
+            var fullVersion = $"{Application.version}.{PlayerSettings.macOS.buildNumber}";
+            var outDir = new FileInfo(report.summary.outputPath).Directory;
+            var outDataPath = Path.Combine(outDir!.FullName, AppVersion.FilePath);
+            File.WriteAllText(outDataPath, fullVersion);
+
             PrintReportSummary(report.summary);
-            ExitWithResult(report.summary.result, report);
+            if (IsFlag("-quit"))
+                ExitWithResult(report.summary.result, report);
         }
 
         private static BuildPlayerOptions GetBuildOptions()
@@ -50,7 +57,10 @@ namespace BuildSystem
                 ? outExtraScriptingDefines.Split(',')
                 : null;
 
-            TryGetArg("-locationPathName", out var locationPathName);
+            var locationPathName = TryGetArg("-locationPathName", out var outLocationPathName)
+                ? outLocationPathName
+                : GetDefaultBuildPath();
+
             TryGetArg("-assetBundleManifestPath", out var assetBundleManifestPath);
 
             var options = TryGetArg("-options", out var optionsStr)
@@ -73,6 +83,30 @@ namespace BuildSystem
             return buildOptions;
         }
 
+        private static string GetDefaultBuildPath()
+        {
+            var path = Path.Combine("Builds", EditorUserBuildSettings.activeBuildTarget.ToString(),
+                Application.productName + GetExtension());
+            return path;
+        }
+
+        private static string GetExtension()
+        {
+            return EditorUserBuildSettings.activeBuildTarget switch
+            {
+                BuildTarget.StandaloneOSX => ".app",
+                BuildTarget.StandaloneWindows64 => ".exe",
+                BuildTarget.StandaloneWindows => ".exe",
+                BuildTarget.WebGL => string.Empty,
+                BuildTarget.iOS => string.Empty,
+                BuildTarget.Android => ".aab",
+                BuildTarget.EmbeddedLinux => ".86_64",
+                BuildTarget.StandaloneLinux64 => ".86_64",
+                _ => throw new ArgumentOutOfRangeException(nameof(EditorUserBuildSettings.activeBuildTarget),
+                    $"buildTarget not supported: {EditorUserBuildSettings.activeBuildTarget}")
+            };
+        }
+
         private static BuildTargetGroup GetActiveBuildTargetGroup()
         {
             var prop = typeof(EditorUserBuildSettings)
@@ -86,7 +120,7 @@ namespace BuildSystem
         private static string[] GetScenePaths()
         {
             string[] scenePaths = null;
-            
+
             if (TryGetArg("-scenes", out var scenesArg))
             {
                 var sceneNames = scenesArg.Split(',');
@@ -187,6 +221,9 @@ namespace BuildSystem
 
         private static bool EnsureBuildDirectoryExists(BuildPlayerOptions options)
         {
+            if (string.IsNullOrEmpty(options.locationPathName))
+                return true;
+
             var fullDir = new FileInfo(options.locationPathName).Directory;
 
             // ensure build target folder exits
@@ -212,6 +249,12 @@ namespace BuildSystem
             PlayerSettings.Android.keystorePass = keyStorePassword;
             PlayerSettings.Android.keyaliasName = keyStoreAlias;
             PlayerSettings.Android.keyaliasPass = keyStorePassword;
+        }
+
+        public static bool IsFlag(string flag)
+        {
+            var index = Array.IndexOf(_args, flag);
+            return index != -1 && index + 1 < _args.Length;
         }
 
         private static bool TryGetArg(string arg, out string value)

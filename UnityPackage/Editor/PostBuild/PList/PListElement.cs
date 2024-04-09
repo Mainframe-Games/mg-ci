@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BuildSystem.PostProcessors.PList
+namespace Mainframe.CI.Editor.PostProcessors.PList
 {
 	[Serializable]
 	public abstract class PListElement

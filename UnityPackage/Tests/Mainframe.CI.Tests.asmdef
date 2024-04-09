@@ -1,8 +1,8 @@
 {
-    "name": "Mainframe.CI.Editor",
-    "rootNamespace": "Mainframe.CI.Editor",
+    "name": "Mainframe.CI.Tests",
+    "rootNamespace": "Mainframe.CI.Tests",
     "references": [
-        "GUID:f476f95e969c25b41b9b8b1d706c3ec2"
+        "GUID:f5f533e4014fc8741b17bfa9bf8b2db8"
     ],
     "includePlatforms": [
         "Editor"
