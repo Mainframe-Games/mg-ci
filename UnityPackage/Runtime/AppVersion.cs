@@ -1,10 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using UnityEditor;
+using UnityEngine;
 
 #if UNITY_EDITOR
-using UnityEngine;
+using UnityEditor;
 #endif
 
 namespace Mainframe.CI.Runtime
