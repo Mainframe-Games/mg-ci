@@ -136,14 +136,15 @@ internal class Git(
         );
     }
 
-    public void Tag(string tag)
+    public void Tag(string inTag)
     {
         using var repository = new Repository(projectPath);
-        repository.ApplyTag(tag, _author, tag);
-        repository.Network.Push(
-            repository.Head,
-            new PushOptions { CredentialsProvider = CredentialsHandler }
-        );
+        repository.ApplyTag(inTag, _author, inTag);
+        // repository.Network.Push(
+        //     repository.Head,
+        //     new PushOptions { CredentialsProvider = CredentialsHandler }
+        // );
+        RunProcess("git push");
     }
 
     private Credentials CredentialsHandler(
