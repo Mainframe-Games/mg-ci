@@ -61,7 +61,7 @@ public class UnityBuild
 
         var args = new UnityArgs
         {
-            ExecuteMethod = "BuildSystem.BuildScript.BuildPlayer",
+            ExecuteMethod = "Mainframe.CI.Editor.BuildScript.BuildPlayer",
             ProjectPath = _projectPath,
             LogPath = logPath,
             BuildPath = BuildPath,
