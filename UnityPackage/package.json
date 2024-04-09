@@ -1,6 +1,6 @@
 {
 	"name": "games.mainframe.ci",
-	"version": "2.0.0-preview.6",
+	"version": "2.0.0-preview.7",
 	"displayName": "Mainframe CI",
 	"description": "Build system for Unity. Src: https://github.com/Mainframe-Games/mg-ci.git?path=UnityPackage",
 	"changelogUrl": "https://github.com/Mainframe-Games/mg-ci",
