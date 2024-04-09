@@ -73,7 +73,7 @@ internal sealed class BuildRunnerServerService(
             switch (workspace.Engine)
             {
                 case GameEngine.Unity:
-                    RunUnity(workspace.ProjectPath, targetName, workspace);
+                    RunUnity(projectGuid, workspace.ProjectPath, targetName, workspace);
                     break;
                 case GameEngine.Godot:
                     throw new NotImplementedException();
@@ -85,7 +85,12 @@ internal sealed class BuildRunnerServerService(
         Console.WriteLine("Build queue empty");
     }
 
-    private void RunUnity(string projectPath, string targetName, Workspace workspace)
+    private void RunUnity(
+        Guid projectGuid,
+        string projectPath,
+        string targetName,
+        Workspace workspace
+    )
     {
         var project = workspace.GetProjectToml();
         var isBuildTargets = project.TryGetValue("build_targets", out var buildTargets);
@@ -143,7 +148,7 @@ internal sealed class BuildRunnerServerService(
         );
 
         // send back
-        FileUploader.UploadDirectory(product_name, new DirectoryInfo(unityRunner.BuildPath), this);
+        FileUploader.UploadDirectory(projectGuid, new DirectoryInfo(unityRunner.BuildPath), this);
     }
 
     private class BuildQueueItem

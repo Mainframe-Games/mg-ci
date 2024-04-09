@@ -19,18 +19,20 @@ public class TestClientService(Client client) : ClientService(client)
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var path = Path.Combine(home, "ci-cache", "Unity Test", "Builds");
 
+        var projectGuid = Guid.NewGuid();
+
         FileUploader.UploadDirectory(
-            "Unity Test",
+            projectGuid,
             new DirectoryInfo(Path.Combine(path, "Windows")),
             this
         );
         FileUploader.UploadDirectory(
-            "Unity Test",
+            projectGuid,
             new DirectoryInfo(Path.Combine(path, "Linux")),
             this
         );
         FileUploader.UploadDirectory(
-            "Unity Test",
+            projectGuid,
             new DirectoryInfo(Path.Combine(path, "Mac")),
             this
         );

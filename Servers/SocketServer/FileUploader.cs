@@ -4,7 +4,7 @@ public static class FileUploader
 {
     private class UploadQueueData
     {
-        public string? ProductName { get; set; }
+        public Guid ProjectGuid { get; set; }
         public DirectoryInfo? Directory { get; set; }
         public IService? Service { get; set; }
     }
@@ -12,11 +12,11 @@ public static class FileUploader
     private static readonly Queue<UploadQueueData> _uploadQueue = new();
     private static Task? _dispatchTask;
 
-    public static void UploadDirectory(string productName, DirectoryInfo rootDir, IService service)
+    public static void UploadDirectory(Guid projectGuid, DirectoryInfo rootDir, IService service)
     {
         var data = new UploadQueueData
         {
-            ProductName = productName,
+            ProjectGuid = projectGuid,
             Directory = rootDir,
             Service = service
         };
@@ -41,7 +41,7 @@ public static class FileUploader
             try
             {
                 var queueData = _uploadQueue.Dequeue();
-                var productName = queueData.ProductName ?? string.Empty;
+                var projectGuid = queueData.ProjectGuid;
                 var rootDir = queueData.Directory ?? throw new NullReferenceException();
                 var service = queueData.Service ?? throw new NullReferenceException();
 
@@ -62,7 +62,7 @@ public static class FileUploader
                         await using var writer = new BinaryWriter(ms);
 
                         // add dir name
-                        writer.Write(productName); // string
+                        writer.Write(projectGuid.ToString()); // string
                         writer.Write(rootDir.Name); // string
                         writer.Write(fileLocalPath); // string
                         writer.Write((uint)file.Length); // uint32

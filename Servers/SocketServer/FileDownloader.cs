@@ -8,7 +8,7 @@ public static class FileDownloader
     {
         using var ms = new MemoryStream(data);
         using var reader = new BinaryReader(ms);
-        var productName = reader.ReadString(); // string
+        var projectGuid = new Guid(reader.ReadString()); // string
         var dirName = reader.ReadString(); // string
         var filePath = reader.ReadString(); // string
         var totalBytes = reader.ReadUInt32(); // uint32
@@ -18,7 +18,7 @@ public static class FileDownloader
         var key = Path.Combine(dirName, filePath);
 
         if (!_packets.ContainsKey(key))
-            _packets.Add(key, CreateNewDownloadPacket(productName, dirName, filePath, totalBytes));
+            _packets.Add(key, CreateNewDownloadPacket(projectGuid, dirName, filePath, totalBytes));
 
         var packet = _packets[key];
         packet.Write(fragment);
@@ -35,7 +35,7 @@ public static class FileDownloader
     }
 
     private static Packet CreateNewDownloadPacket(
-        string productName,
+        Guid projectId,
         string dirName,
         string inFilePath,
         uint totalBytes
@@ -46,7 +46,7 @@ public static class FileDownloader
             home,
             "ci-cache",
             "Downloads",
-            productName,
+            projectId.ToString(),
             dirName,
             inFilePath
         );

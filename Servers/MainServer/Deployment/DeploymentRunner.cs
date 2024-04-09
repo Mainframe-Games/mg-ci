@@ -182,7 +182,12 @@ internal class DeploymentRunner
         var unityProjectSettings = new UnityProjectSettings(_workspace.ProjectPath);
         var packageName = unityProjectSettings.GetValue("applicationIdentifier", "Android");
 
-        var aabPath = Path.Combine(_downloadsPath, _productName, "Android", $"{_productName}.aab");
+        var aabPath = Path.Combine(
+            _downloadsPath,
+            _projectGuid.ToString(),
+            "Android",
+            $"{_productName}.aab"
+        );
         var aabFile = new FileInfo(aabPath);
 
         if (!aabFile.Exists)
