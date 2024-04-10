@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using LibGit2Sharp;
 
 namespace MainServer.VersionControls;
@@ -65,6 +66,21 @@ internal class Git(
         );
     }
 
+    private void Chmod(string pathToFile)
+    {
+        var info = new ProcessStartInfo
+        {
+            FileName = "chmod",
+            Arguments = $"+x {pathToFile}",
+            WorkingDirectory = projectPath,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        Process.Start(info)!.WaitForExit();
+    }
+
     private void RunProcess(string args)
     {
         var info = new ProcessStartInfo
@@ -77,6 +93,23 @@ internal class Git(
             UseShellExecute = false,
             CreateNoWindow = true
         };
+        
+        const string GIT_ASK = "git-askpass.sh";
+        
+        if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(accessToken))
+        {
+            var sh = new StringBuilder();
+            sh.AppendLine("#!/bin/bash");
+            sh.AppendLine("echo \"$GIT_PASSWORD\"");
+            info.EnvironmentVariables["GIT_USERNAME"] = username;
+            info.EnvironmentVariables["GIT_PASSWORD"] = accessToken;
+            File.WriteAllText(GIT_ASK, sh.ToString());
+            
+            var gitAsk = new FileInfo(GIT_ASK);
+            info.EnvironmentVariables["GIT_ASKPASS"] = gitAsk.FullName;
+            Chmod(gitAsk.FullName);
+        }
+        
         Console.WriteLine($"Running: git {args}");
         var process = Process.Start(info) ?? throw new NullReferenceException();
 
@@ -95,6 +128,9 @@ internal class Git(
         process.BeginErrorReadLine();
 
         process.WaitForExit();
+
+        if (File.Exists(GIT_ASK))
+            File.Delete(GIT_ASK);
     }
 
     public string[] GetChangeLog()
