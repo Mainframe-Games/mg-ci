@@ -28,4 +28,14 @@ internal static class TomlEx
             return (T)value;
         return default;
     }
+    
+    public static IList<T>? GetList<T>(this TomlTable table, string key)
+    {
+        if (table.TryGetValue(key, out var value))
+        {
+            if (value is TomlArray array)
+                return new List<T>(array.ToList().Cast<T>());
+        }
+        return null;
+    }
 }
