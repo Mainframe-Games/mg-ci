@@ -19,7 +19,7 @@ namespace Mainframe.CI.Editor
         /// </summary>
         public static void BuildPlayer()
         {
-            Console.WriteLine($"BuildPlayer called with args: {string.Join(", ", _args)}");
+            Console.WriteLine($"BuildPlayer called with args: {string.Join(" ", _args)}");
 
             WriteAppVersion();
 
@@ -160,16 +160,7 @@ namespace Mainframe.CI.Editor
             string[] scenePaths = null;
 
             if (TryGetArg("-scenes", out var scenesArg))
-            {
-                var sceneNames = scenesArg.Split(',');
-                scenePaths = AssetDatabase.FindAssets("t:Scene", sceneNames)
-                    .Select(AssetDatabase.AssetPathToGUID)
-                    .Select(AssetDatabase.GUIDToAssetPath)
-                    .ToArray();
-            }
-
-            if (scenePaths?.Length > 0)
-                return scenePaths;
+                scenePaths = scenesArg.Split(',');
 
             return EditorBuildSettings.scenes
                 .Where(scene => scene.enabled)

@@ -1,5 +1,7 @@
+using System.Linq;
 using Mainframe.CI.Editor;
 using NUnit.Framework;
+using UnityEditor;
 
 namespace Mainframe.CI.Tests
 {
@@ -21,5 +23,17 @@ namespace Mainframe.CI.Tests
         //     // Use yield to skip a frame.
         //     yield return null;
         // }
+
+        [Test]
+        public void TestGettingScenes()
+        {
+            var scenesArg = "Assets/Scenes/Scene.unity,Assets/Scenes/Scene2.unity";
+            var sceneNames = scenesArg.Split(',');
+            var scenePaths = sceneNames
+                .Select(AssetDatabase.AssetPathToGUID)
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Where(x => !string.IsNullOrEmpty(x))
+                .ToArray();
+        }
     }
 }
