@@ -113,8 +113,8 @@ internal sealed class BuildRunnerServerService(
             target.GetValue<string>("target_group") ?? throw new NullReferenceException();
         var sub_target =
             target.GetValue<string>("sub_target") ?? throw new NullReferenceException();
-        var scenes = target.GetValue<List<string>>("scenes") ?? [];
-        var extraScriptingDefines = target.GetValue<List<string>>("extra_scripting_defines") ?? [];
+        var scenes = target.GetList<string>("scenes") ?? [];
+        var extraScriptingDefines = target.GetList<string>("extra_scripting_defines") ?? [];
         var assetBundleManifestPath =
             target.GetValue<string>("asset_bundle_manifest_path") ?? string.Empty;
         var build_options = (int)target.GetValue<long>("build_options");
