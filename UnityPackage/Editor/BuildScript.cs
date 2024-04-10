@@ -64,14 +64,16 @@ namespace Mainframe.CI.Editor
         private static BuildPlayerOptions GetBuildOptions()
         {
             var scenes = GetScenePaths();
-
-            var extraScriptingDefines = TryGetArg("-extraScriptingDefines", out var outExtraScriptingDefines)
-                ? outExtraScriptingDefines.Split(',')
-                : null;
-
             var locationPathName = GetDefaultBuildPath();
 
             TryGetArg("-assetBundleManifestPath", out var assetBundleManifestPath);
+            
+            var extraScriptingDefines = TryGetArg("-extraScriptingDefines", out var outExtraScriptingDefines)
+                ? outExtraScriptingDefines.Split(',')
+                    .Where(x => !string.IsNullOrEmpty(x))
+                    .Select(x => x.Trim())
+                    .ToArray()
+                : null;
 
             var options = TryGetArg("-options", out var optionsStr)
                           && int.TryParse(optionsStr, out var optionsInt)
@@ -157,10 +159,13 @@ namespace Mainframe.CI.Editor
 
         private static string[] GetScenePaths()
         {
-            string[] scenePaths = null;
-
             if (TryGetArg("-scenes", out var scenesArg))
-                scenePaths = scenesArg.Split(',');
+            {
+                var scenePaths = scenesArg.Split(',');
+                foreach (var scenePath in scenePaths)
+                    if (!AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath))
+                        throw new Exception($"Scene not found: {scenePath}");
+            }
 
             return EditorBuildSettings.scenes
                 .Where(scene => scene.enabled)

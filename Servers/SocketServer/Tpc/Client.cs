@@ -75,8 +75,9 @@ public sealed class Client
         {
             var packet = _sendQueue.Dequeue();
             var data = packet.GetBytes();
+            Console.WriteLine($"[Client_{Id}] Send packet {packet}");
             await _stream.WriteAsync(data);
-            await Task.Delay(10); // delay to prevent spamming
+            await Task.Delay(20); // delay to prevent spamming
         }
 
         Console.WriteLine($"[Client_{Id}] Send queue empty");
@@ -130,6 +131,8 @@ public sealed class Client
 
                 var packet = new TpcPacket();
                 packet.Read(data);
+                
+                Console.WriteLine($"[Client_{Id}] Packet Received: {packet}");
 
                 switch (packet.Type)
                 {

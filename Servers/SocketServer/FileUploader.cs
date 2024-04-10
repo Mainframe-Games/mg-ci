@@ -71,6 +71,8 @@ public static class FileUploader
 
                         service.SendBinary(ms.ToArray());
                     }
+                    
+                    Console.WriteLine($"File Uploaded: {file.FullName}");
                 }
 
                 Console.WriteLine($"Upload complete: {rootDir.FullName}");

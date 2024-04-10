@@ -188,8 +188,9 @@ public class Server(int port)
             var (client, packet) = _sendQueue.Dequeue();
             var stream = client.TcpClient.GetStream();
             var data = packet.GetBytes();
+            Console.WriteLine($"[Server] Send packet {packet}");
             await stream.WriteAsync(data);
-            await Task.Delay(10);
+            await Task.Delay(20);
         }
 
         _sendTask = null;

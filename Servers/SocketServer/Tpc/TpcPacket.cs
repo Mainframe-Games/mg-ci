@@ -13,19 +13,24 @@ internal enum MessageType : byte
 
 internal class TpcPacket
 {
+    private static ulong NextId;
+
     /// <summary>
     /// Unique ID for packet
     /// </summary>
-    public Guid Id { get; private set; } = Guid.NewGuid();
+    public ulong Id { get; private set; }
 
     /// <summary>
     /// Empty service name will send to all services
     /// </summary>
     public string ServiceName { get; private set; } = string.Empty;
-    public MessageType Type { get; private set; }
-    public byte[] Data { get; private set; } = Array.Empty<byte>();
 
-    public TpcPacket() { }
+    public MessageType Type { get; private set; }
+    public byte[] Data { get; private set; } = [];
+
+    public TpcPacket()
+    {
+    }
 
     public TpcPacket(MessageType type, byte[] data)
     {
@@ -45,7 +50,8 @@ internal class TpcPacket
         var ms = new MemoryStream();
         var writer = new BinaryWriter(ms);
         {
-            writer.Write(Id.ToString()); // string
+            Id = ++NextId;
+            writer.Write(Id); // uint64
             writer.Write(ServiceName); // string
             writer.Write((byte)Type); // byte
             writer.Write(Data.Length); // int32
@@ -65,16 +71,15 @@ internal class TpcPacket
     {
         var ms = new MemoryStream(bytes);
         var reader = new BinaryReader(ms);
-        {
-            Id = Guid.Parse(reader.ReadString()); // string
-            ServiceName = reader.ReadString(); // string
-            Type = (MessageType)reader.ReadByte(); // byte
-            var dataLength = reader.ReadInt32(); // int32
 
-            if (dataLength > 0)
-                Data = reader.ReadBytes(dataLength); // byte[]
-        }
+        Id = reader.ReadUInt64(); // uint64
+        ServiceName = reader.ReadString(); // string
+        Type = (MessageType)reader.ReadByte(); // byte
+        var dataLength = reader.ReadInt32(); // int32
 
+        if (dataLength > 0)
+            Data = reader.ReadBytes(dataLength); // byte[]
+        
         reader.Dispose();
         ms.Dispose();
     }

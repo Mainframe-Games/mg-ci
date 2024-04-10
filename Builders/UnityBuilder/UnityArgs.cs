@@ -41,7 +41,7 @@ internal readonly struct UnityArgs
 
         if (CustomArgs is not null)
             foreach (var customArg in CustomArgs)
-                args.Append($" {customArg}");
+                args.Append($" {customArg.Trim()}");
 
         var output = args.ToString();
         return output;

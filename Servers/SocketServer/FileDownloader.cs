@@ -30,7 +30,7 @@ public static class FileDownloader
             return;
 
         // OnFileDownloadCompleted?.Invoke(packet.Path);
-        // Console.WriteLine($"Download complete [{packet.Path}]");
+        Console.WriteLine($"Download complete [{packet.Path}]");
         _packets.Remove(key);
     }
 

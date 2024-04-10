@@ -93,9 +93,14 @@ public class UnityBuild
 
         if (_scenes is not null && _scenes.Length > 0)
         {
-            args.Add("-scenes");
-            foreach (var scene in _scenes ?? [])
-                args.Add($",\"{scene}\"");
+            args.Add("-scenes ");
+            for (var i = 0; i < _scenes.Length; i++)
+            {
+                if (i == 0)
+                    args.Add($"\"{_scenes[i]}\"");
+                else
+                    args.Add($",\"{_scenes[i]}\"");
+            }
         }
 
         if (!string.IsNullOrEmpty(_assetBundleManifestPath))
