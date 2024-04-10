@@ -80,8 +80,8 @@ namespace Mainframe.CI.Editor
 
             var buildOptions = new BuildPlayerOptions
             {
-                target = EditorUserBuildSettings.activeBuildTarget,
-                subtarget = (int)EditorUserBuildSettings.standaloneBuildSubtarget,
+                target = GetBuildTarget(),
+                subtarget = GetBuildSubTarget(),
                 options = (BuildOptions)options,
                 targetGroup = GetActiveBuildTargetGroup(),
                 scenes = scenes,
@@ -91,6 +91,32 @@ namespace Mainframe.CI.Editor
             };
 
             return buildOptions;
+        }
+
+        private static int GetBuildSubTarget()
+        {
+            var subTarget = GetArg("-standaloneBuildSubtarget");
+            if (Enum.TryParse<StandaloneBuildSubtarget>(subTarget, out var value))
+                return (int)value;
+            return 0;
+        }
+
+        /// <summary>
+        /// Src: https://docs.unity3d.com/Manual/EditorCommandLineArguments.html
+        /// </summary>
+        /// <returns></returns>
+        private static BuildTarget GetBuildTarget()
+        {
+            var target = GetArg("-buildTarget");
+            return target switch
+            {
+                "Win64" => BuildTarget.StandaloneWindows64,
+                "OSXUniversal" => BuildTarget.StandaloneOSX,
+                "Linux64" => BuildTarget.StandaloneLinux64,
+                "iOS" => BuildTarget.iOS,
+                "Android" => BuildTarget.Android,
+                _ => throw new Exception($"Target not supported: {target}")
+            };
         }
 
         private static string GetDefaultBuildPath()
