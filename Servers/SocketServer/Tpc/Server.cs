@@ -49,7 +49,7 @@ public class Server(int port)
                     $"[Server] Client connected: {client.Id}, ConnectedClients: {_connectedClients.Count}"
                 );
 
-                SendConnectionHandshake(client);
+                await SendConnectionHandshake(client);
                 _ = Task.Run(() => HandleClient(client));
             }
             catch (Exception e)
@@ -60,7 +60,7 @@ public class Server(int port)
         }
     }
 
-    private void SendConnectionHandshake(ConnectedClient client)
+    private async Task SendConnectionHandshake(ConnectedClient client)
     {
         var services = _services.Keys.ToArray();
         var message = new ServerConnectionMessage
@@ -71,7 +71,7 @@ public class Server(int port)
             Services = services
         };
         var data = Encoding.UTF8.GetBytes(message.ToString());
-        SendToClient(client, new TpcPacket(MessageType.Connection, data));
+        await SendToClient(client, new TpcPacket(MessageType.Connection, data));
     }
 
     private async void HandleClient(ConnectedClient inClient)
@@ -83,12 +83,14 @@ public class Server(int port)
         {
             try
             {
-                while (!stream.DataAvailable)
-                {
-                }
+                while (!stream.DataAvailable) { }
 
-                var bytesRead = 0;
-                byte[] buffer;
+                // // checksum
+                // var sumBuffer = new byte[1024];
+                // var sumSize = await stream.ReadAsync(sumBuffer);
+                // var sumValue = new byte[sumSize];
+                // Array.Copy(sumBuffer, sumValue, sumSize);
+                // var sum = Encoding.UTF8.GetString(sumValue);
 
                 // read size
                 var sizeBuffer = new byte[sizeof(int)];
@@ -100,8 +102,9 @@ public class Server(int port)
                 Console.WriteLine($"[Server] In coming packet size: {packetSize}");
 
                 // read packet
-                buffer = new byte[packetSize];
-
+                var buffer = new byte[packetSize];
+                var bytesRead = 0;
+                
                 while (bytesRead < packetSize)
                     bytesRead += await stream.ReadAsync(buffer);
 
@@ -111,47 +114,45 @@ public class Server(int port)
                 var data = new byte[bytesRead];
                 Array.Copy(buffer, data, bytesRead);
 
+                var sumCalc = CheckSum.Build(data);
+                Console.WriteLine($"  Checksum: {sumCalc}");
+                // Console.WriteLine($"  Checksum pass: {sumCalc == sum}");
+                Console.WriteLine($"  Size: {Print.ToByteSizeString(data.Length)}");
+                Console.WriteLine();
+                
                 var packet = new TpcPacket();
                 packet.Read(data);
 
-                Console.WriteLine($"[Server] Packet Received: {packet}");
+                // Console.WriteLine($"[Server] Packet Received: {packet}");
 
                 var packetType = packet.Type;
 
                 switch (packetType)
                 {
                     case MessageType.Connection:
-                        Console.WriteLine("Server should never receive a connection message.");
-                        break;
+                        throw new Exception("Server should never receive a connection message.");
+                    
                     case MessageType.Close:
-                    {
                         client.Close();
                         Console.WriteLine(
                             $"[Server] Client disconnected. ConnectedClients: {_connectedClients.Count}"
                         );
                         break;
-                    }
 
                     case MessageType.String:
                         var str = Encoding.UTF8.GetString(packet.Data, 0, packet.Data.Length);
-                        ReceiveString(client, packet.ServiceName, str);
+                        ReceiveString(packet.ServiceName, str);
                         break;
                     case MessageType.Binary:
-                        ReceiveBinary(client, packet.ServiceName, packet.Data);
+                        ReceiveBinary(packet.ServiceName, packet.Data);
                         break;
                     case MessageType.Json:
                         var json = Encoding.UTF8.GetString(packet.Data, 0, packet.Data.Length);
                         var jObject = JObject.Parse(json) ?? throw new NullReferenceException();
-                        ReceiveJson(client, packet.ServiceName, jObject);
+                        ReceiveJson(packet.ServiceName, jObject);
                         break;
                     default:
-                    {
-                        Console.WriteLine(
-                            $"[Server] Unknown packet type: {packet.Type}, packetId: {packet.Id}"
-                        );
-                        Kill();
-                        break;
-                    }
+                        throw new Exception($"[Server] Unknown packet type: {packet.Type}, packetId: {packet.Id}");
                 }
             }
             catch (Exception e)
@@ -168,19 +169,19 @@ public class Server(int port)
 
     #region Reived from clients
 
-    private void ReceiveString(TcpClient client, string serviceName, string str)
+    private void ReceiveString(string serviceName, string str)
     {
         Console.WriteLine($"[Server/{serviceName}] Received string: {str}");
         GetService(serviceName).OnStringMessage(str);
     }
 
-    private void ReceiveBinary(TcpClient client, string serviceName, byte[] data)
+    private void ReceiveBinary(string serviceName, byte[] data)
     {
-        Console.WriteLine($"[Server/{serviceName}] Received byte[]: {data.Length}");
+        // Console.WriteLine($"[Server/{serviceName}] Received byte[]: {data.Length}");
         GetService(serviceName).OnDataMessage(data);
     }
 
-    private void ReceiveJson(TcpClient client, string serviceName, JObject json)
+    private void ReceiveJson(string serviceName, JObject json)
     {
         Console.WriteLine($"[Server/{serviceName}] Received json: {json}");
         GetService(serviceName).OnJsonMessage(json);
@@ -190,15 +191,15 @@ public class Server(int port)
 
     #region Sends
 
-    internal void SendToClients(TpcPacket packet)
+    internal async Task SendToClients(TpcPacket packet)
     {
-        foreach (var client in _connectedClients)
-            SendToClient(client.Value, packet);
+        await Task.WhenAll(_connectedClients.Select(client
+            => SendToClient(client.Value, packet)));
     }
 
-    private static void SendToClient(ConnectedClient client, TpcPacket packet)
+    private static async Task SendToClient(ConnectedClient client, TpcPacket packet)
     {
-        client.Dispatcher.Send(packet);
+        await client.Dispatcher.SendAsync(packet);
     }
 
     #endregion

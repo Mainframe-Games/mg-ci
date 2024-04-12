@@ -1,4 +1,5 @@
 using System.Net.Sockets;
+using System.Text;
 
 namespace SocketServer;
 
@@ -19,20 +20,30 @@ internal class PacketDispatcher(INetworkDispatcher dispatcher)
         _sendTask ??= Task.Run(SendInternal);
     }
 
+    internal async Task SendAsync(TpcPacket packet)
+    {
+        var data = packet.GetBytes();
+        var checksum = CheckSum.Build(data);
+        
+        // Console.WriteLine($"[{dispatcher.Alias}] Send packet {packet}");
+        Console.WriteLine();
+        Console.WriteLine($"[{dispatcher.Alias}] Sending");
+        Console.WriteLine($"  Checksum: {checksum}");
+        Console.WriteLine($"  Size: {Print.ToByteSizeString(data.Length)}");
+        Console.WriteLine();
+        
+        // await dispatcher.NetworkStream.WriteAsync(Encoding.UTF8.GetBytes(checksum));
+        await dispatcher.NetworkStream.WriteAsync(BitConverter.GetBytes(data.Length));
+        await dispatcher.NetworkStream.WriteAsync(data);
+        await Task.Delay(10); // delay to prevent spamming
+    }
+
     private async Task SendInternal()
     {
         while (_sendQueue.Count > 0)
         {
             var packet = _sendQueue.Dequeue();
-            var data = packet.GetBytes();
-            Console.WriteLine($"[{dispatcher.Alias}] Send packet {packet}");
-            dispatcher.NetworkStream.Write(BitConverter.GetBytes(data.Length));
-            dispatcher.NetworkStream.Write(data);
-            if (dispatcher.NetworkStream.Length != data.Length)
-                throw new Exception("stream length does not match data length");
-            dispatcher.NetworkStream.Flush();
-
-            await Task.Delay(10); // delay to prevent spamming
+            await SendAsync(packet);
         }
 
         Console.WriteLine($"[{dispatcher.Alias}] Send queue empty");

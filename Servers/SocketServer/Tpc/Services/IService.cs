@@ -12,7 +12,7 @@ public interface IService
     void OnJsonMessage(JObject payload);
 
     // sends
-    void SendString(string message);
-    void SendBinary(byte[] data);
-    void SendJson(JObject payload);
+    Task SendString(string message);
+    Task SendBinary(byte[] data);
+    Task SendJson(JObject payload);
 }

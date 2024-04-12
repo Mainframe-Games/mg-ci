@@ -17,22 +17,22 @@ public abstract class ClientService(Client client) : IService
     public bool IsConnected => client.IsConnected;
     public OperationSystemType ServerOperationSystem => client.ServerOperationSystem;
 
-    public void SendString(string message)
+    public async Task SendString(string message)
     {
         var packet = Encoding.UTF8.GetBytes(message);
-        client.Send(new TpcPacket(Name, MessageType.String, packet));
+        await client.SendAsync(new TpcPacket(Name, MessageType.String, packet));
     }
 
-    public void SendBinary(byte[] data)
+    public async Task SendBinary(byte[] data)
     {
-        client.Send(new TpcPacket(Name, MessageType.Binary, data));
+        await client.SendAsync(new TpcPacket(Name, MessageType.Binary, data));
     }
 
-    public void SendJson(JObject payload)
+    public async Task SendJson(JObject payload)
     {
         var data = Encoding.UTF8.GetBytes(payload.ToString());
         var packet = new TpcPacket(Name, MessageType.Json, data);
-        Console.WriteLine($"[ClientService] SendJson: {packet.Id}\n{payload}");
-        client.Send(packet);
+        // Console.WriteLine($"[ClientService/{Name}] SendJson: {packet.Id}\n{payload}");
+        await client.SendAsync(packet);
     }
 }

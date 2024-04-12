@@ -16,25 +16,22 @@ public class TestClientService(Client client) : ClientService(client)
     {
         base.OnConnected();
 
+        var projectGuid = new Guid("25f1670b-3be3-4f75-aacc-3b5390d355a0");
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var path = Path.Combine(home, "ci-cache", "Unity Test", "Builds");
+        var path = Path.Combine(home, "ci-cache", projectGuid.ToString(), "Builds");
 
-        var projectGuid = Guid.NewGuid();
-
-        FileUploader.UploadDirectory(
-            projectGuid,
-            new DirectoryInfo(Path.Combine(path, "Windows")),
-            this
-        );
-        FileUploader.UploadDirectory(
-            projectGuid,
-            new DirectoryInfo(Path.Combine(path, "Linux")),
-            this
-        );
-        FileUploader.UploadDirectory(
-            projectGuid,
-            new DirectoryInfo(Path.Combine(path, "Mac")),
-            this
-        );
+        var buildsDir = new DirectoryInfo(path);
+        foreach (var directory in buildsDir.GetDirectories())
+        {
+            if (directory.Name == "Logs")
+                continue;
+            
+            FileUploader.UploadDirectory(
+                projectGuid,
+                directory,
+                this
+            );
+            break;
+        }
     }
 }

@@ -26,10 +26,10 @@ public sealed class Client : INetworkDispatcher
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     public readonly Dictionary<string, ClientService> Services = [];
-    
+
     public string Alias => $"Client_{Id}";
     public NetworkStream NetworkStream { get; private set; }
-    
+
     public Client(string serverIp, int serverPort)
     {
         Task.Run(() => Connect(serverIp, serverPort));
@@ -57,14 +57,15 @@ public sealed class Client : INetworkDispatcher
 
     #region Sends
     
-    internal void Send(TpcPacket packet)
+    internal async Task SendAsync(TpcPacket packet)
     {
         if (!IsConnected)
         {
             Console.WriteLine("Client is not connected");
             return;
         }
-        _dispatcher.Send(packet);
+
+        await _dispatcher.SendAsync(packet);
     }
 
     #endregion
@@ -101,13 +102,14 @@ public sealed class Client : INetworkDispatcher
         {
             try
             {
-                while (!NetworkStream.DataAvailable)
-                {
-                }
+                while (!NetworkStream.DataAvailable) { }
                 
-                // read packet
-                byte[] buffer;
-                var bytesRead = 0;
+                // checksum
+                // var sumBuffer = new byte[1024];
+                // var sumSize = await NetworkStream.ReadAsync(sumBuffer);
+                // var sumValue = new byte[sumSize];
+                // Array.Copy(sumBuffer, sumValue, sumSize);
+                // var sum = Encoding.UTF8.GetString(sumValue);
 
                 // read size
                 var sizeBuffer = new byte[sizeof(int)];
@@ -119,7 +121,8 @@ public sealed class Client : INetworkDispatcher
                 Console.WriteLine($"[Client_{Id}] In coming packet size: {packetSize}");
 
                 // read packet
-                buffer = new byte[packetSize];
+                var buffer = new byte[packetSize];
+                var bytesRead = 0;
 
                 while (bytesRead < packetSize)
                     bytesRead += await NetworkStream.ReadAsync(buffer, _cancellationTokenSource.Token);
@@ -157,15 +160,8 @@ public sealed class Client : INetworkDispatcher
                         var jObject = JObject.Parse(json) ?? throw new NullReferenceException();
                         ReceiveJson(_client, packet.ServiceName, jObject);
                         break;
-
                     default:
-                    {
-                        Console.WriteLine(
-                            $"[Client_{Id}] Unknown packet type: {packet.Type}, packetId: {packet.Id}"
-                        );
-                        Kill();
-                        break;
-                    }
+                        throw new Exception($"[Client_{Id}] Unknown packet type: {packet.Type}, packetId: {packet.Id}");
                 }
             }
             catch (OperationCanceledException e)

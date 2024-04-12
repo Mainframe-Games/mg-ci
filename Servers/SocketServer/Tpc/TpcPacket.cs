@@ -47,30 +47,24 @@ internal class TpcPacket
 
     public byte[] GetBytes()
     {
-        var ms = new MemoryStream();
-        var writer = new BinaryWriter(ms);
-        {
-            Id = ++NextId;
-            writer.Write(Id); // uint64
-            writer.Write(ServiceName); // string
-            writer.Write((byte)Type); // byte
-            writer.Write(Data.Length); // int32
+        using var ms = new MemoryStream();
+        using var writer = new BinaryWriter(ms);
+        Id = ++NextId;
+        writer.Write(Id); // uint64
+        writer.Write(ServiceName); // string
+        writer.Write((byte)Type); // byte
+        writer.Write(Data.Length); // int32
 
-            if (Data.Length > 0)
-                writer.Write(Data); // byte[]
-        }
-        var data = ms.ToArray();
+        if (Data.Length > 0)
+            writer.Write(Data); // byte[]
 
-        writer.Dispose();
-        ms.Dispose();
-
-        return data;
+        return ms.ToArray();
     }
 
     public void Read(byte[] bytes)
     {
-        var ms = new MemoryStream(bytes);
-        var reader = new BinaryReader(ms);
+        using var ms = new MemoryStream(bytes);
+        using var reader = new BinaryReader(ms);
 
         Id = reader.ReadUInt64(); // uint64
         ServiceName = reader.ReadString(); // string
@@ -79,9 +73,6 @@ internal class TpcPacket
 
         if (dataLength > 0)
             Data = reader.ReadBytes(dataLength); // byte[]
-        
-        reader.Dispose();
-        ms.Dispose();
     }
 
     public override string ToString()
