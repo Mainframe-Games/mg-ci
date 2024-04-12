@@ -56,7 +56,7 @@ public sealed class Client : INetworkDispatcher
     }
 
     #region Sends
-    
+
     internal async Task SendAsync(TpcPacket packet)
     {
         if (!IsConnected)
@@ -103,7 +103,7 @@ public sealed class Client : INetworkDispatcher
             try
             {
                 while (!NetworkStream.DataAvailable) { }
-                
+
                 // checksum
                 // var sumBuffer = new byte[1024];
                 // var sumSize = await NetworkStream.ReadAsync(sumBuffer);
@@ -113,19 +113,25 @@ public sealed class Client : INetworkDispatcher
 
                 // read size
                 var sizeBuffer = new byte[sizeof(int)];
-                var sizeBytesRead = await NetworkStream.ReadAsync(sizeBuffer, _cancellationTokenSource.Token);
+                var sizeBytesRead = await NetworkStream.ReadAsync(
+                    sizeBuffer,
+                    _cancellationTokenSource.Token
+                );
                 if (sizeBytesRead != sizeof(int))
                     throw new Exception("Failed to read packet size");
 
                 var packetSize = BitConverter.ToInt32(sizeBuffer);
-                Console.WriteLine($"[Client_{Id}] In coming packet size: {packetSize}");
+                // Console.WriteLine($"[Client_{Id}] In coming packet size: {packetSize}");
 
                 // read packet
                 var buffer = new byte[packetSize];
                 var bytesRead = 0;
 
                 while (bytesRead < packetSize)
-                    bytesRead += await NetworkStream.ReadAsync(buffer, _cancellationTokenSource.Token);
+                    bytesRead += await NetworkStream.ReadAsync(
+                        buffer,
+                        _cancellationTokenSource.Token
+                    );
 
                 if (bytesRead == 0)
                     continue;
@@ -136,7 +142,7 @@ public sealed class Client : INetworkDispatcher
                 var packet = new TpcPacket();
                 packet.Read(data);
 
-                Console.WriteLine($"[Client_{Id}] Packet Received: {packet}");
+                // Console.WriteLine($"[Client_{Id}] Packet Received: {packet}");
 
                 switch (packet.Type)
                 {
@@ -161,7 +167,9 @@ public sealed class Client : INetworkDispatcher
                         ReceiveJson(_client, packet.ServiceName, jObject);
                         break;
                     default:
-                        throw new Exception($"[Client_{Id}] Unknown packet type: {packet.Type}, packetId: {packet.Id}");
+                        throw new Exception(
+                            $"[Client_{Id}] Unknown packet type: {packet.Type}, packetId: {packet.Id}"
+                        );
                 }
             }
             catch (OperationCanceledException e)
@@ -179,7 +187,7 @@ public sealed class Client : INetworkDispatcher
 
     private void ReceiveString(TcpClient tcpClient, string serviceName, string str)
     {
-        Console.WriteLine($"[Client_{Id}/{serviceName}] Received string: {str}");
+        // Console.WriteLine($"[Client_{Id}/{serviceName}] Received string: {str}");
         GetService(serviceName).OnStringMessage(str);
     }
 
@@ -191,7 +199,7 @@ public sealed class Client : INetworkDispatcher
 
     private void ReceiveJson(TcpClient tcpClient, string serviceName, JObject jObject)
     {
-        Console.WriteLine($"[Client_{Id}/{serviceName}] Received json: {jObject}");
+        // Console.WriteLine($"[Client_{Id}/{serviceName}] Received json: {jObject}");
         GetService(serviceName).OnJsonMessage(jObject);
     }
 

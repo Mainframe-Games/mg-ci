@@ -99,12 +99,12 @@ public class Server(int port)
                     throw new Exception("Failed to read packet size");
 
                 var packetSize = BitConverter.ToInt32(sizeBuffer);
-                Console.WriteLine($"[Server] In coming packet size: {packetSize}");
+                // Console.WriteLine($"[Server] In coming packet size: {packetSize}");
 
                 // read packet
                 var buffer = new byte[packetSize];
                 var bytesRead = 0;
-                
+
                 while (bytesRead < packetSize)
                     bytesRead += await stream.ReadAsync(buffer);
 
@@ -115,11 +115,11 @@ public class Server(int port)
                 Array.Copy(buffer, data, bytesRead);
 
                 var sumCalc = CheckSum.Build(data);
-                Console.WriteLine($"  Checksum: {sumCalc}");
+                // Console.WriteLine($"  Checksum: {sumCalc}");
                 // Console.WriteLine($"  Checksum pass: {sumCalc == sum}");
-                Console.WriteLine($"  Size: {Print.ToByteSizeString(data.Length)}");
-                Console.WriteLine();
-                
+                // Console.WriteLine($"  Size: {Print.ToByteSizeString(data.Length)}");
+                // Console.WriteLine();
+
                 var packet = new TpcPacket();
                 packet.Read(data);
 
@@ -131,7 +131,7 @@ public class Server(int port)
                 {
                     case MessageType.Connection:
                         throw new Exception("Server should never receive a connection message.");
-                    
+
                     case MessageType.Close:
                         client.Close();
                         Console.WriteLine(
@@ -152,7 +152,9 @@ public class Server(int port)
                         ReceiveJson(packet.ServiceName, jObject);
                         break;
                     default:
-                        throw new Exception($"[Server] Unknown packet type: {packet.Type}, packetId: {packet.Id}");
+                        throw new Exception(
+                            $"[Server] Unknown packet type: {packet.Type}, packetId: {packet.Id}"
+                        );
                 }
             }
             catch (Exception e)
@@ -171,7 +173,7 @@ public class Server(int port)
 
     private void ReceiveString(string serviceName, string str)
     {
-        Console.WriteLine($"[Server/{serviceName}] Received string: {str}");
+        // Console.WriteLine($"[Server/{serviceName}] Received string: {str}");
         GetService(serviceName).OnStringMessage(str);
     }
 
@@ -183,7 +185,7 @@ public class Server(int port)
 
     private void ReceiveJson(string serviceName, JObject json)
     {
-        Console.WriteLine($"[Server/{serviceName}] Received json: {json}");
+        // Console.WriteLine($"[Server/{serviceName}] Received json: {json}");
         GetService(serviceName).OnJsonMessage(json);
     }
 
@@ -193,8 +195,7 @@ public class Server(int port)
 
     internal async Task SendToClients(TpcPacket packet)
     {
-        await Task.WhenAll(_connectedClients.Select(client
-            => SendToClient(client.Value, packet)));
+        await Task.WhenAll(_connectedClients.Select(client => SendToClient(client.Value, packet)));
     }
 
     private static async Task SendToClient(ConnectedClient client, TpcPacket packet)
