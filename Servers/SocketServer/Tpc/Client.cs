@@ -5,10 +5,11 @@ using SocketServer.Messages;
 
 namespace SocketServer;
 
-public sealed class Client
+public sealed class Client : INetworkDispatcher
 {
     private TcpClient _client;
-    private NetworkStream _stream;
+    private PacketDispatcher _dispatcher;
+
     public uint Id { get; private set; }
     public bool IsConnected => Id > 0 && _client.Connected;
 
@@ -25,7 +26,10 @@ public sealed class Client
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     public readonly Dictionary<string, ClientService> Services = [];
-
+    
+    public string Alias => $"Client_{Id}";
+    public NetworkStream NetworkStream { get; private set; }
+    
     public Client(string serverIp, int serverPort)
     {
         Task.Run(() => Connect(serverIp, serverPort));
@@ -38,7 +42,8 @@ public sealed class Client
             try
             {
                 _client = new TcpClient(serverIp, serverPort);
-                _stream = _client.GetStream();
+                NetworkStream = _client.GetStream();
+                _dispatcher = new PacketDispatcher(this);
                 _ = Task.Run(ListenForPackets);
             }
             catch (SocketException)
@@ -51,10 +56,7 @@ public sealed class Client
     }
 
     #region Sends
-
-    private readonly Queue<TpcPacket> _sendQueue = new();
-    private Task? _sendTask;
-
+    
     internal void Send(TpcPacket packet)
     {
         if (!IsConnected)
@@ -62,26 +64,7 @@ public sealed class Client
             Console.WriteLine("Client is not connected");
             return;
         }
-
-        _sendQueue.Enqueue(packet);
-
-        if (_sendTask is null || _sendTask.IsCompleted)
-            _sendTask = Task.Run(SendInternal);
-    }
-
-    private async Task SendInternal()
-    {
-        while (_sendQueue.Count > 0)
-        {
-            var packet = _sendQueue.Dequeue();
-            var data = packet.GetBytes();
-            Console.WriteLine($"[Client_{Id}] Send packet {packet}");
-            await _stream.WriteAsync(data);
-            await Task.Delay(20); // delay to prevent spamming
-        }
-
-        Console.WriteLine($"[Client_{Id}] Send queue empty");
-        _sendTask = null;
+        _dispatcher.Send(packet);
     }
 
     #endregion
@@ -118,10 +101,28 @@ public sealed class Client
         {
             try
             {
-                while (!_stream.DataAvailable) { }
+                while (!NetworkStream.DataAvailable)
+                {
+                }
+                
+                // read packet
+                byte[] buffer;
+                var bytesRead = 0;
 
-                var buffer = new byte[_client.ReceiveBufferSize];
-                var bytesRead = await _stream.ReadAsync(buffer, _cancellationTokenSource.Token);
+                // read size
+                var sizeBuffer = new byte[sizeof(int)];
+                var sizeBytesRead = await NetworkStream.ReadAsync(sizeBuffer, _cancellationTokenSource.Token);
+                if (sizeBytesRead != sizeof(int))
+                    throw new Exception("Failed to read packet size");
+
+                var packetSize = BitConverter.ToInt32(sizeBuffer);
+                Console.WriteLine($"[Client_{Id}] In coming packet size: {packetSize}");
+
+                // read packet
+                buffer = new byte[packetSize];
+
+                while (bytesRead < packetSize)
+                    bytesRead += await NetworkStream.ReadAsync(buffer, _cancellationTokenSource.Token);
 
                 if (bytesRead == 0)
                     continue;
@@ -131,7 +132,7 @@ public sealed class Client
 
                 var packet = new TpcPacket();
                 packet.Read(data);
-                
+
                 Console.WriteLine($"[Client_{Id}] Packet Received: {packet}");
 
                 switch (packet.Type)
@@ -233,14 +234,14 @@ public sealed class Client
     {
         var packet = new TpcPacket(MessageType.Close, Array.Empty<byte>());
         var data = packet.GetBytes();
-        _stream.Write(data);
+        NetworkStream.Write(data);
 
         _cancellationTokenSource.Cancel();
 
-        _stream.Close();
+        NetworkStream.Close();
         _client.Close();
 
-        _stream.Dispose();
+        NetworkStream.Dispose();
         _client.Dispose();
     }
 }

@@ -40,15 +40,23 @@ public class Server(int port)
 
         while (true)
         {
-            var tpcClient = await listener.AcceptTcpClientAsync();
-            var client = new ConnectedClient(tpcClient);
-            _connectedClients.Add(client.Id, client);
-            Console.WriteLine(
-                $"[Server] Client connected: {client.Id}, ConnectedClients: {_connectedClients.Count}"
-            );
+            try
+            {
+                var tpcClient = await listener.AcceptTcpClientAsync();
+                var client = new ConnectedClient(tpcClient);
+                _connectedClients.Add(client.Id, client);
+                Console.WriteLine(
+                    $"[Server] Client connected: {client.Id}, ConnectedClients: {_connectedClients.Count}"
+                );
 
-            SendConnectionHandshake(client);
-            _ = Task.Run(() => HandleClient(client));
+                SendConnectionHandshake(client);
+                _ = Task.Run(() => HandleClient(client));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                Kill();
+            }
         }
     }
 
@@ -75,10 +83,27 @@ public class Server(int port)
         {
             try
             {
-                while (!stream.DataAvailable) { }
+                while (!stream.DataAvailable)
+                {
+                }
 
-                var buffer = new byte[client.ReceiveBufferSize];
-                var bytesRead = await stream.ReadAsync(buffer);
+                var bytesRead = 0;
+                byte[] buffer;
+
+                // read size
+                var sizeBuffer = new byte[sizeof(int)];
+                var sizeBytesRead = await stream.ReadAsync(sizeBuffer);
+                if (sizeBytesRead != sizeof(int))
+                    throw new Exception("Failed to read packet size");
+
+                var packetSize = BitConverter.ToInt32(sizeBuffer);
+                Console.WriteLine($"[Server] In coming packet size: {packetSize}");
+
+                // read packet
+                buffer = new byte[packetSize];
+
+                while (bytesRead < packetSize)
+                    bytesRead += await stream.ReadAsync(buffer);
 
                 if (bytesRead == 0)
                     continue;
@@ -165,35 +190,15 @@ public class Server(int port)
 
     #region Sends
 
-    private readonly Queue<(ConnectedClient, TpcPacket)> _sendQueue = [];
-    private Task? _sendTask;
-
     internal void SendToClients(TpcPacket packet)
     {
         foreach (var client in _connectedClients)
             SendToClient(client.Value, packet);
     }
 
-    private void SendToClient(ConnectedClient client, TpcPacket packet)
+    private static void SendToClient(ConnectedClient client, TpcPacket packet)
     {
-        _sendQueue.Enqueue((client, packet));
-        if (_sendTask is null || _sendTask.IsCompleted)
-            _sendTask = Task.Run(SendInternal);
-    }
-
-    private async Task SendInternal()
-    {
-        while (_sendQueue.Count > 0)
-        {
-            var (client, packet) = _sendQueue.Dequeue();
-            var stream = client.TcpClient.GetStream();
-            var data = packet.GetBytes();
-            Console.WriteLine($"[Server] Send packet {packet}");
-            await stream.WriteAsync(data);
-            await Task.Delay(20);
-        }
-
-        _sendTask = null;
+        client.Dispatcher.Send(packet);
     }
 
     #endregion
@@ -242,9 +247,14 @@ public class Server(int port)
         listener.Dispose();
     }
 
-    private class ConnectedClient(TcpClient tcpClient)
+    private class ConnectedClient(TcpClient tcpClient) : INetworkDispatcher
     {
         public uint Id { get; } = ++NextClientId;
         public TcpClient TcpClient { get; } = tcpClient;
+        public string Alias => $"Server -> Client_{Id}";
+        public NetworkStream NetworkStream => TcpClient.GetStream();
+
+        private PacketDispatcher? _dispatcher;
+        public PacketDispatcher Dispatcher => _dispatcher ??= new PacketDispatcher(this);
     }
 }
