@@ -93,9 +93,9 @@ internal class Git(
             UseShellExecute = false,
             CreateNoWindow = true
         };
-        
+
         const string GIT_ASK = "git-askpass.sh";
-        
+
         if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(accessToken))
         {
             var sh = new StringBuilder();
@@ -104,12 +104,12 @@ internal class Git(
             info.EnvironmentVariables["GIT_USERNAME"] = username;
             info.EnvironmentVariables["GIT_PASSWORD"] = accessToken;
             File.WriteAllText(GIT_ASK, sh.ToString());
-            
+
             var gitAsk = new FileInfo(GIT_ASK);
             info.EnvironmentVariables["GIT_ASKPASS"] = gitAsk.FullName;
             Chmod(gitAsk.FullName);
         }
-        
+
         Console.WriteLine($"Running: git {args}");
         var process = Process.Start(info) ?? throw new NullReferenceException();
 
@@ -144,7 +144,10 @@ internal class Git(
 
         foreach (var commit in commits)
         {
-            var message = commit.Message;
+            var message = commit.Message?.Trim();
+
+            if (string.IsNullOrEmpty(message))
+                continue;
 
             if (message.StartsWith('_'))
                 continue;

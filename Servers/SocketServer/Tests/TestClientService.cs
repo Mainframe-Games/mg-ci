@@ -25,13 +25,8 @@ public class TestClientService(Client client) : ClientService(client)
         {
             if (directory.Name == "Logs")
                 continue;
-            
-            FileUploader.UploadDirectory(
-                projectGuid,
-                directory,
-                this
-            );
-            break;
+
+            FileUploader.UploadDirectory(projectGuid, directory, this);
         }
     }
 }
