@@ -68,6 +68,10 @@ internal class Git(
 
     private void Chmod(string pathToFile)
     {
+        // no need to chmod on windows
+        if (OperatingSystem.IsWindows())
+            return;
+
         var info = new ProcessStartInfo
         {
             FileName = "chmod",
