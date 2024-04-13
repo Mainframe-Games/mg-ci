@@ -15,7 +15,7 @@ namespace MainServer.Deployment;
 
 internal class DeploymentRunner
 {
-    private readonly List<string>? _steamVdfs;
+    private readonly IList<string>? _steamVdfs;
     private readonly bool _clanforge;
     private readonly bool _appleStore;
     private readonly bool _googleStore;
@@ -58,7 +58,7 @@ internal class DeploymentRunner
             projectToml.GetValue<string>("settings", "project_name")
             ?? throw new NullReferenceException();
 
-        _steamVdfs = projectToml.GetValue<List<string>>("deployment", "steam_vdfs");
+        _steamVdfs = projectToml.GetList<string>("deployment", "steam_vdfs");
         _clanforge = projectToml.GetValue<bool>("deployment", "clanforge");
         _appleStore = projectToml.GetValue<bool>("deployment", "apple_store");
         _googleStore = projectToml.GetValue<bool>("deployment", "google_store");

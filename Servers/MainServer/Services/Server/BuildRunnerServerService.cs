@@ -50,8 +50,12 @@ internal sealed class BuildRunnerServerService(
             await SendJson(new JObject { ["TargetName"] = buildTarget, ["Status"] = "Queued", });
         }
 
-        if (_buildTask is null || _buildTask.IsCompleted)
-            _buildTask = Task.Run(BuildQueued);
+        if (_buildTask is not null)
+            return;
+
+        _buildTask = BuildQueued();
+        await _buildTask;
+        _buildTask = null;
     }
 
     private async Task BuildQueued()
@@ -71,22 +75,33 @@ internal sealed class BuildRunnerServerService(
             Console.WriteLine($"Queuing build: {targetName}");
             await SendJson(new JObject { ["TargetName"] = targetName, ["Status"] = "Building" });
 
+            var sw = Stopwatch.StartNew();
+
             switch (workspace.Engine)
             {
                 case GameEngine.Unity:
-                    await RunUnity(projectGuid, workspace.ProjectPath, targetName, workspace);
+                    RunUnity(projectGuid, workspace.ProjectPath, targetName, workspace);
                     break;
                 case GameEngine.Godot:
                     throw new NotImplementedException();
                 default:
                     throw new ArgumentException($"Engine not supported: {workspace.Engine}");
             }
+
+            await SendJson(
+                new JObject
+                {
+                    ["TargetName"] = targetName,
+                    ["Status"] = "Complete",
+                    ["Time"] = sw.ElapsedMilliseconds
+                }
+            );
         }
 
         Console.WriteLine("Build queue empty");
     }
 
-    private async Task RunUnity(
+    private void RunUnity(
         Guid projectGuid,
         string projectPath,
         string targetName,
@@ -132,18 +147,7 @@ internal sealed class BuildRunnerServerService(
             assetBundleManifestPath,
             build_options
         );
-
-        var sw = Stopwatch.StartNew();
         unityRunner.Run();
-
-        await SendJson(
-            new JObject
-            {
-                ["TargetName"] = targetName,
-                ["Status"] = "Complete",
-                ["Time"] = sw.ElapsedMilliseconds
-            }
-        );
 
         var path = Path.Combine(projectPath, "Builds", $"{product_name}_{buildTarget}");
         var rootDir = new DirectoryInfo(path);
