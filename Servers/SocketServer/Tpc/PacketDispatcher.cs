@@ -23,15 +23,15 @@ internal class PacketDispatcher(INetworkDispatcher dispatcher)
     internal async Task SendAsync(TpcPacket packet)
     {
         var data = packet.GetBytes();
-        var checksum = CheckSum.Build(data);
-        
+        // var checksum = CheckSum.Build(data);
+
         // Console.WriteLine($"[{dispatcher.Alias}] Send packet {packet}");
-        Console.WriteLine();
-        Console.WriteLine($"[{dispatcher.Alias}] Sending");
-        Console.WriteLine($"  Checksum: {checksum}");
-        Console.WriteLine($"  Size: {Print.ToByteSizeString(data.Length)}");
-        Console.WriteLine();
-        
+        // Console.WriteLine();
+        // Console.WriteLine($"[{dispatcher.Alias}] Sending");
+        // Console.WriteLine($"  Checksum: {checksum}");
+        // Console.WriteLine($"  Size: {Print.ToByteSizeString(data.Length)}");
+        // Console.WriteLine();
+
         // await dispatcher.NetworkStream.WriteAsync(Encoding.UTF8.GetBytes(checksum));
         await dispatcher.NetworkStream.WriteAsync(BitConverter.GetBytes(data.Length));
         await dispatcher.NetworkStream.WriteAsync(data);
@@ -46,7 +46,7 @@ internal class PacketDispatcher(INetworkDispatcher dispatcher)
             await SendAsync(packet);
         }
 
-        Console.WriteLine($"[{dispatcher.Alias}] Send queue empty");
+        // Console.WriteLine($"[{dispatcher.Alias}] Send queue empty");
         _sendTask = null;
     }
 }

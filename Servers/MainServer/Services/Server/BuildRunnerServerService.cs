@@ -6,6 +6,7 @@ using MainServer.Workspaces;
 using Newtonsoft.Json.Linq;
 using ServerShared;
 using SocketServer;
+using SocketServer.Utils;
 using Tomlyn.Model;
 using UnityBuilder;
 
@@ -30,7 +31,7 @@ internal sealed class BuildRunnerServerService(
         throw new NotImplementedException();
     }
 
-    public override void OnJsonMessage(JObject payload)
+    public override async void OnJsonMessage(JObject payload)
     {
         var packet = payload.ToObject<BuildRunnerPacket>() ?? throw new NullReferenceException();
 
@@ -46,14 +47,14 @@ internal sealed class BuildRunnerServerService(
                 }
             );
 
-            SendJson(new JObject { ["TargetName"] = buildTarget, ["Status"] = "Queued", });
+            await SendJson(new JObject { ["TargetName"] = buildTarget, ["Status"] = "Queued", });
         }
 
         if (_buildTask is null || _buildTask.IsCompleted)
             _buildTask = Task.Run(BuildQueued);
     }
 
-    private void BuildQueued()
+    private async Task BuildQueued()
     {
         while (_buildQueue.Count > 0)
         {
@@ -68,12 +69,12 @@ internal sealed class BuildRunnerServerService(
                 ?? throw new NullReferenceException();
 
             Console.WriteLine($"Queuing build: {targetName}");
-            SendJson(new JObject { ["TargetName"] = targetName, ["Status"] = "Building" });
+            await SendJson(new JObject { ["TargetName"] = targetName, ["Status"] = "Building" });
 
             switch (workspace.Engine)
             {
                 case GameEngine.Unity:
-                    RunUnity(projectGuid, workspace.ProjectPath, targetName, workspace);
+                    await RunUnity(projectGuid, workspace.ProjectPath, targetName, workspace);
                     break;
                 case GameEngine.Godot:
                     throw new NotImplementedException();
@@ -85,7 +86,7 @@ internal sealed class BuildRunnerServerService(
         Console.WriteLine("Build queue empty");
     }
 
-    private void RunUnity(
+    private async Task RunUnity(
         Guid projectGuid,
         string projectPath,
         string targetName,
@@ -135,7 +136,7 @@ internal sealed class BuildRunnerServerService(
         var sw = Stopwatch.StartNew();
         unityRunner.Run();
 
-        SendJson(
+        await SendJson(
             new JObject
             {
                 ["TargetName"] = targetName,
@@ -144,9 +145,21 @@ internal sealed class BuildRunnerServerService(
             }
         );
 
-        // send back
         var path = Path.Combine(projectPath, "Builds", $"{product_name}_{buildTarget}");
-        FileUploader.UploadDirectory(projectGuid, new DirectoryInfo(path), this);
+        var rootDir = new DirectoryInfo(path);
+
+        if (server.IsSameMachine())
+        {
+            // runner server is on same machine as the main server,
+            // so we just copy the directory
+            FileCopier.Copy(projectGuid, rootDir);
+        }
+        else
+        {
+            // runner server is on a different machine,
+            // so we need to upload it to the main server
+            FileUploader.UploadDirectory(projectGuid, rootDir, this);
+        }
     }
 
     private class BuildQueueItem

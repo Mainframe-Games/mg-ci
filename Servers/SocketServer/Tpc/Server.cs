@@ -6,7 +6,7 @@ using SocketServer.Messages;
 
 namespace SocketServer;
 
-public class Server(int port)
+public class Server(ushort port)
 {
     private readonly TcpListener listener = new(IPAddress.Any, port);
     private readonly Dictionary<uint, ConnectedClient> _connectedClients = [];
@@ -62,14 +62,14 @@ public class Server(int port)
 
     private async Task SendConnectionHandshake(ConnectedClient client)
     {
-        var services = _services.Keys.ToArray();
         var message = new ServerConnectionMessage
         {
             ClientId = client.Id,
             MachineName = Environment.MachineName,
             OperatingSystem = OsType,
-            Services = services
+            Services = _services.Keys.ToArray()
         };
+
         var data = Encoding.UTF8.GetBytes(message.ToString());
         await SendToClient(client, new TpcPacket(MessageType.Connection, data));
     }
@@ -130,7 +130,8 @@ public class Server(int port)
                 switch (packetType)
                 {
                     case MessageType.Connection:
-                        throw new Exception("Server should never receive a connection message.");
+                        inClient.MachineName = Encoding.UTF8.GetString(packet.Data);
+                        break;
 
                     case MessageType.Close:
                         client.Close();
@@ -203,6 +204,12 @@ public class Server(int port)
         await client.Dispatcher.SendAsync(packet);
     }
 
+    internal async Task SendToClient(uint clientId, TpcPacket packet)
+    {
+        if (!_connectedClients.TryGetValue(clientId, out var client))
+            throw new Exception($"[Server] Client not found '{clientId}'");
+        await SendToClient(client, packet);
+    }
     #endregion
 
     #region Services
@@ -210,11 +217,6 @@ public class Server(int port)
     public void AddService(IService service)
     {
         _services.Add(service.Name, service);
-    }
-
-    public void RemoveService(string name)
-    {
-        _services.Remove(name);
     }
 
     private IService GetService(string serviceName)
@@ -249,6 +251,13 @@ public class Server(int port)
         listener.Dispose();
     }
 
+    public bool IsSameMachine()
+    {
+        return _connectedClients.Values.Any(
+            client => client.MachineName == Environment.MachineName
+        );
+    }
+
     private class ConnectedClient(TcpClient tcpClient) : INetworkDispatcher
     {
         public uint Id { get; } = ++NextClientId;
@@ -258,5 +267,10 @@ public class Server(int port)
 
         private PacketDispatcher? _dispatcher;
         public PacketDispatcher Dispatcher => _dispatcher ??= new PacketDispatcher(this);
+
+        /// <summary>
+        /// Name of the machine the client is on
+        /// </summary>
+        public string? MachineName { get; set; }
     }
 }

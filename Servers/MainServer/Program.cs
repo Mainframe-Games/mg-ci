@@ -2,6 +2,7 @@
 using MainServer.Configs;
 using MainServer.Services.Server;
 using MainServer.Utils;
+using SocketServer;
 using Tomlyn;
 
 Console.Title = $"Main Server - {ServerInfo.Version}";
@@ -11,18 +12,18 @@ var serverConfig = !string.IsNullOrEmpty(serverConfigPath)
     ? LoadConfig(serverConfigPath)
     : LoadConfig();
 
-SocketServer.Server server;
+Server server;
 
 if (args.Contains("-runner"))
 {
     // start build runner server
-    server = new SocketServer.Server(serverConfig.Port + 1);
+    server = new Server((ushort)(serverConfig.Port + 1));
     server.AddService(new BuildRunnerServerService(server, serverConfig));
 }
 else
 {
     // start main server
-    server = new SocketServer.Server(serverConfig.Port);
+    server = new Server(serverConfig.Port);
     server.AddService(new BuildServerService(server, serverConfig));
 
     ClientServicesManager.Init(serverConfig.Runners);

@@ -58,9 +58,8 @@ public static class FileUploader
 
                     foreach (var frag in fileFrags)
                     {
-                        Console.WriteLine($"File Uploading: ({Print.ToByteSizeString((int)file.Length)}) {file.FullName}");
-                        Console.WriteLine(
-                            $"  Frag: ({Print.ToByteSizeString(frag.Length)}) {fileFrags.IndexOf(frag) + 1}/{fileFrags.Count}");
+                        // Console.WriteLine($"File Uploading: ({Print.ToByteSizeString((int)file.Length)}) {file.FullName}");
+                        // Console.WriteLine($"  Frag: ({Print.ToByteSizeString(frag.Length)}) {fileFrags.IndexOf(frag) + 1}/{fileFrags.Count}");
 
                         var ms = new MemoryStream();
                         await using var writer = new BinaryWriter(ms);
@@ -74,7 +73,6 @@ public static class FileUploader
                         writer.Write(frag); // byte[]
 
                         await service.SendBinary(ms.ToArray());
-                        // await Task.Delay(500);
                     }
                 }
 

@@ -72,7 +72,7 @@ public sealed class Client : INetworkDispatcher
 
     #region Receives
 
-    private void ReceiveConnectionHandshake(byte[] data)
+    private async Task ReceiveConnectionHandshake(byte[] data)
     {
         try
         {
@@ -84,10 +84,13 @@ public sealed class Client : INetworkDispatcher
             Console.WriteLine($"[Client_{Id}] Received connection from server: {message}");
 
             foreach (var serviceName in message.Services ?? [])
-            {
                 if (TryGetService(serviceName, out var service))
                     service?.OnConnected();
-            }
+
+            // send back connection handshake
+            var clientMachineName = Environment.MachineName;
+            var bytes = Encoding.UTF8.GetBytes(clientMachineName);
+            await SendAsync(new TpcPacket(MessageType.Connection, bytes));
         }
         catch (Exception e)
         {
@@ -147,7 +150,7 @@ public sealed class Client : INetworkDispatcher
                 switch (packet.Type)
                 {
                     case MessageType.Connection:
-                        ReceiveConnectionHandshake(packet.Data);
+                        await ReceiveConnectionHandshake(packet.Data);
                         break;
 
                     case MessageType.Close:
@@ -156,15 +159,15 @@ public sealed class Client : INetworkDispatcher
 
                     case MessageType.String:
                         var str = Encoding.UTF8.GetString(packet.Data, 0, packet.Data.Length);
-                        ReceiveString(_client, packet.ServiceName, str);
+                        ReceiveString(packet.ServiceName, str);
                         break;
                     case MessageType.Binary:
-                        ReceiveBinary(_client, packet.ServiceName, packet.Data);
+                        ReceiveBinary(packet.ServiceName, packet.Data);
                         break;
                     case MessageType.Json:
                         var json = Encoding.UTF8.GetString(packet.Data, 0, packet.Data.Length);
                         var jObject = JObject.Parse(json) ?? throw new NullReferenceException();
-                        ReceiveJson(_client, packet.ServiceName, jObject);
+                        ReceiveJson(packet.ServiceName, jObject);
                         break;
                     default:
                         throw new Exception(
@@ -185,19 +188,19 @@ public sealed class Client : INetworkDispatcher
         }
     }
 
-    private void ReceiveString(TcpClient tcpClient, string serviceName, string str)
+    private void ReceiveString(string serviceName, string str)
     {
         // Console.WriteLine($"[Client_{Id}/{serviceName}] Received string: {str}");
         GetService(serviceName).OnStringMessage(str);
     }
 
-    private void ReceiveBinary(TcpClient tcpClient, string serviceName, byte[] data)
+    private void ReceiveBinary(string serviceName, byte[] data)
     {
         // Console.WriteLine($"[Client_{Id}/{serviceName}] Received byte[]: {data.Length}");
         GetService(serviceName).OnDataMessage(data);
     }
 
-    private void ReceiveJson(TcpClient tcpClient, string serviceName, JObject jObject)
+    private void ReceiveJson(string serviceName, JObject jObject)
     {
         // Console.WriteLine($"[Client_{Id}/{serviceName}] Received json: {jObject}");
         GetService(serviceName).OnJsonMessage(jObject);
@@ -236,7 +239,7 @@ public sealed class Client : INetworkDispatcher
 
     public void Close()
     {
-        var packet = new TpcPacket(MessageType.Close, Array.Empty<byte>());
+        var packet = new TpcPacket(MessageType.Close, []);
         var data = packet.GetBytes();
         NetworkStream.Write(data);
 

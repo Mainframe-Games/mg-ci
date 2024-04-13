@@ -72,7 +72,10 @@ public class UnityBuild
         unity.Run(args);
 
         if (unity.ExitCode == 0)
+        {
+            Console.WriteLine($@"Unity build complete. Time: {unity.Time:hh\:mm\:ss}");
             return;
+        }
 
         Console.WriteLine($"Unity build failed. Code: {unity.ExitCode}: {unity.Message}");
         Environment.Exit(1);
