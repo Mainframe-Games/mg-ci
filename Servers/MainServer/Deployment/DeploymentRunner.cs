@@ -70,7 +70,7 @@ internal class DeploymentRunner
         try
         {
             // client deploys
-            DeployApple(); // apple first as apple takes longer to process on appstore connect
+            await DeployApple(); // apple first as apple takes longer to process on appstore connect
             await DeployGoogle();
             DeploySteam();
 
@@ -158,7 +158,7 @@ internal class DeploymentRunner
         await clanforge.Deploy();
     }
 
-    private void DeployApple()
+    private async Task DeployApple()
     {
         if (!_appleStore)
             return;
@@ -171,7 +171,7 @@ internal class DeploymentRunner
             AppleId = _serverConfig.AppleStore?.AppleId,
             AppSpecificPassword = _serverConfig.AppleStore?.AppSpecificPassword
         };
-        xcodeService.SendJson(data.ToJson());
+        await xcodeService.SendJson(data.ToJson());
     }
 
     private async Task DeployGoogle()
@@ -212,10 +212,29 @@ internal class DeploymentRunner
         if (_serverConfig.Steam is null)
             throw new NullReferenceException("Steam config is null");
 
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var steamOutPath = Path.Combine(
+            home,
+            "ci-cache",
+            "Downloads",
+            _projectGuid.ToString(),
+            "SteamOutput"
+        );
+
         foreach (var vdfPath in _steamVdfs)
         {
+            var appBuild = new AppBuild
+            {
+                AppID = "123",
+                Desc = _fullVersion,
+                SetLive = _workspace.SetLive!,
+                // ContentRoot = "TODO: path/to/build",
+                Depots = new Dictionary<string, Depot> { }
+            };
+
+            var path = Path.Combine(_workspace.ProjectPath, vdfPath);
             var steam = new SteamDeploy(
-                vdfPath,
+                path,
                 _serverConfig.Steam.Password!,
                 _serverConfig.Steam.Username!,
                 _fullVersion,

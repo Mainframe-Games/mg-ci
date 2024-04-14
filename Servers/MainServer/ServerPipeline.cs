@@ -29,14 +29,15 @@ internal class ServerPipeline(
 
             // changelog
             var changeLog = workspace.GetChangeLog();
+            var fullVersion = "0.2.5.197";
 
             // version bump
-            var fullVersion = RunVersionBump();
+            // var fullVersion = RunVersionBump();
             Console.WriteLine($"Pre Build Complete\n  time: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
 
             // builds
-            await RunBuildAsync();
+            // await RunBuildAsync();
             Console.WriteLine($"Build Complete\n  time: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
 
@@ -46,18 +47,7 @@ internal class ServerPipeline(
             sw.Restart();
 
             // hooks
-            var buildResults = buildProcesses
-                .Select(p => (p.BuildName, TimeSpan.FromMilliseconds(p.TotalBuildTime)))
-                .ToList();
-            var hookRunner = new HooksRunner(
-                workspace,
-                TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds),
-                buildResults,
-                changeLog,
-                fullVersion
-            );
-            hookRunner.Run();
-
+            // RunHooks(changeLog, fullVersion, sw.ElapsedMilliseconds);
             Console.WriteLine($"hooks Complete\n  time: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
 
@@ -118,7 +108,7 @@ internal class ServerPipeline(
         }
 
         foreach (var runner in runnerMap)
-            runner.Key.SendJson(runner.Value.ToJson());
+            await runner.Key.SendJson(runner.Value.ToJson());
 
         // wait for them all to finish
         while (buildProcesses.Any(p => !p.IsComplete))
@@ -156,6 +146,21 @@ internal class ServerPipeline(
     }
 
     #endregion
+
+    private void RunHooks(string[] changeLog, string fullVersion, long elapsedMilliseconds)
+    {
+        var buildResults = buildProcesses
+            .Select(p => (p.BuildName, TimeSpan.FromMilliseconds(p.TotalBuildTime)))
+            .ToList();
+        var hookRunner = new HooksRunner(
+            workspace,
+            TimeSpan.FromMilliseconds(elapsedMilliseconds),
+            buildResults,
+            changeLog,
+            fullVersion
+        );
+        hookRunner.Run();
+    }
 
     private class BuildRunnerProcess(string buildName)
     {
