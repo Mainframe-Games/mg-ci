@@ -3,58 +3,94 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:AvaloniaAppMVVM.ViewModels"
+             xmlns:data="clr-namespace:AvaloniaAppMVVM.Data"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AvaloniaAppMVVM.Views.DeployView"
              x:DataType="vm:DeployViewModel">
-    
+
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:DeployViewModel />
     </Design.DataContext>
-    
+
     <ScrollViewer>
         <StackPanel Margin="20 20" Spacing="10">
-            <TextBlock FontSize="25" FontWeight="Black">
-                Deploy
-            </TextBlock>
+
+            <TextBlock Text="Deploy" FontSize="25" FontWeight="Black" />
+            <TextBlock Text="Steam" FontSize="18" VerticalAlignment="Center" />
             
+            <StackPanel Name="AppBuildsStackPanel">
+                
+            </StackPanel>
+            
+
+            <!-- <ItemsRepeater ItemsSource="{Binding AppBuilds}"> -->
+            <!--     <ItemsRepeater.ItemTemplate> -->
+            <!--         <DataTemplate DataType="{x:Type vm:AppBuildTemplate}"> -->
+            <!--             <StackPanel> -->
+            <!-- -->
+            <!--                 ~1~ App ID @1@ -->
+            <!--                 <TextBlock Text="App ID:" /> -->
+            <!--                 <TextBox Text="{Binding  AppId}" /> -->
+            <!-- -->
+            <!--                 ~1~ Depots @1@ -->
+            <!--                 <Grid ColumnDefinitions="*, Auto"> -->
+            <!--                     <TextBlock Text="Depot IDs:" FontSize="18" VerticalAlignment="Center" /> -->
+            <!--                     <Button Grid.Column="1" -->
+            <!--                             Content="Add" -->
+            <!--                             Command="{Binding AddDepotId, -->
+            <!--                                 RelativeSource={RelativeSource AncestorType=vm:DeployViewModel}}" -->
+            <!--                             CommandParameter="{Binding AppID}"/> -->
+            <!--                 </Grid> -->
+            <!--                 <ItemsRepeater ItemsSource="{Binding DepotIds}" -->
+            <!--                                Margin="10, 0 0 0"> -->
+            <!--                     <ItemsRepeater.ItemTemplate> -->
+            <!--                         <DataTemplate DataType="{x:Type system:String}"> -->
+            <!--                  -->
+            <!--                             <Grid ColumnDefinitions="*, Auto"> -->
+            <!--                                 <TextBox Text="{Binding}" /> -->
+            <!--                                 <Button Grid.Column="1" -->
+            <!--                                         Background="Firebrick" -->
+            <!--                                         Content="Delete" -->
+            <!--                                         Command="{Binding RemoveDepotId, -->
+            <!--                                         RelativeSource={RelativeSource AncestorType=vm:DeployViewModel}}" -->
+            <!--                                         CommandParameter="{Binding }"/> -->
+            <!--                             </Grid> -->
+            <!--                  -->
+            <!--                         </DataTemplate> -->
+            <!--                     </ItemsRepeater.ItemTemplate> -->
+            <!--                 </ItemsRepeater> -->
+            <!-- -->
+            <!--                 <Grid ColumnDefinitions="*, Auto"> -->
+            <!--                     <Button Grid.Column="1" -->
+            <!--                             Content="Delete App Build" -->
+            <!--                             Command="{Binding RemoveAppBuild, -->
+            <!--                                 RelativeSource={RelativeSource }}" -->
+            <!--                             CommandParameter="{Binding }"/> -->
+            <!--                 </Grid> -->
+            <!-- -->
+            <!--             </StackPanel> -->
+            <!-- -->
+            <!--         </DataTemplate> -->
+            <!--     </ItemsRepeater.ItemTemplate> -->
+            <!-- </ItemsRepeater> -->
+
             <Grid ColumnDefinitions="*, Auto">
-            <TextBlock
-                FontSize="18"
-                VerticalAlignment="Center">
-                Steam
-            </TextBlock>
                 <Button Grid.Column="1"
-                        Command="{Binding AddSteamVdf}">
-                    Add
-                </Button>
+                        Content="Add Steam App Build"
+                        Click="Button_AddSteamAppBuild_OnClick"/>
             </Grid>
-            
-            <ItemsRepeater ItemsSource="{Binding SteamVdfs}">
-                <ItemsRepeater.ItemTemplate>
-                    <DataTemplate>
-                        <Grid ColumnDefinitions="*, Auto">
-                            <TextBox Text="{Binding Value}" Margin="2"/>
-                            <Button Grid.Column="1" 
-                                    Background="Firebrick"
-                                    Click="Button_DeleteSteamVdf_OnClick">
-                                Delete
-                            </Button>
-                        </Grid>
-                    </DataTemplate>
-                </ItemsRepeater.ItemTemplate>
-            </ItemsRepeater>
-            
-            <CheckBox Content="AppleStore" 
-                      IsChecked="{Binding Project.Deployment.AppleStore}"/>
-            <CheckBox Content="GoogleStore" 
-                      IsChecked="{Binding Project.Deployment.GoogleStore}"/>
+
+            <CheckBox Content="AppleStore"
+                      IsChecked="{Binding Project.Deployment.AppleStore}" />
+            <CheckBox Content="GoogleStore"
+                      IsChecked="{Binding Project.Deployment.GoogleStore}" />
             <CheckBox Content="Clanforge"
-                      IsChecked="{Binding Project.Deployment.Clanforge}"/>
+                      IsChecked="{Binding Project.Deployment.Clanforge}" />
             <CheckBox Content="AWS S3"
-                      IsChecked="{Binding Project.Deployment.AwsS3}"/>
-            
+                      IsChecked="{Binding Project.Deployment.AwsS3}" />
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>

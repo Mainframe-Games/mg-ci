@@ -45,11 +45,22 @@ public class Project
             return null;
 
         var toml = File.ReadAllText(projectToml);
-        var proj = Toml.ToModel<Project>(
-            toml,
-            options: new TomlModelOptions { IgnoreMissingProperties = true }
-        );
-        proj.Location = location;
+        Project proj;
+        try
+        {
+            proj = Toml.ToModel<Project>(
+                toml,
+                options: new TomlModelOptions { IgnoreMissingProperties = true },
+                sourcePath: projectToml
+            );
+            proj.Location = location;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return null;
+        }
+
         _projectsMap.Add(location, proj);
 
         Console.WriteLine($"Loading project: {proj.Location}");
@@ -105,8 +116,7 @@ public class Prebuild
 
 public class Deployment
 {
-    public List<string> SteamVdfs { get; set; } = [];
-    public string? SteamSetLive { get; set; } = "beta";
+    public List<AppBuild> SteamAppBuilds { get; set; } = [];
     public bool AppleStore { get; set; }
     public bool GoogleStore { get; set; }
     public bool Clanforge { get; set; }
