@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -19,23 +20,38 @@ public partial class DeployView : MyUserControl<DeployViewModel>
         _viewModel.Project = _project;
 
         foreach (var appBuild in _project.Deployment.SteamAppBuilds)
-            AddNewSteamAppBuild(appBuild.AppID, appBuild.DepotIds);
+            AddNewSteamAppBuild(appBuild.AppID, appBuild.Depots);
     }
 
     protected override void OnPreSave()
     {
         _project.Deployment.SteamAppBuilds.Clear();
-        // foreach (var steamVdf in _viewModel.SteamVdfs)
-        // _project.Deployment.SteamVdfs.Add(steamVdf.Value);
-    }
 
-    private void Button_DeleteSteamVdf_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not Button { DataContext: StringWrap vdf })
-            return;
+        foreach (var child in AppBuildsStackPanel.Children)
+        {
+            if (child is not _AppBuildTemplate template)
+                continue;
 
-        // if (DataContext is DeployViewModel vm)
-        //     vm.SteamVdfs.Remove(vdf);
+            var depots = new List<Depot>();
+            foreach (var depot in template.DepotsStackPanel.Children)
+            {
+                if (depot is not _SteamDepotItem steamDepot)
+                    continue;
+
+                depots.Add(
+                    new Depot
+                    {
+                        Id = steamDepot.TextBox.Text!,
+                        BuildTargetName =
+                            steamDepot.ComboBox.SelectedItem?.ToString() ?? string.Empty
+                    }
+                );
+            }
+
+            _project.Deployment.SteamAppBuilds.Add(
+                new AppBuild { AppID = template.AppIdTextBox.Text, Depots = depots }
+            );
+        }
     }
 
     private void Button_AddSteamAppBuild_OnClick(object? sender, RoutedEventArgs e)
@@ -43,19 +59,23 @@ public partial class DeployView : MyUserControl<DeployViewModel>
         AddNewSteamAppBuild(string.Empty, []);
     }
 
-    private void AddNewSteamAppBuild(string appBuildId, List<string> depotIds)
+    private void AddNewSteamAppBuild(string appBuildId, List<Depot> depots)
     {
-        var b = new _AppBuildTemplate(new AppBuild { AppID = appBuildId, DepotIds = depotIds });
-        b.OnDeleteClick += s =>
+        var appBuild = new AppBuild { AppID = appBuildId, Depots = depots };
+        var buildTargetOptions = _project.BuildTargets.Select(x => x.Name).ToList();
+        var template = new _AppBuildTemplate(appBuild, buildTargetOptions!);
+        template.OnDeleteClick += aBuild =>
         {
-            AppBuildsStackPanel.Children.Remove(s);
+            AppBuildsStackPanel.Children.Remove(aBuild);
         };
-        AppBuildsStackPanel.Children.Add(b);
+        AppBuildsStackPanel.Children.Add(template);
     }
 
     private class _TextDeletableItem : Grid
     {
         public event Action<_TextDeletableItem>? OnDeleteClick;
+
+        public string Text => ((TextBox)Children[0]).Text!;
 
         public _TextDeletableItem(string text)
         {
@@ -81,13 +101,24 @@ public partial class DeployView : MyUserControl<DeployViewModel>
         public ComboBox ComboBox { get; set; }
         public Button DeleteButton { get; set; }
 
-        public _SteamDepotItem(string text)
+        public _SteamDepotItem(
+            string text,
+            string selectedBuildTarget,
+            IList<string> buildTargetOptions
+        )
         {
             Orientation = Orientation.Horizontal;
+            Spacing = 10;
+            Margin = new Thickness(10, 5, 5, 10);
 
             TextBox = new TextBox { Text = text };
-            ComboBox = new ComboBox { ItemsSource = new[] { "1", "2", "3" }, SelectedIndex = 0 };
-            DeleteButton = new Button { Content = "Delete" };
+            var buildTargetIndex = Math.Max(buildTargetOptions.IndexOf(selectedBuildTarget), 0);
+            ComboBox = new ComboBox
+            {
+                ItemsSource = buildTargetOptions,
+                SelectedIndex = buildTargetIndex
+            };
+            DeleteButton = new Button { Content = "Delete", Background = Brushes.Firebrick };
             Children.Add(TextBox);
             Children.Add(ComboBox);
             Children.Add(DeleteButton);
@@ -98,24 +129,37 @@ public partial class DeployView : MyUserControl<DeployViewModel>
     {
         public TextBlock AppId { get; set; } = new() { Text = "App ID:" };
         public _TextDeletableItem AppIdTextBox { get; set; }
+
+        public StackPanel DepotsStackPanel { get; }
         public TextBlock DepotIds { get; set; } = new() { Text = "Depot IDs:" };
-        public List<_SteamDepotItem> DepotIdsTextBoxes2 { get; set; } = [];
 
         public event Action<_AppBuildTemplate>? OnDeleteClick;
 
-        public _AppBuildTemplate(AppBuild appBuild)
+        public _AppBuildTemplate(AppBuild appBuild, IList<string> buildTargetOptions)
         {
             AppIdTextBox = new _TextDeletableItem(appBuild.AppID);
             AppIdTextBox.OnDeleteClick += OnDeleteClicked;
-            foreach (var depotId in appBuild.DepotIds)
-                DepotIdsTextBoxes2.Add(new _SteamDepotItem(depotId));
 
             Children.Add(AppId);
             Children.Add(AppIdTextBox);
 
-            Children.Add(DepotIds);
-            foreach (var depotId in DepotIdsTextBoxes2)
-                Children.Add(depotId);
+            DepotsStackPanel = new StackPanel { Spacing = 10 };
+            Children.Add(DepotsStackPanel);
+
+            DepotsStackPanel.Children.Add(DepotIds);
+            foreach (var depot in appBuild.Depots)
+                DepotsStackPanel.Children.Add(
+                    new _SteamDepotItem(depot.Id, depot.BuildTargetName, buildTargetOptions)
+                );
+
+            // depot add button
+            var addDepotIdButton = new Button { Content = "Add Depot" };
+            addDepotIdButton.Click += (sender, args) =>
+            {
+                var depot = new _SteamDepotItem(string.Empty, string.Empty, buildTargetOptions);
+                DepotsStackPanel.Children.Add(depot);
+            };
+            Children.Add(addDepotIdButton);
         }
 
         private void OnDeleteClicked(_TextDeletableItem textDeletableItem)

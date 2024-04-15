@@ -29,7 +29,7 @@ public partial class DeployViewModel : ViewModelBase
     {
         foreach (var appBuild in Project!.Deployment.SteamAppBuilds)
             if (appBuild.AppID == appId)
-                appBuild.DepotIds.Add(string.Empty);
+                appBuild.Depots.Add(new Depot());
     }
 
     // [RelayCommand]
