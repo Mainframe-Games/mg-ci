@@ -1,4 +1,5 @@
 ﻿using MainServer.Configs;
+using MainServer.Utils;
 using MainServer.VersionBumping;
 using MainServer.VersionControls;
 using Tomlyn;
@@ -20,12 +21,13 @@ internal enum VersionControlType
 
 internal class Workspace(string projectPath, ServerConfig serverConfig)
 {
+    private TomlTable? _projectToml;
+    
     public string ProjectPath => projectPath;
     public GameEngine Engine { get; private set; }
     public VersionControlType VersionControl { get; private set; }
     public string? Branch { get; init; } = "main";
     public string? GitUrl { get; init; }
-    public string? SetLive { get; set; } = "beta";
 
     private Git GitProcess
     {
@@ -41,12 +43,19 @@ internal class Workspace(string projectPath, ServerConfig serverConfig)
             );
         }
     }
+    
+    public string ProjectName => GetProjectToml().GetValue<string>("settings", "project_name") 
+                                 ?? string.Empty;
 
     public TomlTable GetProjectToml()
     {
+        if (_projectToml is not null)
+            return _projectToml;
+        
         var projectTomlPath = Path.Combine(projectPath, ".ci", "project.toml");
         var toml = File.ReadAllText(projectTomlPath);
-        return Toml.ToModel(toml);
+        _projectToml = Toml.ToModel(toml);
+        return _projectToml;
     }
 
     #region Engine

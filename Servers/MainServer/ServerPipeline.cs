@@ -29,15 +29,14 @@ internal class ServerPipeline(
 
             // changelog
             var changeLog = workspace.GetChangeLog();
-            var fullVersion = "0.2.5.197";
 
             // version bump
-            // var fullVersion = RunVersionBump();
+            var fullVersion = RunVersionBump();
             Console.WriteLine($"Pre Build Complete\n  time: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
 
             // builds
-            // await RunBuildAsync();
+            await RunBuildAsync();
             Console.WriteLine($"Build Complete\n  time: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
 
@@ -57,6 +56,7 @@ internal class ServerPipeline(
             Console.WriteLine("############################################");
             Console.WriteLine("# Project build completed");
             Console.WriteLine($"# {projectGuid}");
+            Console.WriteLine($"# {workspace.ProjectName}");
             Console.WriteLine($@"# TotalTime: {DateTime.Now - startTime:h\:mm\:ss}");
             Console.WriteLine("############################################");
             sw.Restart();
