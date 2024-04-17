@@ -50,12 +50,11 @@ public class SteamDeploy(AppBuild appBuild, string password, string username)
             process.BeginErrorReadLine();
             process.OutputDataReceived += (sender, eventArgs) =>
             {
-                Console.WriteLine(eventArgs.Data);
+                Console.WriteLine($"[SteamDeploy_LOG] {eventArgs.Data}");
             };
             process.ErrorDataReceived += (sender, eventArgs) =>
             {
-                Console.WriteLine(eventArgs.Data);
-                throw new Exception(eventArgs.Data);
+                Console.WriteLine($"[SteamDeploy_ERR] {eventArgs.Data}");
             };
             process.WaitForExit();
         }

@@ -77,23 +77,20 @@ internal sealed class BuildRunnerServerService(
 
             var sw = Stopwatch.StartNew();
 
-            switch (workspace.Engine)
+            var outputDir = workspace.Engine switch
             {
-                case GameEngine.Unity:
-                    RunUnity(projectGuid, workspace.ProjectPath, targetName, workspace);
-                    break;
-                case GameEngine.Godot:
-                    throw new NotImplementedException();
-                default:
-                    throw new ArgumentException($"Engine not supported: {workspace.Engine}");
-            }
+                GameEngine.Unity => RunUnity(projectGuid, workspace.ProjectPath, targetName, workspace),
+                GameEngine.Godot => throw new NotImplementedException(),
+                _ => throw new ArgumentException($"Engine not supported: {workspace.Engine}")
+            };
 
             await SendJson(
                 new JObject
                 {
                     ["TargetName"] = targetName,
                     ["Status"] = "Complete",
-                    ["Time"] = sw.ElapsedMilliseconds
+                    ["Time"] = sw.ElapsedMilliseconds,
+                    ["OutputDirectoryName"] = outputDir.Name
                 }
             );
         }
@@ -101,7 +98,17 @@ internal sealed class BuildRunnerServerService(
         Console.WriteLine("Build queue empty");
     }
 
-    private void RunUnity(
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="projectGuid"></param>
+    /// <param name="projectPath"></param>
+    /// <param name="targetName"></param>
+    /// <param name="workspace"></param>
+    /// <returns>Output Directory</returns>
+    /// <exception cref="Exception"></exception>
+    /// <exception cref="NullReferenceException"></exception>
+    private DirectoryInfo RunUnity(
         Guid projectGuid,
         string projectPath,
         string targetName,
@@ -164,6 +171,8 @@ internal sealed class BuildRunnerServerService(
             // so we need to upload it to the main server
             FileUploader.UploadDirectory(projectGuid, rootDir, this);
         }
+
+        return rootDir;
     }
 
     private class BuildQueueItem

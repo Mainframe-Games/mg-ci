@@ -55,8 +55,8 @@ internal class ServerPipeline(
 
             Console.WriteLine("############################################");
             Console.WriteLine("# Project build completed");
-            Console.WriteLine($"# {projectGuid}");
-            Console.WriteLine($"# {workspace.ProjectName}");
+            Console.WriteLine($"# Proj Name: {workspace.ProjectName}");
+            Console.WriteLine($"# Guid: {projectGuid}");
             Console.WriteLine($@"# TotalTime: {DateTime.Now - startTime:h\:mm\:ss}");
             Console.WriteLine("############################################");
             sw.Restart();
@@ -115,10 +115,10 @@ internal class ServerPipeline(
             await Task.Delay(1000);
     }
 
-    private void OnBuildCompleted(string targetName, long buildTime)
+    private void OnBuildCompleted(string targetName, long buildTime, string outputDirectoryName)
     {
         foreach (var process in buildProcesses)
-            process.OnStringMessage(targetName, buildTime);
+            process.OnStringMessage(targetName, buildTime, outputDirectoryName);
     }
 
     private static BuildRunnerClientService GetUnityRunner(string targetName, bool isIL2CPP)
@@ -141,7 +141,7 @@ internal class ServerPipeline(
 
     private async Task RunDeploy(string fullVersion, string[] changeLog)
     {
-        var deployRunner = new DeploymentRunner(workspace, fullVersion, changeLog, serverConfig);
+        var deployRunner = new DeploymentRunner(workspace, buildProcesses, fullVersion, changeLog, serverConfig);
         await deployRunner.Deploy();
     }
 
@@ -162,19 +162,21 @@ internal class ServerPipeline(
         hookRunner.Run();
     }
 
-    private class BuildRunnerProcess(string buildName)
+}
+internal class BuildRunnerProcess(string buildName)
+{
+    public readonly string BuildName = buildName;
+    public bool IsComplete { get; private set; }
+    public long TotalBuildTime { get; private set; }
+    public string OutputDirectoryName { get; private set; } = string.Empty;
+
+    public void OnStringMessage(string targetName, long buildTime, string outputDirectoryName)
     {
-        public readonly string BuildName = buildName;
-        public bool IsComplete { get; private set; }
-        public long TotalBuildTime { get; private set; }
+        if (targetName != BuildName)
+            return;
 
-        public void OnStringMessage(string targetName, long buildTime)
-        {
-            if (targetName != BuildName)
-                return;
-
-            TotalBuildTime = buildTime;
-            IsComplete = true;
-        }
+        TotalBuildTime = buildTime;
+        IsComplete = true;
+        OutputDirectoryName = outputDirectoryName;
     }
 }

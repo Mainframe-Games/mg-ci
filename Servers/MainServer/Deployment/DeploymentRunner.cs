@@ -35,6 +35,7 @@ internal class DeploymentRunner
 
     public DeploymentRunner(
         Workspace workspace,
+        List<BuildRunnerProcess> buildProcesses,
         string fullVersion,
         string[] changeLogArray,
         ServerConfig serverConfig
@@ -70,9 +71,10 @@ internal class DeploymentRunner
             {
                 var id = depot.GetValue<string>("id");
                 var buildTarget = depot.GetValue<string>("build_target_name");
+                var buildOutputDir = GetBuildTargetOutDirName(buildTarget!);
                 depots.Add(
                     id!,
-                    new Depot { FileMapping = new FileMapping { LocalPath = $"/{buildTarget}/*" } }
+                    new Depot { FileMapping = new FileMapping { LocalPath = $"/{buildOutputDir}/*" } }
                 );
             }
 
@@ -93,8 +95,20 @@ internal class DeploymentRunner
         _appleStore = projectToml.GetValue<bool>("deployment", "apple_store");
         _googleStore = projectToml.GetValue<bool>("deployment", "google_store");
         _awsS3 = projectToml.GetValue<bool>("deployment", "aws_s3");
-    }
+        return;
 
+        string GetBuildTargetOutDirName(string buildTarget)
+        {
+            foreach (var build in buildProcesses)
+            {
+                if (build.BuildName == buildTarget)
+                    return build.OutputDirectoryName;
+            }
+
+            throw new Exception("Coule not find buildTarget in provided Build Runners");
+        }
+    }
+    
     public async Task Deploy()
     {
         try
@@ -250,7 +264,6 @@ internal class DeploymentRunner
                 _serverConfig.Steam.Username!
             );
             steam.Deploy();
-            break;
         }
     }
 

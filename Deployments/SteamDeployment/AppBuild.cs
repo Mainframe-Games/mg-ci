@@ -8,7 +8,7 @@ public class AppBuild
     public string Desc { get; set; } = string.Empty;
     public string ContentRoot { get; set; } = string.Empty;
     public string BuildOutput { get; set; } = string.Empty;
-    public string Preview { get; set; } = "1";
+    public string Preview { get; set; } = "0";
     public string SetLive { get; set; } = "beta";
     public Dictionary<string, Depot> Depots { get; set; } = new();
 
