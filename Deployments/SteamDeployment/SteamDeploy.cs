@@ -22,24 +22,76 @@ public class SteamDeploy(AppBuild appBuild, string password, string username)
 
     public void Deploy()
     {
-        var vdf = appBuild.Build();
-        var vdfPath = Path.Combine(appBuild.ContentRoot, "app_build.vdf");
-        File.WriteAllText(vdfPath, vdf);
+        try
+        {
+            var vdf = appBuild.Build();
+            var vdfPath = Path.Combine(appBuild.ContentRoot, "app_build.vdf");
+            File.WriteAllText(vdfPath, vdf);
 
-        var args = new StringBuilder();
-        args.Append("+login");
-        args.Append($" {username}");
-        args.Append($" {password}");
-        args.Append($" +run_app_build \"{vdfPath}\"");
-        args.Append(" +quit");
+            var args = new StringBuilder();
+            args.Append("+login");
+            args.Append($" {username}");
+            args.Append($" {password}");
+            args.Append($" +run_app_build \"{vdfPath}\"");
+            args.Append(" +quit");
 
-        var process = Process.Start(SteamCmdPath, args.ToString());
-        process.WaitForExit();
+            SetPermissions();
+            var info = new ProcessStartInfo(SteamCmdPath)
+            {
+                Arguments = args.ToString(),
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = false,
+                
+            };
+            var process = Process.Start(info);
+            process!.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            process.OutputDataReceived += (sender, eventArgs) =>
+            {
+                Console.WriteLine(eventArgs.Data);
+            };
+            process.ErrorDataReceived += (sender, eventArgs) =>
+            {
+                Console.WriteLine(eventArgs.Data);
+                throw new Exception(eventArgs.Data);
+            };
+            process.WaitForExit();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
 
-        var code = process.ExitCode;
-        var output = process.StandardOutput.ReadToEnd();
+    private void SetPermissions()
+    {
+        Chmod(SteamCmdPath);
 
-        if (output.Contains("FAILED", StringComparison.OrdinalIgnoreCase))
-            throw new Exception($"Steam upload failed ({code}): {output}");
+        if (OperatingSystem.IsMacOS())
+        {
+            var steamCmd = SteamCmdPath.Replace(".sh", string.Empty);
+            Chmod(steamCmd);
+        }
+    }
+
+    private void Chmod(string pathToFile)
+    {
+        // no need to chmod on windows
+        if (OperatingSystem.IsWindows())
+            return;
+
+        var info = new ProcessStartInfo
+        {
+            FileName = "chmod",
+            Arguments = $"+x {pathToFile}",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        Process.Start(info)!.WaitForExit();
     }
 }

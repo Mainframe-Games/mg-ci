@@ -182,6 +182,10 @@ internal class Git(
     public void Tag(string inTag)
     {
         using var repository = new Repository(projectPath);
+        
+        if (repository.Tags.Any(x => x.FriendlyName == inTag))
+            return;
+        
         repository.ApplyTag(inTag, _author, inTag);
         repository.Network.Push(
             repository.Head,

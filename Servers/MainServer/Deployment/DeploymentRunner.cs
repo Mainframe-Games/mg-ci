@@ -63,10 +63,10 @@ internal class DeploymentRunner
             return;
 
         // steam depots
-        foreach (var appBuild in ((TomlArray)deployment["steam_app_builds"]).Cast<TomlTable>())
+        foreach (var appBuild in (TomlTableArray)deployment["steam_app_builds"])
         {
             var depots = new Dictionary<string, Depot>();
-            foreach (var depot in ((TomlArray)appBuild["depot"]).Cast<TomlTable>())
+            foreach (var depot in (TomlTableArray)appBuild["depots"])
             {
                 var id = depot.GetValue<string>("id");
                 var buildTarget = depot.GetValue<string>("build_target_name");
@@ -250,6 +250,7 @@ internal class DeploymentRunner
                 _serverConfig.Steam.Username!
             );
             steam.Deploy();
+            break;
         }
     }
 
