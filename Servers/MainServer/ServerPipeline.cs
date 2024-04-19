@@ -46,7 +46,7 @@ internal class ServerPipeline(
             sw.Restart();
 
             // hooks
-            // RunHooks(changeLog, fullVersion, sw.ElapsedMilliseconds);
+            RunHooks(changeLog, fullVersion, sw.ElapsedMilliseconds);
             Console.WriteLine($"hooks Complete\n  time: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
 
@@ -55,8 +55,8 @@ internal class ServerPipeline(
 
             Console.WriteLine("############################################");
             Console.WriteLine("# Project build completed");
-            Console.WriteLine($"# Proj Name: {workspace.ProjectName}");
-            Console.WriteLine($"# Guid: {projectGuid}");
+            Console.WriteLine($"# {workspace.ProjectName}");
+            Console.WriteLine($"# {projectGuid}");
             Console.WriteLine($@"# TotalTime: {DateTime.Now - startTime:h\:mm\:ss}");
             Console.WriteLine("############################################");
             sw.Restart();
@@ -141,7 +141,13 @@ internal class ServerPipeline(
 
     private async Task RunDeploy(string fullVersion, string[] changeLog)
     {
-        var deployRunner = new DeploymentRunner(workspace, buildProcesses, fullVersion, changeLog, serverConfig);
+        var deployRunner = new DeploymentRunner(
+            workspace,
+            buildProcesses,
+            fullVersion,
+            changeLog,
+            serverConfig
+        );
         await deployRunner.Deploy();
     }
 
@@ -161,8 +167,8 @@ internal class ServerPipeline(
         );
         hookRunner.Run();
     }
-
 }
+
 internal class BuildRunnerProcess(string buildName)
 {
     public readonly string BuildName = buildName;
