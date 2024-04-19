@@ -2,6 +2,8 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
+        <AssemblyVersion>2.0.0.0</AssemblyVersion>
+        <ApplicationIcon>Assets\mg_300_circle.ico</ApplicationIcon>
     </PropertyGroup>
 
     <ItemGroup>
@@ -27,6 +29,9 @@
                  CopyToPublishDirectory="PreserveNewest"
                  CopyToOutputDirectory="PreserveNewest"
                  Link="ContentBuilder\%(RecursiveDir)\%(Filename)%(Extension)"/>
+    </ItemGroup>
+    <ItemGroup>
+      <AvaloniaResource Include="Assets\mg_300_circle.ico" />
     </ItemGroup>
 
 </Project>

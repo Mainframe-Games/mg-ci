@@ -5,6 +5,11 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <LangVersion>latest</LangVersion>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <Product>Mainframe-CI</Product>
+        <Company>Mainframe Games Ltd</Company>
+        <AssemblyName>Mainframe-CI</AssemblyName>
+        <ApplicationIcon>Assets\mg_300_circle.ico</ApplicationIcon>
     </PropertyGroup>
 
     <ItemGroup>
