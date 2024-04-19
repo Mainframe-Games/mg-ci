@@ -7,6 +7,7 @@ using MainServer.Services.Packets;
 using MainServer.Utils;
 using SharedLib;
 using SteamDeployment;
+using Tomlyn.Model;
 using UnityBuilder;
 using UnityServicesDeployment;
 using Workspace = MainServer.Workspaces.Workspace;
@@ -15,7 +16,7 @@ namespace MainServer.Deployment;
 
 internal class DeploymentRunner
 {
-    private readonly IList<string>? _steamVdfs;
+    private readonly List<AppBuild> _steamAppBuilds = [];
     private readonly bool _clanforge;
     private readonly bool _appleStore;
     private readonly bool _googleStore;
@@ -34,6 +35,7 @@ internal class DeploymentRunner
 
     public DeploymentRunner(
         Workspace workspace,
+        List<BuildRunnerProcess> buildProcesses,
         string fullVersion,
         string[] changeLogArray,
         ServerConfig serverConfig
@@ -58,19 +60,61 @@ internal class DeploymentRunner
             projectToml.GetValue<string>("settings", "project_name")
             ?? throw new NullReferenceException();
 
-        _steamVdfs = projectToml.GetList<string>("deployment", "steam_vdfs");
+        if (projectToml["deployment"] is not TomlTable deployment)
+            return;
+
+        // steam depots
+        foreach (var appBuild in (TomlTableArray)deployment["steam_app_builds"])
+        {
+            var depots = new Dictionary<string, Depot>();
+            foreach (var depot in (TomlTableArray)appBuild["depots"])
+            {
+                var id = depot.GetValue<string>("id");
+                var buildTarget = depot.GetValue<string>("build_target_name");
+                var buildOutputDir = GetBuildTargetOutDirName(buildTarget!);
+                depots.Add(
+                    id!,
+                    new Depot { FileMapping = new FileMapping { LocalPath = $"/{buildOutputDir}/*" } }
+                );
+            }
+
+            var build = new AppBuild
+            {
+                AppID = appBuild.GetValue<string>("app_id")!,
+                Desc = _fullVersion,
+                SetLive = "beta",
+                ContentRoot = Path.Combine(_downloadsPath, _projectGuid.ToString()),
+                BuildOutput = Path.Combine(_downloadsPath, _projectGuid.ToString(), "SteamOutput"),
+                Depots = depots,
+            };
+            _steamAppBuilds.Add(build);
+        }
+
+        // deployment options
         _clanforge = projectToml.GetValue<bool>("deployment", "clanforge");
         _appleStore = projectToml.GetValue<bool>("deployment", "apple_store");
         _googleStore = projectToml.GetValue<bool>("deployment", "google_store");
         _awsS3 = projectToml.GetValue<bool>("deployment", "aws_s3");
-    }
+        return;
 
+        string GetBuildTargetOutDirName(string buildTarget)
+        {
+            foreach (var build in buildProcesses)
+            {
+                if (build.BuildName == buildTarget)
+                    return build.OutputDirectoryName;
+            }
+
+            throw new Exception("Coule not find buildTarget in provided Build Runners");
+        }
+    }
+    
     public async Task Deploy()
     {
         try
         {
             // client deploys
-            DeployApple(); // apple first as apple takes longer to process on appstore connect
+            await DeployApple(); // apple first as apple takes longer to process on appstore connect
             await DeployGoogle();
             DeploySteam();
 
@@ -158,7 +202,7 @@ internal class DeploymentRunner
         await clanforge.Deploy();
     }
 
-    private void DeployApple()
+    private async Task DeployApple()
     {
         if (!_appleStore)
             return;
@@ -171,7 +215,7 @@ internal class DeploymentRunner
             AppleId = _serverConfig.AppleStore?.AppleId,
             AppSpecificPassword = _serverConfig.AppleStore?.AppSpecificPassword
         };
-        xcodeService.SendJson(data.ToJson());
+        await xcodeService.SendJson(data.ToJson());
     }
 
     private async Task DeployGoogle()
@@ -206,20 +250,18 @@ internal class DeploymentRunner
 
     private void DeploySteam()
     {
-        if (_steamVdfs == null)
+        if (_steamAppBuilds.Count == 0)
             return;
 
         if (_serverConfig.Steam is null)
             throw new NullReferenceException("Steam config is null");
 
-        foreach (var vdfPath in _steamVdfs)
+        foreach (var appBuild in _steamAppBuilds)
         {
             var steam = new SteamDeploy(
-                vdfPath,
+                appBuild,
                 _serverConfig.Steam.Password!,
-                _serverConfig.Steam.Username!,
-                _fullVersion,
-                _workspace.SetLive!
+                _serverConfig.Steam.Username!
             );
             steam.Deploy();
         }

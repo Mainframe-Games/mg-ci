@@ -3,13 +3,7 @@ using System.Text;
 
 namespace SteamDeployment;
 
-public class SteamDeploy(
-    string vdfPath,
-    string password,
-    string username,
-    string description,
-    string setLive = "beta"
-)
+public class SteamDeploy(AppBuild appBuild, string password, string username)
 {
     private static string SteamCmdPath
     {
@@ -28,48 +22,75 @@ public class SteamDeploy(
 
     public void Deploy()
     {
-        var vdfPath1 = Path.Combine(Environment.CurrentDirectory, vdfPath);
-        SetVdfProperties(vdfPath1, ("Desc", description), ("SetLive", setLive));
+        try
+        {
+            var vdf = appBuild.Build();
+            var vdfPath = Path.Combine(appBuild.ContentRoot, "app_build.vdf");
+            File.WriteAllText(vdfPath, vdf);
 
-        var args = new StringBuilder();
-        args.Append("+login");
-        args.Append($" {username}");
-        args.Append($" {password}");
-        args.Append($" +run_app_build \"{vdfPath1}\"");
-        args.Append(" +quit");
+            var args = new StringBuilder();
+            args.Append("+login");
+            args.Append($" {username}");
+            args.Append($" {password}");
+            args.Append($" +run_app_build \"{vdfPath}\"");
+            args.Append(" +quit");
 
-        var process = Process.Start(SteamCmdPath, args.ToString());
-        process.WaitForExit();
-
-        var code = process.ExitCode;
-        var output = process.StandardOutput.ReadToEnd();
-
-        if (output.Contains("FAILED", StringComparison.OrdinalIgnoreCase))
-            throw new Exception($"Steam upload failed ({code}): {output}");
+            SetPermissions();
+            var info = new ProcessStartInfo(SteamCmdPath)
+            {
+                Arguments = args.ToString(),
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = false,
+                
+            };
+            var process = Process.Start(info);
+            process!.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            process.OutputDataReceived += (sender, eventArgs) =>
+            {
+                Console.WriteLine($"[SteamDeploy_LOG] {eventArgs.Data}");
+            };
+            process.ErrorDataReceived += (sender, eventArgs) =>
+            {
+                Console.WriteLine($"[SteamDeploy_ERR] {eventArgs.Data}");
+            };
+            process.WaitForExit();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 
-    private static void SetVdfProperties(string vdfPath, params (string key, string value)[] values)
+    private void SetPermissions()
     {
-        if (!File.Exists(vdfPath))
-            throw new FileNotFoundException($"File doesn't exist at {vdfPath}");
+        Chmod(SteamCmdPath);
 
-        var vdfLines = File.ReadAllLines(vdfPath);
-
-        foreach ((string key, string value) in values)
+        if (OperatingSystem.IsMacOS())
         {
-            if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
-                continue;
-
-            foreach (var line in vdfLines)
-            {
-                if (!line.Contains($"\"{key}\""))
-                    continue;
-
-                var index = Array.IndexOf(vdfLines, line);
-                vdfLines[index] = $"\t\"{key}\" \"{value}\"";
-            }
+            var steamCmd = SteamCmdPath.Replace(".sh", string.Empty);
+            Chmod(steamCmd);
         }
+    }
 
-        File.WriteAllText(vdfPath, string.Join("\n", vdfLines));
+    private void Chmod(string pathToFile)
+    {
+        // no need to chmod on windows
+        if (OperatingSystem.IsWindows())
+            return;
+
+        var info = new ProcessStartInfo
+        {
+            FileName = "chmod",
+            Arguments = $"+x {pathToFile}",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        Process.Start(info)!.WaitForExit();
     }
 }

@@ -46,18 +46,7 @@ internal class ServerPipeline(
             sw.Restart();
 
             // hooks
-            var buildResults = buildProcesses
-                .Select(p => (p.BuildName, TimeSpan.FromMilliseconds(p.TotalBuildTime)))
-                .ToList();
-            var hookRunner = new HooksRunner(
-                workspace,
-                TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds),
-                buildResults,
-                changeLog,
-                fullVersion
-            );
-            hookRunner.Run();
-
+            RunHooks(changeLog, fullVersion, sw.ElapsedMilliseconds);
             Console.WriteLine($"hooks Complete\n  time: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
 
@@ -66,6 +55,7 @@ internal class ServerPipeline(
 
             Console.WriteLine("############################################");
             Console.WriteLine("# Project build completed");
+            Console.WriteLine($"# {workspace.ProjectName}");
             Console.WriteLine($"# {projectGuid}");
             Console.WriteLine($@"# TotalTime: {DateTime.Now - startTime:h\:mm\:ss}");
             Console.WriteLine("############################################");
@@ -118,17 +108,17 @@ internal class ServerPipeline(
         }
 
         foreach (var runner in runnerMap)
-            runner.Key.SendJson(runner.Value.ToJson());
+            await runner.Key.SendJson(runner.Value.ToJson());
 
         // wait for them all to finish
         while (buildProcesses.Any(p => !p.IsComplete))
             await Task.Delay(1000);
     }
 
-    private void OnBuildCompleted(string targetName, long buildTime)
+    private void OnBuildCompleted(string targetName, long buildTime, string outputDirectoryName)
     {
         foreach (var process in buildProcesses)
-            process.OnStringMessage(targetName, buildTime);
+            process.OnStringMessage(targetName, buildTime, outputDirectoryName);
     }
 
     private static BuildRunnerClientService GetUnityRunner(string targetName, bool isIL2CPP)
@@ -151,25 +141,48 @@ internal class ServerPipeline(
 
     private async Task RunDeploy(string fullVersion, string[] changeLog)
     {
-        var deployRunner = new DeploymentRunner(workspace, fullVersion, changeLog, serverConfig);
+        var deployRunner = new DeploymentRunner(
+            workspace,
+            buildProcesses,
+            fullVersion,
+            changeLog,
+            serverConfig
+        );
         await deployRunner.Deploy();
     }
 
     #endregion
 
-    private class BuildRunnerProcess(string buildName)
+    private void RunHooks(string[] changeLog, string fullVersion, long elapsedMilliseconds)
     {
-        public readonly string BuildName = buildName;
-        public bool IsComplete { get; private set; }
-        public long TotalBuildTime { get; private set; }
+        var buildResults = buildProcesses
+            .Select(p => (p.BuildName, TimeSpan.FromMilliseconds(p.TotalBuildTime)))
+            .ToList();
+        var hookRunner = new HooksRunner(
+            workspace,
+            TimeSpan.FromMilliseconds(elapsedMilliseconds),
+            buildResults,
+            changeLog,
+            fullVersion
+        );
+        hookRunner.Run();
+    }
+}
 
-        public void OnStringMessage(string targetName, long buildTime)
-        {
-            if (targetName != BuildName)
-                return;
+internal class BuildRunnerProcess(string buildName)
+{
+    public readonly string BuildName = buildName;
+    public bool IsComplete { get; private set; }
+    public long TotalBuildTime { get; private set; }
+    public string OutputDirectoryName { get; private set; } = string.Empty;
 
-            TotalBuildTime = buildTime;
-            IsComplete = true;
-        }
+    public void OnStringMessage(string targetName, long buildTime, string outputDirectoryName)
+    {
+        if (targetName != BuildName)
+            return;
+
+        TotalBuildTime = buildTime;
+        IsComplete = true;
+        OutputDirectoryName = outputDirectoryName;
     }
 }

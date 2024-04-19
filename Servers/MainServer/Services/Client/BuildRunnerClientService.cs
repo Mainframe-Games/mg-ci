@@ -5,7 +5,7 @@ namespace MainServer.Services.Client;
 
 internal sealed class BuildRunnerClientService(SocketServer.Client client) : ClientService(client)
 {
-    public delegate void BuildCompleteDelegate(string targetName, long buildTime);
+    public delegate void BuildCompleteDelegate(string targetName, long buildTime, string outputDirectoryName);
     public static event BuildCompleteDelegate? OnBuildCompleteMessage;
 
     public override string Name => "build-runner";
@@ -30,10 +30,10 @@ internal sealed class BuildRunnerClientService(SocketServer.Client client) : Cli
                 break;
 
             case "Complete":
-                var targetName =
-                    payload["TargetName"]?.ToString() ?? throw new NullReferenceException();
+                var targetName = payload["TargetName"]?.ToString() ?? throw new NullReferenceException();
                 var buildTime = payload["Time"]?.Value<long>() ?? 0;
-                OnBuildCompleteMessage?.Invoke(targetName, buildTime);
+                var outputDirectoryName = payload["OutputDirectoryName"]?.ToString() ?? throw new NullReferenceException();
+                OnBuildCompleteMessage?.Invoke(targetName, buildTime, outputDirectoryName);
                 break;
 
             case "Error":

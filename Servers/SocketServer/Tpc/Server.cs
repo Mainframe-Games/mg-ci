@@ -114,7 +114,7 @@ public class Server(ushort port)
                 var data = new byte[bytesRead];
                 Array.Copy(buffer, data, bytesRead);
 
-                var sumCalc = CheckSum.Build(data);
+                // var sumCalc = CheckSum.Build(data);
                 // Console.WriteLine($"  Checksum: {sumCalc}");
                 // Console.WriteLine($"  Checksum pass: {sumCalc == sum}");
                 // Console.WriteLine($"  Size: {Print.ToByteSizeString(data.Length)}");
