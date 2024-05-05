@@ -14,39 +14,32 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**"/>
-        <None Remove="Assets\github.png"/>
-        <AvaloniaResource Include="Assets\github.png"/>
+        <None Remove="Assets\github.png" />
+        <AvaloniaResource Include="Assets\github.png" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia"/>
-        <PackageReference Include="Avalonia.Desktop"/>
-        <PackageReference Include="Avalonia.Fonts.Inter"/>
+        <PackageReference Include="Avalonia" Version="11.0.10"/>
+        <PackageReference Include="Avalonia.Desktop" Version="11.0.10"/>
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.10"/>
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics"/>
-        <PackageReference Include="CommunityToolkit.Labs.Extensions.DependencyInjection"/>
-        <PackageReference Include="CommunityToolkit.Mvvm"/>
-        <PackageReference Include="FluentAvaloniaUI"/>
-        <PackageReference Include="LibGit2Sharp"/>
-        <PackageReference Include="LoadingIndicators.Avalonia"/>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection"/>
-        <PackageReference Include="Newtonsoft.Json"/>
-        <PackageReference Include="Tomlyn"/>
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.10"/>
+        <PackageReference Include="CommunityToolkit.Labs.Extensions.DependencyInjection" />
+        <PackageReference Include="CommunityToolkit.Mvvm" />
+        <PackageReference Include="FluentAvaloniaUI" />
+        <PackageReference Include="LibGit2Sharp" />
+        <PackageReference Include="LoadingIndicators.Avalonia" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+        <PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="Tomlyn" />
     </ItemGroup>
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\github.png"/>
+        <AvaloniaResource Include="Assets\github.png" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Servers\SocketServer\SocketServer.csproj"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageVersion Include="Avalonia" Version="11.0.10"/>
-        <PackageVersion Include="Avalonia.Desktop" Version="11.0.10"/>
-        <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.0.10"/>
-        <!-- Add other PackageVersion items as needed -->
+      <ProjectReference Include="..\Servers\SocketServer\SocketServer.csproj" />
     </ItemGroup>
 
 </Project>

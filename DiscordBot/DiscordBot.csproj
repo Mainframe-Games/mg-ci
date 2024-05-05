@@ -6,13 +6,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Discord.Net"/>
-        <PackageReference Include="Newtonsoft.Json" />
-        <ProjectReference Include="..\SharedLib\SharedLib.csproj"/>
+      <PackageReference Include="Discord.Net" Version="3.10.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageVersion Include="Discord.Net" Version="3.14.1" />
+      <ProjectReference Include="..\SharedLib\SharedLib.csproj" />
     </ItemGroup>
 
 

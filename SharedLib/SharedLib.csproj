@@ -5,7 +5,8 @@
 
     <ItemGroup>
       <PackageReference Include="LibGit2Sharp" />
-      <PackageReference Include="Newtonsoft.Json" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+      <PackageReference Include="YamlDotNet.NetCore" Version="1.0.0" />
     </ItemGroup>
 
 
