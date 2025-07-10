@@ -1,4 +1,5 @@
-﻿using SharedLib.BuildToDiscord;
+﻿using System;
+using SharedLib.BuildToDiscord;
 
 namespace SharedLib;
 

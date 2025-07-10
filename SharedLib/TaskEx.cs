@@ -1,4 +1,9 @@
-﻿namespace SharedLib;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace SharedLib;
 
 public static class TaskEx
 {

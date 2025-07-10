@@ -1,4 +1,6 @@
-﻿namespace SharedLib;
+﻿using System;
+
+namespace SharedLib;
 
 public static class PrintEx
 {

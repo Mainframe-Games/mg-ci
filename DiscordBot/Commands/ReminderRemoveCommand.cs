@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 
@@ -10,7 +12,7 @@ public class ReminderRemoveCommand : Command
 
 	public override SlashCommandProperties Build()
 	{
-		var choices = DiscordWrapper.Config.Reminders?.Select(x => x.Name) ?? Array.Empty<string>();
+		var choices = DiscordWrapper.Config.Reminders?.Select(x => x.Name) ?? [];
 
 		return CreateCommand()
 			.AddOption(BuildOptionStringWithChoices("reminder", "Reminder to remove", true, choices))

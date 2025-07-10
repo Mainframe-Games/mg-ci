@@ -1,4 +1,6 @@
-﻿using Discord.WebSocket;
+﻿using System.Net.Http;
+using System.Threading.Tasks;
+using Discord.WebSocket;
 using SharedLib;
 
 namespace DiscordBot.Commands;

@@ -1,4 +1,8 @@
-﻿namespace SharedLib;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace SharedLib;
 
 public class Args
 {

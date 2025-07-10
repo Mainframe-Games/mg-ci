@@ -1,4 +1,5 @@
-﻿using DiscordBot;
+﻿using System;
+using DiscordBot;
 using DiscordBot.Configs;
 
 Console.Title = $"Discord Bot - {DiscordWrapper.Version}";

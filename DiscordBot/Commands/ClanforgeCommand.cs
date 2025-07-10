@@ -1,4 +1,7 @@
-﻿using Discord;
+﻿using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using SharedLib;
