@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
@@ -8,7 +12,7 @@ public static class Extensions
 {
 	public const int MAX_MESSAGE_SIZE = 4096;
 	
-	public static async Task<RestInteractionMessage?> RespondSuccessDelayed(this SocketSlashCommand command, IUser user, string title, string description)
+	public static async Task<RestInteractionMessage> RespondSuccessDelayed(this SocketSlashCommand command, IUser user, string title, string description)
 	{
 		if (description.Length > MAX_MESSAGE_SIZE)
 			return await RespondSuccessFileDelayed(command, user, title, description);
