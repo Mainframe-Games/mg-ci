@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamDeployment", "Deployme
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ItchioDeployment", "Deployments\ItchioDeployment\ItchioDeployment.csproj", "{1FE5E7E7-7270-4470-91B6-1A4EC511F29E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLI", "CLI\CLI.csproj", "{A83368BA-A5F7-48EE-9648-2C4F3B91D0CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,6 +42,10 @@ Global
 		{1FE5E7E7-7270-4470-91B6-1A4EC511F29E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FE5E7E7-7270-4470-91B6-1A4EC511F29E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1FE5E7E7-7270-4470-91B6-1A4EC511F29E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A83368BA-A5F7-48EE-9648-2C4F3B91D0CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A83368BA-A5F7-48EE-9648-2C4F3B91D0CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A83368BA-A5F7-48EE-9648-2C4F3B91D0CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A83368BA-A5F7-48EE-9648-2C4F3B91D0CF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{59847429-1E15-4CB0-ABD3-0C8FD6880983} = {B85BA8A1-B6C6-4EC7-8447-3A230EAC3826}
