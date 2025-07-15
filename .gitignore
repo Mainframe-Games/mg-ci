@@ -4,4 +4,4 @@
 obj/
 bin/
 *.DS_Store
-*.csproj.user
+*.DotSettings.user
