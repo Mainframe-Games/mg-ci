@@ -1,11 +1,5 @@
 ﻿using System.CommandLine;
 using CLI.Commands;
-using Spectre.Console;
-
-AnsiConsole.Write(
-    new FigletText("Mainframe CI")
-        .LeftJustified()
-        .Color(Color.Red));
 
 var rootCommand = new RootCommand("Mainframe CI Tool");
 
@@ -16,9 +10,7 @@ var commands = typeof(ICommand).Assembly
     .ToArray();
 
 foreach (var command in commands)
-{
     rootCommand.Add(command.BuildCommand());
-}
 
 // Invoke the command
 var parseResult =  rootCommand.Parse(args);
