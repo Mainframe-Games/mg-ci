@@ -92,4 +92,45 @@ public class SetupGodot : ICommand
         
         return 0;
     }
+
+    /// <summary>
+    /// Retrieves the default file path for the Godot engine based on the user's operating system.
+    /// The path is configured to be suitable for the platform the application is executed on.
+    /// </summary>
+    /// <returns>A string specifying the default path where the Godot engine is expected to be located.</returns>
+    public static string GetDefaultGodotPath(string godotVersion)
+    {
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        
+        if (OperatingSystem.IsWindows())
+        {
+            var engineDir = Path.Combine(home, "Godot");
+            var dir = new DirectoryInfo(engineDir);
+            var exes = dir.GetFiles("*.exe", SearchOption.AllDirectories);
+            foreach (var exe in exes)
+            {
+                var fileInfo = new FileInfo(exe.FullName);
+                if (fileInfo.Name.StartsWith($"Godot_v{godotVersion}-stable_mono_win64"))
+                    return exe.FullName;
+            }
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+            var engineDir = Path.Combine(home, ".local/share/godot/engine");
+            var dir = new DirectoryInfo(engineDir);
+            var exes = dir.GetFiles("*.x86_64", SearchOption.AllDirectories);
+            foreach (var exe in exes)
+            {
+                var fileInfo = new FileInfo(exe.FullName);
+                if (fileInfo.Name.StartsWith($"Godot_v{godotVersion}-stable_mono_linux"))
+                    return exe.FullName;
+            }
+        }
+        else
+        {
+            throw new Exception($"Platform not supported: {Environment.OSVersion}");
+        }
+
+        throw new Exception("Could not find Godot executable.");
+    }
 }
