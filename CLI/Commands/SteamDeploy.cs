@@ -1,6 +1,7 @@
 ﻿using System.CommandLine;
 using System.Text.RegularExpressions;
 using CLI.Utils;
+using Spectre.Console;
 
 namespace CLI.Commands;
 
@@ -68,14 +69,18 @@ public partial class SteamDeploy : ICommand
         UpdateVdfDescription(vdfFullPath, version);
         
         var steamCmdPath = SteamSetup.GetDefaultSteamCmdPath();
+        Log.WriteLine($"SteamCmdPath: {steamCmdPath}");
+        Log.WriteLine($"Vdf: {vdfFullPath}");
         var res = await CliWrap.Cli.Wrap(steamCmdPath)
-            .WithArguments($"+login {steamUsername} {steamPassword} +run_app_build {vdf} quit")
+            .WithArguments($"+login {steamUsername} {steamPassword} +run_app_build {vdfFullPath} +quit")
             .WithWorkingDirectory(projectPathFull)
             .WithCustomPipes()
             .ExecuteAsync();
         
         if (res.ExitCode != 0)
             return res.ExitCode;
+        
+        Log.WriteLine($"Steam deploy successful! [{res.RunTime}]", Color.Green);
         
         return 0;
     }

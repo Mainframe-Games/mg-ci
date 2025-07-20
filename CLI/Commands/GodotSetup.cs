@@ -61,8 +61,7 @@ public class GodotSetup : ICommand
         Console.WriteLine($"[Godot Setup] ExportTemplatesPath: {exportTemplatesPath}");
         
         // create directory
-        Directory.Delete(engineDir, true);
-        Directory.CreateDirectory(engineDir);
+        DirectoryUtil.DeleteDirectoryExists(engineDir, true);
         
         // download engine
         // Console.WriteLine($"[Godot Setup] Downloading engine... {engineUrl} -> {engineDir}/{engineZip}");
@@ -77,8 +76,7 @@ public class GodotSetup : ICommand
         File.Delete($"{engineDir}/{engineZip}");
         
         // unzip templates
-        Directory.Delete(exportTemplatesPath, true);
-        Directory.CreateDirectory(exportTemplatesPath);
+        DirectoryUtil.DeleteDirectoryExists(exportTemplatesPath, true);
         await Zip.UnzipFileAsync($"{engineDir}/{exportTemplateTpz}", exportTemplatesPath);
         
         // clean up export templates unzip

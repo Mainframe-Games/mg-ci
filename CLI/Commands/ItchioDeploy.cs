@@ -1,6 +1,7 @@
 ﻿using System.CommandLine;
 using CLI.Utils;
 using CliWrap;
+using Spectre.Console;
 using Command = System.CommandLine.Command;
 
 namespace CLI.Commands;
@@ -9,7 +10,7 @@ public class ItchioDeploy : ICommand
 {
     public Command BuildCommand()
     {
-        var command = new Command("itcho-deploy");
+        var command = new Command("itchio-deploy");
         
         var projectPath = new Option<string>("--projectPath", "-p")
         {
@@ -50,11 +51,16 @@ public class ItchioDeploy : ICommand
         var version = GodotVersioning.GetVersion(projectPath);
         var buildPath = Path.Combine(projectPath, "builds", "windows");
 
-        await Cli.Wrap(butlerPath)
+        var res = await Cli.Wrap(butlerPath)
             .WithArguments($"push {buildPath} {companyAndGame}:windows --userversion {version}")
             .WithWorkingDirectory(projectPath)
             .WithCustomPipes()
             .ExecuteAsync();
+        
+        if (res.ExitCode != 0)
+            return res.ExitCode;
+        
+        Log.WriteLine($"Itchio deploy successful! [{res.RunTime}]", Color.Green);
         
         return 0;
     }

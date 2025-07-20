@@ -95,9 +95,7 @@ public class GodotBuild : ICommand
         var buildPathRaw = GetExportPath(projectPath, exportRelease);
         var buildPath = Path.GetFullPath(Path.Combine(projectPath, buildPathRaw));
         var buildDir = Path.GetDirectoryName(buildPath) ?? throw new NullReferenceException();
-        if (Directory.Exists(buildDir))
-            Directory.Delete(buildDir, true);
-        Directory.CreateDirectory(buildDir);
+        DirectoryUtil.DeleteDirectoryExists(buildDir, true);
         
         // export project
         var godotPath = GodotSetup.GetDefaultGodotPath(godotVersion);

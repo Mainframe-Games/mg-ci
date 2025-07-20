@@ -98,7 +98,7 @@ public class DiscordHook : ICommand
         
         // send POST request
         var version = GodotVersioning.GetVersion(projectPath);
-        var description = $"**Change Log:**\n{string.Join("\n", commits)}";
+        var description = $"**Change Log:**\n{ParseCommits(commits)}";
         var json = new JObject
         {
             ["embeds"] = new JArray(
@@ -126,5 +126,63 @@ public class DiscordHook : ICommand
         }
         
         return 0;
+    }
+
+    private static string ParseCommits(List<string> commits)
+    {
+        var fixes = new StringBuilder();
+        var additions = new StringBuilder();
+        var removals = new StringBuilder();
+        var other = new StringBuilder();
+
+        foreach (var commit in commits)
+        {
+            var prefix = commit.ToLower().Trim().Split(' ')[0];
+
+            switch (prefix)
+            {
+                case "fix" or "fixed":
+                    fixes.AppendLine($"- {commit}");
+                    break;
+                
+                case "add" or "added":
+                    additions.AppendLine($"- {commit}");
+                    break;
+
+                case "remove" or "removed":
+                    removals.AppendLine($"- {commit}");
+                    break;
+                
+                default:
+                    other.AppendLine($"- {commit}");
+                    break;
+            }
+        }
+        
+        var outStr = new StringBuilder();
+        if (fixes.Length > 0)
+        {
+            outStr.AppendLine("**Fixes:**");
+            outStr.AppendLine(fixes.ToString());
+            outStr.AppendLine();
+        }
+        if (additions.Length > 0)
+        {
+            outStr.AppendLine("**Additions:**");
+            outStr.AppendLine(additions.ToString());
+            outStr.AppendLine();
+        }
+        if (removals.Length > 0)
+        {
+            outStr.AppendLine("**Removals:**");
+            outStr.AppendLine(removals.ToString());
+            outStr.AppendLine();
+        }
+        if (other.Length > 0)
+        {
+            outStr.AppendLine("**Other:**");
+            outStr.AppendLine(other.ToString());
+        }
+        return outStr.ToString();
     }
 }
