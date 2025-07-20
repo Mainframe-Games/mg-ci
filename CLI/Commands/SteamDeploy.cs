@@ -66,7 +66,7 @@ public partial class SteamDeploy : ICommand
         
         var version = GodotVersioning.GetVersion(projectPathFull);
         var vdfFullPath = Path.Combine(projectPathFull, vdf);
-        UpdateVdfDescription(vdfFullPath, version);
+        await UpdateVdfDescription(vdfFullPath, version);
         
         var steamCmdPath = SteamSetup.GetDefaultSteamCmdPath();
         Log.WriteLine($"SteamCmdPath: {steamCmdPath}");
@@ -85,12 +85,12 @@ public partial class SteamDeploy : ICommand
         return 0;
     }
 
-    private static void UpdateVdfDescription(string vdfPath, string version)
+    private static async Task UpdateVdfDescription(string vdfPath, string version)
     {
         if (!File.Exists(vdfPath))
             throw new FileNotFoundException($"File doesn't exist: {vdfPath}");
         
-        var lines = File.ReadAllLines(vdfPath);
+        var lines = await File.ReadAllLinesAsync(vdfPath);
         for (var i = 0; i < lines.Length; i++)
         {
             if (!lines[i].Contains("Desc"))
@@ -100,7 +100,7 @@ public partial class SteamDeploy : ICommand
             var result = DescRegex().Replace(lines[i], version);
             
             lines[i] = result;
-            File.WriteAllLines(vdfPath, lines);
+            await FileWriter.WriteAllLinesAsync(vdfPath, lines);
             break;
         }
     }

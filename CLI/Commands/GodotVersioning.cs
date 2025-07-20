@@ -60,7 +60,7 @@ public class GodotVersioning : ICommand
                 verSplit[^1] = buildNumInt.ToString();
                 var newVer = string.Join(".", verSplit);
                 lines[i] = $"config/version=\"{newVer}\"";
-                await File.WriteAllLinesAsync(file.FullName, lines);
+                await FileWriter.WriteAllLinesAsync(file.FullName, lines);
                 break;
             }
         }
