@@ -2,11 +2,11 @@
 
 namespace CLI.Commands;
 
-public class Versioning : ICommand
+public class GodotVersioning : ICommand
 {
     public Command BuildCommand()
     {
-        var command = new Command("versioning");
+        var command = new Command("godot-versioning");
         var pathOption = new Option<string>("--path", "-p")
         {
             HelpName = "Path to project.godot"

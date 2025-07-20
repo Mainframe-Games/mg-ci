@@ -3,11 +3,11 @@ using CLI.Utils;
 
 namespace CLI.Commands;
 
-public class SetupGodot : ICommand
+public class GodotSetup : ICommand
 {
     public Command BuildCommand()
     {
-        var command = new Command("setup-godot");
+        var command = new Command("godot-setup");
         
         // Add options or subcommands
         var option = new Option<string>("--version", "-v");

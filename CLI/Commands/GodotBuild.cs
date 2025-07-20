@@ -6,11 +6,11 @@ using Command = System.CommandLine.Command;
 
 namespace CLI.Commands;
 
-public class BuildGodot : ICommand
+public class GodotBuild : ICommand
 {
     public Command BuildCommand()
     {
-        var command = new Command("build-godot");
+        var command = new Command("godot-build");
         
         var projectPath = new Option<string>("--projectPath", "-p")
         {
@@ -74,7 +74,7 @@ public class BuildGodot : ICommand
             return res.ExitCode;
 
         // FIX: work around for bug https://github.com/firebelley/godot-export/issues/127
-        var godotPath = SetupGodot.GetDefaultGodotPath(godotVersion);
+        var godotPath = GodotSetup.GetDefaultGodotPath(godotVersion);
         var dotGodotFolder = Path.Combine(projectPath, ".godot");
         if (!Directory.Exists(dotGodotFolder))
         {
@@ -100,7 +100,7 @@ public class BuildGodot : ICommand
         Directory.CreateDirectory(buildDir);
         
         // export project
-        var godotPath = SetupGodot.GetDefaultGodotPath(godotVersion);
+        var godotPath = GodotSetup.GetDefaultGodotPath(godotVersion);
         var res = await Cli.Wrap(godotPath)
             .WithArguments($"--headless --import --path . --export-release {exportRelease}")
             .WithWorkingDirectory(projectPath)
