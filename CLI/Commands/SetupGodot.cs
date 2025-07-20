@@ -14,10 +14,8 @@ public class SetupGodot : ICommand
         command.Add(option);
 
         // Set the handler directly
-        command.SetAction(async (result, token) =>
-        {
-            await Run(result.GetRequiredValue(option));
-        });
+        command.SetAction(async (result, token) 
+            => await Run(result.GetRequiredValue(option)));
 
         return command;
     }
