@@ -38,25 +38,39 @@ public partial class SteamDeploy : ICommand
         
         // Set the handler directly
         command.SetAction(async (result, token)
-            => await Run(
-                result.GetRequiredValue(projectPath),
-                result.GetRequiredValue(vdfPath),
-                result.GetRequiredValue(steamAccount),
-                result.GetRequiredValue(steamPassword)
-            ));
+            =>
+        {
+            try
+            {
+                return await Run(
+                    result.GetRequiredValue(projectPath),
+                    result.GetRequiredValue(vdfPath),
+                    result.GetRequiredValue(steamAccount),
+                    result.GetRequiredValue(steamPassword)
+                );
+            }
+            catch (Exception e)
+            {
+                Log.Exception(e);
+                return -1;
+            }
+        });
         return command;
     }
 
     private static async Task<int> Run(string projectPath, string vdf, string steamUsername, string steamPassword)
     {
-        var version = GodotVersioning.GetVersion(projectPath);
-        var vdfFullPath = Path.Combine(projectPath, vdf);
+        var projectPathFull = Path.GetFullPath(projectPath);
+        Log.WriteLine($"ProjectPath: {projectPathFull}");
+        
+        var version = GodotVersioning.GetVersion(projectPathFull);
+        var vdfFullPath = Path.Combine(projectPathFull, vdf);
         UpdateVdfDescription(vdfFullPath, version);
         
         var steamCmdPath = SteamSetup.GetDefaultSteamCmdPath();
         var res = await CliWrap.Cli.Wrap(steamCmdPath)
             .WithArguments($"+login {steamUsername} {steamPassword} +run_app_build {vdf} quit")
-            .WithWorkingDirectory(projectPath)
+            .WithWorkingDirectory(projectPathFull)
             .WithCustomPipes()
             .ExecuteAsync();
         

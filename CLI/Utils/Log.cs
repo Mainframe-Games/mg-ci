@@ -9,4 +9,10 @@ public static class Log
         AnsiConsole.Write(new Text(message, color ?? Color.Default));
         AnsiConsole.WriteLine();
     }
+    
+    public static void Exception(Exception exception)
+    {
+        AnsiConsole.Write(new Text(exception.ToString(), Color.Red));
+        AnsiConsole.WriteLine();
+    }
 }
