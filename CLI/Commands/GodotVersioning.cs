@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using CLI.Utils;
 
 namespace CLI.Commands;
 
@@ -7,23 +8,23 @@ public class GodotVersioning : ICommand
     public Command BuildCommand()
     {
         var command = new Command("godot-versioning");
-        var pathOption = new Option<string>("--path", "-p")
+        var projectPath = new Option<string>("--projectPath", "-p")
         {
             HelpName = "Path to project.godot"
         };
-        command.Add(pathOption);
+        command.Add(projectPath);
         
         // Set the handler directly
         command.SetAction(async (result, token) =>
         {
             try
             {
-                var path = result.GetRequiredValue(pathOption);
+                var path = result.GetRequiredValue(projectPath);
                 await Run(path);
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine(e);
+                Log.Exception(e);
                 return 1;
             }
             
@@ -35,25 +36,33 @@ public class GodotVersioning : ICommand
 
     private static async Task Run(string path)
     {
-        if (!path.EndsWith("project.godot"))
-            path = Path.Combine(path, "project.godot"); 
+        var fullPath = Path.GetFullPath(path);
+        Log.WriteLine($"ProjectPath: {fullPath}");
+        var dirInfo = new DirectoryInfo(fullPath);
+        var files = dirInfo.GetFiles("*.godot", SearchOption.AllDirectories);
         
-        var lines = await File.ReadAllLinesAsync(path);
-
-        for (var i = 0; i < lines.Length; i++)
+        if (files.Length == 0)
+            throw new Exception("Could not find version in project.godot");
+        
+        foreach (var file in files)
         {
-            if (!lines[i].Contains("config/version"))
-                continue;
+            var lines = await File.ReadAllLinesAsync(file.FullName);
 
-            var verStr = lines[i].Split("=")[^1].Trim('"');
-            var verSplit = verStr.Split(".");
-            var buildNumInt = int.Parse(verSplit[^1]);
-            buildNumInt++;
-            verSplit[^1] = buildNumInt.ToString();
-            var newLine = string.Join(".", verSplit);
-            lines[i] = newLine;
-            await File.WriteAllLinesAsync(path, lines);
-            break;
+            for (var i = 0; i < lines.Length; i++)
+            {
+                if (!lines[i].Contains("config/version"))
+                    continue;
+
+                var verStr = lines[i].Split("=")[^1].Trim('"');
+                var verSplit = verStr.Split(".");
+                var buildNumInt = int.Parse(verSplit[^1]);
+                buildNumInt++;
+                verSplit[^1] = buildNumInt.ToString();
+                var newVer = string.Join(".", verSplit);
+                lines[i] = $"config/version=\"{newVer}\"";
+                await File.WriteAllLinesAsync(file.FullName, lines);
+                break;
+            }
         }
     }
 
