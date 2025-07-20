@@ -9,7 +9,7 @@ public class ItchioDeploy : ICommand
 {
     public Command BuildCommand()
     {
-        var command = new Command("discord-hook");
+        var command = new Command("itcho-deploy");
         
         var projectPath = new Option<string>("--projectPath", "-p")
         {

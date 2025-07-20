@@ -15,7 +15,7 @@ public class TestCommand : ICommand
             AnsiConsole.Write(
                 new FigletText("Mainframe CLI Tools")
                     .LeftJustified()
-                    .Color(Color.Red));
+                    .Color(Color.Cyan1));
             await Task.CompletedTask;
             return 0;
         });
