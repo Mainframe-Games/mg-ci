@@ -56,4 +56,25 @@ public class GodotVersioning : ICommand
             break;
         }
     }
+
+    public static string GetVersion(string path)
+    {
+        var dirInfo = new DirectoryInfo(path);
+        var files = dirInfo.GetFiles("*.godot", SearchOption.AllDirectories);
+        foreach (var file in files)
+        {
+            var lines = File.ReadAllLines(file.FullName);
+
+            for (var i = 0; i < lines.Length; i++)
+            {
+                if (!lines[i].Contains("config/version"))
+                    continue;
+
+                var verStr = lines[i].Split("=")[^1].Trim('"');
+                return verStr;
+            }
+        }
+        
+        throw new Exception("Could not find version in project.godot");
+    }
 }
