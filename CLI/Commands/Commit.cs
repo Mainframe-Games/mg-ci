@@ -32,7 +32,6 @@ public class Commit : ICommand
             }
         });
         
-        
         return command;
     }
 
