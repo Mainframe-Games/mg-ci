@@ -68,7 +68,7 @@ public partial class SteamDeploy : ICommand
         var vdfFullPath = Path.Combine(projectPathFull, vdf);
         await UpdateVdfDescription(vdfFullPath, version);
         
-        var steamCmdPath = SteamSetup.GetDefaultSteamCmdPath();
+        var steamCmdPath = SteamCmdSetup.GetDefaultSteamCmdPath();
         Log.WriteLine($"SteamCmdPath: {steamCmdPath}");
         Log.WriteLine($"Vdf: {vdfFullPath}");
         var res = await CliWrap.Cli.Wrap(steamCmdPath)
