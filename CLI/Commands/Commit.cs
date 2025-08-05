@@ -51,7 +51,7 @@ public class Commit : ICommand
         
         // commit with message
         res = await Cli.Wrap("git")
-            .WithArguments($"commit -m \"_Build Version: {version}\"")
+            .WithArguments($"commit -m \"Build Version: {version}\"")
             .WithWorkingDirectory(projectPath)
             .WithCustomPipes()
             .ExecuteAsync();

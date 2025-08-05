@@ -90,10 +90,7 @@ public class DiscordHook : ICommand
         for (int i = commits.Count - 1; i >= 0; i--)
         {
             var split = commits[i].Split(' ');
-            if (split[1].Trim().StartsWith("_"))
-                commits.RemoveAt(i); // remove private entry 
-            else
-                commits[i] = string.Join(" ", split[1..]); // remove SHA
+            commits[i] = string.Join(" ", split[1..]); // remove SHA
         }
         
         // send POST request
@@ -133,7 +130,6 @@ public class DiscordHook : ICommand
         var fixes = new StringBuilder();
         var additions = new StringBuilder();
         var removals = new StringBuilder();
-        var other = new StringBuilder();
 
         foreach (var commit in commits)
         {
@@ -141,7 +137,7 @@ public class DiscordHook : ICommand
 
             switch (prefix)
             {
-                case "fix" or "fixed":
+                case "fix" or "fixed" or "change" or "changed":
                     fixes.AppendLine($"- {commit}");
                     break;
                 
@@ -154,7 +150,7 @@ public class DiscordHook : ICommand
                     break;
                 
                 default:
-                    other.AppendLine($"- {commit}");
+                    // do nothing, ignore
                     break;
             }
         }
@@ -164,24 +160,16 @@ public class DiscordHook : ICommand
         {
             outStr.AppendLine("**Fixes:**");
             outStr.AppendLine(fixes.ToString());
-            outStr.AppendLine();
         }
         if (additions.Length > 0)
         {
             outStr.AppendLine("**Additions:**");
             outStr.AppendLine(additions.ToString());
-            outStr.AppendLine();
         }
         if (removals.Length > 0)
         {
             outStr.AppendLine("**Removals:**");
             outStr.AppendLine(removals.ToString());
-            outStr.AppendLine();
-        }
-        if (other.Length > 0)
-        {
-            outStr.AppendLine("**Other:**");
-            outStr.AppendLine(other.ToString());
         }
         return outStr.ToString();
     }
