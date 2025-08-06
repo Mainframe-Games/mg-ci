@@ -10,13 +10,12 @@ public class TestCommand : ICommand
         var command = new Command("test");
 
         // Set the handler directly
-        command.SetAction(async (result, token) =>
+        command.SetAction(_ =>
         {
             AnsiConsole.Write(
                 new FigletText("Mainframe CLI Tools")
                     .LeftJustified()
                     .Color(Color.Cyan1));
-            await Task.CompletedTask;
             return 0;
         });
 
