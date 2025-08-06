@@ -40,9 +40,9 @@ public class DiscordHook : ICommand
         
         var noChangeLog = new Option<bool>("--noChangeLog")
         {
-            HelpName = "Url to steam capsule",
+            HelpName = "Skips change log step in description",
         };
-        command.Add(logoUrl);
+        command.Add(noChangeLog);
         
         // Set the handler directly
         command.SetAction(async (result, token)
