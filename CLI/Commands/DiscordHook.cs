@@ -38,6 +38,12 @@ public class DiscordHook : ICommand
         };
         command.Add(logoUrl);
         
+        var noChangeLog = new Option<bool>("--noChangeLog")
+        {
+            HelpName = "Url to steam capsule",
+        };
+        command.Add(logoUrl);
+        
         // Set the handler directly
         command.SetAction(async (result, token)
             =>
@@ -48,7 +54,8 @@ public class DiscordHook : ICommand
                     result.GetRequiredValue(projectPath), 
                     result.GetRequiredValue(hookUrl), 
                     result.GetRequiredValue(steamUrl), 
-                    result.GetRequiredValue(logoUrl)
+                    result.GetRequiredValue(logoUrl),
+                    result.GetValue(noChangeLog)
                     );
             }
             catch (Exception e)
@@ -61,7 +68,7 @@ public class DiscordHook : ICommand
         return command;
     }
 
-    private static async Task<int> Run(string projectPath, string hookUrl, string steamUrl, string logoUrl)
+    private static async Task<int> Run(string projectPath, string hookUrl, string steamUrl, string logoUrl, bool noChangeLog)
     {
         // get all tags
         var tags = new List<string>();
@@ -75,27 +82,30 @@ public class DiscordHook : ICommand
             return res.ExitCode;
         
         // get all commits 
-        var prevTag = tags[1];
         var commits = new List<string>();
-        res = await Cli.Wrap("git")
-            .WithArguments($"log {prevTag}..HEAD --oneline")
-            .WithWorkingDirectory(projectPath)
-            .WithStandardOutputPipe(PipeTarget.ToDelegate(commits.Add))
-            .WithStandardErrorPipe(CliWrapExtensions.StdErrorPipe)
-            .ExecuteAsync();
-        
-        if (res.ExitCode != 0)
-            return res.ExitCode;
-
-        for (int i = commits.Count - 1; i >= 0; i--)
+        if (!noChangeLog)
         {
-            var split = commits[i].Split(' ');
-            commits[i] = string.Join(" ", split[1..]); // remove SHA
+            var prevTag = tags[1];
+            res = await Cli.Wrap("git")
+                .WithArguments($"log {prevTag}..HEAD --oneline")
+                .WithWorkingDirectory(projectPath)
+                .WithStandardOutputPipe(PipeTarget.ToDelegate(commits.Add))
+                .WithStandardErrorPipe(CliWrapExtensions.StdErrorPipe)
+                .ExecuteAsync();
+            
+            if (res.ExitCode != 0)
+                return res.ExitCode;
+            
+            for (int i = commits.Count - 1; i >= 0; i--)
+            {
+                var split = commits[i].Split(' ');
+                commits[i] = string.Join(" ", split[1..]); // remove SHA
+            }
         }
         
         // send POST request
         var version = GodotVersioning.GetVersion(projectPath);
-        var description = $"**Change Log:**\n{ParseCommits(commits)}";
+        var description = noChangeLog ? "" : $"**Change Log:**\n{ParseCommits(commits)}";
         var json = new JObject
         {
             ["embeds"] = new JArray(
