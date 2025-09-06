@@ -3,16 +3,14 @@ using CLI.Utils;
 
 namespace CLI.Commands;
 
-public class SteamCmdSetup : ICommand
+public class SteamCmdSetup : Command
 {
-    public Command BuildCommand()
+    public SteamCmdSetup() : base("steamcmd-setup", "Setup SteamCMD")
     {
-        var command = new Command("steamcmd-setup");
-        command.SetAction(async (result, token) => await Run());
-        return command;
+        SetAction(Run);
     }
 
-    private static async Task<int> Run()
+    private static async Task Run(ParseResult result, CancellationToken token)
     {
         const int sdkVersion = 160;
         var zipFileName = $"steamworks_sdk_{sdkVersion}.zip";
@@ -34,8 +32,6 @@ public class SteamCmdSetup : ICommand
             fileInfo.CopyTo($"{destinationPath}/{fileInfo.Name}", true);
         
         DirectoryUtil.DeleteDirectoryExists(destinationPathTemp, false);
-        
-        return 0;
     }
 
     private static DirectoryInfo GetTempContentBuilderDirectory(string destinationPathTemp)

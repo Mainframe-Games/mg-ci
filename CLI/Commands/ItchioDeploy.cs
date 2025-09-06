@@ -6,46 +6,31 @@ using Command = System.CommandLine.Command;
 
 namespace CLI.Commands;
 
-public class ItchioDeploy : ICommand
+public class ItchioDeploy : Command
 {
-    public Command BuildCommand()
+    private readonly Option<string> _projectPath = new("--projectPath", "-p")
     {
-        var command = new Command("itchio-deploy");
-        
-        var projectPath = new Option<string>("--projectPath", "-p")
-        {
-            HelpName = "Path to the Godot project"
-        };
-        command.Add(projectPath);
-        
-        var companyAndGame = new Option<string>("--companyAndGame", "-c")
-        {
-            HelpName = "COMPANY/GAME e.g. mainframegames/speed-golf-royale-prototype"
-        };
-        command.Add(companyAndGame);
-        
-        // Set the handler directly
-        command.SetAction(async (result, token)
-            =>
-        {
-            try
-            {
-                return await Run(
-                    result.GetRequiredValue(projectPath), 
-                    result.GetRequiredValue(companyAndGame)
-                );
-            }
-            catch (Exception e)
-            {
-                Log.Exception(e);
-                return -1;
-            }
-        });
-        
-        return command;
+        HelpName = "Path to the Godot project"
+    };
+
+    private readonly Option<string> _companyAndGame = new("--companyAndGame", "-c")
+    {
+        HelpName = "COMPANY/GAME e.g. mainframegames/speed-golf-royale-prototype"
+    };
+    
+    public ItchioDeploy() : base("itchio-deploy", "Deploys a game to itch.io")
+    {
+        Add(_projectPath);
+        Add(_companyAndGame);
+        SetAction(async (result, token)
+            => await Run(
+                result.GetRequiredValue(_projectPath), 
+                result.GetRequiredValue(_companyAndGame),
+                token
+            ));
     }
 
-    private static async Task<int> Run(string projectPath, string companyAndGame)
+    private static async Task<int> Run(string projectPath, string companyAndGame, CancellationToken token)
     {
         var butlerPath = GetButlerPath();
         var version = GodotVersioning.GetVersion(projectPath);
@@ -55,7 +40,7 @@ public class ItchioDeploy : ICommand
             .WithArguments($"push {buildPath} {companyAndGame}:windows --userversion {version}")
             .WithWorkingDirectory(projectPath)
             .WithCustomPipes()
-            .ExecuteAsync();
+            .ExecuteAsync(token);
         
         if (res.ExitCode != 0)
             return res.ExitCode;

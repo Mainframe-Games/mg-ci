@@ -1,65 +1,61 @@
 ﻿using System.CommandLine;
 using System.Text.RegularExpressions;
 using CLI.Utils;
+using CliWrap;
 using Spectre.Console;
+using Command = System.CommandLine.Command;
 
 namespace CLI.Commands;
 
-public partial class SteamDeploy : ICommand
+public partial class SteamDeploy : Command
 {
     [GeneratedRegex("""(?<="Desc"\s*")[\d.]+(?=")""")]
     private static partial Regex DescRegex();
-    
-    public Command BuildCommand()
+
+    private readonly Option<string> _projectPath = new("--projectPath", "-p")
     {
-        var command = new Command("steam-deploy");
-        
-        var projectPath = new Option<string>("--projectPath", "-p")
-        {
-            HelpName = "Path to Godot project"
-        };
-        command.Add(projectPath);
-        
-        var vdfPath = new Option<string>("--vdf")
-        {
-            HelpName = "Path to the .vdf file"
-        };
-        command.Add(vdfPath);
-        
-        var steamAccount = new Option<string>("--username", "-u")
-        {
-            HelpName = "Steamworks username"
-        };
-        command.Add(steamAccount);
-        var steamPassword = new Option<string>("--password", "-pw")
-        {
-            HelpName = "Steamworks password"
-        };
-        command.Add(steamPassword);
+        HelpName = "Path to Godot project"
+    };
+
+    private readonly Option<string> _vdfPath = new("--vdf")
+    {
+        HelpName = "Path to the .vdf file"
+    };
+
+    private readonly Option<string> _steamAccount = new("--username", "-u")
+    {
+        HelpName = "Steamworks username"
+    };
+
+    private readonly Option<string> _steamPassword = new("--password", "-pw")
+    {
+        HelpName = "Steamworks password"
+    };
+    
+    public SteamDeploy() : base("steam-deploy", "Deploy to Steam")
+    {
+        Add(_projectPath);
+        Add(_vdfPath);
+        Add(_steamAccount);
+        Add(_steamPassword);
         
         // Set the handler directly
-        command.SetAction(async (result, token)
-            =>
-        {
-            try
-            {
-                return await Run(
-                    result.GetRequiredValue(projectPath),
-                    result.GetRequiredValue(vdfPath),
-                    result.GetRequiredValue(steamAccount),
-                    result.GetRequiredValue(steamPassword)
-                );
-            }
-            catch (Exception e)
-            {
-                Log.Exception(e);
-                return -1;
-            }
-        });
-        return command;
+        SetAction(async (result, token)
+            => await Run(
+                result.GetRequiredValue(_projectPath),
+                result.GetRequiredValue(_vdfPath),
+                result.GetRequiredValue(_steamAccount),
+                result.GetRequiredValue(_steamPassword),
+                token
+            ));
     }
 
-    private static async Task<int> Run(string projectPath, string vdf, string steamUsername, string steamPassword)
+    private static async Task<int> Run(
+        string projectPath,
+        string vdf,
+        string steamUsername,
+        string steamPassword,
+        CancellationToken token)
     {
         var projectPathFull = Path.GetFullPath(projectPath);
         Log.WriteLine($"ProjectPath: {projectPathFull}");
@@ -71,11 +67,11 @@ public partial class SteamDeploy : ICommand
         var steamCmdPath = SteamCmdSetup.GetDefaultSteamCmdPath();
         Log.WriteLine($"SteamCmdPath: {steamCmdPath}");
         Log.WriteLine($"Vdf: {vdfFullPath}");
-        var res = await CliWrap.Cli.Wrap(steamCmdPath)
+        var res = await Cli.Wrap(steamCmdPath)
             .WithArguments($"+login {steamUsername} {steamPassword} +run_app_build {vdfFullPath} +quit")
             .WithWorkingDirectory(projectPathFull)
             .WithCustomPipes()
-            .ExecuteAsync();
+            .ExecuteAsync(token);
         
         if (res.ExitCode != 0)
             return res.ExitCode;

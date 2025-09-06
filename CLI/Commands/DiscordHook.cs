@@ -8,67 +8,57 @@ using Command = System.CommandLine.Command;
 
 namespace CLI.Commands;
 
-public class DiscordHook : ICommand
+public class DiscordHook : Command
 {
-    public Command BuildCommand()
+    private readonly Option<string> _projectPath = new("--projectPath", "-p")
     {
-        var command = new Command("discord-hook");
+        HelpName = "Path to the Godot project"
+    };
+
+    private readonly Option<string> _hookUrl = new("--hookUrl", "-h")
+    {
+        HelpName = "Url to discord channel"
+    };
+
+    private readonly Option<string> _steamUrl = new("--steamUrl", "-s")
+    {
+        HelpName = "Url to steam page"
+    };
+
+    private readonly Option<string> _logoUrl = new("--logoUrl", "-l")
+    {
+        HelpName = "Url to steam capsule"
+    };
+
+    private readonly Option<bool> _noChangeLog = new("--noChangeLog")
+    {
+        HelpName = "Skips change log step in description",
+    };
+    
+    public DiscordHook() : base("discord-hook", "Send a Discord webhook with the latest build info")
+    {
+        Add(_projectPath);
+        Add(_hookUrl);
+        Add(_steamUrl);
+        Add(_logoUrl);
+        Add(_noChangeLog);
         
-        var projectPath = new Option<string>("--projectPath", "-p")
-        {
-            HelpName = "Path to the Godot project"
-        };
-        command.Add(projectPath);
-        
-        var hookUrl = new Option<string>("--hookUrl", "-h")
-        {
-            HelpName = "Url to discord channel"
-        };
-        command.Add(hookUrl);
-        
-        var steamUrl = new Option<string>("--steamUrl", "-s")
-        {
-            HelpName = "Url to steam page"
-        };
-        command.Add(steamUrl);
-        
-        var logoUrl = new Option<string>("--logoUrl", "-l")
-        {
-            HelpName = "Url to steam capsule"
-        };
-        command.Add(logoUrl);
-        
-        var noChangeLog = new Option<bool>("--noChangeLog")
-        {
-            HelpName = "Skips change log step in description",
-        };
-        command.Add(noChangeLog);
-        
-        // Set the handler directly
-        command.SetAction(async (result, token)
-            =>
-        {
-            try
-            {
-                return await Run(
-                    result.GetRequiredValue(projectPath), 
-                    result.GetRequiredValue(hookUrl), 
-                    result.GetRequiredValue(steamUrl), 
-                    result.GetRequiredValue(logoUrl),
-                    result.GetValue(noChangeLog)
-                    );
-            }
-            catch (Exception e)
-            {
-                Log.Exception(e);
-                return -1;
-            }
-        });
-        
-        return command;
+        SetAction(async (result, token) => await Run(
+            result.GetRequiredValue(_projectPath), 
+            result.GetRequiredValue(_hookUrl), 
+            result.GetRequiredValue(_steamUrl), 
+            result.GetRequiredValue(_logoUrl),
+            result.GetValue(_noChangeLog),
+            token
+        ));
     }
 
-    private static async Task<int> Run(string projectPath, string hookUrl, string steamUrl, string logoUrl, bool noChangeLog)
+    private static async Task<int> Run(
+        string projectPath,
+        string hookUrl,
+        string steamUrl,
+        string logoUrl,
+        bool noChangeLog, CancellationToken token)
     {
         // get all tags
         var tags = new List<string>();
@@ -76,7 +66,7 @@ public class DiscordHook : ICommand
             .WithArguments("tag --sort=-creatordate")
             .WithWorkingDirectory(projectPath)
             .WithStandardOutputPipe(PipeTarget.ToDelegate(tags.Add))
-            .ExecuteAsync();
+            .ExecuteAsync(token);
 
         if (res.ExitCode != 0)
             return res.ExitCode;
@@ -91,7 +81,7 @@ public class DiscordHook : ICommand
                 .WithWorkingDirectory(projectPath)
                 .WithStandardOutputPipe(PipeTarget.ToDelegate(commits.Add))
                 .WithStandardErrorPipe(CliWrapExtensions.StdErrorPipe)
-                .ExecuteAsync();
+                .ExecuteAsync(token);
             
             if (res.ExitCode != 0)
                 return res.ExitCode;
@@ -124,7 +114,7 @@ public class DiscordHook : ICommand
         
         using var client = new HttpClient();
         var content = new StringContent(json.ToString(), Encoding.UTF8, "application/json");
-        var response = await client.PostAsync(hookUrl, content);
+        var response = await client.PostAsync(hookUrl, content, token);
 
         if (!response.IsSuccessStatusCode)
         {

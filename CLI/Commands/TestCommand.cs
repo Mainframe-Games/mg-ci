@@ -3,14 +3,11 @@ using Spectre.Console;
 
 namespace CLI.Commands;
 
-public class TestCommand : ICommand
+public class TestCommand : Command
 {
-    public Command BuildCommand()
+    public TestCommand() : base("test", "Test command")
     {
-        var command = new Command("test");
-
-        // Set the handler directly
-        command.SetAction(_ =>
+        SetAction(_ =>
         {
             AnsiConsole.Write(
                 new FigletText("Mainframe CLI Tools")
@@ -18,7 +15,5 @@ public class TestCommand : ICommand
                     .Color(Color.Cyan1));
             return 0;
         });
-
-        return command;
     }
 }

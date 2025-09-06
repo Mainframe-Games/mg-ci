@@ -5,7 +5,11 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <AssemblyName>mg-cli</AssemblyName>
+        <AssemblyName>mg</AssemblyName>
+        <PackageId>mg</PackageId>
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>mg</ToolCommandName>
+        <PackageOutputPath>./nupkg</PackageOutputPath>
     </PropertyGroup>
 
     <ItemGroup>

@@ -3,38 +3,24 @@ using CLI.Utils;
 
 namespace CLI.Commands;
 
-public class GodotVersioning : ICommand
+public class GodotVersioning : Command
 {
-    public Command BuildCommand()
+    private readonly Option<string> _projectPath = new("--projectPath", "-p")
     {
-        var command = new Command("godot-versioning");
-        var projectPath = new Option<string>("--projectPath", "-p")
+        HelpName = "Path to project.godot"
+    };
+    
+    public GodotVersioning() : base("godot-versioning", "Increments the version in the project.godot file.")
+    {
+        Add(_projectPath);
+        SetAction(async (result, token) =>
         {
-            HelpName = "Path to project.godot"
-        };
-        command.Add(projectPath);
-        
-        // Set the handler directly
-        command.SetAction(async (result, token) =>
-        {
-            try
-            {
-                var path = result.GetRequiredValue(projectPath);
-                await Run(path);
-            }
-            catch (Exception e)
-            {
-                Log.Exception(e);
-                return 1;
-            }
-            
-            return 0;
+            var path = result.GetRequiredValue(_projectPath);
+            await Run(path, token);
         });
-
-        return command;
     }
 
-    private static async Task Run(string path)
+    private static async Task Run(string path, CancellationToken token)
     {
         var fullPath = Path.GetFullPath(path);
         Log.WriteLine($"ProjectPath: {fullPath}");
@@ -46,7 +32,7 @@ public class GodotVersioning : ICommand
         
         foreach (var file in files)
         {
-            var lines = await File.ReadAllLinesAsync(file.FullName);
+            var lines = await File.ReadAllLinesAsync(file.FullName, token);
 
             for (var i = 0; i < lines.Length; i++)
             {

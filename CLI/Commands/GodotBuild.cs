@@ -6,43 +6,44 @@ using Command = System.CommandLine.Command;
 
 namespace CLI.Commands;
 
-public class GodotBuild : ICommand
+public class GodotBuild : Command
 {
-    public Command BuildCommand()
+    private readonly Option<string> _projectPath = new("--projectPath", "-p")
     {
-        var command = new Command("godot-build");
-        
-        var projectPath = new Option<string>("--projectPath", "-p")
-        {
-            HelpName = "Path to Godot project"
-        };
-        command.Add(projectPath);
-        
-        var godotVersion = new Option<string>("--godotVersion", "-v")
-        {
-            HelpName = "Version of Godot Engine to use for build."
-        };
-        command.Add(godotVersion);
-        
-        var exportRelease = new Option<string>("--exportRelease", "-r")
-        {
-            HelpName = "ExportRelease preset name set in export_presets.cfg"
-        };
-        command.Add(exportRelease);
+        HelpName = "Path to Godot project"
+    };
+
+    private readonly Option<string> _godotVersion = new("--godotVersion", "-v")
+    {
+        HelpName = "Version of Godot Engine to use for build."
+    };
+
+    private readonly Option<string> _exportRelease = new("--exportRelease", "-r")
+    {
+        HelpName = "ExportRelease preset name set in export_presets.cfg"
+    };
+    
+    public GodotBuild() : base("godot-build", "Builds a Godot project.")
+    {
+        Add(_projectPath);
+        Add(_godotVersion);
+        Add(_exportRelease);
         
         // Set the handler directly
-        command.SetAction(async (result, token) 
+        SetAction(async (result, token) 
             => await Run(
-                result.GetRequiredValue(projectPath),
-                result.GetRequiredValue(godotVersion),
-                result.GetRequiredValue(exportRelease)
-                ));
-        return command;
+                result.GetRequiredValue(_projectPath),
+                result.GetRequiredValue(_godotVersion),
+                result.GetRequiredValue(_exportRelease),
+                token
+            ));
     }
 
-    private static async Task<int> Run(string projectPath,
+    private static async Task<int> Run(
+        string projectPath,
         string godotVersion,
-        string exportRelease)
+        string exportRelease,
+        CancellationToken token)
     {
         // run a dotnet build to catch any compile errors first
         var res = await PrebuildAsync(projectPath, godotVersion);

@@ -5,44 +5,29 @@ using Command = System.CommandLine.Command;
 
 namespace CLI.Commands;
 
-public class Commit : ICommand
+public class Commit : Command
 {
-    public Command BuildCommand()
+    private readonly Option<string> _projectPath = new("--projectPath", "-p")
     {
-        var command = new Command("commit");
-        
-        var projectPath = new Option<string>("--projectPath", "-p")
-        {
-            HelpName = "Path to Godot project"
-        };
-        command.Add(projectPath);
-        
-        // Set the handler directly
-        command.SetAction(async (result, token)
-            =>
-        {
-            try
-            {
-                return await Run(result.GetRequiredValue(projectPath));
-            }
-            catch (Exception e)
-            {
-                Log.Exception(e);
-                return -1;
-            }
-        });
-        
-        return command;
-    }
+        HelpName = "Path to Godot project"
+    };
 
-    private static async Task<int> Run(string projectPath)
+    public Commit() : base("commit", "Commit and tag the build")
     {
+        Add(_projectPath);
+        SetAction(Run);
+    }
+    
+    private async Task<int> Run(ParseResult result, CancellationToken token)
+    {
+        var projectPath = result.GetRequiredValue(_projectPath);
+        
         // stage files
         var res = await Cli.Wrap("git")
             .WithArguments("add .")
             .WithWorkingDirectory(projectPath)
             .WithCustomPipes()
-            .ExecuteAsync();
+            .ExecuteAsync(token);
 
         if (res.ExitCode != 0)
             return res.ExitCode;
@@ -54,7 +39,7 @@ public class Commit : ICommand
             .WithArguments($"commit -m \"Build Version: {version}\"")
             .WithWorkingDirectory(projectPath)
             .WithCustomPipes()
-            .ExecuteAsync();
+            .ExecuteAsync(token);
         
         if (res.ExitCode != 0)
             return res.ExitCode;
@@ -64,7 +49,7 @@ public class Commit : ICommand
             .WithArguments($"tag v{version}")
             .WithWorkingDirectory(projectPath)
             .WithCustomPipes()
-            .ExecuteAsync();
+            .ExecuteAsync(token);
         
         if (res.ExitCode != 0)
             return res.ExitCode;
@@ -74,11 +59,8 @@ public class Commit : ICommand
             .WithArguments("push origin main --tags")
             .WithWorkingDirectory(projectPath)
             .WithCustomPipes()
-            .ExecuteAsync();
+            .ExecuteAsync(token);
         
-        if (res.ExitCode != 0)
-            return res.ExitCode;
-
-        return 0;
+        return res.ExitCode;
     }
 }

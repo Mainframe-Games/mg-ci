@@ -1,16 +1,22 @@
 ﻿using System.CommandLine;
 using CLI.Commands;
 
-var rootCommand = new RootCommand("Mainframe CI Tool");
-
-var commands = typeof(ICommand).Assembly
-    .GetTypes()
-    .Where(x => x.GetInterface(nameof(ICommand)) is not null)
-    .Select(x => Activator.CreateInstance(x) as ICommand ?? throw new NullReferenceException())
-    .ToArray();
-
-foreach (var command in commands)
-    rootCommand.Add(command.BuildCommand());
+var rootCommand = new RootCommand("Mainframe CI Tool")
+{
+    new TestCommand(),
+    
+    new Commit(),
+    new DiscordHook(),
+    
+    new GodotBuild(),
+    new GodotSetup(),
+    new GodotVersioning(),
+    
+    new ItchioDeploy(),
+    new SteamCmdSetup(),
+    new SteamDeploy(),
+    
+};
 
 // Invoke the command
 var parseResult =  rootCommand.Parse(args);

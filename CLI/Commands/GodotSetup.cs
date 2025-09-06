@@ -3,24 +3,21 @@ using CLI.Utils;
 
 namespace CLI.Commands;
 
-public class GodotSetup : ICommand
+public class GodotSetup : Command
 {
-    public Command BuildCommand()
+    private readonly Option<string> _option = new ("--version", "-v")
     {
-        var command = new Command("godot-setup");
-        
-        // Add options or subcommands
-        var option = new Option<string>("--version", "-v");
-        command.Add(option);
-
-        // Set the handler directly
-        command.SetAction(async (result, token) 
-            => await Run(result.GetRequiredValue(option)));
-
-        return command;
+        HelpName = "The version of Godot to install"
+    };
+    
+    public GodotSetup() : base("godot-setup", "Installs the Godot engine and export templates.")
+    {
+        Add(_option);
+        SetAction(async (result, token) 
+            => await Run(result.GetRequiredValue(_option), token));
     }
 
-    private static async Task<int> Run(string godotVersion)
+    private static async Task<int> Run(string godotVersion, CancellationToken token)
     {
         string coreUrl =
             $"https://github.com/godotengine/godot-builds/releases/download/{godotVersion}-stable/";
