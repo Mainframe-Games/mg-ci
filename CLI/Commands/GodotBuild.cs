@@ -18,9 +18,14 @@ public class GodotBuild : Command
         HelpName = "Version of Godot Engine to use for build."
     };
 
-    private readonly Option<string> _exportRelease = new("--exportRelease", "-r")
+    private readonly Option<string> _exportRelease = new("--export-release", "-r")
     {
         HelpName = "ExportRelease preset name set in export_presets.cfg"
+    };
+    
+    private readonly Option<string> _exportDebug = new("--export-debug", "-d")
+    {
+        HelpName = "ExportDebug preset name set in export_presets.cfg"
     };
     
     public GodotBuild() : base("godot-build", "Builds a Godot project.")
@@ -28,13 +33,15 @@ public class GodotBuild : Command
         Add(_projectPath);
         Add(_godotVersion);
         Add(_exportRelease);
+        Add(_exportDebug);
         
         // Set the handler directly
         SetAction(async (result, token) 
             => await Run(
                 result.GetRequiredValue(_projectPath),
                 result.GetRequiredValue(_godotVersion),
-                result.GetRequiredValue(_exportRelease),
+                result.GetValue(_exportRelease),
+                result.GetValue(_exportDebug),
                 token
             ));
     }
@@ -42,14 +49,15 @@ public class GodotBuild : Command
     private static async Task<int> Run(
         string projectPath,
         string godotVersion,
-        string exportRelease,
+        string? exportRelease,
+        string? exportDebug,
         CancellationToken token)
     {
         // run a dotnet build to catch any compile errors first
         var res = await PrebuildAsync(projectPath, godotVersion);
         if (res != 0) return res;
         
-        res = await BuildAsync(projectPath, godotVersion, exportRelease);
+        res = await BuildAsync(projectPath, godotVersion, exportRelease, exportDebug);
         if (res != 0) return res;
 
         return 0;
@@ -66,7 +74,8 @@ public class GodotBuild : Command
     {
         // run a dotnet build to catch any compile errors first
         var res = await Cli.Wrap("dotnet")
-            .WithArguments("build -c ExportRelease")
+            // .WithArguments("build -c ExportRelease")
+            .WithArguments("build")
             .WithWorkingDirectory(projectPath)
             .WithCustomPipes()
             .ExecuteAsync();
@@ -90,18 +99,24 @@ public class GodotBuild : Command
         return 0;
     }
 
-    private static async Task<int> BuildAsync(string projectPath, string godotVersion, string exportRelease)
+    private static async Task<int> BuildAsync(string projectPath, string godotVersion, string? exportRelease, string? exportDebug)
     {
         // delete and create new build directory
-        var buildPathRaw = GetExportPath(projectPath, exportRelease);
+        var buildPathRaw = GetExportPath(projectPath, exportRelease ?? exportDebug!);
         var buildPath = Path.GetFullPath(Path.Combine(projectPath, buildPathRaw));
         var buildDir = Path.GetDirectoryName(buildPath) ?? throw new NullReferenceException();
         DirectoryUtil.DeleteDirectoryExists(buildDir, true);
         
+        string? export = null;
+        if (exportRelease is not null)
+            export = $"--export-release {exportRelease}";
+        else if (exportDebug is not null)
+            export = $"--export-debug {exportDebug}";
+        
         // export project
         var godotPath = GodotSetup.GetDefaultGodotPath(godotVersion);
         var res = await Cli.Wrap(godotPath)
-            .WithArguments($"--headless --import --path . --export-release {exportRelease}")
+            .WithArguments($"--headless --import --path . {export}")
             .WithWorkingDirectory(projectPath)
             .WithCustomPipes()
             .ExecuteAsync();
