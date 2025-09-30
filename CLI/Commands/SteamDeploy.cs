@@ -38,25 +38,16 @@ public partial class SteamDeploy : Command
         Add(_vdfPath);
         Add(_steamAccount);
         Add(_steamPassword);
-        
-        // Set the handler directly
-        SetAction(async (result, token)
-            => await Run(
-                result.GetRequiredValue(_projectPath),
-                result.GetRequiredValue(_vdfPath),
-                result.GetRequiredValue(_steamAccount),
-                result.GetRequiredValue(_steamPassword),
-                token
-            ));
+        SetAction(Run);
     }
 
-    private static async Task<int> Run(
-        string projectPath,
-        string vdf,
-        string steamUsername,
-        string steamPassword,
-        CancellationToken token)
+    private async Task<int> Run(ParseResult result, CancellationToken token)
     {
+        var projectPath = result.GetRequiredValue(_projectPath);
+        var vdf = result.GetRequiredValue(_vdfPath);
+        var steamUsername = result.GetRequiredValue(_steamAccount);
+        var steamPassword = result.GetRequiredValue(_steamPassword);
+        
         var projectPathFull = Path.GetFullPath(projectPath);
         Log.WriteLine($"ProjectPath: {projectPathFull}");
         

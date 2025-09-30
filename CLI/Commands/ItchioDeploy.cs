@@ -22,16 +22,14 @@ public class ItchioDeploy : Command
     {
         Add(_projectPath);
         Add(_companyAndGame);
-        SetAction(async (result, token)
-            => await Run(
-                result.GetRequiredValue(_projectPath), 
-                result.GetRequiredValue(_companyAndGame),
-                token
-            ));
+        SetAction(Run);
     }
 
-    private static async Task<int> Run(string projectPath, string companyAndGame, CancellationToken token)
+    private async Task<int> Run(ParseResult result, CancellationToken token)
     {
+        var projectPath = result.GetRequiredValue(_projectPath);
+        var companyAndGame = result.GetRequiredValue(_companyAndGame);
+        
         var butlerPath = GetButlerPath();
         var version = GodotVersioning.GetVersion(projectPath);
         var buildPath = Path.Combine(projectPath, "builds", "windows");
@@ -46,7 +44,6 @@ public class ItchioDeploy : Command
             return res.ExitCode;
         
         Log.WriteLine($"Itchio deploy successful! [{res.RunTime}]", Color.Green);
-        
         return 0;
     }
 

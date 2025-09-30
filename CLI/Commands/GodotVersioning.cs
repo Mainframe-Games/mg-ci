@@ -13,15 +13,12 @@ public class GodotVersioning : Command
     public GodotVersioning() : base("godot-versioning", "Increments the version in the project.godot file.")
     {
         Add(_projectPath);
-        SetAction(async (result, token) =>
-        {
-            var path = result.GetRequiredValue(_projectPath);
-            await Run(path, token);
-        });
+        SetAction(Run);
     }
 
-    private static async Task Run(string path, CancellationToken token)
+    private async Task Run(ParseResult result, CancellationToken token)
     {
+        var path = result.GetRequiredValue(_projectPath);
         var fullPath = Path.GetFullPath(path);
         Log.WriteLine($"ProjectPath: {fullPath}");
         var dirInfo = new DirectoryInfo(fullPath);

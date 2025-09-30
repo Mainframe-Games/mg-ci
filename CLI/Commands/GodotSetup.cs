@@ -13,12 +13,13 @@ public class GodotSetup : Command
     public GodotSetup() : base("godot-setup", "Installs the Godot engine and export templates.")
     {
         Add(_option);
-        SetAction(async (result, token) 
-            => await Run(result.GetRequiredValue(_option), token));
+        SetAction(Run);
     }
 
-    private static async Task<int> Run(string godotVersion, CancellationToken token)
+    private async Task<int> Run(ParseResult result, CancellationToken token)
     {
+        var godotVersion = result.GetRequiredValue(_option);
+        
         string coreUrl =
             $"https://github.com/godotengine/godot-builds/releases/download/{godotVersion}-stable/";
         

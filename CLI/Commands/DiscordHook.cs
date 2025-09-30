@@ -42,24 +42,17 @@ public class DiscordHook : Command
         Add(_steamUrl);
         Add(_logoUrl);
         Add(_noChangeLog);
-        
-        SetAction(async (result, token) => await Run(
-            result.GetRequiredValue(_projectPath), 
-            result.GetRequiredValue(_hookUrl), 
-            result.GetRequiredValue(_steamUrl), 
-            result.GetRequiredValue(_logoUrl),
-            result.GetValue(_noChangeLog),
-            token
-        ));
+        SetAction(Run);
     }
 
-    private static async Task<int> Run(
-        string projectPath,
-        string hookUrl,
-        string steamUrl,
-        string logoUrl,
-        bool noChangeLog, CancellationToken token)
+    private async Task<int> Run(ParseResult result, CancellationToken token)
     {
+        string projectPath = result.GetRequiredValue(_projectPath);
+        string hookUrl = result.GetRequiredValue(_hookUrl);
+        string steamUrl = result.GetRequiredValue(_steamUrl);
+        string logoUrl = result.GetRequiredValue(_logoUrl);
+        bool noChangeLog = result.GetValue(_noChangeLog);
+            
         // get all tags
         var tags = new List<string>();
         var res = await Cli.Wrap("git")

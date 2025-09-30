@@ -34,25 +34,16 @@ public class GodotBuild : Command
         Add(_godotVersion);
         Add(_exportRelease);
         Add(_exportDebug);
-        
-        // Set the handler directly
-        SetAction(async (result, token) 
-            => await Run(
-                result.GetRequiredValue(_projectPath),
-                result.GetRequiredValue(_godotVersion),
-                result.GetValue(_exportRelease),
-                result.GetValue(_exportDebug),
-                token
-            ));
+        SetAction(Run);
     }
 
-    private static async Task<int> Run(
-        string projectPath,
-        string godotVersion,
-        string? exportRelease,
-        string? exportDebug,
-        CancellationToken token)
+    private async Task<int> Run(ParseResult result, CancellationToken token)
     {
+        var projectPath = result.GetRequiredValue(_projectPath);
+        var godotVersion = result.GetRequiredValue(_godotVersion);
+        var exportRelease = result.GetValue(_exportRelease);
+        var exportDebug = result.GetValue(_exportDebug);
+        
         // run a dotnet build to catch any compile errors first
         var res = await PrebuildAsync(projectPath, godotVersion);
         if (res != 0) return res;
