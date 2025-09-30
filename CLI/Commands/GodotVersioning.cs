@@ -39,13 +39,14 @@ public class GodotVersioning : Command
                 var verStr = lines[i].Split("=")[^1].Trim('"');
                 var verSplit = verStr.Split(".");
                 var buildNumInt = int.Parse(verSplit[^1]);
-                buildNumInt++;
                 
                 verSplit[0] = DateTime.Now.Year.ToString();
                 verSplit[1] = DateTime.Now.Month.ToString();
-                verSplit[^1] = buildNumInt.ToString();
+                verSplit[^1] = (++buildNumInt).ToString();
                 
                 var newVer = string.Join(".", verSplit);
+                Log.WriteLine($"New Version: {newVer}");
+                
                 lines[i] = $"config/version=\"{newVer}\"";
                 await FileWriter.WriteAllLinesAsync(file.FullName, lines);
                 break;
