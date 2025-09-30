@@ -45,7 +45,7 @@ public class GodotVersioning : Command
                 buildNumInt++;
                 
                 verSplit[0] = DateTime.Now.Year.ToString();
-                verSplit[2] = DateTime.Now.Month.ToString();
+                verSplit[1] = DateTime.Now.Month.ToString();
                 verSplit[^1] = buildNumInt.ToString();
                 
                 var newVer = string.Join(".", verSplit);
