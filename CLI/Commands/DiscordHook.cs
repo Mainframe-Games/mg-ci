@@ -120,50 +120,57 @@ public class DiscordHook : Command
 
     private static string ParseCommits(List<string> commits)
     {
-        var fixes = new StringBuilder();
-        var additions = new StringBuilder();
-        var removals = new StringBuilder();
+        // var fixes = new StringBuilder();
+        // var additions = new StringBuilder();
+        // var removals = new StringBuilder();
+        
+        var outStr = new StringBuilder();
 
         foreach (var commit in commits)
         {
-            var prefix = commit.ToLower().Trim().Split(' ')[0];
-
-            switch (prefix)
-            {
-                case "fix" or "fixed" or "change" or "changed":
-                    fixes.AppendLine($"- {commit}");
-                    break;
-                
-                case "add" or "added":
-                    additions.AppendLine($"- {commit}");
-                    break;
-
-                case "remove" or "removed":
-                    removals.AppendLine($"- {commit}");
-                    break;
-                
-                default:
-                    // do nothing, ignore
-                    break;
-            }
+            if (commit.StartsWith('_'))
+                continue;
+            
+            // var prefix = commit.ToLower().Trim().Split(' ')[0];
+            //
+            // switch (prefix)
+            // {
+            //     case "fix" or "fixed" or "change" or "changed":
+            //         fixes.AppendLine($"- {commit}");
+            //         break;
+            //     
+            //     case "add" or "added":
+            //         additions.AppendLine($"- {commit}");
+            //         break;
+            //
+            //     case "remove" or "removed":
+            //         removals.AppendLine($"- {commit}");
+            //         break;
+            //     
+            //     default:
+            //         break;
+            // }
+            
+            outStr.AppendLine($"- {commit}");
+            
         }
         
-        var outStr = new StringBuilder();
-        if (fixes.Length > 0)
-        {
-            outStr.AppendLine("**Fixes:**");
-            outStr.AppendLine(fixes.ToString());
-        }
-        if (additions.Length > 0)
-        {
-            outStr.AppendLine("**Additions:**");
-            outStr.AppendLine(additions.ToString());
-        }
-        if (removals.Length > 0)
-        {
-            outStr.AppendLine("**Removals:**");
-            outStr.AppendLine(removals.ToString());
-        }
+        // if (fixes.Length > 0)
+        // {
+        //     outStr.AppendLine("**Fixes:**");
+        //     outStr.AppendLine(fixes.ToString());
+        // }
+        // if (additions.Length > 0)
+        // {
+        //     outStr.AppendLine("**Additions:**");
+        //     outStr.AppendLine(additions.ToString());
+        // }
+        // if (removals.Length > 0)
+        // {
+        //     outStr.AppendLine("**Removals:**");
+        //     outStr.AppendLine(removals.ToString());
+        // }
+        
         return outStr.ToString();
     }
 }
