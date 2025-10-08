@@ -36,7 +36,7 @@ public class Commit : Command
         
         // commit with message
         res = await Cli.Wrap("git")
-            .WithArguments($"commit -m \"Build Version: {version}\"")
+            .WithArguments($"commit -m \"_Build Version: {version}\"")
             .WithWorkingDirectory(projectPath)
             .WithCustomPipes()
             .ExecuteAsync(token);
