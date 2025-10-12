@@ -1,5 +1,4 @@
 ﻿using System.CommandLine;
-using System.Text.RegularExpressions;
 using CLI.Utils;
 using CliWrap;
 using Spectre.Console;
@@ -7,11 +6,8 @@ using Command = System.CommandLine.Command;
 
 namespace CLI.Commands;
 
-public partial class SteamDeploy : Command
+public class SteamDeploy : Command
 {
-    [GeneratedRegex("""(?<="Desc"\s*")[\d.]+(?=")""")]
-    private static partial Regex DescRegex();
-
     private readonly Option<string> _projectPath = new("--projectPath", "-p")
     {
         HelpName = "Path to Godot project"
@@ -83,10 +79,7 @@ public partial class SteamDeploy : Command
             if (!lines[i].Contains("Desc"))
                 continue;
             
-            // Using regex pattern that matches the version number between quotes
-            var result = DescRegex().Replace(lines[i], version);
-            
-            lines[i] = result;
+            lines[i] = $"\t\"Desc\" \"{version}\"";
             await FileWriter.WriteAllLinesAsync(vdfPath, lines);
             break;
         }
