@@ -19,8 +19,7 @@ public class GodotSetup : Command
     private async Task<int> Run(ParseResult result, CancellationToken token)
     {
         var godotVersion = result.GetRequiredValue(_option);
-        
-        string coreUrl =
+        var coreUrl =
             $"https://github.com/godotengine/godot-builds/releases/download/{godotVersion}-stable/";
         
         Console.WriteLine($"[Godot Setup] Godot version: {godotVersion}");
@@ -62,11 +61,9 @@ public class GodotSetup : Command
         DirectoryUtil.DeleteDirectoryExists(engineDir, true);
         
         // download engine
-        // Console.WriteLine($"[Godot Setup] Downloading engine... {engineUrl} -> {engineDir}/{engineZip}");
         await Web.DownloadFileWithProgressAsync(engineUrl, $"{engineDir}/{engineZip}");
         
         // download export templates
-        // Console.WriteLine($"[Godot Setup] Downloading export templates... {exportTemplatesUrl} -> {engineDir}/{exportTemplateTpz}");
         await Web.DownloadFileWithProgressAsync(exportTemplatesUrl, $"{engineDir}/{exportTemplateTpz}");
         
         // unzip engine
@@ -83,10 +80,66 @@ public class GodotSetup : Command
             templateFile.MoveTo($"{exportTemplatesPath}/{templateFile.Name}");
         templates.Delete(true);
         File.Delete($"{engineDir}/{exportTemplateTpz}");
+
+        if (OperatingSystem.IsLinux())
+        {
+            await CreateDesktopEntryLinux(godotVersion);
+            var enginePath = $"{engineDir}/Godot_v{godotVersion}-stable_mono_linux_x86_64/Godot_v{godotVersion}-stable_mono_linux.x86_64";
+            SetExecutablePermissionsLinux(enginePath);
+        }
         
         Console.WriteLine($"[GODOT SETUP] Godot Engine {godotVersion} setup completed successfully.");
         
         return 0;
+    }
+
+    private static void SetExecutablePermissionsLinux(in string filePath)
+    {
+        if (!OperatingSystem.IsLinux())
+            return;
+        
+        var currentModes = File.GetUnixFileMode(filePath);
+        Console.WriteLine($"[GODOT SETUP] {filePath} before | UnixFileMode: {currentModes}");
+        
+        var newMode = currentModes 
+                      | UnixFileMode.UserExecute
+                      | UnixFileMode.GroupExecute
+                      | UnixFileMode.OtherExecute;
+        
+        File.SetUnixFileMode(filePath, newMode);
+        
+        Console.WriteLine($"[GODOT SETUP] {filePath} after | UnixFileMode: {newMode}");
+    }
+
+    private static async Task CreateDesktopEntryLinux(string godotVersion)
+    {
+        if (!OperatingSystem.IsLinux())
+            return;
+        
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        
+        string desktopContents =
+            $"""
+            [Desktop Entry]
+            Version=4.1.1
+            Name=Godot Engine
+            Comment=Godot Engine Mono
+            Exec=/bin/sh -c "{home}/.local/share/godot/engine/Godot_v{godotVersion}-stable_mono_linux_x86_64/Godot_v{godotVersion}-stable_mono_linux.x86_64"
+            Icon={home}/.local/share/godot/engine/icon_color.svg
+            Terminal=false
+            Type=Application
+            Categories=Development
+            Name[en_NZ]=Godot Engine
+            """;
+        
+        var desktopEntryPath = $"{home}/.local/share/applications/godot.desktop";
+        await File.WriteAllTextAsync(desktopEntryPath, desktopContents);
+        Console.WriteLine($"[GODOT SETUP] Created desktop entry {desktopEntryPath}\n{desktopContents}");
+        SetExecutablePermissionsLinux(desktopEntryPath);
+        
+        // download icon
+        var iconPath = $"{home}/.local/share/godot/engine/icon_color.svg";
+        await Web.DownloadFileWithProgressAsync("https://godotengine.org/assets/press/icon_color.svg", iconPath);
     }
 
     /// <summary>
