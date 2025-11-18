@@ -1,6 +1,7 @@
 ﻿using System.CommandLine;
 using CLI.Utils;
 using CliWrap;
+using CliWrap.Buffered;
 using Spectre.Console;
 using Command = System.CommandLine.Command;
 
@@ -75,10 +76,10 @@ public class GodotBuild : Command
             return res.ExitCode;
 
         // FIX: work around for bug https://github.com/firebelley/godot-export/issues/127
-        var godotPath = GodotSetup.GetDefaultGodotPath(godotVersion);
         var dotGodotFolder = Path.Combine(projectPath, ".godot");
         if (!Directory.Exists(dotGodotFolder))
         {
+            var godotPath = GodotSetup.GetDefaultGodotPath(godotVersion);
             res = await Cli.Wrap(godotPath)
                 .WithArguments("--headless --import")
                 .WithWorkingDirectory(projectPath)
@@ -123,26 +124,38 @@ public class GodotBuild : Command
     private static string GetExportPath(string projectPath, string exportRelease)
     {
         var exportPresetsCfg = GetExportPresetsCfg(projectPath);
+        var foundPreset = false;
+        
         foreach (var line in exportPresetsCfg)
         {
-            if (!line.Contains("export_path")) 
+            if (line.StartsWith("name=") && GetLineValue(line) == exportRelease)
+            {
+                foundPreset = true;
+                continue;
+            }
+            
+            if(!foundPreset)
                 continue;
             
-            var exportPath = line.Split("=")[^1].Trim('"');
+            if (!line.StartsWith("export_path=")) 
+                continue;
+            
+            var exportPath = GetLineValue(line);
             return exportPath;
         }
-        
+
         throw new Exception($"Export preset {exportRelease} not found in export_presets.cfg.");
+
+        static string GetLineValue(in string line)
+            => line.Split("=")[^1].Trim('"');
     }
 
     private static string[] GetExportPresetsCfg(string projectPath)
     {
         var exportPresetsPath = Path.Combine(projectPath, "export_presets.cfg");
-        
-        if (File.Exists(exportPresetsPath))
-            return File.ReadAllLines(exportPresetsPath);
-        
-        throw new Exception("No export presets found in project directory.");
+        return File.Exists(exportPresetsPath)
+            ? File.ReadAllLines(exportPresetsPath)
+            : throw new Exception("No export presets found in project directory.");
     }
     
     #endregion
