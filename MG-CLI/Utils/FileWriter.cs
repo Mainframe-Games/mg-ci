@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace CLI.Utils;
+namespace MG;
 
 public abstract class FileWriter
 {

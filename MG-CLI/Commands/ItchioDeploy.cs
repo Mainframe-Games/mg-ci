@@ -1,10 +1,9 @@
 ﻿using System.CommandLine;
-using CLI.Utils;
 using CliWrap;
 using Spectre.Console;
 using Command = System.CommandLine.Command;
 
-namespace CLI.Commands;
+namespace MG;
 
 public class ItchioDeploy : Command
 {

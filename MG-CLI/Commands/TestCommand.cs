@@ -1,7 +1,7 @@
 ﻿using System.CommandLine;
 using Spectre.Console;
 
-namespace CLI.Commands;
+namespace MG;
 
 public class TestCommand : Command
 {
@@ -10,7 +10,7 @@ public class TestCommand : Command
         SetAction(_ =>
         {
             AnsiConsole.Write(
-                new FigletText("Mainframe CLI Tools")
+                new FigletText("Mainframe MG-CLI Tools")
                     .LeftJustified()
                     .Color(Color.Cyan1));
             return 0;

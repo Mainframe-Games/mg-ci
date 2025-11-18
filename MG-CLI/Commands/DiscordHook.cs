@@ -1,12 +1,11 @@
 ﻿using System.CommandLine;
 using System.Text;
-using CLI.Utils;
 using CliWrap;
 using Newtonsoft.Json.Linq;
 using Spectre.Console;
 using Command = System.CommandLine.Command;
 
-namespace CLI.Commands;
+namespace MG;
 
 public class DiscordHook : Command
 {

@@ -1,4 +1,4 @@
 pack:
-	dotnet pack ./CLI/CLI.csproj -c Release
-	dotnet tool uninstall --global mg || true
-	dotnet tool install --global mg --add-source "./CLI/nupkg" --no-cache
+	dotnet pack ./MG-CLI/MG-CLI.csproj -c Release
+	dotnet tool uninstall --global mg-cli || true
+	dotnet tool install --global mg-cli --add-source "./MG-CLI/nupkg" --no-cache

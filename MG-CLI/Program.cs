@@ -1,5 +1,5 @@
 ﻿using System.CommandLine;
-using CLI.Commands;
+using MG;
 
 var rootCommand = new RootCommand("Mainframe CI Tool")
 {

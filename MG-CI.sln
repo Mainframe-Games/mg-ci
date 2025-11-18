@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLI", "CLI\CLI.csproj", "{A83368BA-A5F7-48EE-9648-2C4F3B91D0CF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MG-CLI", "MG-CLI\MG-CLI.csproj", "{A83368BA-A5F7-48EE-9648-2C4F3B91D0CF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

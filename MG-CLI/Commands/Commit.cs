@@ -1,9 +1,8 @@
 ﻿using System.CommandLine;
-using CLI.Utils;
 using CliWrap;
 using Command = System.CommandLine.Command;
 
-namespace CLI.Commands;
+namespace MG;
 
 public class Commit : Command
 {

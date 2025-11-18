@@ -1,7 +1,7 @@
 ﻿using System.IO.Compression;
 using Spectre.Console;
 
-namespace CLI.Utils;
+namespace MG;
 
 public static class Zip
 {

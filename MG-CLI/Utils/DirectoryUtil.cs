@@ -1,4 +1,4 @@
-﻿namespace CLI.Utils;
+﻿namespace MG;
 
 public static class DirectoryUtil
 {

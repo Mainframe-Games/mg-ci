@@ -1,11 +1,9 @@
 ﻿using System.CommandLine;
-using CLI.Utils;
 using CliWrap;
-using CliWrap.Buffered;
 using Spectre.Console;
 using Command = System.CommandLine.Command;
 
-namespace CLI.Commands;
+namespace MG;
 
 public class GodotBuild : Command
 {
