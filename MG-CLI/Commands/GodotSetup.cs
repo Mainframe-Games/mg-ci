@@ -42,6 +42,12 @@ public class GodotSetup : Command
             engineDir = $"{home}/.local/share/godot/engine";
             exportTemplatesPath = $"{home}/.local/share/godot/export_templates/{godotVersion}.stable.mono";
         }
+        else if (OperatingSystem.IsMacOS())
+        {
+            engineZip = $"Godot_v{godotVersion}-stable_mono_macos.universal.zip";
+            engineDir = $"{home}/Applications";
+            exportTemplatesPath = $"{home}/Library/Application Support/Godot/export_templates/{godotVersion}.stable.mono";
+        }
         else
         {
             throw new Exception($"Platform not supported: {Environment.OSVersion}");
@@ -57,7 +63,14 @@ public class GodotSetup : Command
         Console.WriteLine($"[Godot Setup] ExportTemplatesPath: {exportTemplatesPath}");
         
         // create directory
-        DirectoryUtil.DeleteDirectoryExists(engineDir, true);
+        if (OperatingSystem.IsMacOS())
+        {
+            DirectoryUtil.DeleteDirectoryExists(engineDir + "/Godot_mono.app", false);
+        }
+        else
+        {
+            DirectoryUtil.DeleteDirectoryExists(engineDir, true);
+        }
         
         // download engine
         await Web.DownloadFileWithProgressAsync(engineUrl, $"{engineDir}/{engineZip}");
@@ -84,7 +97,12 @@ public class GodotSetup : Command
         {
             await CreateDesktopEntryLinux(godotVersion);
             var enginePath = $"{engineDir}/Godot_v{godotVersion}-stable_mono_linux_x86_64/Godot_v{godotVersion}-stable_mono_linux.x86_64";
-            SetExecutablePermissionsLinux(enginePath);
+            SetExecutablePermissionsUnix(enginePath);
+        }
+        else if (OperatingSystem.IsMacOS())
+        {
+            var enginePath = $"{engineDir}/Godot_mono.app/Contents/MacOS/Godot";
+            SetExecutablePermissionsUnix(enginePath);
         }
         
         Console.WriteLine($"[GODOT SETUP] Godot Engine {godotVersion} setup completed successfully.");
@@ -92,9 +110,9 @@ public class GodotSetup : Command
         return 0;
     }
 
-    private static void SetExecutablePermissionsLinux(in string filePath)
+    private static void SetExecutablePermissionsUnix(in string filePath)
     {
-        if (!OperatingSystem.IsLinux())
+        if (!OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS())
             return;
         
         var currentModes = File.GetUnixFileMode(filePath);
@@ -134,7 +152,7 @@ public class GodotSetup : Command
         var desktopEntryPath = $"{home}/.local/share/applications/godot.desktop";
         await File.WriteAllTextAsync(desktopEntryPath, desktopContents);
         Console.WriteLine($"[GODOT SETUP] Created desktop entry {desktopEntryPath}\n{desktopContents}");
-        SetExecutablePermissionsLinux(desktopEntryPath);
+        SetExecutablePermissionsUnix(desktopEntryPath);
         
         // download icon
         var iconPath = $"{home}/.local/share/godot/engine/icon_color.svg";
