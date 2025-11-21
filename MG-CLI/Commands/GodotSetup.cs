@@ -192,9 +192,17 @@ public class GodotSetup : Command
                     return exe.FullName;
             }
         }
+        else if (OperatingSystem.IsMacOS())
+        {
+            var engineDir = Path.Combine(home, "Applications/Godot_mono.app/Contents/MacOS/Godot");
+            var fileInfo = new FileInfo(engineDir);
+            if (fileInfo.Exists)
+                return fileInfo.FullName;
+            throw new FileNotFoundException($"Could not find Godot executable: {engineDir}");
+        }
         else
         {
-            throw new Exception($"Platform not supported: {Environment.OSVersion}");
+            throw new PlatformNotSupportedException($"Platform not supported: {Environment.OSVersion}");
         }
 
         throw new Exception("Could not find Godot executable.");

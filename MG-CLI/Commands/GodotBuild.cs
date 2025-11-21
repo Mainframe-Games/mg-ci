@@ -114,6 +114,13 @@ public class GodotBuild : Command
         if (res.IsSuccess)
             Log.WriteLine($"Build successful [{res.RunTime}]. {buildPath}", Color.Green);
         
+        // mac builds need to be unzipped
+        if (exportRelease == "Mac")
+        {
+            var extractFolder = buildPath.Replace(".zip", "");
+            await Zip.UnzipFileAsync(buildPath, extractFolder + "/..");
+        }
+        
         return res.ExitCode;
     }
 
