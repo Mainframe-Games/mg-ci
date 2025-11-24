@@ -27,12 +27,18 @@ public class GodotBuild : Command
         HelpName = "ExportDebug preset name set in export_presets.cfg"
     };
     
+    private readonly Option<bool> _interactive = new("--interactive", "-i")
+    {
+        HelpName = "Enable interactive mode"
+    };
+    
     public GodotBuild() : base("godot-build", "Builds a Godot project.")
     {
         Add(_projectPath);
         Add(_godotVersion);
         Add(_exportRelease);
         Add(_exportDebug);
+        Add(_interactive);
         SetAction(Run);
     }
 
@@ -40,15 +46,43 @@ public class GodotBuild : Command
     {
         var projectPath = result.GetRequiredValue(_projectPath);
         var godotVersion = result.GetRequiredValue(_godotVersion);
-        var exportRelease = result.GetValue(_exportRelease);
-        var exportDebug = result.GetValue(_exportDebug);
+        var isInteractive = result.GetValue(_interactive);
+
+        var templates = new List<string>();
+        var isDebug = false;
         
+        if (isInteractive)
+        {
+            templates = AnsiConsole.Prompt(
+                new MultiSelectionPrompt<string>()
+                    .Title("Choose targets:")
+                    .InstructionsText(
+                        "[grey](Press [blue]<space>[/] to toggle, " + 
+                        "[green]<enter>[/] to accept)[/]")
+                    .AddChoices(GetExportPresets(projectPath)));
+            
+            isDebug = await AnsiConsole.ConfirmAsync("Build in Debug mode?", false, token);
+            
+        }
+        else
+        {
+            var exportRelease = result.GetValue(_exportRelease);
+            var exportDebug = result.GetValue(_exportDebug);
+            isDebug = !string.IsNullOrEmpty(exportDebug);
+            templates.Add(isDebug ? exportDebug! : exportRelease!);
+        }
+
         // run a dotnet build to catch any compile errors first
         var res = await PrebuildAsync(projectPath, godotVersion);
         if (res != 0) return res;
         
-        res = await BuildAsync(projectPath, godotVersion, exportRelease, exportDebug);
-        if (res != 0) return res;
+        foreach (var template in templates)
+        {
+            var exportType = isDebug ? $"--export-debug {template}" : $"--export-release {template}";
+            res = await BuildAsync(projectPath, godotVersion, exportType);
+            if (res != 0)
+                Log.WriteLine($"Build failed for '{template}' [{res}].", Color.Red);
+        }
 
         return 0;
     }
@@ -64,7 +98,6 @@ public class GodotBuild : Command
     {
         // run a dotnet build to catch any compile errors first
         var res = await Cli.Wrap("dotnet")
-            // .WithArguments("build -c ExportRelease")
             .WithArguments("build")
             .WithWorkingDirectory(projectPath)
             .WithCustomPipes()
@@ -89,24 +122,19 @@ public class GodotBuild : Command
         return 0;
     }
 
-    private static async Task<int> BuildAsync(string projectPath, string godotVersion, string? exportRelease, string? exportDebug)
+    private static async Task<int> BuildAsync(string projectPath, string godotVersion, string? exportType)
     {
         // delete and create new build directory
-        var buildPathRaw = GetExportPath(projectPath, exportRelease ?? exportDebug!);
+        var template = exportType?.Split(' ')[^1] ?? throw new NullReferenceException("No export preset specified.");
+        var buildPathRaw = GetExportPath(projectPath, template);
         var buildPath = Path.GetFullPath(Path.Combine(projectPath, buildPathRaw));
         var buildDir = Path.GetDirectoryName(buildPath) ?? throw new NullReferenceException();
         DirectoryUtil.DeleteDirectoryExists(buildDir, true);
         
-        string? export = null;
-        if (exportRelease is not null)
-            export = $"--export-release {exportRelease}";
-        else if (exportDebug is not null)
-            export = $"--export-debug {exportDebug}";
-        
         // export project
         var godotPath = GodotSetup.GetDefaultGodotPath(godotVersion);
         var res = await Cli.Wrap(godotPath)
-            .WithArguments($"--headless --import --path . {export}")
+            .WithArguments($"--headless --import --path . {exportType}")
             .WithWorkingDirectory(projectPath)
             .WithCustomPipes()
             .ExecuteAsync();
@@ -125,6 +153,19 @@ public class GodotBuild : Command
     }
 
     #region Helper Methods
+
+    private static IEnumerable<string> GetExportPresets(string projectPath)
+    {
+        var exportPresetsCfg = GetExportPresetsCfg(projectPath);
+        foreach (var line in exportPresetsCfg)
+        {
+            if (!line.StartsWith("name=")) 
+                continue;
+            
+            var presetName = GetLineValue(line);
+            yield return presetName;
+        }
+    }
     
     private static string GetExportPath(string projectPath, string exportRelease)
     {
@@ -150,10 +191,10 @@ public class GodotBuild : Command
         }
 
         throw new Exception($"Export preset {exportRelease} not found in export_presets.cfg.");
-
-        static string GetLineValue(in string line)
-            => line.Split("=")[^1].Trim('"');
     }
+    
+    private static string GetLineValue(in string line)
+        => line.Split("=")[^1].Trim('"');
 
     private static string[] GetExportPresetsCfg(string projectPath)
     {
