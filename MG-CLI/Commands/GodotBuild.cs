@@ -125,7 +125,7 @@ public class GodotBuild : Command
     private static async Task<int> BuildAsync(string projectPath, string godotVersion, string? exportType)
     {
         // delete and create new build directory
-        var template = exportType?.Split(' ')[^1] ?? throw new NullReferenceException("No export preset specified.");
+        var template = exportType?.Split(' ')[^1].Trim() ?? throw new NullReferenceException("No export preset specified.");
         var buildPathRaw = GetExportPath(projectPath, template);
         var buildPath = Path.GetFullPath(Path.Combine(projectPath, buildPathRaw));
         var buildDir = Path.GetDirectoryName(buildPath) ?? throw new NullReferenceException();
@@ -143,7 +143,7 @@ public class GodotBuild : Command
             Log.WriteLine($"Build successful [{res.RunTime}]. {buildPath}", Color.Green);
         
         // mac builds need to be unzipped
-        if (exportRelease == "Mac")
+        if (template == "Mac")
         {
             var extractFolder = buildPath.Replace(".zip", "");
             await Zip.UnzipFileAsync(buildPath, extractFolder + "/..");
