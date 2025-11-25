@@ -47,7 +47,7 @@ public class GodotVersioning : Command
                 Log.WriteLine($"New Version: {newVer}");
                 
                 lines[i] = $"config/version=\"{newVer}\"";
-                await FileWriter.WriteAllLinesAsync(file.FullName, lines);
+                await FileEx.WriteAllLinesAsync(file.FullName, lines);
                 break;
             }
         }

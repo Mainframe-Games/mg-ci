@@ -24,7 +24,7 @@ public class SteamCmdSetup : Command
         await Web.DownloadFileWithProgressAsync(steamworksSdkUrl, destinationPath);
         await Zip.UnzipFileAsync($"{destinationPathTemp}/{zipFileName}", destinationPathTemp);
 
-        DirectoryInfo tempDir = GetTempContentBuilderDirectory(destinationPathTemp);
+        var tempDir = GetTempContentBuilderDirectory(destinationPathTemp);
         
         var files = tempDir.GetFiles("*.*", SearchOption.AllDirectories);
         foreach (var fileInfo in files)
@@ -53,7 +53,7 @@ public class SteamCmdSetup : Command
             return Path.Combine(home, "steamcmd");
         
         if (OperatingSystem.IsMacOS())
-            return Path.Combine("Applications", "steamcmd");
+            return Path.Combine(home, "Applications", "steamcmd");
         
         throw new PlatformNotSupportedException($"Platform not supported. {Environment.OSVersion}");
     }

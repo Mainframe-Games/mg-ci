@@ -79,7 +79,7 @@ public class SteamDeploy : Command
                 continue;
             
             lines[i] = $"\t\"Desc\" \"{version}\"";
-            await FileWriter.WriteAllLinesAsync(vdfPath, lines);
+            await FileEx.WriteAllLinesAsync(vdfPath, lines);
             break;
         }
     }

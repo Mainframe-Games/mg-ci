@@ -97,37 +97,19 @@ public class GodotSetup : Command
         {
             await CreateDesktopEntryLinux(godotVersion);
             var enginePath = $"{engineDir}/Godot_v{godotVersion}-stable_mono_linux_x86_64/Godot_v{godotVersion}-stable_mono_linux.x86_64";
-            SetExecutablePermissionsUnix(enginePath);
+            FileEx.SetExecutablePermissionsUnix(enginePath);
         }
         else if (OperatingSystem.IsMacOS())
         {
             var enginePath = $"{engineDir}/Godot_mono.app/Contents/MacOS/Godot";
-            SetExecutablePermissionsUnix(enginePath);
+            FileEx.SetExecutablePermissionsUnix(enginePath);
         }
         
         Console.WriteLine($"[GODOT SETUP] Godot Engine {godotVersion} setup completed successfully.");
         
         return 0;
     }
-
-    private static void SetExecutablePermissionsUnix(in string filePath)
-    {
-        if (!OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS())
-            return;
-        
-        var currentModes = File.GetUnixFileMode(filePath);
-        Console.WriteLine($"[GODOT SETUP] {filePath} before | UnixFileMode: {currentModes}");
-        
-        var newMode = currentModes 
-                      | UnixFileMode.UserExecute
-                      | UnixFileMode.GroupExecute
-                      | UnixFileMode.OtherExecute;
-        
-        File.SetUnixFileMode(filePath, newMode);
-        
-        Console.WriteLine($"[GODOT SETUP] {filePath} after | UnixFileMode: {newMode}");
-    }
-
+    
     private static async Task CreateDesktopEntryLinux(string godotVersion)
     {
         if (!OperatingSystem.IsLinux())
@@ -152,7 +134,7 @@ public class GodotSetup : Command
         var desktopEntryPath = $"{home}/.local/share/applications/godot.desktop";
         await File.WriteAllTextAsync(desktopEntryPath, desktopContents);
         Console.WriteLine($"[GODOT SETUP] Created desktop entry {desktopEntryPath}\n{desktopContents}");
-        SetExecutablePermissionsUnix(desktopEntryPath);
+        FileEx.SetExecutablePermissionsUnix(desktopEntryPath);
         
         // download icon
         var iconPath = $"{home}/.local/share/godot/engine/icon_color.svg";
