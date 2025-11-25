@@ -1,4 +1,7 @@
 ﻿using System.Text;
+using CliWrap;
+using CliWrap.Buffered;
+using Spectre.Console;
 
 namespace MG;
 
@@ -24,13 +27,28 @@ public static class FileEx
         if (!OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS())
             return;
         
-        var currentModes = File.GetUnixFileMode(filePath);
+        var res = Cli.Wrap("chmod")
+            .WithArguments($"+x {filePath}")
+            .ExecuteBufferedAsync();
         
-        var newMode = currentModes 
-                      | UnixFileMode.UserExecute
-                      | UnixFileMode.GroupExecute
-                      | UnixFileMode.OtherExecute;
+        res.Task.Wait();
+        var result = res.Task.Result;
+        if (result.ExitCode != 0)
+        {
+            Log.WriteLine(result.StandardError, Color.Red);
+        }
+        else
+        {
+            Log.WriteLine(result.StandardOutput);
+        }
         
-        File.SetUnixFileMode(filePath, newMode);
+        // var currentModes = File.GetUnixFileMode(filePath);
+        //
+        // var newMode = currentModes 
+        //               | UnixFileMode.UserExecute
+        //               | UnixFileMode.GroupExecute
+        //               | UnixFileMode.OtherExecute;
+        //
+        // File.SetUnixFileMode(filePath, newMode);
     }
 }

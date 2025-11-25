@@ -20,42 +20,54 @@ public static class Web
     {
         await AnsiConsole.Progress().StartAsync(async ctx =>
         {
-            var fileName = Path.GetFileName(url);
-            var prog = ctx.AddTask($"Downloading: {fileName}");
+            await DownloadFileWithProgress(url, destinationPath, ctx);
+        });
+    }
+
+    private static async Task DownloadFileWithProgress(string url, string destinationPath, ProgressContext ctx)
+    {
+        var fileName = Path.GetFileName(url);
+        var prog = ctx.AddTask($"Downloading: {fileName}");
             
-            using var httpClient = new HttpClient();
-            using var response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
-            response.EnsureSuccessStatusCode();
+        using var httpClient = new HttpClient();
+        using var response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+        response.EnsureSuccessStatusCode();
 
-            var totalBytes = response.Content.Headers.ContentLength ?? -1L;
-            var bytesRead = 0L;
-    
-            await using var contentStream = await response.Content.ReadAsStreamAsync();
-            await using var fileStream = File.Create(destinationPath);
-    
-            var buffer = new byte[8192];
-            var isMoreToRead = true;
+        var totalBytes = response.Content.Headers.ContentLength ?? -1L;
 
-            do
+        if (totalBytes == -1L)
+        {
+            await DownloadFileWithProgress(url, destinationPath, ctx);
+            //throw new IOException("Could not determine the total number of bytes to download.");
+            return;
+        }
+    
+        await using var contentStream = await response.Content.ReadAsStreamAsync();
+        await using var fileStream = File.Create(destinationPath);
+    
+        var buffer = new byte[8192];
+        var isMoreToRead = true;
+        var bytesRead = 0L;
+
+        do
+        {
+            var read = await contentStream.ReadAsync(buffer);
+            if (read == 0)
             {
-                var read = await contentStream.ReadAsync(buffer);
-                if (read == 0)
-                {
-                    isMoreToRead = false;
-                }
-                else
-                {
-                    await fileStream.WriteAsync(buffer.AsMemory(0, read));
-                    bytesRead += read;
+                isMoreToRead = false;
+            }
+            else
+            {
+                await fileStream.WriteAsync(buffer.AsMemory(0, read));
+                bytesRead += read;
 
-                    if (totalBytes != -1L)
-                    {
-                        var progressPercentage = (double)bytesRead / totalBytes * 100;
-                        prog.Value(progressPercentage);
-                    }
+                if (totalBytes != -1L)
+                {
+                    var progressPercentage = (double)bytesRead / totalBytes * 100;
+                    prog.Value(progressPercentage);
                 }
             }
-            while (isMoreToRead);
-        });
+        }
+        while (isMoreToRead);
     }
 }
