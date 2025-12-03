@@ -147,6 +147,7 @@ public class GodotBuild : Command
         {
             var extractFolder = buildPath.Replace(".zip", "");
             await Zip.UnzipFileAsync(buildPath, extractFolder + "/..");
+            DirectoryUtil.DeleteDirectoryExists(buildDir, false);
         }
         
         return res.ExitCode;
