@@ -19,7 +19,7 @@ public class GodotVersioning : Command
     {
         var path = result.GetRequiredValue(_projectPath);
         var fullPath = Path.GetFullPath(path);
-        Log.WriteLine($"ProjectPath: {fullPath}");
+        Log.Print($"ProjectPath: {fullPath}");
         var dirInfo = new DirectoryInfo(fullPath);
         var files = dirInfo.GetFiles("*.godot", SearchOption.AllDirectories);
         
@@ -39,12 +39,12 @@ public class GodotVersioning : Command
                 var verSplit = verStr.Split(".");
                 var buildNumInt = int.Parse(verSplit[^1]);
                 
-                verSplit[0] = DateTime.Now.ToString("yy");
+                verSplit[0] = DateTime.Now.ToString("yyyy");
                 verSplit[1] = DateTime.Now.Month.ToString();
                 verSplit[^1] = (++buildNumInt).ToString();
                 
                 var newVer = string.Join(".", verSplit);
-                Log.WriteLine($"New Version: {newVer}");
+                Log.Print($"New Version: {newVer}");
                 
                 lines[i] = $"config/version=\"{newVer}\"";
                 await FileEx.WriteAllLinesAsync(file.FullName, lines);

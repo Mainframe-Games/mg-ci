@@ -35,11 +35,11 @@ public static class FileEx
         var result = res.Task.Result;
         if (result.ExitCode != 0)
         {
-            Log.WriteLine(result.StandardError, Color.Red);
+            Log.Print(result.StandardError, Color.Red);
         }
         else
         {
-            Log.WriteLine(result.StandardOutput);
+            Log.Print(result.StandardOutput);
         }
         
         // var currentModes = File.GetUnixFileMode(filePath);

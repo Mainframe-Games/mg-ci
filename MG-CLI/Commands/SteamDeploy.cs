@@ -44,15 +44,15 @@ public class SteamDeploy : Command
         var steamPassword = result.GetRequiredValue(_steamPassword);
         
         var projectPathFull = Path.GetFullPath(projectPath);
-        Log.WriteLine($"ProjectPath: {projectPathFull}");
+        Log.Print($"ProjectPath: {projectPathFull}");
         
         var version = GodotVersioning.GetVersion(projectPathFull);
         var vdfFullPath = Path.Combine(projectPathFull, vdf);
         await UpdateVdfDescription(vdfFullPath, version);
         
         var steamCmdPath = SteamCmdSetup.GetDefaultSteamCmdPath();
-        Log.WriteLine($"SteamCmdPath: {steamCmdPath}");
-        Log.WriteLine($"Vdf: {vdfFullPath}");
+        Log.Print($"SteamCmdPath: {steamCmdPath}");
+        Log.Print($"Vdf: {vdfFullPath}");
         var res = await Cli.Wrap(steamCmdPath)
             .WithArguments($"+login {steamUsername} {steamPassword} +run_app_build {vdfFullPath} +quit")
             .WithWorkingDirectory(projectPathFull)
@@ -62,7 +62,7 @@ public class SteamDeploy : Command
         if (res.ExitCode != 0)
             return res.ExitCode;
         
-        Log.WriteLine($"Steam deploy successful! [{res.RunTime}]", Color.Green);
+        Log.Print($"Steam deploy successful! [{res.RunTime}]", Color.Green);
         
         return 0;
     }

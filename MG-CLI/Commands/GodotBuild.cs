@@ -81,7 +81,7 @@ public class GodotBuild : Command
             var exportType = isDebug ? $"--export-debug {template}" : $"--export-release {template}";
             res = await BuildAsync(projectPath, godotVersion, exportType);
             if (res != 0)
-                Log.WriteLine($"Build failed for '{template}' [{res}].", Color.Red);
+                Log.Print($"Build failed for '{template}' [{res}].", Color.Red);
         }
 
         return 0;
@@ -131,6 +131,8 @@ public class GodotBuild : Command
         var buildDir = Path.GetDirectoryName(buildPath) ?? throw new NullReferenceException();
         DirectoryUtil.DeleteDirectoryExists(buildDir, true);
         
+        Log.CreateLogFile($"builds/Logs/{template}.log");
+        
         // export project
         var godotPath = GodotSetup.GetDefaultGodotPath(godotVersion);
         var res = await Cli.Wrap(godotPath)
@@ -140,16 +142,18 @@ public class GodotBuild : Command
             .ExecuteAsync();
         
         if (res.IsSuccess)
-            Log.WriteLine($"Build successful [{res.RunTime}]. {buildPath}", Color.Green);
+            Log.Print($"Build successful [{res.RunTime}]. {buildPath}", Color.Green);
         
         // mac builds need to be unzipped
         if (template == "Mac")
         {
             var extractFolder = buildPath.Replace(".zip", "");
             await Zip.UnzipFileAsync(buildPath, extractFolder + "/..");
+            Log.Print($"Deleting zip file... {buildPath}");
             File.Delete(buildPath);
         }
-        
+
+        Log.StopLoggingToFile();
         return res.ExitCode;
     }
 

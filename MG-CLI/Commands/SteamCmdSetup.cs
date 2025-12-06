@@ -49,7 +49,7 @@ public class SteamCmdSetup : Command
                 .ExecuteBufferedAsync(cancellationToken: token);
         }
         
-        Log.WriteLine("SteamCMD setup complete");
+        Log.Print("SteamCMD setup complete");
     }
 
     private static DirectoryInfo GetTempContentBuilderDirectory(string destinationPathTemp)

@@ -110,7 +110,7 @@ public class DiscordHook : Command
 
         if (!response.IsSuccessStatusCode)
         {
-            Log.WriteLine($"Discord hook failed: {response.StatusCode}, reason: {response.ReasonPhrase}", Color.Red);
+            Log.Print($"Discord hook failed: {response.StatusCode}, reason: {response.ReasonPhrase}", Color.Red);
             return (int)response.StatusCode;
         }
         
