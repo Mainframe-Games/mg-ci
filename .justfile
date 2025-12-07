@@ -1,9 +1,15 @@
+# Bumps build version and packs dotnet tool
+publish:
+  just bump-version
+  just pack
+
+# packs dotnet tool without verison change
 pack:
-	just bump-version
 	dotnet pack ./MG-CLI/MG-CLI.csproj -c Release
 	dotnet tool uninstall --global mg-cli || true
 	dotnet tool install --global mg-cli --add-source "./MG-CLI/nupkg" --no-cache
 
+# Bumps the last number in build version
 bump-version:
   #!/bin/bash
   set -e
