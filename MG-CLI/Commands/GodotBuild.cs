@@ -147,14 +147,37 @@ public class GodotBuild : Command
         // mac builds need to be unzipped
         if (template == "Mac")
         {
-            var extractFolder = buildPath.Replace(".zip", "");
-            await Zip.UnzipFileAsync(buildPath, extractFolder + "/..");
-            Log.Print($"Deleting zip file... {buildPath}");
-            File.Delete(buildPath);
+            await MacOsPostBuild(buildPath);
         }
 
         Log.StopLoggingToFile();
         return res.ExitCode;
+    }
+
+    private static async Task MacOsPostBuild(string buildPath)
+    {
+        var extractFolder = buildPath.Replace(".zip", "");
+        await Zip.UnzipFileAsync(buildPath, extractFolder + "/..");
+        Log.Print($"Deleting zip file... {buildPath}");
+        File.Delete(buildPath);
+        
+        var appPath = buildPath.Replace(".zip", ".app");
+        var gameName = Path.GetFileNameWithoutExtension(appPath);
+        
+        // sign
+        await Cli.Wrap("chmod")
+            .WithArguments($"+x \"{appPath}/Contents/MacOS/{gameName}\"")
+            .ExecuteAsync();
+        
+        await Cli.Wrap("xattr")
+            .WithArguments($"-dr com.apple.quarantine \"{appPath}\"")
+            .ExecuteAsync();
+        
+        await Cli.Wrap("codesign")
+            .WithArguments($"-s - --force --deep \"{appPath}\"")
+            .ExecuteAsync();
+        
+        Log.Print($"Signed app at {appPath}", Color.Green);
     }
 
     #region Helper Methods
