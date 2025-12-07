@@ -2,6 +2,7 @@
 publish:
   just bump-version
   just pack
+  just commit
 
 # packs dotnet tool without verison change
 pack:
@@ -25,3 +26,13 @@ bump-version:
   # Update the version in the csproj
   sed -i '' "s|<Version>$version</Version>|<Version>$new_version</Version>|" "$csproj"
   echo "Bumped version: $version -> $new_version"
+
+commit:
+  #!/bin/bash
+  set -e
+  csproj="MG-CLI/MG-CLI.csproj"
+  version=$(awk -F'[><]' '/<Version>/{print $3; exit}' "$csproj")
+  git add .
+  git commit -m "Release v$version"
+  git tag "v$version"
+  git push origin main --tags
