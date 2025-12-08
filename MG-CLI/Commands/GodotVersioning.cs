@@ -23,44 +23,47 @@ public class GodotVersioning : Command
         await SetVersion(fullPath, token);
     }
 
-    private static async Task SetVersion(string fullPath, CancellationToken token)
+    private static FileInfo GetProjectSettingsFile(string fullPath)
     {
         var dirInfo = new DirectoryInfo(fullPath);
         var file = dirInfo
             .GetFiles("*.godot", SearchOption.AllDirectories)
             .First();
-        
+        return file;
+    }
+
+    private static async Task SetVersion(string fullPath, CancellationToken token)
+    {
+        var file = GetProjectSettingsFile(fullPath);
         var lines = await File.ReadAllLinesAsync(file.FullName, token);
 
         for (var i = 0; i < lines.Length; i++)
         {
-            if (!lines[i].Contains("config/version"))
+            var key = lines[i].Split("=")[0].Trim('"');
+            var value = lines[i].Split("=")[^1].Trim('"');
+            
+            if (key != "config/version")
                 continue;
 
-            var verStr = lines[i].Split("=")[^1].Trim('"');
-            var verSplit = verStr.Split(".");
+            var verSplit = value.Split(".");
             var buildNumInt = int.Parse(verSplit[^1]);
-                
+            
             verSplit[0] = DateTime.Now.ToString("yyyy");
             verSplit[1] = DateTime.Now.Month.ToString();
             verSplit[^1] = (++buildNumInt).ToString();
                 
             var newVer = string.Join(".", verSplit);
             Log.Print($"New Version: {newVer}");
-                
-            lines[i] = $"config/version=\"{newVer}\"";
-            await FileEx.WriteAllLinesAsync(file.FullName, lines);
-            break;
+            
+            lines[i] = $"{key}=\"{newVer}\"";
         }
+        
+        await FileEx.WriteAllLinesAsync(file.FullName, lines);
     }
 
     public static string GetVersion(string path)
     {
-        var dirInfo = new DirectoryInfo(path);
-        var file = dirInfo
-            .GetFiles("*.godot", SearchOption.AllDirectories)
-            .First();
-        
+        var file = GetProjectSettingsFile(path);
         var lines = File.ReadAllLines(file.FullName);
 
         var verStr = "";
@@ -68,11 +71,14 @@ public class GodotVersioning : Command
 
         foreach (var line in lines)
         {
-            if (line.Contains("config/version"))
-                verStr = line.Split("=")[^1].Trim('"');
+            var key = line.Split("=")[0].Trim('"');
+            var value = line.Split("=")[^1].Trim('"');
+            
+            if (key == "config/version")
+                verStr = value;
 
-            if (line.Contains("config/version_suffix"))
-                verStrSuffix = line.Split("=")[^1].Trim('"');
+            if (key == "config/version_suffix")
+                verStrSuffix = value;
         }
         
         return verStr + verStrSuffix;

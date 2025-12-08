@@ -27,12 +27,18 @@ public class SteamDeploy : Command
         HelpName = "Steamworks password"
     };
     
+    private readonly Option<bool> _preview = new("--preview", "-pv")
+    {
+        HelpName = "Marks vdf file as Preview 1"
+    };
+    
     public SteamDeploy() : base("steam-deploy", "Deploy to Steam")
     {
         Add(_projectPath);
         Add(_vdfPath);
         Add(_steamAccount);
         Add(_steamPassword);
+        Add(_preview);
         SetAction(Run);
     }
 
@@ -42,13 +48,14 @@ public class SteamDeploy : Command
         var vdf = result.GetRequiredValue(_vdfPath);
         var steamUsername = result.GetRequiredValue(_steamAccount);
         var steamPassword = result.GetRequiredValue(_steamPassword);
+        var preview = result.GetValue(_preview);
         
         var projectPathFull = Path.GetFullPath(projectPath);
         Log.Print($"ProjectPath: {projectPathFull}");
         
         var version = GodotVersioning.GetVersion(projectPathFull);
         var vdfFullPath = Path.Combine(projectPathFull, vdf);
-        await UpdateVdfDescription(vdfFullPath, version);
+        await UpdateVdfDescription(vdfFullPath, version, preview);
         
         var steamCmdPath = SteamCmdSetup.GetDefaultSteamCmdPath();
         Log.Print($"SteamCmdPath: {steamCmdPath}");
@@ -57,6 +64,7 @@ public class SteamDeploy : Command
             .WithArguments($"+login {steamUsername} {steamPassword} +run_app_build {vdfFullPath} +quit")
             .WithWorkingDirectory(projectPathFull)
             .WithCustomPipes()
+            .WithStandardInputPipe(PipeSource.FromStream(Console.OpenStandardInput()))
             .ExecuteAsync(token);
         
         if (res.ExitCode != 0)
@@ -67,7 +75,7 @@ public class SteamDeploy : Command
         return 0;
     }
 
-    private static async Task UpdateVdfDescription(string vdfPath, string version)
+    private static async Task UpdateVdfDescription(string vdfPath, string version, bool preview)
     {
         if (!File.Exists(vdfPath))
             throw new FileNotFoundException($"File doesn't exist: {vdfPath}");
@@ -75,12 +83,13 @@ public class SteamDeploy : Command
         var lines = await File.ReadAllLinesAsync(vdfPath);
         for (var i = 0; i < lines.Length; i++)
         {
-            if (!lines[i].Contains("Desc"))
-                continue;
-            
-            lines[i] = $"\t\"Desc\" \"{version}\"";
-            await FileEx.WriteAllLinesAsync(vdfPath, lines);
-            break;
+            if (lines[i].Contains("Desc"))
+                lines[i] = $"\t\"Desc\" \"{version}\"";
+
+            if (lines[i].Contains("Preview"))
+                lines[i] = $"\t\"Preview\" \"{(preview ? "1" : "0")}\"";
         }
+        
+        await FileEx.WriteAllLinesAsync(vdfPath, lines);
     }
 }
