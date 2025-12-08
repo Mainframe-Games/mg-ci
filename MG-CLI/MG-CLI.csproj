@@ -10,7 +10,7 @@
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>mg-cli</ToolCommandName>
         <PackageOutputPath>./nupkg</PackageOutputPath>
-        <Version>1.0.13</Version>
+        <Version>1.0.14</Version>
     </PropertyGroup>
 
     <ItemGroup>
