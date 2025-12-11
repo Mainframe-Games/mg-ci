@@ -28,7 +28,7 @@ public static class MixamoTools
     {
         if (!File.Exists(fbxPath))
         {
-            Console.Error.WriteLine($"[mixamo:validate] FBX not found: {fbxPath}");
+            Log.PrintError($"[mixamo:validate] FBX not found: {fbxPath}");
             return false;
         }
 
@@ -47,13 +47,13 @@ public static class MixamoTools
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[mixamo:validate] Failed to import FBX: {ex.Message}");
+            Log.PrintError($"[mixamo:validate] Failed to import FBX: {ex.Message}");
             return false;
         }
 
         if (scene == null || !scene.HasMeshes)
         {
-            Console.Error.WriteLine("[mixamo:validate] Scene has no meshes.");
+            Log.PrintError("[mixamo:validate] Scene has no meshes.");
             return false;
         }
 
@@ -66,11 +66,11 @@ public static class MixamoTools
 
         if (meshBones.Count == 0)
         {
-            Console.Error.WriteLine("[mixamo:validate] No bones found in meshes (not skinned?).");
+            Log.PrintError("[mixamo:validate] No bones found in meshes (not skinned?).");
             return false;
         }
 
-        Console.WriteLine("[mixamo:validate] Found bone count: " + meshBones.Count);
+        Log.Print("[mixamo:validate] Found bone count: " + meshBones.Count);
 
         // Try to guess the root bone (Hips or mixamorig:Hips etc.)
         string? rootBone = meshBones.FirstOrDefault(n =>
@@ -79,11 +79,11 @@ public static class MixamoTools
 
         if (rootBone == null)
         {
-            Console.Error.WriteLine("[mixamo:validate] Could not find root bone 'Hips' or 'mixamorig:Hips'.");
+            Log.PrintError("[mixamo:validate] Could not find root bone 'Hips' or 'mixamorig:Hips'.");
         }
         else
         {
-            Console.WriteLine("[mixamo:validate] Root bone candidate: " + rootBone);
+            Log.Print("[mixamo:validate] Root bone candidate: " + rootBone);
         }
 
         // Check missing core bones
@@ -95,13 +95,13 @@ public static class MixamoTools
 
         if (missingRequired.Any())
         {
-            Console.Error.WriteLine("[mixamo:validate] Missing expected Mixamo bones:");
+            Log.PrintError("[mixamo:validate] Missing expected Mixamo bones:");
             foreach (var b in missingRequired)
-                Console.Error.WriteLine("  - " + b);
+                Log.PrintError("  - " + b);
         }
         else
         {
-            Console.WriteLine("[mixamo:validate] All core Mixamo bones present ✅");
+            Log.Print("[mixamo:validate] All core Mixamo bones present ✅");
         }
 
         // Check that all mesh bones exist in the node hierarchy
@@ -114,9 +114,9 @@ public static class MixamoTools
 
         if (orphanBones.Any())
         {
-            Console.Error.WriteLine("[mixamo:validate] Some bones are not present as nodes in the hierarchy:");
+            Log.PrintError("[mixamo:validate] Some bones are not present as nodes in the hierarchy:");
             foreach (var b in orphanBones)
-                Console.Error.WriteLine("  - " + b);
+                Log.PrintError("  - " + b);
         }
 
         var looksLikeMixamo = rootBone != null &&
@@ -125,11 +125,11 @@ public static class MixamoTools
 
         if (looksLikeMixamo)
         {
-            Console.WriteLine("[mixamo:validate] ✅ Rig looks Mixamo-compatible.");
+            Log.Print("[mixamo:validate] ✅ Rig looks Mixamo-compatible.");
         }
         else
         {
-            Console.Error.WriteLine("[mixamo:validate] ⚠ Rig does NOT fully match expected Mixamo structure.");
+            Log.PrintError("[mixamo:validate] ⚠ Rig does NOT fully match expected Mixamo structure.");
         }
 
         return looksLikeMixamo;
@@ -170,9 +170,9 @@ public static class MixamoTools
         if (baseScene == null || !baseScene.HasMeshes)
             throw new InvalidOperationException("Base FBX import failed or has no meshes.");
 
-        Console.WriteLine($"[mixamo:build] Base meshes: {baseScene.MeshCount}, bones: " +
+        Log.Print($"[mixamo:build] Base meshes: {baseScene.MeshCount}, bones: " +
                           baseScene.Meshes.Sum(m => m.BoneCount));
-        Console.WriteLine($"[mixamo:build] Base animations: {baseScene.AnimationCount}");
+        Log.Print($"[mixamo:build] Base animations: {baseScene.AnimationCount}");
 
         // 2) Import each Mixamo animation FBX and copy animations into baseScene
         var fbxFiles = Directory.GetFiles(animsDir, "*.fbx");
@@ -180,43 +180,43 @@ public static class MixamoTools
 
         foreach (var animFile in fbxFiles)
         {
-            Console.WriteLine($"\n[mixamo:build] Importing animation FBX: {Path.GetFileName(animFile)}");
+            Log.Print($"\n[mixamo:build] Importing animation FBX: {Path.GetFileName(animFile)}");
 
             var animScene = context.ImportFile(animFile, PostProcessSteps.None);
             if (animScene == null || !animScene.HasAnimations)
             {
-                Console.WriteLine("  No animations found, skipping.");
+                Log.Print("  No animations found, skipping.");
                 continue;
             }
 
-            Console.WriteLine($"  Found {animScene.AnimationCount} animation(s)");
+            Log.Print($"  Found {animScene.AnimationCount} animation(s)");
 
             foreach (var srcAnim in animScene.Animations)
             {
                 var clipName = Path.GetFileNameWithoutExtension(animFile);
-                Console.WriteLine($"  Adding clip: {clipName}");
+                Log.Print($"  Adding clip: {clipName}");
 
                 var cloned = CloneAnimation(srcAnim, clipName);
                 baseScene.Animations.Add(cloned);
             }
         }
 
-        Console.WriteLine($"\n[mixamo:build] Total animations in combined scene: {baseScene.AnimationCount}");
+        Log.Print($"\n[mixamo:build] Total animations in combined scene: {baseScene.AnimationCount}");
 
         // 3) Export to glTF2 (.gltf + .bin)
         var tempGltf = Path.ChangeExtension(outputGlbPath, ".gltf");
         Directory.CreateDirectory(Path.GetDirectoryName(tempGltf)!);
 
-        Console.WriteLine($"[mixamo:build] Exporting intermediate glTF2: {tempGltf}");
+        Log.Print($"[mixamo:build] Exporting intermediate glTF2: {tempGltf}");
         context.ExportFile(baseScene, tempGltf, "gltf2");
 
         // 4) Repack to .glb using SharpGLTF
-        Console.WriteLine($"[mixamo:build] Repacking to .glb: {outputGlbPath}");
+        Log.Print($"[mixamo:build] Repacking to .glb: {outputGlbPath}");
         var model = ModelRoot.Load(tempGltf);
         Directory.CreateDirectory(Path.GetDirectoryName(outputGlbPath)!);
         model.Save(outputGlbPath);
 
-        Console.WriteLine("[mixamo:build] ✅ Done. GLB ready for Godot.");
+        Log.Print("[mixamo:build] ✅ Done. GLB ready for Godot.");
     }
 
     private static Animation CloneAnimation(Animation src, string newName)
