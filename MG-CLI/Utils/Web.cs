@@ -1,6 +1,6 @@
 ﻿using Spectre.Console;
 
-namespace MG;
+namespace MG_CLI;
 
 /// <summary>
 /// Provides utility methods for web-related operations, such as downloading files and performing HTTP POST requests.

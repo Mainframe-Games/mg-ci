@@ -1,7 +1,7 @@
 ﻿using CliWrap;
 using Spectre.Console;
 
-namespace MG;
+namespace MG_CLI;
 
 public static class CliWrapExtensions
 {

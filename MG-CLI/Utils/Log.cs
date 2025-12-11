@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using Spectre.Console;
 
-namespace MG;
+namespace MG_CLI;
 
 public static partial class Log
 {

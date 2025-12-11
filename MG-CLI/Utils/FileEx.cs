@@ -3,7 +3,7 @@ using CliWrap;
 using CliWrap.Buffered;
 using Spectre.Console;
 
-namespace MG;
+namespace MG_CLI;
 
 public static class FileEx
 {

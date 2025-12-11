@@ -1,4 +1,4 @@
-﻿namespace MG;
+﻿namespace MG_CLI;
 
 public static class DirectoryUtil
 {

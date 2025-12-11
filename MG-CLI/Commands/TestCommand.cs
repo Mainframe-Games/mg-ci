@@ -1,7 +1,7 @@
 ﻿using System.CommandLine;
 using Spectre.Console;
 
-namespace MG;
+namespace MG_CLI;
 
 public class TestCommand : Command
 {

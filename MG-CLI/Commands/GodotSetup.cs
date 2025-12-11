@@ -1,6 +1,6 @@
 ﻿using System.CommandLine;
 
-namespace MG;
+namespace MG_CLI;
 
 public class GodotSetup : Command
 {

@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 using Spectre.Console;
 using Command = System.CommandLine.Command;
 
-namespace MG;
+namespace MG_CLI;
 
 public class DiscordHook : Command
 {
