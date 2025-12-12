@@ -4,6 +4,7 @@ using Assimp.Configs;
 using SharpGLTF.Geometry;
 using SharpGLTF.Materials;
 using SharpGLTF.Scenes;
+using Spectre.Console;
 
 // Convenience aliases for vertex types
 using VPOSNORM = SharpGLTF.Geometry.VertexTypes.VertexPositionNormal;
@@ -21,6 +22,8 @@ public static class FbxToGlbConverter
         if (!File.Exists(fbxPath))
             throw new FileNotFoundException("FBX file not found", fbxPath);
 
+        Log.Print($"Converting FBX to GLB\n  from: {fbxPath}\n  to: {glbPath}");
+        
         var config = new FBXPreservePivotsConfig(false);
 
         using var context = new AssimpContext();
@@ -42,7 +45,7 @@ public static class FbxToGlbConverter
         var bones = CollectBones(scene);
 
         // 2) Build SharpGLTF node hierarchy from Assimp nodes
-        var nodeMap = BuildNodeHierarchy(scene, bones, out var armatureRoot);
+        var nodeMap = BuildNodeHierarchy(scene, bones);
 
         // 3) Build a single skinned MeshBuilder from all meshes
         var meshBuilder = BuildSkinnedMesh(scene, bones, nodeMap);
@@ -50,35 +53,56 @@ public static class FbxToGlbConverter
         // 4) Create SceneBuilder and add skinned mesh
         var sceneBuilder = new SceneBuilder();
 
-        // Armature root defaults to scene root if we didn't find a better one
-        var rootNodeBuilder = armatureRoot ?? nodeMap[scene.RootNode.Name];
-
-        // We pass *all* joint nodes that correspond to bones
-        var jointNodes = bones.Values
-            .Where(b => b.Node != null && nodeMap.TryGetValue(b.Node.Name, out _))
-            .Select(b => nodeMap[b.Node.Name])
-            .Distinct()
-            .ToArray();
-
-        // NOTE: The signature of AddSkinnedMesh in Toolkit is:
-        // InstanceBuilder AddSkinnedMesh(
-        //     MeshBuilder<VertexPositionNormal, VertexTexture1, VertexJoints4> mesh,
-        //     Matrix4x4 localTransform,
-        //     NodeBuilder armatureRoot,
-        //     params NodeBuilder[] joints);
-        //
-        // If your intellisense shows a slightly different overload,
-        // adjust the call accordingly – concept is the same.
-        var nodes = new[] { rootNodeBuilder }.Union(jointNodes).ToArray();
-        sceneBuilder.AddSkinnedMesh(
-            meshBuilder,
-            System.Numerics.Matrix4x4.Identity,
-            nodes);
+        AddSkinnedMeshWithIbms(sceneBuilder, meshBuilder, bones, nodeMap);        
 
         // 5) Bake to glTF2 model and save as .glb
         var model = sceneBuilder.ToGltf2();
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(glbPath))!);
         model.SaveGLB(glbPath);
+        
+        Log.Print($"Completed: {glbPath}", Color.Green);
+    }
+    
+    private static void AddSkinnedMeshWithIbms(
+        SceneBuilder sceneBuilder,
+        MeshBuilder<VPOSNORM, VTEX1, VJOINTS> meshBuilder,
+        Dictionary<string, BoneInfo> bones,
+        Dictionary<string, NodeBuilder> nodeMap)
+    {
+        var jointNodes = new List<NodeBuilder>();
+        var ibmList   = new List<System.Numerics.Matrix4x4>();
+
+        foreach (var kvp in bones)
+        {
+            var boneInfo = kvp.Value;
+            var boneName = boneInfo.Name;
+
+            if (!nodeMap.TryGetValue(boneName, out var jointNode))
+                continue; // skip bones that don't have a corresponding node
+
+            jointNodes.Add(jointNode);
+
+            // Assimp's OffsetMatrix: mesh space -> bone space in bind pose
+            // which is exactly what glTF expects as an inverseBindMatrix.
+            var aMat = boneInfo.Bone.OffsetMatrix;
+            var m = new System.Numerics.Matrix4x4(
+                aMat.A1, aMat.B1, aMat.C1, aMat.D1,
+                aMat.A2, aMat.B2, aMat.C2, aMat.D2,
+                aMat.A3, aMat.B3, aMat.C3, aMat.D3,
+                aMat.A4, aMat.B4, aMat.C4, aMat.D4);
+
+            // Make sure bottom-right is 1 (numeric noise guard)
+            m.M44 = 1;
+
+            ibmList.Add(m);
+        }
+
+        var jointTuples = jointNodes
+            .Zip(ibmList, (joint, ibm) => (Joint: joint, InverseBindMatrix: ibm))
+            .ToArray();
+        
+        // 🔴 IMPORTANT: use the overload with inverse bind matrices
+        sceneBuilder.AddSkinnedMesh(meshBuilder, jointTuples);
     }
 
     #region Bone / skeleton helpers
@@ -87,8 +111,7 @@ public static class FbxToGlbConverter
     {
         public string Name = string.Empty;
         public int Index;
-        public System.Numerics.Matrix4x4 OffsetMatrix;          // inverse bind matrix from Assimp
-        public Node? Node;                                      // corresponding Assimp node (if any)
+        public Bone Bone;
     }
 
     private static Dictionary<string, BoneInfo> CollectBones(Scene scene)
@@ -105,7 +128,7 @@ public static class FbxToGlbConverter
                     {
                         Name = bone.Name,
                         Index = bones.Count,
-                        OffsetMatrix = ToNumerics(bone.OffsetMatrix)
+                        Bone = bone
                     };
 
                     bones.Add(bone.Name, info);
@@ -123,16 +146,22 @@ public static class FbxToGlbConverter
 
     private static Dictionary<string, NodeBuilder> BuildNodeHierarchy(
         Scene scene,
-        Dictionary<string, BoneInfo> bones,
-        out NodeBuilder? armatureRoot)
+        Dictionary<string, BoneInfo> bones)
     {
         var nodeMap = new Dictionary<string, NodeBuilder>();
 
         // Local variable that the local function can close over
         NodeBuilder? armatureRootLocal = null;
 
+        // Build hierarchy starting at scene root
+        BuildNode(scene.RootNode, null);
+
+        // AttachNodesToBones(scene.RootNode);
+
+        return nodeMap;
+
         // Recursive local function to mirror Assimp's node tree into NodeBuilder hierarchy
-        NodeBuilder BuildNode(Node assimpNode, NodeBuilder? parent)
+        void BuildNode(Node assimpNode, NodeBuilder? parent)
         {
             var localTransform = ToNumerics(assimpNode.Transform);
 
@@ -141,8 +170,7 @@ public static class FbxToGlbConverter
                 LocalTransform = localTransform
             };
 
-            if (parent != null)
-                parent.AddNode(nodeBuilder);
+            parent?.AddNode(nodeBuilder);
 
             nodeMap[assimpNode.Name] = nodeBuilder;
 
@@ -152,29 +180,7 @@ public static class FbxToGlbConverter
 
             foreach (var child in assimpNode.Children)
                 BuildNode(child, nodeBuilder);
-
-            return nodeBuilder;
         }
-
-        // Build hierarchy starting at scene root
-        BuildNode(scene.RootNode, null);
-
-        // Fallback if no bone node matched: use scene root
-        armatureRoot = armatureRootLocal ?? nodeMap[scene.RootNode.Name];
-
-        // Wire Assimp node references into BoneInfo, so we know which Node is which bone
-        void AttachNodesToBones(Node node)
-        {
-            if (bones.TryGetValue(node.Name, out var b))
-                b.Node = node;
-
-            foreach (var c in node.Children)
-                AttachNodesToBones(c);
-        }
-
-        AttachNodesToBones(scene.RootNode);
-
-        return nodeMap;
     }
 
     #endregion
