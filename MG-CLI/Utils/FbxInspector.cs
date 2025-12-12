@@ -48,7 +48,6 @@ public static class FbxInspector
             return;
         }
 
-        Log.Print();
         str.AppendLine("=== SCENE ===");
         str.AppendLine($"Meshes:      {scene.MeshCount}");
         str.AppendLine($"Animations:  {scene.AnimationCount}");
