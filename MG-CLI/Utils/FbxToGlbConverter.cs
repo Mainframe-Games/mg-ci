@@ -4,7 +4,12 @@ using Assimp.Configs;
 using SharpGLTF.Geometry;
 using SharpGLTF.Materials;
 using SharpGLTF.Scenes;
+using SharpGLTF.Schema2;
 using Spectre.Console;
+using Matrix4x4 = System.Numerics.Matrix4x4;
+using Mesh = Assimp.Mesh;
+using Node = Assimp.Node;
+using Scene = Assimp.Scene;
 
 // Convenience aliases for vertex types
 using VPOSNORM = SharpGLTF.Geometry.VertexTypes.VertexPositionNormal;
@@ -17,7 +22,7 @@ namespace MG_CLI;
 public static class FbxToGlbConverter
 {
     // Public entry point
-    public static void ExportFbxToGlb(string fbxPath, string glbPath)
+    public static ModelRoot ExportFbxToGlb(string fbxPath, string glbPath)
     {
         if (!File.Exists(fbxPath))
             throw new FileNotFoundException("FBX file not found", fbxPath);
@@ -61,6 +66,7 @@ public static class FbxToGlbConverter
         model.SaveGLB(glbPath);
         
         Log.Print($"Completed: {glbPath}", Color.Green);
+        return model;
     }
     
     private static void AddSkinnedMeshWithIbms(
@@ -70,7 +76,7 @@ public static class FbxToGlbConverter
         Dictionary<string, NodeBuilder> nodeMap)
     {
         var jointNodes = new List<NodeBuilder>();
-        var ibmList   = new List<System.Numerics.Matrix4x4>();
+        var ibmList   = new List<Matrix4x4>();
 
         foreach (var kvp in bones)
         {
@@ -85,7 +91,7 @@ public static class FbxToGlbConverter
             // Assimp's OffsetMatrix: mesh space -> bone space in bind pose
             // which is exactly what glTF expects as an inverseBindMatrix.
             var aMat = boneInfo.Bone.OffsetMatrix;
-            var m = new System.Numerics.Matrix4x4(
+            var m = new Matrix4x4(
                 aMat.A1, aMat.B1, aMat.C1, aMat.D1,
                 aMat.A2, aMat.B2, aMat.C2, aMat.D2,
                 aMat.A3, aMat.B3, aMat.C3, aMat.D3,
@@ -269,15 +275,15 @@ public static class FbxToGlbConverter
     }
 
     private static VERTEX CreateVertex(
-        Assimp.Mesh mesh,
+        Mesh mesh,
         int index,
         Vector4[] boneIndices,
         Vector4[] boneWeights)
     {
-        var pos = mesh.HasVertices ? mesh.Vertices[index] : new Assimp.Vector3D();
-        var nrm = mesh.HasNormals ? mesh.Normals[index] : new Assimp.Vector3D(0, 1, 0);
+        var pos = mesh.HasVertices ? mesh.Vertices[index] : new Vector3D();
+        var nrm = mesh.HasNormals ? mesh.Normals[index] : new Vector3D(0, 1, 0);
 
-        Assimp.Vector3D uv = default;
+        Vector3D uv = default;
         if (mesh.TextureCoordinateChannelCount > 0 &&
             mesh.TextureCoordinateChannels[0].Count > index)
         {
@@ -307,11 +313,11 @@ public static class FbxToGlbConverter
 
     #region Matrix conversions
 
-    private static System.Numerics.Matrix4x4 ToNumerics(Assimp.Matrix4x4 assimpMatrix)
+    private static Matrix4x4 ToNumerics(Assimp.Matrix4x4 assimpMatrix)
     {
         // Assimp's Matrix4x4 has same layout as System.Numerics.Matrix4x4 (row-major),
         // but types are different, so we map field by field.
-        return new System.Numerics.Matrix4x4(
+        return new Matrix4x4(
             assimpMatrix.A1, assimpMatrix.B1, assimpMatrix.C1, assimpMatrix.D1,
             assimpMatrix.A2, assimpMatrix.B2, assimpMatrix.C2, assimpMatrix.D2,
             assimpMatrix.A3, assimpMatrix.B3, assimpMatrix.C3, assimpMatrix.D3,

@@ -8,11 +8,21 @@ public static partial class Log
     private static string? LogToFile { get; set; }
     public static bool IsLoggingToFile { get; private set; }
     
-    public static void Print(string message, Color? color = null)
+    public static void Print(in string message, in Color? color = null)
     {
         AnsiConsole.Write(new Text(message, color ?? Color.White));
         AnsiConsole.WriteLine();
         ToFile(message);
+    }
+
+    public static void Success(string message)
+    {
+        Print($"[SUCCESS] {message}", Color.Green);
+    }
+    
+    public static void PrintWarning(string message)
+    {
+        Print($"[WARNING] {message}", Color.Yellow);
     }
 
     public static void PrintError(string message)

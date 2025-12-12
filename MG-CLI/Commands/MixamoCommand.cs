@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using Spectre.Console;
 
 namespace MG_CLI;
 
@@ -32,15 +33,25 @@ public class MixamoCommand : Command
 
     private int Run(ParseResult result)
     {
-        var basePath = result.GetRequiredValue(_baseModel);
-        var animDir = result.GetRequiredValue(_animsDirOption);
-        var outFile = result.GetRequiredValue(_outGlbOption);
-
-        var ok = MixamoTools.ValidateMixamoRig(basePath);
-        if (!ok)
+        try
+        {
+            var basePath = result.GetRequiredValue(_baseModel);
+            var animDir = result.GetRequiredValue(_animsDirOption);
+            var outFile = result.GetRequiredValue(_outGlbOption);
+            
+            // convert the FBX to GLB
+            var model = FbxToGlbConverter.ExportFbxToGlb(basePath, outFile);
+            MixamoAnimations.AddAnimationsFromMixamoDir(model, animDir);
+            
+            model.SaveGLB(outFile);
+            
+            Log.Print($"[mixamo] Exported to {outFile}", Color.Green);
+        }
+        catch (Exception e)
+        {
+            Log.Exception(e);
             return -1;
-        
-        MixamoTools.BuildCombinedGodotGlb(basePath, animDir, outFile);
+        }
         
         return 0;
     }
