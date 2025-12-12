@@ -16,6 +16,7 @@ var rootCommand = new RootCommand("Mainframe CI Tool")
     new SteamCmdSetup(),
     new SteamDeploy(),
     
+    new FbxInspectCommand(),
     new MixamoCommand(),
     
 };
