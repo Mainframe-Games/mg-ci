@@ -39,11 +39,14 @@ public class MixamoCommand : Command
             var animDir = result.GetRequiredValue(_animsDirOption);
             var outFile = result.GetRequiredValue(_outGlbOption);
             
+            // inspect 
+            // FbxInspector.InspectFbx(basePath);
+            
             // convert the FBX to GLB
             var model = FbxToGlbConverter.ExportFbxToGlb(basePath, outFile);
-            MixamoAnimations.AddAnimationsFromMixamoDir(model, animDir);
+            // MixamoAnimations.AddAnimationsFromMixamoDir(model, animDir);
             
-            model.SaveGLB(outFile);
+            // model.SaveGLB(outFile);
             
             Log.Print($"[mixamo] Exported to {outFile}", Color.Green);
         }

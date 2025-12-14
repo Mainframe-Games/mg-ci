@@ -46,21 +46,18 @@ public static class FbxToGlbConverter
         if (scene == null || scene.MeshCount == 0)
             throw new InvalidOperationException("[mixamo:export] Scene has no meshes.");
 
-        // 1) Collect all bones and map them to indices
+        // Collect all bones and map them to indices
         var bones = CollectBones(scene);
 
-        // 2) Build SharpGLTF node hierarchy from Assimp nodes
+        // Build SharpGLTF node hierarchy from Assimp nodes
         var nodeMap = BuildNodeHierarchy(scene, bones);
 
-        // 3) Build a single skinned MeshBuilder from all meshes
-        var meshBuilder = BuildSkinnedMesh(scene, bones, nodeMap);
-
-        // 4) Create SceneBuilder and add skinned mesh
+        // Create SceneBuilder and add skinned mesh
         var sceneBuilder = new SceneBuilder();
 
-        AddSkinnedMeshWithIbms(sceneBuilder, meshBuilder, bones, nodeMap);        
+        AddSkinnedMeshWithIbms(scene, sceneBuilder, bones, nodeMap);        
 
-        // 5) Bake to glTF2 model and save as .glb
+        // Bake to glTF2 model and save as .glb
         var model = sceneBuilder.ToGltf2();
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(glbPath))!);
         model.SaveGLB(glbPath);
@@ -70,8 +67,8 @@ public static class FbxToGlbConverter
     }
     
     private static void AddSkinnedMeshWithIbms(
+        Scene scene,
         SceneBuilder sceneBuilder,
-        MeshBuilder<VPOSNORM, VTEX1, VJOINTS> meshBuilder,
         Dictionary<string, BoneInfo> bones,
         Dictionary<string, NodeBuilder> nodeMap)
     {
@@ -95,10 +92,11 @@ public static class FbxToGlbConverter
                 aMat.A1, aMat.B1, aMat.C1, aMat.D1,
                 aMat.A2, aMat.B2, aMat.C2, aMat.D2,
                 aMat.A3, aMat.B3, aMat.C3, aMat.D3,
-                aMat.A4, aMat.B4, aMat.C4, aMat.D4);
-
-            // Make sure bottom-right is 1 (numeric noise guard)
-            m.M44 = 1;
+                aMat.A4, aMat.B4, aMat.C4, aMat.D4)
+            {
+                // Make sure bottom-right is 1 (numeric noise guard)
+                M44 = 1
+            };
 
             ibmList.Add(m);
         }
@@ -106,10 +104,113 @@ public static class FbxToGlbConverter
         var jointTuples = jointNodes
             .Zip(ibmList, (joint, ibm) => (Joint: joint, InverseBindMatrix: ibm))
             .ToArray();
+
+        var sceneNames = scene.BuildMeshIndexToNodeNameMap();
         
-        // 🔴 IMPORTANT: use the overload with inverse bind matrices
-        sceneBuilder.AddSkinnedMesh(meshBuilder, jointTuples);
+        for (int mi = 0; mi < scene.MeshCount; mi++)
+        {
+            var assimpMesh = scene.Meshes[mi];
+            assimpMesh.Name = sceneNames[mi];
+
+            // Build one GLTF mesh per Assimp mesh
+            var meshBuilder = BuildSkinnedMeshSingle(assimpMesh, bones);
+
+            // Give it a stable node name so Godot imports separate children like Body01, Head01, etc.
+            var meshName = string.IsNullOrWhiteSpace(assimpMesh.Name) ? $"Mesh_{mi:00}" : assimpMesh.Name;
+            
+            // This names the glTF node instance (important for Godot)
+            var skin = sceneBuilder.AddSkinnedMesh(meshBuilder, jointTuples);
+            skin?.WithName(meshName);
+            Log.Print($"SkinName: {skin?.Name}");
+        }
     }
+    
+    private static MeshBuilder<VPOSNORM, VTEX1, VJOINTS> BuildSkinnedMeshSingle(
+        Mesh mesh,
+        Dictionary<string, BoneInfo> bones)
+    {
+        var meshName = string.IsNullOrWhiteSpace(mesh.Name) ? "mesh" : mesh.Name;
+
+        var meshBuilder = new MeshBuilder<VPOSNORM, VTEX1, VJOINTS>(meshName);
+
+        var material = new MaterialBuilder()
+            .WithDoubleSide(true)
+            .WithMetallicRoughnessShader();
+
+        var prim = meshBuilder.UsePrimitive(material);
+
+        var vertexCount = mesh.VertexCount;
+
+        var boneIndices = new Vector4[vertexCount];
+        var boneWeights = new Vector4[vertexCount];
+
+        // Same weight packing logic you already have:
+        foreach (var assimpBone in mesh.Bones)
+        {
+            if (!bones.TryGetValue(assimpBone.Name, out var boneInfo))
+                continue;
+
+            var jointIndex = boneInfo.Index;
+
+            foreach (var vw in assimpBone.VertexWeights)
+            {
+                var vId = vw.VertexID;
+                var w = vw.Weight;
+
+                ref var idx = ref boneIndices[vId];
+                ref var wt = ref boneWeights[vId];
+
+                if (wt.X == 0)
+                {
+                    idx.X = jointIndex;
+                    wt.X = w;
+                }
+                else if (wt.Y == 0)
+                {
+                    idx.Y = jointIndex;
+                    wt.Y = w;
+                }
+                else if (wt.Z == 0)
+                {
+                    idx.Z = jointIndex;
+                    wt.Z = w;
+                }
+                else if (wt.W == 0)
+                {
+                    idx.W = jointIndex;
+                    wt.W = w;
+                }
+            }
+        }
+
+        // Normalize weights
+        for (int i = 0; i < vertexCount; i++)
+        {
+            var w = boneWeights[i];
+            var sum = w.X + w.Y + w.Z + w.W;
+            if (sum > 0)
+            {
+                var inv = 1f / sum;
+                boneWeights[i] = new Vector4(w.X * inv, w.Y * inv, w.Z * inv, w.W * inv);
+            }
+        }
+
+        // Triangles
+        for (int f = 0; f < mesh.FaceCount; f++)
+        {
+            var face = mesh.Faces[f];
+            if (face.IndexCount != 3) continue;
+
+            var v0 = CreateVertex(mesh, face.Indices[0], boneIndices, boneWeights);
+            var v1 = CreateVertex(mesh, face.Indices[1], boneIndices, boneWeights);
+            var v2 = CreateVertex(mesh, face.Indices[2], boneIndices, boneWeights);
+
+            prim.AddTriangle(v0, v1, v2);
+        }
+
+        return meshBuilder;
+    }
+
 
     #region Bone / skeleton helpers
 
@@ -161,8 +262,6 @@ public static class FbxToGlbConverter
 
         // Build hierarchy starting at scene root
         BuildNode(scene.RootNode, null);
-
-        // AttachNodesToBones(scene.RootNode);
 
         return nodeMap;
 

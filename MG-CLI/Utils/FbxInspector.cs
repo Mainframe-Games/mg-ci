@@ -8,8 +8,6 @@ public static class FbxInspector
 {
     public static void InspectFbx(string fbxPath)
     {
-        var str = new StringBuilder();
-        
         if (!File.Exists(fbxPath))
         {
             Log.PrintError($"[inspect] FBX not found: {fbxPath}");
@@ -20,9 +18,10 @@ public static class FbxInspector
 
         using var context = new AssimpContext();
 
-        LogStream.IsVerboseLoggingEnabled = true;
-        var log = new LogStream((msg, _) => Log.Print("[ASSIMP] " + msg));
-        log.Attach();
+        // DEBUG
+        // LogStream.IsVerboseLoggingEnabled = true;
+        // var log = new LogStream((msg, _) => Log.Print("[ASSIMP] " + msg));
+        // log.Attach();
 
         const PostProcessSteps flags =
             PostProcessSteps.Triangulate |
@@ -48,6 +47,7 @@ public static class FbxInspector
             return;
         }
 
+        var str = new StringBuilder();
         str.AppendLine("=== SCENE ===");
         str.AppendLine($"Meshes:      {scene.MeshCount}");
         str.AppendLine($"Animations:  {scene.AnimationCount}");
@@ -55,9 +55,11 @@ public static class FbxInspector
 
         str.AppendLine();
         str.AppendLine("=== MESHES ===");
+        var meshNames = scene.BuildMeshIndexToNodeNameMap();
         for (int mi = 0; mi < scene.MeshCount; mi++)
         {
             var mesh = scene.Meshes[mi];
+            mesh.Name = meshNames[mi];
             str.AppendLine($"Mesh[{mi}]: {mesh.Name}");
             str.AppendLine($"  Vertices:   {mesh.VertexCount}");
             str.AppendLine($"  Faces:      {mesh.FaceCount}");
@@ -82,10 +84,10 @@ public static class FbxInspector
 
         str.AppendLine();
         str.AppendLine("=== NODE HIERARCHY (first 3 levels) ===");
-        PrintNode(scene.RootNode, 0, maxDepth: 3);
+        PrintNode(scene.RootNode, 0, maxDepth: 3, str);
 
         str.AppendLine();
-        str.AppendLine("=== ANIMATIONS ===");
+        str.AppendLine($"=== ANIMATIONS ({scene.AnimationCount}) ===");
         for (int ai = 0; ai < scene.AnimationCount; ai++)
         {
             var anim = scene.Animations[ai];
@@ -103,23 +105,23 @@ public static class FbxInspector
         }
 
         str.AppendLine();
-        Log.Print("[inspect] Done.", Color.Green);
 
         var dir = Path.GetDirectoryName(fbxPath);
         var fileName = Path.GetFileName(fbxPath);
         var outputPath = Path.Combine(dir!, $"{fileName}.inspect.txt");
         File.WriteAllText(outputPath, str.ToString());
-        Log.Print($"[inspect] Logged output to: {outputPath}", Color.Green);
+        Log.Success($"[inspect] Logged output to: {outputPath}");
     }
 
-    private static void PrintNode(Node node, int depth, int maxDepth)
+    private static void PrintNode(Node node, int depth, int maxDepth, StringBuilder str)
     {
         var indent = new string(' ', depth * 2);
-        Log.Print($"{indent}- {node.Name} (Children: {node.ChildCount}, Meshes: {string.Join(",", node.MeshIndices)})");
+        str.AppendLine($"{indent}- {node.Name} (Children: {node.ChildCount}, Meshes: {string.Join(",", node.MeshIndices)})");
 
-        if (depth >= maxDepth) return;
+        if (depth >= maxDepth) 
+            return;
 
         foreach (var child in node.Children)
-            PrintNode(child, depth + 1, maxDepth);
+            PrintNode(child, depth + 1, maxDepth, str);
     }
 }
