@@ -12,12 +12,11 @@ var rootCommand = new RootCommand("Mainframe CI Tool")
     new GodotSetup(),
     new GodotVersioning(),
     
+    new ItchioButlerSetup(),
     new ItchioDeploy(),
+    
     new SteamCmdSetup(),
     new SteamDeploy(),
-    
-    new FbxInspectCommand(),
-    new MixamoCommand(),
     
 };
 

@@ -97,12 +97,12 @@ public class GodotSetup : Command
         {
             await CreateDesktopEntryLinux(godotVersion);
             var enginePath = $"{engineDir}/Godot_v{godotVersion}-stable_mono_linux_x86_64/Godot_v{godotVersion}-stable_mono_linux.x86_64";
-            FileEx.SetExecutablePermissionsUnix(enginePath);
+            FileEx.Chmod(enginePath);
         }
         else if (OperatingSystem.IsMacOS())
         {
             var enginePath = $"{engineDir}/Godot_mono.app/Contents/MacOS/Godot";
-            FileEx.SetExecutablePermissionsUnix(enginePath);
+            FileEx.Chmod(enginePath);
         }
         
         Console.WriteLine($"[GODOT SETUP] Godot Engine {godotVersion} setup completed successfully.");
@@ -134,7 +134,7 @@ public class GodotSetup : Command
         var desktopEntryPath = $"{home}/.local/share/applications/godot.desktop";
         await File.WriteAllTextAsync(desktopEntryPath, desktopContents);
         Console.WriteLine($"[GODOT SETUP] Created desktop entry {desktopEntryPath}\n{desktopContents}");
-        FileEx.SetExecutablePermissionsUnix(desktopEntryPath);
+        FileEx.Chmod(desktopEntryPath);
         
         // download icon
         var iconPath = $"{home}/.local/share/godot/engine/icon_color.svg";

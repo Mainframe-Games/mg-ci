@@ -40,8 +40,8 @@ public class SteamCmdSetup : Command
         // set permissions
         if (OperatingSystem.IsMacOS())
         {
-            FileEx.SetExecutablePermissionsUnix($"{destinationPath}/steamcmd");
-            FileEx.SetExecutablePermissionsUnix($"{destinationPath}/steamcmd.sh");
+            FileEx.Chmod($"{destinationPath}/steamcmd");
+            FileEx.Chmod($"{destinationPath}/steamcmd.sh");
            
             await Cli
                 .Wrap($"{destinationPath}/steamcmd.sh")

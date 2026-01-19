@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using System.Diagnostics;
 using CliWrap;
 using Spectre.Console;
 using Command = System.CommandLine.Command;
@@ -12,29 +13,29 @@ public class ItchioDeploy : Command
         HelpName = "Path to the Godot project"
     };
 
-    private readonly Option<string> _companyAndGame = new("--companyAndGame", "-c")
+    private readonly Argument<string> _companyGamePlatform = new("company-game-platform")
     {
-        HelpName = "COMPANY/GAME e.g. mainframegames/speed-golf-royale-prototype"
+        HelpName = "COMPANY/GAME e.g. <company>/<game-name>:<platform>"
     };
     
     public ItchioDeploy() : base("itchio-deploy", "Deploys a game to itch.io")
     {
         Add(_projectPath);
-        Add(_companyAndGame);
+        Add(_companyGamePlatform);
         SetAction(Run);
     }
 
     private async Task<int> Run(ParseResult result, CancellationToken token)
     {
         var projectPath = result.GetRequiredValue(_projectPath);
-        var companyAndGame = result.GetRequiredValue(_companyAndGame);
+        var companyAndGame = result.GetRequiredValue(_companyGamePlatform);
         
-        var butlerPath = GetButlerPath();
+        var butlerPath = ItchioButlerSetup.GetButlerPath();
         var version = GodotVersioning.GetVersion(projectPath);
         var buildPath = Path.Combine(projectPath, "builds", "windows");
 
         var res = await Cli.Wrap(butlerPath)
-            .WithArguments($"push {buildPath} {companyAndGame}:windows --userversion {version}")
+            .WithArguments($"push {buildPath} {companyAndGame} --userversion {version}")
             .WithWorkingDirectory(projectPath)
             .WithCustomPipes()
             .ExecuteAsync(token);
@@ -44,15 +45,5 @@ public class ItchioDeploy : Command
         
         Log.Print($"Itchio deploy successful! [{res.RunTime}]", Color.Green);
         return 0;
-    }
-
-    private static string GetButlerPath()
-    {
-        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        
-        if (OperatingSystem.IsWindows())
-            return Path.Combine(home, "butler/butler.exe");
-
-        throw new PlatformNotSupportedException();
     }
 }

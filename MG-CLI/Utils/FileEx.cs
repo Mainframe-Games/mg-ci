@@ -22,7 +22,7 @@ public static class FileEx
     /// Sets executable permissions on a file for the user, group, and others on Unix-based systems.
     /// </summary>
     /// <param name="filePath">The path of the file for which the executable permissions will be set.</param>
-    public static void SetExecutablePermissionsUnix(in string filePath)
+    public static void Chmod(in string filePath)
     {
         if (!OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS())
             return;
