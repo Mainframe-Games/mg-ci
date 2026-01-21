@@ -11,18 +11,30 @@ namespace MG_CLI;
 /// </summary>
 public class ItchioButlerSetup : Command
 {
-    public ItchioButlerSetup() : base("itchio-setup", "Deploys a game to itch.io")
+    private static readonly Option<bool> _version = new("--version", "-v")
     {
+        HelpName = "The version of Butler that is installed"
+    };
+    
+    public ItchioButlerSetup() : base("itchio-setup", "Downloads and installed Butler")
+    {
+        Add(_version);
         SetAction(Run);
     }
 
     private static async Task<int> Run(ParseResult result, CancellationToken token)
     {
+        var version = result.GetValue(_version);
+        if (version)
+            return await PrintVersion(token);
+        
         await DownloadButler();
 
         var butlerPath = GetButlerPath();
+        var dir = Path.GetDirectoryName(butlerPath)!;
         var res = await Cli
             .Wrap(butlerPath)
+            .WithWorkingDirectory(dir)
             .WithArguments("login")
             .WithCustomPipes()
             .ExecuteAsync(token);
@@ -39,6 +51,8 @@ public class ItchioButlerSetup : Command
         var path = Path.Combine(home, "butler");
         if (!Directory.Exists(path))
             Directory.CreateDirectory(path);
+        else
+            DirectoryUtil.DeleteDirectoryExists(path, true);
 
         // Get URL
         string url;
@@ -55,6 +69,7 @@ public class ItchioButlerSetup : Command
         var zipFilePath = $"{path}/butler.zip";
         await Web.DownloadFileWithProgressAsync(url, zipFilePath);
         await Zip.UnzipFileAsync(zipFilePath, path);
+        File.Delete(zipFilePath);
         Log.Print($"Itchio butler downloaded successfully! [{ms.ElapsedMilliseconds}ms]", Color.Green);
 
         // chmod
@@ -72,5 +87,16 @@ public class ItchioButlerSetup : Command
             return Path.Combine(home, "butler/butler");
         
         return string.Empty;
+    }
+
+    private static async Task<int> PrintVersion(CancellationToken token)
+    {
+        var butlerPath = GetButlerPath();
+        var res = await Cli
+            .Wrap(butlerPath)
+            .WithArguments("version")
+            .WithCustomPipes()
+            .ExecuteAsync(token);
+        return res.ExitCode;
     }
 }
