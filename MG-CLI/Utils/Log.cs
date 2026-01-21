@@ -3,65 +3,83 @@ using Spectre.Console;
 
 namespace MG_CLI;
 
+public enum LogLevel : byte
+{
+    Debug,
+    Info,
+    Warning,
+    Error
+}
+
 public static partial class Log
 {
     private static string? LogToFile { get; set; }
-    public static bool IsLoggingToFile { get; private set; }
+    private static bool IsLoggingToFile { get; set; }
+    private static LogLevel LogFileMinLogLevel { get; set; } = LogLevel.Debug; // the min level that will log to file
+    private static StreamWriter? _logStreamWriter;
     
-    public static void Print(in string message, in Color? color = null)
+    private static void PrintInternal(in string message, in Color? color, in LogLevel level)
     {
         AnsiConsole.Write(new Text(message, color ?? Color.White));
         AnsiConsole.WriteLine();
-        ToFile(message);
+        ToFile(message, level);
+    }
+    
+    public static void Print(in string message)
+    {
+        PrintInternal(message, Color.White, LogLevel.Debug);
     }
 
     public static void Success(string message)
     {
-        Print($"[SUCCESS] {message}", Color.Green);
+        PrintInternal(message, Color.Green, LogLevel.Info);
     }
     
     public static void PrintWarning(string message)
     {
-        Print($"[WARNING] {message}", Color.Yellow);
+        PrintInternal(message, Color.Yellow, LogLevel.Warning);
     }
 
     public static void PrintError(string message)
     {
-        Print($"[ERROR] {message}", Color.Red);
+        PrintInternal(message, Color.Red, LogLevel.Error);
     }
 
-    public static void Exception(Exception exception)
-    {
-        AnsiConsole.Write(new Text(exception.ToString(), Color.Red));
-        AnsiConsole.WriteLine();
-    }
-
-    public static void CreateLogFile(in string path)
+    public static void CreateLogFile(in string path, in LogLevel minLogLevel)
     {
         if (File.Exists(path))
             File.Delete(path);
-        
+
         LogToFile = path;
         var fullPath = Path.GetFullPath(LogToFile);
         var fileInfo = new FileInfo(fullPath);
         fileInfo.Directory?.Create();
-        fileInfo.Create().Dispose();
+
+        _logStreamWriter = new StreamWriter(fullPath, append: true) { AutoFlush = true };
+        Print($"Created log file: {fullPath}");
+        
         IsLoggingToFile = true;
-        Print($"Created log file: {fullPath}", Color.Aqua);
+        LogFileMinLogLevel = minLogLevel;
     }
     
     public static void StopLoggingToFile()
     {
         IsLoggingToFile = false;
+        _logStreamWriter?.Flush();
+        _logStreamWriter?.Dispose();
+        _logStreamWriter = null;
     }
     
-    private static void ToFile(string message)
+    private static void ToFile(string message, LogLevel level)
     {
-        if (LogToFile is null || !IsLoggingToFile)
+        if (level < LogFileMinLogLevel)
             return;
         
+        if (_logStreamWriter is null || !IsLoggingToFile)
+            return;
+
         var line = StripANSI(message);
-        File.AppendAllText(LogToFile, line + Environment.NewLine);
+        _logStreamWriter.WriteLine(line);
     }
 
     private static string StripANSI(string input)

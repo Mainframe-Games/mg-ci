@@ -70,7 +70,7 @@ public class SteamDeploy : Command
         if (res.ExitCode != 0)
             return res.ExitCode;
         
-        Log.Print($"Steam deploy successful! [{res.RunTime}]", Color.Green);
+        Log.Success($"Steam deploy successful! [{res.RunTime}]");
         
         return 0;
     }

@@ -50,7 +50,7 @@ public class ItchioDeploy : Command
         if (res.ExitCode != 0)
             return res.ExitCode;
         
-        Log.Print($"Itchio deploy successful! [{res.RunTime}]", Color.Green);
+        Log.Success($"Itchio deploy successful! [{res.RunTime}]");
         return 0;
     }
 }

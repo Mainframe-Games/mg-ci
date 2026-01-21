@@ -35,7 +35,7 @@ public static class FileEx
         var result = res.Task.Result;
         if (result.ExitCode != 0)
         {
-            Log.Print(result.StandardError, Color.Red);
+            Log.PrintError(result.StandardError);
         }
         else
         {

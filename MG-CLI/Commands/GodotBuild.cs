@@ -49,7 +49,7 @@ public class GodotBuild : Command
         var isInteractive = result.GetValue(_interactive);
 
         var templates = new List<string>();
-        var isDebug = false;
+        bool isDebug;
         
         if (isInteractive)
         {
@@ -73,18 +73,19 @@ public class GodotBuild : Command
         }
 
         // run a dotnet build to catch any compile errors first
-        var res = await PrebuildAsync(projectPath, godotVersion);
-        if (res != 0) return res;
+        var exitCode = await PrebuildAsync(projectPath, godotVersion, token);
+        if (exitCode != 0) 
+            return exitCode;
         
         foreach (var template in templates)
         {
             var exportType = isDebug ? $"--export-debug {template}" : $"--export-release {template}";
-            res = await BuildAsync(projectPath, godotVersion, exportType);
-            if (res != 0)
-                Log.Print($"Build failed for '{template}' [{res}].", Color.Red);
+            exitCode = await BuildAsync(projectPath, godotVersion, exportType, token);
+            if (exitCode != 0)
+                Log.PrintError($"Build failed for '{template}' [{exitCode}].");
         }
 
-        return 0;
+        return exitCode;
     }
 
     /// <summary>
@@ -93,15 +94,17 @@ public class GodotBuild : Command
     /// </summary>
     /// <param name="projectPath">The file path to the Godot project that requires preparation.</param>
     /// <param name="godotVersion">The version of the Godot engine being used for the project.</param>
+    /// <param name="token"></param>
     /// <returns>A task that returns an integer exit code, where 0 indicates success and any non-zero value indicates an error.</returns>
-    private static async Task<int> PrebuildAsync(string projectPath, string godotVersion)
+    private static async Task<int> PrebuildAsync(string projectPath, string godotVersion, CancellationToken token)
     {
         // run a dotnet build to catch any compile errors first
-        var res = await Cli.Wrap("dotnet")
+        var res = await Cli
+            .Wrap("dotnet")
             .WithArguments("build")
             .WithWorkingDirectory(projectPath)
             .WithCustomPipes()
-            .ExecuteAsync();
+            .ExecuteAsync(token);
         
         if (res.ExitCode != 0)
             return res.ExitCode;
@@ -109,20 +112,12 @@ public class GodotBuild : Command
         // FIX: work around for bug https://github.com/firebelley/godot-export/issues/127
         var dotGodotFolder = Path.Combine(projectPath, ".godot");
         if (!Directory.Exists(dotGodotFolder))
-        {
-            var godotPath = GodotSetup.GetDefaultGodotPath(godotVersion);
-            res = await Cli.Wrap(godotPath)
-                .WithArguments("--headless --import")
-                .WithWorkingDirectory(projectPath)
-                .WithCustomPipes()
-                .ExecuteAsync();
-            return res.ExitCode;
-        }
+            return await GodotImport.Import(projectPath, godotVersion, token);
         
         return 0;
     }
 
-    private static async Task<int> BuildAsync(string projectPath, string godotVersion, string? exportType)
+    private static async Task<int> BuildAsync(string projectPath, string godotVersion, string? exportType, CancellationToken token)
     {
         // delete and create new build directory
         var template = exportType?.Split(' ')[^1].Trim() ?? throw new NullReferenceException("No export preset specified.");
@@ -131,30 +126,29 @@ public class GodotBuild : Command
         var buildDir = Path.GetDirectoryName(buildPath) ?? throw new NullReferenceException();
         DirectoryUtil.DeleteDirectoryExists(buildDir, true);
         
-        Log.CreateLogFile($"builds/Logs/{template}.log");
+        Log.CreateLogFile($"builds/Logs/{template}.log", LogLevel.Debug);
         
         // export project
         var godotPath = GodotSetup.GetDefaultGodotPath(godotVersion);
-        var res = await Cli.Wrap(godotPath)
+        var res = await Cli
+            .Wrap(godotPath)
             .WithArguments($"--headless --import --path . {exportType}")
             .WithWorkingDirectory(projectPath)
             .WithCustomPipes()
-            .ExecuteAsync();
+            .ExecuteAsync(token);
         
         if (res.IsSuccess)
-            Log.Print($"Build successful [{res.RunTime}]. {buildPath}", Color.Green);
+            Log.Success($"Build successful [{res.RunTime}]. {buildPath}");
         
         // mac builds need to be unzipped
         if (template == "Mac")
-        {
-            await MacOsPostBuild(buildPath);
-        }
+            await MacOsPostBuild(buildPath, token);
 
         Log.StopLoggingToFile();
         return res.ExitCode;
     }
 
-    private static async Task MacOsPostBuild(string buildPath)
+    private static async Task MacOsPostBuild(string buildPath, CancellationToken token)
     {
         var extractFolder = buildPath.Replace(".zip", "");
         await Zip.UnzipFileAsync(buildPath, extractFolder + "/..");
@@ -167,17 +161,17 @@ public class GodotBuild : Command
         // sign
         await Cli.Wrap("chmod")
             .WithArguments($"+x \"{appPath}/Contents/MacOS/{gameName}\"")
-            .ExecuteAsync();
+            .ExecuteAsync(token);
         
         await Cli.Wrap("xattr")
             .WithArguments($"-dr com.apple.quarantine \"{appPath}\"")
-            .ExecuteAsync();
+            .ExecuteAsync(token);
         
         await Cli.Wrap("codesign")
             .WithArguments($"-s - --force --deep \"{appPath}\"")
-            .ExecuteAsync();
+            .ExecuteAsync(token);
         
-        Log.Print($"Signed app at {appPath}", Color.Green);
+        Log.Success($"Signed app at {appPath}");
     }
 
     #region Helper Methods

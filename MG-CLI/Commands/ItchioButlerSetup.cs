@@ -70,7 +70,7 @@ public class ItchioButlerSetup : Command
         await Web.DownloadFileWithProgressAsync(url, zipFilePath);
         await Zip.UnzipFileAsync(zipFilePath, path);
         File.Delete(zipFilePath);
-        Log.Print($"Itchio butler downloaded successfully! [{ms.ElapsedMilliseconds}ms]", Color.Green);
+        Log.Success($"Itchio butler downloaded successfully! [{ms.ElapsedMilliseconds}ms]");
 
         // chmod
         var butlerPath = GetButlerPath();
