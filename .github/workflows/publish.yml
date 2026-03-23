@@ -1,0 +1,52 @@
+name: Publish to NuGet
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Bump Version
+        run: dotnet run --project MG-CLI/MG-CLI.csproj csproj-versioning MG-CLI/MG-CLI.csproj Version
+
+      - name: Read new version
+        id: version
+        run: |
+          VERSION=$(grep -oP '(?<=<Version>)[^<]+' MG-CLI/MG-CLI.csproj)
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add MG-CLI/MG-CLI.csproj
+          git commit -m "chore: bump version to ${{ steps.version.outputs.VERSION }} [skip ci]"
+          git tag "v${{ steps.version.outputs.VERSION }}"
+          git push origin main --tags
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Pack
+        run: dotnet pack MG-CLI/MG-CLI.csproj --configuration Release --no-build -p:Version=${{ steps.version.outputs.VERSION }} --output ./nupkg
+
+      - name: Push to NuGet
+        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
