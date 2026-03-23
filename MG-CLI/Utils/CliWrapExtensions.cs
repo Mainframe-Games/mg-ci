@@ -1,11 +1,9 @@
 ﻿using CliWrap;
-using Spectre.Console;
 
 namespace MG_CLI;
 
 public static class CliWrapExtensions
 {
-    public static readonly PipeTarget StdOutPutPipe = PipeTarget.ToDelegate(str => Log.Print(str));
     public static readonly PipeTarget StdErrorPipe = PipeTarget.ToDelegate(str =>
     {
         if (str.Trim().StartsWith("warning", StringComparison.InvariantCultureIgnoreCase))
@@ -14,10 +12,13 @@ public static class CliWrapExtensions
         Log.PrintError(str);
     });
     
-    public static Command WithCustomPipes(this Command command)
+    public static Command WithCustomPipes(this Command command, string tag)
     {
         return command
-            .WithStandardOutputPipe(StdOutPutPipe)
+            .WithStandardOutputPipe(PipeTarget.ToDelegate(str => 
+            {
+                Log.PrintMarkup($"[gray]{tag}[/]{str}");
+            }))
             .WithStandardErrorPipe(StdErrorPipe);
     }
 }

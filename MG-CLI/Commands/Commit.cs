@@ -25,7 +25,7 @@ public class Commit : Command
         var res = await Cli.Wrap("git")
             .WithArguments("add .")
             .WithWorkingDirectory(projectPath)
-            .WithCustomPipes()
+            .WithCustomPipes(Name)
             .ExecuteAsync(token);
 
         if (res.ExitCode != 0)
@@ -37,7 +37,7 @@ public class Commit : Command
         res = await Cli.Wrap("git")
             .WithArguments($"commit -m \"_Build Version: {version}\"")
             .WithWorkingDirectory(projectPath)
-            .WithCustomPipes()
+            .WithCustomPipes(Name)
             .ExecuteAsync(token);
         
         if (res.ExitCode != 0)
@@ -47,7 +47,7 @@ public class Commit : Command
         res = await Cli.Wrap("git")
             .WithArguments($"tag v{version}")
             .WithWorkingDirectory(projectPath)
-            .WithCustomPipes()
+            .WithCustomPipes(Name)
             .ExecuteAsync(token);
         
         if (res.ExitCode != 0)
@@ -57,7 +57,7 @@ public class Commit : Command
         res = await Cli.Wrap("git")
             .WithArguments("push origin main --tags")
             .WithWorkingDirectory(projectPath)
-            .WithCustomPipes()
+            .WithCustomPipes(Name)
             .ExecuteAsync(token);
         
         return res.ExitCode;

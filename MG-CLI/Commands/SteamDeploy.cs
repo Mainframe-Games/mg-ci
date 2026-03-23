@@ -63,7 +63,7 @@ public class SteamDeploy : Command
         var res = await Cli.Wrap(steamCmdPath)
             .WithArguments($"+login {steamUsername} {steamPassword} +run_app_build {vdfFullPath} +quit")
             .WithWorkingDirectory(projectPathFull)
-            .WithCustomPipes()
+            .WithCustomPipes(Name)
             .WithStandardInputPipe(PipeSource.FromStream(Console.OpenStandardInput()))
             .ExecuteAsync(token);
         

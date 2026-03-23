@@ -96,14 +96,14 @@ public class GodotBuild : Command
     /// <param name="godotVersion">The version of the Godot engine being used for the project.</param>
     /// <param name="token"></param>
     /// <returns>A task that returns an integer exit code, where 0 indicates success and any non-zero value indicates an error.</returns>
-    private static async Task<int> PrebuildAsync(string projectPath, string godotVersion, CancellationToken token)
+    private async Task<int> PrebuildAsync(string projectPath, string godotVersion, CancellationToken token)
     {
         // run a dotnet build to catch any compile errors first
         var res = await Cli
             .Wrap("dotnet")
             .WithArguments("build")
             .WithWorkingDirectory(projectPath)
-            .WithCustomPipes()
+            .WithCustomPipes(Name)
             .ExecuteAsync(token);
         
         if (res.ExitCode != 0)
@@ -112,12 +112,12 @@ public class GodotBuild : Command
         // FIX: work around for bug https://github.com/firebelley/godot-export/issues/127
         var dotGodotFolder = Path.Combine(projectPath, ".godot");
         if (!Directory.Exists(dotGodotFolder))
-            return await GodotImport.Import(projectPath, godotVersion, token);
+            return await GodotImport.Import(projectPath, godotVersion, Name, token);
         
         return 0;
     }
 
-    private static async Task<int> BuildAsync(string projectPath, string godotVersion, string? exportType, CancellationToken token)
+    private async Task<int> BuildAsync(string projectPath, string godotVersion, string? exportType, CancellationToken token)
     {
         // delete and create new build directory
         var template = exportType?.Split(' ')[^1].Trim() ?? throw new NullReferenceException("No export preset specified.");
@@ -134,7 +134,7 @@ public class GodotBuild : Command
             .Wrap(godotPath)
             .WithArguments($"--headless --import --path . {exportType}")
             .WithWorkingDirectory(projectPath)
-            .WithCustomPipes()
+            .WithCustomPipes(Name)
             .ExecuteAsync(token);
         
         if (res.IsSuccess)

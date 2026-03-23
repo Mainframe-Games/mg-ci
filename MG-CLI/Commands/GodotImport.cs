@@ -28,19 +28,19 @@ public class GodotImport : Command
         Log.CreateLogFile("godot-import.log", LogLevel.Warning);
         var godotVersion = result.GetRequiredValue(_godotVersion);
         var projectPath = result.GetRequiredValue(_projectPath);
-        var exitCode = await Import(godotVersion, projectPath, token);
+        var exitCode = await Import(godotVersion, projectPath, Name, token);
         Log.StopLoggingToFile();
         return exitCode;
     }
 
-    public static async Task<int> Import(string godotVersion, string projectPath, CancellationToken token)
+    public static async Task<int> Import(string godotVersion, string projectPath, string tag, CancellationToken token)
     {
         var godotPath = GodotSetup.GetDefaultGodotPath(godotVersion);
         var res = await Cli
             .Wrap(godotPath)
             .WithArguments("--headless --import")
             .WithWorkingDirectory(projectPath)
-            .WithCustomPipes()
+            .WithCustomPipes(tag)
             .ExecuteAsync(token);
         Log.Success($"Completed godot import: {res.RunTime.TotalSeconds}s");
         return res.ExitCode;

@@ -25,6 +25,7 @@ dotnet tool install --global mg-cli
 | `steam-deploy` | Deploy a build to Steam |
 | `itchio-setup` | Install Butler (itch.io CLI) |
 | `itchio-deploy` | Deploy a build to itch.io |
+| `digitalocean` | Deploy a build to a DigitalOcean droplet |
 | `test` | Print the MG-CLI banner |
 
 ---
@@ -219,6 +220,28 @@ mg-cli itchio-deploy <build-path> <company/game:platform> -p <project-path>
 | Option | Alias | Required | Description |
 |---|---|---|---|
 | `--projectPath` | `-p` | Yes | Path to the Godot project |
+
+---
+
+### DigitalOcean Deploy
+
+Deploy a build to a DigitalOcean droplet over SSH. Copies a systemd service file, an optional nginx config, and build files to the server, then restarts the service.
+
+```bash
+mg-cli digitalocean <ip-address> <service-file-path> <build-path> [-n <nginx-config>]
+```
+
+| Argument | Required | Description |
+|---|---|---|
+| `ip-address` | Yes | IP address of the DigitalOcean droplet |
+| `service-file-path` | Yes | Path to the systemd `.service` file to deploy |
+| `build-path` | Yes | Path to the local build directory to copy to the server |
+
+| Option | Alias | Required | Description |
+|---|---|---|---|
+| `--nginx-config` | `-n` | No | Path to an nginx `.conf` file to deploy |
+
+The command reads `WorkingDirectory` and `ExecStart` from the service file to determine where to deploy and what to make executable. It stops the existing service, cleans the remote directory, copies all files via `scp`, and restarts the service with `systemctl`.
 
 ---
 

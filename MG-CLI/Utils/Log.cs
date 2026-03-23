@@ -18,31 +18,38 @@ public static partial class Log
     private static LogLevel LogFileMinLogLevel { get; set; } = LogLevel.Debug; // the min level that will log to file
     private static StreamWriter? _logStreamWriter;
     
-    private static void PrintInternal(in string message, in Color? color, in LogLevel level)
+    public static void PrintMarkup(in string text, in LogLevel level = LogLevel.Debug)
     {
-        AnsiConsole.Write(new Text(message, color ?? Color.White));
+        AnsiConsole.Markup(text);
         AnsiConsole.WriteLine();
-        ToFile(message, level);
+        ToFile(text, level);
+    }
+    
+    private static void PrintCustom(in Text text, in LogLevel level)
+    {
+        AnsiConsole.Write(text);
+        AnsiConsole.WriteLine();
+        ToFile(text.ToString() ?? string.Empty, level);
     }
     
     public static void Print(in string message)
     {
-        PrintInternal(message, Color.White, LogLevel.Debug);
+        PrintCustom(new Text(message, Color.White), LogLevel.Debug);
     }
 
     public static void Success(string message)
     {
-        PrintInternal(message, Color.Green, LogLevel.Info);
+        PrintCustom(new Text(message, Color.Green), LogLevel.Info);
     }
     
     public static void PrintWarning(string message)
     {
-        PrintInternal(message, Color.Yellow, LogLevel.Warning);
+        PrintCustom(new Text(message, Color.Yellow), LogLevel.Warning);
     }
 
     public static void PrintError(string message)
     {
-        PrintInternal(message, Color.Red, LogLevel.Error);
+        PrintCustom(new Text(message, Color.Red), LogLevel.Error);
     }
 
     public static void CreateLogFile(in string path, in LogLevel minLogLevel)

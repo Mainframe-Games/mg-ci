@@ -13,7 +13,7 @@ public class SteamCmdSetup : Command
         SetAction(Run);
     }
 
-    private static async Task Run(ParseResult result, CancellationToken token)
+    private async Task Run(ParseResult result, CancellationToken token)
     {
         const int sdkVersion = 163;
         var zipFileName = $"steamworks_sdk_{sdkVersion}.zip";
@@ -45,7 +45,7 @@ public class SteamCmdSetup : Command
            
             await Cli
                 .Wrap($"{destinationPath}/steamcmd.sh")
-                .WithCustomPipes()
+                .WithCustomPipes(Name)
                 .ExecuteBufferedAsync(cancellationToken: token);
         }
         

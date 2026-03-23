@@ -22,7 +22,7 @@ public class ItchioButlerSetup : Command
         SetAction(Run);
     }
 
-    private static async Task<int> Run(ParseResult result, CancellationToken token)
+    private async Task<int> Run(ParseResult result, CancellationToken token)
     {
         var version = result.GetValue(_version);
         if (version)
@@ -36,7 +36,7 @@ public class ItchioButlerSetup : Command
             .Wrap(butlerPath)
             .WithWorkingDirectory(dir)
             .WithArguments("login")
-            .WithCustomPipes()
+            .WithCustomPipes(Name)
             .ExecuteAsync(token);
         
         return res.ExitCode;
@@ -89,13 +89,13 @@ public class ItchioButlerSetup : Command
         return string.Empty;
     }
 
-    private static async Task<int> PrintVersion(CancellationToken token)
+    private async Task<int> PrintVersion(CancellationToken token)
     {
         var butlerPath = GetButlerPath();
         var res = await Cli
             .Wrap(butlerPath)
             .WithArguments("version")
-            .WithCustomPipes()
+            .WithCustomPipes(Name)
             .ExecuteAsync(token);
         return res.ExitCode;
     }

@@ -19,7 +19,9 @@ var rootCommand = new RootCommand("Mainframe CI Tool")
     new SteamCmdSetup(),
     new SteamDeploy(),
     
-    new CsprojVersioning()
+    new CsprojVersioning(),
+    
+    new DigitalOcean(),
 };
 
 // Invoke the command
