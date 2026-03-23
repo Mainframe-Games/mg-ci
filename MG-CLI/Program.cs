@@ -10,7 +10,7 @@ var rootCommand = new RootCommand("Mainframe CI Tool")
     
     new GodotBuild(),
     new GodotSetup(),
-    new GodotVersioning(),
+    new GodotVersion(),
     new GodotImport(),
     
     new ItchioButlerSetup(),

@@ -31,7 +31,7 @@ public class Commit : Command
         if (res.ExitCode != 0)
             return res.ExitCode;
         
-        var version = GodotVersioning.GetVersion(projectPath);
+        var version = GodotVersion.GetVersion(projectPath);
         
         // commit with message
         res = await Cli.Wrap("git")

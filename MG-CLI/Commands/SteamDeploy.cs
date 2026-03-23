@@ -53,7 +53,7 @@ public class SteamDeploy : Command
         var projectPathFull = Path.GetFullPath(projectPath);
         Log.Print($"ProjectPath: {projectPathFull}");
         
-        var version = GodotVersioning.GetVersion(projectPathFull);
+        var version = GodotVersion.GetVersion(projectPathFull);
         var vdfFullPath = Path.Combine(projectPathFull, vdf);
         await UpdateVdfDescription(vdfFullPath, version, preview);
         

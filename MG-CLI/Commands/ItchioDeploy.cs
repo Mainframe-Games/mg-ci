@@ -38,7 +38,7 @@ public class ItchioDeploy : Command
         var companyAndGame = result.GetRequiredValue(_companyGamePlatform);
         
         var butlerPath = ItchioButlerSetup.GetButlerPath();
-        var version = GodotVersioning.GetVersion(projectPath);
+        var version = GodotVersion.GetVersion(projectPath);
 
         var res = await Cli
             .Wrap(butlerPath)

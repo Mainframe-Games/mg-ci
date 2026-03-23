@@ -17,7 +17,7 @@ dotnet tool install --global mg-cli
 | `godot-setup` | Install Godot engine and export templates |
 | `godot-import` | Run the Godot import process |
 | `godot-build` | Build a Godot project for one or more export presets |
-| `godot-versioning` | Bump the version in `project.godot` |
+| `godot-version` | Get or bump the version in `project.godot` |
 | `csproj-versioning` | Bump the version in a `.csproj` file |
 | `commit` | Commit and tag the current build |
 | `discord-hook` | Send a Discord webhook with build info and changelog |
@@ -88,17 +88,21 @@ Before building, the command runs `dotnet build` to catch C# compilation errors 
 
 ---
 
-### Godot Versioning
+### Godot Version
 
-Bump the version in a Godot `project.godot` file. Uses a `YYYY.MM.BUILD` scheme — year and month are set automatically, and the build number is incremented.
+Get or bump the version in a Godot `project.godot` file. Uses a `YYYY.MM.BUILD` scheme — year and month are set automatically, and the build number is incremented. Run from the Godot project directory.
 
 ```bash
-mg-cli godot-versioning -p <project-path>
+# Print the current version
+mg-cli godot-version
+
+# Bump the version
+mg-cli godot-version --bump
 ```
 
 | Option | Alias | Required | Description |
 |---|---|---|---|
-| `--projectPath` | `-p` | Yes | Path to the Godot project directory |
+| `--bump` | `-b` | No | Bump the version number instead of printing it |
 
 ---
 

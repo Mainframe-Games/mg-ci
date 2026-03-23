@@ -2,25 +2,31 @@
 
 namespace MG_CLI;
 
-public class GodotVersioning : Command
+public class GodotVersion : Command
 {
-    private readonly Option<string> _projectPath = new("--projectPath", "-p")
+    private readonly Option<bool> _bump = new("--bump", "-b")
     {
-        HelpName = "Path to project.godot"
+        HelpName = "Bumpers the version number and returns it."
     };
     
-    public GodotVersioning() : base("godot-versioning", "Increments the version in the project.godot file.")
+    public GodotVersion() : base("godot-version", "Increments the version in the project.godot file.")
     {
-        Add(_projectPath);
+        Add(_bump);
         SetAction(Run);
     }
 
     private async Task Run(ParseResult result, CancellationToken token)
     {
-        var path = result.GetRequiredValue(_projectPath);
+        var path = Environment.CurrentDirectory;
         var fullPath = Path.GetFullPath(path);
-        Log.Print($"ProjectPath: {fullPath}");
-        await SetVersion(fullPath, token);
+
+        if (result.GetValue(_bump))
+        {
+            await SetVersion(fullPath, token);
+            return;
+        }
+        var version = GetVersion(fullPath);
+        Log.Print(version);
     }
 
     private static FileInfo GetProjectSettingsFile(string fullPath)

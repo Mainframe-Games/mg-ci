@@ -86,7 +86,7 @@ public class DiscordHook : Command
         }
         
         // send POST request
-        var version = GodotVersioning.GetVersion(projectPath);
+        var version = GodotVersion.GetVersion(projectPath);
         var description = noChangeLog ? "" : $"**Change Log:**\n{ParseCommits(commits)}";
         var json = new JObject
         {
