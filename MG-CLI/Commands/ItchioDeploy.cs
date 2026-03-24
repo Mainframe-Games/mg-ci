@@ -44,7 +44,7 @@ public class ItchioDeploy : Command
             .Wrap(butlerPath)
             .WithArguments($"push {buildPath} {companyAndGame} --userversion {version}")
             .WithWorkingDirectory(projectPath)
-            .WithCustomPipes(Name)
+            .WithCustomPipes()
             .ExecuteAsync(token);
         
         if (res.ExitCode != 0)

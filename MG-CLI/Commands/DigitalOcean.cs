@@ -131,7 +131,7 @@ public class DigitalOcean : Command
         var res = await Cli
             .Wrap("ssh")
             .WithArguments($"root@{ip} '{command}'")
-            .WithCustomPipes(Name)
+            .WithCustomPipes()
             .WithValidation(CommandResultValidation.None)
             .ExecuteBufferedAsync();
         
@@ -144,7 +144,7 @@ public class DigitalOcean : Command
         var args = recursive ? "-r" : string.Empty;
         var res = await Cli.Wrap("scp")
             .WithArguments($"{args} {filePath} root@{ip}:{locationPath}".Trim())
-            .WithCustomPipes(Name)
+            .WithCustomPipes()
             .WithValidation(CommandResultValidation.None)
             .ExecuteBufferedAsync();
         

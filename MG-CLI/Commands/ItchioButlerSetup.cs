@@ -36,7 +36,7 @@ public class ItchioButlerSetup : Command
             .Wrap(butlerPath)
             .WithWorkingDirectory(dir)
             .WithArguments("login")
-            .WithCustomPipes(Name)
+            .WithCustomPipes()
             .ExecuteAsync(token);
         
         return res.ExitCode;
@@ -95,7 +95,7 @@ public class ItchioButlerSetup : Command
         var res = await Cli
             .Wrap(butlerPath)
             .WithArguments("version")
-            .WithCustomPipes(Name)
+            .WithCustomPipes()
             .ExecuteAsync(token);
         return res.ExitCode;
     }

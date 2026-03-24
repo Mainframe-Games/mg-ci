@@ -45,7 +45,7 @@ public class SteamCmdSetup : Command
            
             await Cli
                 .Wrap($"{destinationPath}/steamcmd.sh")
-                .WithCustomPipes(Name)
+                .WithCustomPipes()
                 .ExecuteBufferedAsync(cancellationToken: token);
         }
         

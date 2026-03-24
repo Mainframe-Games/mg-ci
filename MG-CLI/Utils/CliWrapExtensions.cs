@@ -4,6 +4,11 @@ namespace MG_CLI;
 
 public static class CliWrapExtensions
 {
+    public static readonly PipeTarget StdOutPipe = PipeTarget.ToDelegate(str =>
+    {
+        Log.Print(str);
+    });
+    
     public static readonly PipeTarget StdErrorPipe = PipeTarget.ToDelegate(str =>
     {
         if (str.Trim().StartsWith("warning", StringComparison.InvariantCultureIgnoreCase))
@@ -12,13 +17,10 @@ public static class CliWrapExtensions
         Log.PrintError(str);
     });
     
-    public static Command WithCustomPipes(this Command command, string tag)
+    public static Command WithCustomPipes(this Command command)
     {
         return command
-            .WithStandardOutputPipe(PipeTarget.ToDelegate(str => 
-            {
-                Log.PrintMarkup($"[gray]{tag}[/]{str}");
-            }))
+            .WithStandardOutputPipe(StdOutPipe)
             .WithStandardErrorPipe(StdErrorPipe);
     }
 }

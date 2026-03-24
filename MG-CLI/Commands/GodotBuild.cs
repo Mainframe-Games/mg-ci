@@ -103,7 +103,7 @@ public class GodotBuild : Command
             .Wrap("dotnet")
             .WithArguments("build")
             .WithWorkingDirectory(projectPath)
-            .WithCustomPipes(Name)
+            .WithCustomPipes()
             .ExecuteAsync(token);
         
         if (res.ExitCode != 0)
@@ -134,7 +134,7 @@ public class GodotBuild : Command
             .Wrap(godotPath)
             .WithArguments($"--headless --import --path . {exportType}")
             .WithWorkingDirectory(projectPath)
-            .WithCustomPipes(Name)
+            .WithCustomPipes()
             .ExecuteAsync(token);
         
         if (res.IsSuccess)

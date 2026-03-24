@@ -18,12 +18,12 @@ public static partial class Log
     private static LogLevel LogFileMinLogLevel { get; set; } = LogLevel.Debug; // the min level that will log to file
     private static StreamWriter? _logStreamWriter;
     
-    public static void PrintMarkup(in string text, in LogLevel level = LogLevel.Debug)
-    {
-        AnsiConsole.Markup(text);
-        AnsiConsole.WriteLine();
-        ToFile(text, level);
-    }
+    // public static void PrintMarkup(in string text, in LogLevel level = LogLevel.Debug)
+    // {
+    //     AnsiConsole.Markup(text);
+    //     AnsiConsole.WriteLine();
+    //     ToFile(text, level);
+    // }
     
     private static void PrintCustom(in Text text, in LogLevel level)
     {

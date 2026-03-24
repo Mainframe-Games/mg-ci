@@ -40,7 +40,7 @@ public class GodotImport : Command
             .Wrap(godotPath)
             .WithArguments("--headless --import")
             .WithWorkingDirectory(projectPath)
-            .WithCustomPipes(tag)
+            .WithCustomPipes()
             .ExecuteAsync(token);
         Log.Success($"Completed godot import: {res.RunTime.TotalSeconds}s");
         return res.ExitCode;
