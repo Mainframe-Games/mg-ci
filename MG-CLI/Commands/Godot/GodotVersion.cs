@@ -26,7 +26,7 @@ public class GodotVersion : Command
             return;
         }
         var version = GetVersion(fullPath);
-        Log.Print(version);
+        Console.WriteLine(version);
     }
 
     private static FileInfo GetProjectSettingsFile(string fullPath)
