@@ -16,7 +16,7 @@ public class GodotImport : Command
         HelpName = "Version of Godot to use"
     };
     
-    public GodotImport() : base("godot-import", "Runs import process for Godot")
+    public GodotImport() : base("import", "Runs import process for Godot")
     {
         Add(_projectPath);
         Add(_godotVersion);
@@ -35,7 +35,7 @@ public class GodotImport : Command
 
     public static async Task<int> Import(string godotVersion, string projectPath, string tag, CancellationToken token)
     {
-        var godotPath = GodotSetup.GetDefaultGodotPath(godotVersion);
+        var godotPath = GodotInstall.GetDefaultGodotPath(godotVersion);
         var res = await Cli
             .Wrap(godotPath)
             .WithArguments("--headless --import")

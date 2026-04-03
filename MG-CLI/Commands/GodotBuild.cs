@@ -32,7 +32,7 @@ public class GodotBuild : Command
         HelpName = "Enable interactive mode"
     };
     
-    public GodotBuild() : base("godot-build", "Builds a Godot project.")
+    public GodotBuild() : base("build", "Builds a Godot project.")
     {
         Add(_projectPath);
         Add(_godotVersion);
@@ -129,7 +129,7 @@ public class GodotBuild : Command
         Log.CreateLogFile($"builds/Logs/{template}.log", LogLevel.Debug);
         
         // export project
-        var godotPath = GodotSetup.GetDefaultGodotPath(godotVersion);
+        var godotPath = GodotInstall.GetDefaultGodotPath(godotVersion);
         var res = await Cli
             .Wrap(godotPath)
             .WithArguments($"--headless --import --path . {exportType}")

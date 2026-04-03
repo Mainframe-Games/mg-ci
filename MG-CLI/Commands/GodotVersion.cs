@@ -9,7 +9,7 @@ public class GodotVersion : Command
         HelpName = "Bumpers the version number and returns it."
     };
     
-    public GodotVersion() : base("godot-version", "Increments the version in the project.godot file.")
+    public GodotVersion() : base("version", "Increments the version in the project.godot file.")
     {
         Add(_bump);
         SetAction(Run);

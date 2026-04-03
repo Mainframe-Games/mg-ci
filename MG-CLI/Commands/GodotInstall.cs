@@ -2,14 +2,14 @@
 
 namespace MG_CLI;
 
-public class GodotSetup : Command
+public class GodotInstall : Command
 {
-    private readonly Option<string> _option = new ("--version", "-v")
+    private readonly Argument<string> _option = new ("version")
     {
         HelpName = "The version of Godot to install"
     };
     
-    public GodotSetup() : base("godot-setup", "Installs the Godot engine and export templates.")
+    public GodotInstall() : base("install", "Installs the Godot engine and export templates.")
     {
         Add(_option);
         SetAction(Run);

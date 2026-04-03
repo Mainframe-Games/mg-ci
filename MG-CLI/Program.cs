@@ -8,10 +8,7 @@ var rootCommand = new RootCommand("Mainframe CI Tool")
     new Commit(),
     new DiscordHook(),
     
-    new GodotBuild(),
-    new GodotSetup(),
-    new GodotVersion(),
-    new GodotImport(),
+    new GodotCommands(),
     
     new ItchioButlerSetup(),
     new ItchioDeploy(),

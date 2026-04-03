@@ -2,7 +2,7 @@
 
 [![NuGet](https://img.shields.io/nuget/v/mg-cli)](https://www.nuget.org/packages/mg-cli)
 
-A .NET command-line tool for managing builds, versioning, and deployments of Godot projects. Handles the full CI/CD pipeline — from building export presets, to deploying on Steam and itch.io, to sending Discord notifications.
+A .NET 10.0 global tool for managing CI/CD pipelines for Godot game projects — building export presets, versioning, deploying to Steam/itch.io/DigitalOcean, and posting Discord notifications.
 
 ## Installation
 
@@ -12,12 +12,14 @@ dotnet tool install --global mg-cli
 
 ## Commands
 
+Godot-related commands are grouped under the `godot` subcommand.
+
 | Command | Description |
 |---|---|
-| `godot-setup` | Install Godot engine and export templates |
-| `godot-import` | Run the Godot import process |
-| `godot-build` | Build a Godot project for one or more export presets |
-| `godot-version` | Get or bump the version in `project.godot` |
+| `godot install` | Install Godot engine and export templates |
+| `godot import` | Run the Godot import process |
+| `godot build` | Build a Godot project for one or more export presets |
+| `godot version` | Get or bump the version in `project.godot` |
 | `csproj-versioning` | Bump the version in a `.csproj` file |
 | `commit` | Commit and tag the current build |
 | `discord-hook` | Send a Discord webhook with build info and changelog |
@@ -30,19 +32,19 @@ dotnet tool install --global mg-cli
 
 ---
 
-### Godot Setup
+### Godot Install
 
 Install the Godot engine and export templates for a specific version. Supports Windows, Linux, and macOS.
 
 ```bash
-mg-cli godot-setup --version <godot-version>
+mg-cli godot install <version>
 ```
 
-| Option | Alias | Required | Description |
-|---|---|---|---|
-| `--version` | `-v` | Yes | Godot version to install (e.g. `4.4.1`) |
+| Argument | Required | Description |
+|---|---|---|
+| `version` | Yes | Godot version to install (e.g. `4.4.1`) |
 
-Downloads the engine and export templates from the official Godot GitHub releases, extracts them to the standard platform location, and sets executable permissions.
+Downloads the engine and export templates from the official Godot GitHub releases, extracts them to the standard platform location, and sets executable permissions. On Linux, a desktop entry is created at `~/.local/share/applications/godot.desktop`.
 
 ---
 
@@ -51,7 +53,7 @@ Downloads the engine and export templates from the official Godot GitHub release
 Run the Godot headless import process for a project.
 
 ```bash
-mg-cli godot-import <project-path> <godot-version>
+mg-cli godot import <project-path> <godot-version>
 ```
 
 | Argument | Required | Description |
@@ -67,13 +69,13 @@ Build a Godot project for one or more export presets. Supports both interactive 
 
 ```bash
 # Release build
-mg-cli godot-build -p <project-path> -v <godot-version> -r <preset-name>
+mg-cli godot build -p <project-path> -v <godot-version> -r <preset-name>
 
 # Debug build
-mg-cli godot-build -p <project-path> -v <godot-version> -d <preset-name>
+mg-cli godot build -p <project-path> -v <godot-version> -d <preset-name>
 
 # Interactive mode — select presets from a list
-mg-cli godot-build -p <project-path> -v <godot-version> -i
+mg-cli godot build -p <project-path> -v <godot-version> -i
 ```
 
 | Option | Alias | Required | Description |
@@ -90,14 +92,14 @@ Before building, the command runs `dotnet build` to catch C# compilation errors 
 
 ### Godot Version
 
-Get or bump the version in a Godot `project.godot` file. Uses a `YYYY.MM.BUILD` scheme — year and month are set automatically, and the build number is incremented. Run from the Godot project directory.
+Get or bump the version in a Godot `project.godot` file. Uses a `YYYY.MM.BUILD` scheme — year and month are set automatically, and the build number is incremented. Also preserves any `config/version_suffix`. Run from the Godot project directory.
 
 ```bash
 # Print the current version
-mg-cli godot-version
+mg-cli godot version
 
 # Bump the version
-mg-cli godot-version --bump
+mg-cli godot version --bump
 ```
 
 | Option | Alias | Required | Description |
@@ -251,9 +253,9 @@ The command reads `WorkingDirectory` and `ExecStart` from the service file to de
 
 ## CI/CD
 
-The repository includes a [GitHub Actions workflow](.github/workflows/publish.yml) that runs on every push to `main`:
+The repository includes a [GitHub Actions workflow](.github/workflows/publish.yml) that runs on every push to `main` (skipped when commit message contains `[skip ci]`):
 
-1. Bumps the package version
+1. Bumps the package version via `csproj-versioning`
 2. Commits the version change and creates a git tag
 3. Builds, packs, and publishes to NuGet
 
