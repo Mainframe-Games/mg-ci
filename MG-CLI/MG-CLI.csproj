@@ -11,7 +11,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>mg-cli</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
-    <Version>1.0.24</Version>
+    <Version>1.0.25</Version>
     <Title>MG CLI</Title>
     <Authors>Mainframe Games</Authors>
     <Copyright>Mainframe Games 2026</Copyright>
