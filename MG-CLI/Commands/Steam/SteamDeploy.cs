@@ -1,6 +1,5 @@
 ﻿using System.CommandLine;
 using CliWrap;
-using Spectre.Console;
 using Command = System.CommandLine.Command;
 
 namespace MG_CLI;
@@ -32,7 +31,7 @@ public class SteamDeploy : Command
         HelpName = "Marks vdf file as Preview 1"
     };
     
-    public SteamDeploy() : base("steam-deploy", "Deploy to Steam")
+    public SteamDeploy() : base("deploy", "Deploy to Steam")
     {
         Add(_projectPath);
         Add(_vdfPath);

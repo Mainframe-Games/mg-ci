@@ -1,7 +1,5 @@
 ﻿using System.CommandLine;
-using System.Diagnostics;
 using CliWrap;
-using Spectre.Console;
 using Command = System.CommandLine.Command;
 
 namespace MG_CLI;
@@ -23,7 +21,7 @@ public class ItchioDeploy : Command
         HelpName = "e.g. <company>/<game-name>:<platform>"
     };
     
-    public ItchioDeploy() : base("itchio-deploy", "Deploys a game to itch.io")
+    public ItchioDeploy() : base("deploy", "Deploys a game to itch.io")
     {
         Add(_projectPath);
         Add(_buildPath);

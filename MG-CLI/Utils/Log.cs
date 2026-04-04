@@ -52,6 +52,16 @@ public static partial class Log
         PrintCustom(new Text(message, Color.Red), LogLevel.Error);
     }
 
+    public static void Logo()
+    {
+        AnsiConsole.Write(
+            new FigletText("Mainframe Games CLI")
+                .LeftJustified()
+                .Color(Color.Cyan1));
+    }
+
+    #region To File
+    
     public static void CreateLogFile(in string path, in LogLevel minLogLevel)
     {
         if (File.Exists(path))
@@ -94,4 +104,6 @@ public static partial class Log
 
     [GeneratedRegex(@"\x1B\[[0-9;]*[A-Za-z]", RegexOptions.Compiled)]
     private static partial Regex MyRegex();
+
+    #endregion
 }

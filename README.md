@@ -12,7 +12,7 @@ dotnet tool install --global mg-cli
 
 ## Commands
 
-Godot-related commands are grouped under the `godot` subcommand.
+Godot commands are grouped under `godot`, Steam commands under `steam`, and itch.io commands under `itchio`.
 
 | Command | Description |
 |---|---|
@@ -23,12 +23,11 @@ Godot-related commands are grouped under the `godot` subcommand.
 | `csproj-versioning` | Bump the version in a `.csproj` file |
 | `commit` | Commit and tag the current build |
 | `discord-hook` | Send a Discord webhook with build info and changelog |
-| `steamcmd-setup` | Install SteamCMD from the Steamworks SDK |
-| `steam-deploy` | Deploy a build to Steam |
-| `itchio-setup` | Install Butler (itch.io CLI) |
-| `itchio-deploy` | Deploy a build to itch.io |
+| `steam setup` | Install SteamCMD from the Steamworks SDK |
+| `steam deploy` | Deploy a build to Steam |
+| `itchio setup` | Install Butler (itch.io CLI) |
+| `itchio deploy` | Deploy a build to itch.io |
 | `digitalocean` | Deploy a build to a DigitalOcean droplet |
-| `test` | Print the MG-CLI banner |
 
 ---
 
@@ -128,12 +127,12 @@ mg-cli csproj-versioning <path-to-csproj> [property-name]
 Stage all changes, commit with the current build version, create a git tag, and push to `origin/main`.
 
 ```bash
-mg-cli commit -p <project-path>
+mg-cli commit <project-path>
 ```
 
-| Option | Alias | Required | Description |
-|---|---|---|---|
-| `--projectPath` | `-p` | Yes | Path to the Godot project |
+| Argument | Required | Description |
+|---|---|---|
+| `project-path` | No | Path to the Godot project (defaults to current directory) |
 
 Commit message format: `_Build Version: <version>`
 Tag format: `v<version>`
@@ -158,12 +157,12 @@ mg-cli discord-hook -p <project-path> -h <webhook-url> -s <steam-url> -l <logo-u
 
 ---
 
-### SteamCMD Setup
+### Steam Setup
 
 Download and install SteamCMD from the Steamworks SDK.
 
 ```bash
-mg-cli steamcmd-setup
+mg-cli steam setup
 ```
 
 Installs the content builder to `~/steamcmd`. No arguments required.
@@ -175,7 +174,7 @@ Installs the content builder to `~/steamcmd`. No arguments required.
 Deploy a build to Steam using SteamCMD and a VDF build configuration file.
 
 ```bash
-mg-cli steam-deploy -p <project-path> --vdf <path-to-vdf> -u <username> -pw <password>
+mg-cli steam deploy -p <project-path> --vdf <path-to-vdf> -u <username> -pw <password>
 ```
 
 | Option | Alias | Required | Description |
@@ -196,10 +195,10 @@ Download and install [Butler](https://itch.io/docs/butler/), the itch.io command
 
 ```bash
 # Install Butler
-mg-cli itchio-setup
+mg-cli itchio setup
 
 # Check installed version
-mg-cli itchio-setup -v
+mg-cli itchio setup -v
 ```
 
 | Option | Alias | Required | Description |
@@ -215,7 +214,7 @@ After installation you will be prompted to log in interactively.
 Push a build to itch.io using Butler.
 
 ```bash
-mg-cli itchio-deploy <build-path> <company/game:platform> -p <project-path>
+mg-cli itchio deploy <build-path> <company/game:platform> -p <project-path>
 ```
 
 | Argument | Required | Description |

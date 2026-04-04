@@ -1,7 +1,6 @@
 using System.CommandLine;
 using System.Diagnostics;
 using CliWrap;
-using Spectre.Console;
 using Command = System.CommandLine.Command;
 
 namespace MG_CLI;
@@ -16,7 +15,7 @@ public class ItchioButlerSetup : Command
         HelpName = "The version of Butler that is installed"
     };
     
-    public ItchioButlerSetup() : base("itchio-setup", "Downloads and installed Butler")
+    public ItchioButlerSetup() : base("setup", "Downloads and installed Butler")
     {
         Add(_version);
         SetAction(Run);

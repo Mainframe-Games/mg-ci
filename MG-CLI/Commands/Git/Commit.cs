@@ -6,7 +6,7 @@ namespace MG_CLI;
 
 public class Commit : Command
 {
-    private readonly Option<string> _projectPath = new("--projectPath", "-p")
+    private readonly Argument<string> _projectPath = new("projectPath")
     {
         HelpName = "Path to Godot project"
     };
@@ -19,7 +19,7 @@ public class Commit : Command
     
     private async Task<int> Run(ParseResult result, CancellationToken token)
     {
-        var projectPath = result.GetRequiredValue(_projectPath);
+        var projectPath = result.GetValue(_projectPath) ?? Environment.CurrentDirectory;
         
         // stage files
         var res = await Cli.Wrap("git")

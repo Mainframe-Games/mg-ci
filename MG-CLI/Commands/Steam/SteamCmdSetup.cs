@@ -1,14 +1,13 @@
 ﻿using System.CommandLine;
 using CliWrap;
 using CliWrap.Buffered;
-using Spectre.Console;
 using Command = System.CommandLine.Command;
 
 namespace MG_CLI;
 
 public class SteamCmdSetup : Command
 {
-    public SteamCmdSetup() : base("steamcmd-setup", "Setup SteamCMD")
+    public SteamCmdSetup() : base("setup", "Setup SteamCMD")
     {
         SetAction(Run);
     }
