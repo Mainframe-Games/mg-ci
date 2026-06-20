@@ -10,5 +10,6 @@ public class GodotCommands : Command
         Add(new GodotBuild());
         Add(new GodotVersion());
         Add(new GodotInstall());
+        Add(new GodotProjectSettings());
     }
 }
