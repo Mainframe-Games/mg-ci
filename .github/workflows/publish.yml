@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "**.cs"
+      - "**.csproj"
+      - ".github/workflows/publish.yml"
 
 jobs:
   publish:

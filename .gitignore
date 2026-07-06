@@ -6,3 +6,6 @@ bin/
 *.DS_Store
 *.DotSettings.user
 *.nupkg
+# docfx generated output
+docs/_site/
+docs/api/
