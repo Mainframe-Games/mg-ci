@@ -1,0 +1,16 @@
+- name: Introduction
+  href: introduction.md
+- name: Getting Started
+  href: getting-started.md
+- name: Architecture
+  href: architecture.md
+- name: Command Reference
+  href: commands.md
+- name: Utilities
+  href: utilities.md
+- name: Versioning
+  href: versioning.md
+- name: CI/CD Pipeline
+  href: cicd.md
+- name: Development
+  href: development.md

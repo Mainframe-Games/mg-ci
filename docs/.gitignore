@@ -1,0 +1,4 @@
+# docfx build output
+_site/
+obj/
+api/

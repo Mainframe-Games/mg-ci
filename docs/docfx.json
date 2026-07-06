@@ -1,0 +1,42 @@
+{
+  "build": {
+    "content": [
+      {
+        "files": [
+          "index.md",
+          "toc.yml"
+        ]
+      },
+      {
+        "files": [
+          "articles/**.md",
+          "articles/**/toc.yml"
+        ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [
+          "images/**"
+        ]
+      }
+    ],
+    "output": "_site",
+    "template": [
+      "default",
+      "modern"
+    ],
+    "globalMetadata": {
+      "_appName": "MG-CLI",
+      "_appTitle": "MG-CLI Documentation",
+      "_appFooter": "MG-CLI &mdash; Mainframe Games CI/CD tooling for Godot",
+      "_enableSearch": true,
+      "_disableContribution": false,
+      "_gitContribute": {
+        "repo": "https://github.com/Mainframe-Games/mg-ci",
+        "branch": "main"
+      }
+    },
+    "markdownEngineName": "markdig"
+  }
+}
