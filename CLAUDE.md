@@ -49,3 +49,8 @@ There are no automated tests in this project.
 1. Runs `csproj-versioning` to bump patch version on `MG-CLI/MG-CLI.csproj`
 2. Commits the bump and pushes a git tag
 3. Packs and pushes the NuGet package to nuget.org (requires `NUGET_API_KEY` secret)
+
+## Project memory
+
+@import memory/README.md
+@import memory/context/current-state.md
